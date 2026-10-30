@@ -1,0 +1,6 @@
+chat   run0 pt=   57 ct= 205 ttft=  12.6s prefill=4.5 tok/s decode=4.91 tok/s
+chat   run1 pt=   59 ct= 237 ttft= 13.47s prefill=4.4 tok/s decode=5.05 tok/s
+
+summary (smoke; warm runs only, median):
+  chat   prompt=    59 prefill=    4.4 tok/s  decode=  5.05 tok/s
+raw: /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/20261030-012316-smoke.jsonl  telemetry: /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/20261030-012316-smoke-telemetry.csv

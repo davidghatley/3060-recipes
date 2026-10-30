@@ -1,0 +1,17 @@
+[strata] 2026-10-30 01:22:42 engine started: /home/davidhatley/.local/share/strata/install/engine-dsv41/0.1.54-linux-x86_64-cuda-cuda13/strata-dsv41 --serve --pack /mnt/models/llm/deepseek-v41-flash/packs/deepseek-v4.1-flash-ist-das-2.00bpw --max-context 8192 --eos 1 --vision on --dspark auto --dspark-conf 0.65 --vision off
+ds4: tensor parallel 2 -> 1: the experts' 256-value blocks split n_ff 2304 no other way (each GPU its own layers)
+ds4: DSpark not loaded: the routed experts (132 GB) are far more than the GPU holds (11 GB), where its verify rounds read 3.3x a token's bytes and gain nothing (--dspark on loads it anyway)
+ds4: experts per word: 5 (faster mode; full quality: --experts 6)
+ds4: the experts VRAM leaves over (~129.9 GB) are read in place from the model's files (--mmap-experts off copies them into RAM) (39.3 GB of RAM free to keep them: the most-routed 0.0 GB read ahead; prompts in chunks of 4096)
+ds4: RAM store: 38.4 GB of RAM free after the GPU's weights: store sized 26.4 GB, not 30.1
+ds4: RAM store: up to 2568 slots of 10.3 MB (26.4 GB), policy 0, 8 reader threads, unbuffered reads
+ds4: RAM store: 2568 of the profile's hottest experts read in (19.9 GB) in 9.1 s
+ds4: prompt path: the chunked pass from 96 tokens, windows of 16 below
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 2.51 GB (252 of 15360 in VRAM), caches 0.01 GB, 581 MiB free
+ds4: 15108 routed experts on the CPU lane (130.3 GB, in place in the model's files), 6 threads
+maya ds4 serve: GEN <max_new> [keys] <ids>; GENI <max_new> [keys] <pictures> <ids>; STOP, QUIT
+ds4 slots: folder /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots: 0 conversation(s) kept from earlier runs (0.00 GB)
+maya ds4 serve: prompt 33 tokens = 0 reused + 33 read in 8222 ms (4.0 tok/s), 4 generated in 1300 ms (3.08 tok/s); CPU lane 90.5% of the experts
+maya ds4 serve: prompt 57 tokens = 0 reused + 57 read in 12595 ms (4.5 tok/s), 205 generated in 41920 ms (4.89 tok/s); CPU lane 76.8% of the experts
+maya ds4 serve: prompt 59 tokens = 0 reused + 59 read in 13468 ms (4.4 tok/s), 128 generated in 24994 ms (5.12 tok/s); CPU lane 73.6% of the experts
+maya ds4 serve: prompt 204 tokens = 187 reused + 17 read in 3294 ms (5.2 tok/s), 92 generated in 18733 ms (4.91 tok/s); CPU lane 72.7% of the experts
