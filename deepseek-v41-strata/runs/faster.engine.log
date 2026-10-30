@@ -1,0 +1,43 @@
+[strata] 2026-10-30 01:25:44 engine started: /home/davidhatley/.local/share/strata/install/engine-dsv41/0.1.54-linux-x86_64-cuda-cuda13/strata-dsv41 --serve --pack /mnt/models/llm/deepseek-v41-flash/packs/deepseek-v4.1-flash-ist-das-2.00bpw --max-context 8192 --eos 1 --vision on --dspark auto --dspark-conf 0.65 --vision off
+ds4: tensor parallel 2 -> 1: the experts' 256-value blocks split n_ff 2304 no other way (each GPU its own layers)
+ds4: DSpark not loaded: the routed experts (132 GB) are far more than the GPU holds (11 GB), where its verify rounds read 3.3x a token's bytes and gain nothing (--dspark on loads it anyway)
+ds4: experts per word: 5 (faster mode; full quality: --experts 6)
+ds4: the experts VRAM leaves over (~129.9 GB) are read in place from the model's files (--mmap-experts off copies them into RAM) (40.0 GB of RAM free to keep them: the most-routed 0.0 GB read ahead; prompts in chunks of 4096)
+ds4: RAM store: 39.0 GB of RAM free after the GPU's weights: store sized 27.0 GB, not 30.2
+ds4: RAM store: up to 2630 slots of 10.3 MB (27.0 GB), policy 0, 8 reader threads, unbuffered reads
+ds4: RAM store: 2630 of the profile's hottest experts read in (20.4 GB) in 9.3 s
+ds4: prompt path: the chunked pass from 96 tokens, windows of 16 below
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 2.51 GB (252 of 15360 in VRAM), caches 0.01 GB, 581 MiB free
+ds4: 15108 routed experts on the CPU lane (130.3 GB, in place in the model's files), 6 threads
+maya ds4 serve: GEN <max_new> [keys] <ids>; GENI <max_new> [keys] <pictures> <ids>; STOP, QUIT
+ds4 slots: folder /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots: 0 conversation(s) kept from earlier runs (0.00 GB)
+maya ds4 serve: prompt 33 tokens = 0 reused + 33 read in 8211 ms (4.0 tok/s), 4 generated in 1385 ms (2.89 tok/s); CPU lane 90.4% of the experts
+maya ds4 serve: prompt 57 tokens = 0 reused + 57 read in 12488 ms (4.6 tok/s), 207 generated in 42477 ms (4.87 tok/s); CPU lane 75.9% of the experts
+maya ds4 serve: prompt 58 tokens = 0 reused + 58 read in 13187 ms (4.4 tok/s), 165 generated in 33267 ms (4.96 tok/s); CPU lane 72.7% of the experts
+maya ds4 serve: prompt 58 tokens = 0 reused + 58 read in 13532 ms (4.3 tok/s), 128 generated in 25435 ms (5.03 tok/s); CPU lane 71.6% of the experts
+maya ds4 serve: prompt 203 tokens = 186 reused + 17 read in 3225 ms (5.3 tok/s), 87 generated in 18174 ms (4.79 tok/s); CPU lane 71.2% of the experts
+maya ds4 serve: prompt 59 tokens = 0 reused + 59 read in 12898 ms (4.6 tok/s), 128 generated in 26996 ms (4.74 tok/s); CPU lane 73.4% of the experts
+maya ds4 serve: prompt 204 tokens = 187 reused + 17 read in 3353 ms (5.1 tok/s), 111 generated in 23610 ms (4.70 tok/s); CPU lane 75.6% of the experts
+maya ds4 serve: prompt 59 tokens = 0 reused + 59 read in 12492 ms (4.7 tok/s), 128 generated in 25806 ms (4.96 tok/s); CPU lane 76.1% of the experts
+maya ds4 serve: prompt 204 tokens = 187 reused + 17 read in 3379 ms (5.0 tok/s), 111 generated in 23939 ms (4.64 tok/s); CPU lane 77.0% of the experts
+maya ds4 serve: prompt 59 tokens = 0 reused + 59 read in 12671 ms (4.7 tok/s), 128 generated in 25910 ms (4.94 tok/s); CPU lane 77.1% of the experts
+maya ds4 serve: prompt 204 tokens = 187 reused + 17 read in 3805 ms (4.5 tok/s), 111 generated in 23933 ms (4.64 tok/s); CPU lane 77.5% of the experts
+maya ds4 serve: prompt 3216 tokens = 0 reused + 3216 read in 39444 ms (81.5 tok/s), 128 generated in 29159 ms (4.39 tok/s); CPU lane 28.8% of the experts
+maya ds4 serve: prompt 3361 tokens = 3344 reused + 17 read in 3785 ms (4.5 tok/s), 111 generated in 23337 ms (4.76 tok/s); CPU lane 30.1% of the experts
+ds4 slots: saved a 3471-token conversation (0.01 GB in RAM in 0.0 s); 1 in RAM, 0 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+maya ds4 serve: prompt 3220 tokens = 0 reused + 3220 read in 35522 ms (90.6 tok/s), 128 generated in 28837 ms (4.44 tok/s); CPU lane 19.6% of the experts
+maya ds4 serve: prompt 3365 tokens = 3348 reused + 17 read in 3909 ms (4.3 tok/s), 111 generated in 24252 ms (4.58 tok/s); CPU lane 20.6% of the experts
+ds4 slots: saved a 3475-token conversation (0.01 GB in RAM in 0.0 s); 2 in RAM, 0 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+maya ds4 serve: prompt 3217 tokens = 0 reused + 3217 read in 35037 ms (91.8 tok/s), 128 generated in 27010 ms (4.74 tok/s); CPU lane 15.8% of the experts
+maya ds4 serve: prompt 3362 tokens = 3345 reused + 17 read in 3255 ms (5.2 tok/s), 111 generated in 24368 ms (4.56 tok/s); CPU lane 16.6% of the experts
+ds4 slots: saved a 3472-token conversation (0.01 GB in RAM in 0.0 s); 3 in RAM, 0 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+maya ds4 serve: prompt 6263 tokens = 0 reused + 6263 read in 51752 ms (121.0 tok/s), 128 generated in 30083 ms (4.25 tok/s); CPU lane 12.7% of the experts
+maya ds4 serve: prompt 6408 tokens = 6391 reused + 17 read in 3475 ms (4.9 tok/s), 111 generated in 23848 ms (4.65 tok/s); CPU lane 13.3% of the experts
+ds4 slots: saved a 6518-token conversation (0.02 GB in RAM in 0.0 s); 4 in RAM, 0 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+maya ds4 serve: prompt 6260 tokens = 0 reused + 6260 read in 49791 ms (125.7 tok/s), 128 generated in 27584 ms (4.64 tok/s); CPU lane 11.0% of the experts
+maya ds4 serve: prompt 6405 tokens = 6388 reused + 17 read in 3710 ms (4.6 tok/s), 111 generated in 24863 ms (4.46 tok/s); CPU lane 11.4% of the experts
+ds4 slots: saved a 6515-token conversation (0.02 GB in RAM in 0.0 s); 4 in RAM, 1 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+maya ds4 serve: prompt 6258 tokens = 0 reused + 6258 read in 49895 ms (125.4 tok/s), 128 generated in 26403 ms (4.85 tok/s); CPU lane 9.9% of the experts
+maya ds4 serve: prompt 6403 tokens = 6386 reused + 17 read in 3248 ms (5.2 tok/s), 111 generated in 25274 ms (4.39 tok/s); CPU lane 10.2% of the experts
+ds4 slots: saved a 6513-token conversation as the engine ended (0.02 GB in RAM in 0.0 s); 4 in RAM, 2 in /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots
+ds4 slots: wrote 4 conversation(s) to /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/ds4-slots; 6 there in all

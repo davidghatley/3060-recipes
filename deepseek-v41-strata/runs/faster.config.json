@@ -1,0 +1,45 @@
+{
+ "exe": "/home/davidhatley/.local/share/strata/install/engine-dsv41/0.1.54-linux-x86_64-cuda-cuda13/strata-dsv41",
+ "args": [
+  "--pack",
+  "/mnt/models/llm/deepseek-v41-flash/packs/deepseek-v4.1-flash-ist-das-2.00bpw",
+  "--max-context",
+  "8192",
+  "--eos",
+  "1",
+  "--vision",
+  "on",
+  "--dspark",
+  "auto",
+  "--dspark-conf",
+  "0.65",
+  "--vision",
+  "off"
+ ],
+ "cwd": "/mnt/models/llm/strata/terminal/0.1.54",
+ "tokenizer": "/mnt/models/llm/deepseek-v41-flash/packs/deepseek-v4.1-flash-ist-das-2.00bpw/tokenizer",
+ "model_name": "deepseek-v4.1-flash",
+ "arch": "deepseek41",
+ "log": "/home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/faster.engine.log",
+ "lib_dirs": [
+  "/home/davidhatley/.local/share/strata/install/engine-dsv41/0.1.54-linux-x86_64-cuda-cuda13"
+ ],
+ "port": 8080,
+ "engine_ready_s": 3600,
+ "gpu": 0,
+ "gpus_asked": true,
+ "args_written": [
+  "--pack",
+  "/mnt/models/llm/deepseek-v41-flash/packs/deepseek-v4.1-flash-ist-das-2.00bpw",
+  "--max-context",
+  "8192",
+  "--eos",
+  "1",
+  "--vision",
+  "on",
+  "--dspark",
+  "auto",
+  "--dspark-conf",
+  "0.65"
+ ]
+}

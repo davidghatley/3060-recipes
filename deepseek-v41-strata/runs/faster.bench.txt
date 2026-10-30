@@ -1,0 +1,19 @@
+chat   run0 pt=   57 ct= 207 ttft=  12.5s prefill=4.6 tok/s decode=4.89 tok/s
+chat   run1 pt=   58 ct= 165 ttft= 13.19s prefill=4.4 tok/s decode=4.99 tok/s
+chat   run2 pt=   58 ct= 232 ttft= 13.53s prefill=4.3 tok/s decode=4.97 tok/s
+code   run0 pt=   59 ct= 256 ttft=  12.9s prefill=4.6 tok/s decode=4.73 tok/s
+code   run1 pt=   59 ct= 256 ttft= 12.49s prefill=4.7 tok/s decode=4.8 tok/s
+code   run2 pt=   59 ct= 256 ttft= 12.67s prefill=4.7 tok/s decode=4.75 tok/s
+ctx4k  run0 pt= 3216 ct= 256 ttft= 39.46s prefill=81.5 tok/s decode=4.53 tok/s
+ctx4k  run1 pt= 3220 ct= 256 ttft= 35.53s prefill=90.6 tok/s decode=4.47 tok/s
+ctx4k  run2 pt= 3217 ct= 256 ttft= 35.04s prefill=91.8 tok/s decode=4.67 tok/s
+ctx8k  run0 pt= 6263 ct= 256 ttft= 51.76s prefill=121.0 tok/s decode=4.44 tok/s
+ctx8k  run1 pt= 6260 ct= 256 ttft=  49.8s prefill=125.7 tok/s decode=4.54 tok/s
+ctx8k  run2 pt= 6258 ct= 256 ttft=  49.9s prefill=125.4 tok/s decode=4.64 tok/s
+
+summary (faster; warm runs only, median):
+  chat   prompt=    58 prefill=    4.3 tok/s  decode=  4.98 tok/s
+  code   prompt=    59 prefill=    4.7 tok/s  decode=  4.78 tok/s
+  ctx4k  prompt=  3218 prefill=   91.2 tok/s  decode=  4.57 tok/s
+  ctx8k  prompt=  6259 prefill=  125.6 tok/s  decode=  4.59 tok/s
+raw: /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/20261030-012619-faster.jsonl  telemetry: /home/davidhatley/Projects/3060-recipes/deepseek-v41-strata/runs/20261030-012619-faster-telemetry.csv
