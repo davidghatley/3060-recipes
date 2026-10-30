@@ -12,7 +12,7 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
 ## Traps
 - `gpu_run` caps RAM at 20 GB via `memcap` (cgroup MemoryMax), and that cap **counts page cache**.
   Engines that mmap experts (Strata, llama.cpp with `-ot exps=CPU`) need `GPU_RUN_MEM=44G`.
-  Otherwise the expert cache is starved and every token pages from SSD.
+  The DeepSeek runs peaked at 31–35 GB, so 20 GB would bind. The effect of a low cap was not measured.
 - `/mnt/models` is on the fast Micron NVMe. `/mnt/scratch` is a slower SK hynix BC501, so don't stream weights from it.
 - Run Python that reads downloaded files with `python -I`, from scripts kept outside the download dir.
 

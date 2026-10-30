@@ -25,23 +25,27 @@ RTX 3060 12 GB (PCIe 4.0 x16, driver 610.57) · i5-12500 6C/12T · 62 GB RAM · 
 - The plan step says "tight: needs more disk space" even with 823 GB free on the target drive. It isn't checking the `--data-dir` disk, so the warning can be ignored as long as `HF_HOME` and `TMPDIR` also point at `/mnt/models`.
 - Download: `strata install -- --family deepseek41 --model IST-DAS-2.00bpw --data-dir /mnt/models/llm/deepseek-v41-flash --yes --no-start`
 
-## Measured (2026-10-30, bench.py: 3 runs per case, warm-run medians, 256 output tokens, effort low)
+## Measured (2026-10-30, bench.py: 3 runs per case, medians of runs 2–3, 256 output tokens, effort low)
 | Mode | chat decode | code decode | 4K prompt: prefill / decode | 8K prompt: prefill / decode |
 |---|---|---|---|---|
-| Faster (5 experts, default) | **4.98** | 4.78 | 91 / 4.57 | 126 / 4.59 |
-| Full quality (6 experts) | 4.10 | 3.69 | 89 / 3.48 | 113 / 1.99* |
+| Faster (5 experts, default), 01:26 | **4.98** | 4.78 | 91 / 4.57 | 126 / 4.59 |
+| Full quality (6 experts), 09:07 | 4.10 | 3.69 | 89 / 3.48 | 113 / 1.99* |
 
-\*In full mode, 8K decode dropped to 1.6–2.4 tok/s on two of the three runs, which is probably SSD or RAM pressure. Both modes were run through gpu_run with a 44 GB cap. Load to first token takes about 35 s.
+\*Not representative: the first 8K run decoded at 3.37, the next two at 1.59 and 2.39. VRAM use was about 300 MiB higher during all three 8K runs, and NVMe reads fell to 510–1,000 MB/s in the two slow ones, so the SSD was not the limit. Cause not identified; other work on the machine is possible. The modes ran 7.5 h apart, so the comparison isn't controlled. Excluding that case, Full quality was about 18–24% slower.
 
-- VRAM: 11.3–11.5 GB used. Dense weights take 5.86 GB; 252–262 of the 15,360 experts fit in VRAM (Strata's plan said 841).
-- RAM: Strata sized its expert store from free RAM, which gave 26.4 GB because other sessions held about 20 GB. Engine RSS was about 25.5 GiB.
-- During decode the NVMe reads a median of 1.5 GB/s, peaking at 2.4 GB/s. The CPU lane handles about 75% of expert work. Decode is SSD- and RAM-bound, not GPU-bound.
+- Short prompts read at only 3.5–4.7 tok/s, so a 60-token prompt still takes 12–19 s. Prefill speed only reaches the 90–125 tok/s range on long prompts.
+- Server up and warm-up reply done about 35 s after start.
+- VRAM: 11.3–11.8 GB used. Dense weights take 5.86 GB; 252–262 of the 15,360 experts fit in VRAM (Strata's plan said 841).
+- RAM: the engine sized its expert store at 26–27 GB (from about 38–39 GB free). Scope memory peak was 34.9 GB (Faster) and 30.6 GB (Full), so the 44 GB cap never bound. About 10 GB stayed available during the runs.
+- NVMe: median about 1.3–1.4 GB/s during decode, against peaks of 2.4 GB/s seen in the smoke run. CPU: about 4.8 cores busy on average over the Faster run.
+- CPU lane share: about 72–78% on short prompts. It falls as long prompts run (29% down to 10%), so it looks like a running counter that includes prefill, not a decode-only figure.
 - The DSpark drafter turned itself off ("gains nothing" when the experts are this far off the GPU).
-- Skipped: the llama.cpp baseline. Strata downloaded the older 4-shard layout, which current llama.cpp can't load without converting it, and conversion needs about 138 GB more disk.
+- Skipped: the llama.cpp baseline. Strata downloaded the older 4-shard layout, which current llama.cpp can't load without converting it, and conversion needs about 138 GB more disk (118 GB free).
 
 ## Verdict
-**True, with caveats.** A single 12 GB GPU does run the model (11.4 GB used). But "runs" means about **4.6–5 tok/s decode and 90–125 tok/s prefill** on this box, because most of the 763B model lives in RAM and on the SSD. That's below the README's 9–11 tok/s for a 3060 and in line with the installer's own "5–7".
-The cheapest speedup is free RAM: close other sessions or ComfyUI so the expert store grows past 26 GB. After that, a faster NVMe. Use Faster mode; Full quality costs about 20–25% of speed and becomes unstable at 8K.
+**True, with caveats.** A single 12 GB GPU does run the model. But "runs" means about **4.6–5 tok/s decode** and 90–125 tok/s prefill on long prompts on this box, because most of the 763B model lives in RAM and on the SSD. That's about half the README's 9–11 tok/s for a 3060, below `--plan`'s 7.2, and at the bottom of the installer's "5–7". This box has more RAM than that 46 GB test rig, so RAM alone doesn't explain the gap.
+
+**Bottleneck: not established.** Decode is not GPU-memory-bound in any useful sense, but these runs don't separate CPU from disk. Untested ideas: more free RAM for the store, a faster NVMe. Use Faster mode: it is the default and was quicker in every case.
 
 ## Log
 - 2026-10-29 21:30: download started at about 14 MB/s, so roughly 5 h for 257 GB. The DeepSeek engine (strata-dsv41 0.1.54, CUDA 13, 445 MB) installed to `~/.local/share/strata/install/engine-dsv41/`, ignoring STRATA_DATA_DIR.
