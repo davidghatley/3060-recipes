@@ -1,0 +1,22 @@
+# 3060-recipes
+
+Recipes for running models that are far too big for the GPU on this box: one RTX 3060 (12 GB), 62 GB RAM, i5-12500 and NVMe drives.
+Each recipe lives in its own folder with a README, its scripts and a RESULTS.md that holds the measured numbers.
+
+## Owner's rules
+- Ask before downloads over 10 GB (unless an approved plan covers them), before sudo, and before touching other projects' envs.
+- Never delete anything. Move it aside instead.
+- GPU jobs always go through `~/anime-pipeline/tools/gpu_run` (see the gpu-share skill). Never kill processes you didn't start.
+- Model weights live in `/mnt/models/llm/<name>/` and never go in this repo. `/` has almost no free space.
+
+## Traps
+- `gpu_run` caps RAM at 20 GB via `memcap` (cgroup MemoryMax), and that cap **counts page cache**.
+  Engines that mmap experts (Strata, llama.cpp with `-ot exps=CPU`) need `GPU_RUN_MEM=44G`.
+  Otherwise the expert cache is starved and every token pages from SSD.
+- `/mnt/models` is on the fast Micron NVMe. `/mnt/scratch` is a slower SK hynix BC501, so don't stream weights from it.
+- Run Python that reads downloaded files with `python -I`, from scripts kept outside the download dir.
+
+## Layout
+- `deepseek-v41-strata/`: DeepSeek-V4.1-Flash 763B MoE (ISTA GSQ-RCO IQ2_XXS) on the Strata engine
+- `scripts/`: shared helpers (benchmark client etc.)
+- `notes/`, `docs/`: research notes
