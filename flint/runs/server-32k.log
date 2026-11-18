@@ -1,0 +1,11 @@
+0.00.532.818 I srv  llama_server: initializing ...
+0.00.532.829 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.533.952 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.535.686 I srv    load_model: loading model '/mnt/models/llm/flint/Flint-Q4_K_M.gguf'
+0.00.805.996 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.16.748.788 I cmn          init: llama threadpool init, n_threads = 6
+0.16.909.023 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 32768, kv_unified = 'false'
+0.16.921.367 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.16.921.771 I srv  server_run_i: model loaded
+0.16.921.777 I srv  server_on_li: listening on http://127.0.0.1:8081
+Received second interrupt, terminating immediately.

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "flint-local/flint-local",
+  "update": "disable",
+  "share": "disabled",
+  "compaction": {
+    "auto": true,
+    "buffer": 4096
+  },
+  "providers": {
+    "flint-local": {
+      "name": "Flint (local RTX 3060)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8081/v1",
+        "apiKey": "local"
+      },
+      "models": {
+        "flint-local": {
+          "name": "Flint Q4_K_M local",
+          "limit": {
+            "context": 131072,
+            "output": 4096
+          },
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ],
+            "reasoning": {
+              "supported": true,
+              "toggle": false
+            }
+          },
+          "compatibility": {
+            "reasoningField": "reasoning_content",
+            "maxTokensField": "max_tokens"
+          },
+          "body": {
+            "temperature": 1.0,
+            "top_p": 0.95,
+            "top_k": 20
+          }
+        }
+      }
+    }
+  }
+}

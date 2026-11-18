@@ -1,0 +1,55 @@
+0.00.658.658 I srv  llama_server: initializing ...
+0.00.658.669 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.660.956 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.663.032 I srv    load_model: loading model '/mnt/models/llm/flint/Flint-Q4_K_M.gguf'
+0.00.942.097 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.19.075.607 I cmn          init: llama threadpool init, n_threads = 6
+0.19.242.666 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 131072, kv_unified = 'false'
+0.19.256.353 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.19.256.636 I srv  server_run_i: model loaded
+0.19.256.641 I srv  server_on_li: listening on http://127.0.0.1:8081
+0.20.898.776 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+0.20.899.471 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.27.051.830 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   2048, progress = 0.18, t =   6.15 s / 332.88 tokens per second
+0.33.101.607 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   4096, progress = 0.36, t =  12.20 s / 335.68 tokens per second
+0.39.232.661 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   6144, progress = 0.53, t =  18.33 s / 335.13 tokens per second
+0.45.411.216 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   8192, progress = 0.71, t =  24.51 s / 334.21 tokens per second
+0.51.571.758 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  10240, progress = 0.89, t =  30.67 s / 333.85 tokens per second
+0.54.479.684 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  10985, progress = 0.96, t =  33.58 s / 327.13 tokens per second
+0.56.051.944 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  11493, progress = 1.00, t =  35.15 s / 326.95 tokens per second
+0.56.128.919 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =  11497, progress = 1.00, t =  35.23 s / 326.35 tokens per second
+0.58.153.100 I slot print_timing: id  0 | task 0 | prompt eval time =   35288.69 ms / 11501 tokens (    3.07 ms per token,   325.91 tokens per second)
+0.58.153.104 I slot print_timing: id  0 | task 0 |        eval time =    1964.91 ms /    81 tokens (   24.56 ms per token,    40.71 tokens per second)
+0.58.153.105 I slot print_timing: id  0 | task 0 |       total time =   37253.60 ms / 11582 tokens
+0.58.153.110 I slot print_timing: id  0 | task 0 |    graphs reused =         79
+0.58.153.110 I slot print_timing: id  0 | task 0 |   graph reallocs =         22    /     0        (same size) / (changed size)
+0.58.153.488 I slot      release: id  0 | task 0 | stop processing: n_tokens = 11581, truncated = 0
+0.58.153.500 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 11581, t_last = 71627979469
+0.58.209.387 I slot launch_slot_: id  0 | task 2 | processing task, is_child = 0
+1.01.326.025 I slot print_timing: id  0 | task 2 | n_gen =    148, tg =  48.98 t/s, tg_3s =  49.31 t/s
+1.02.379.046 I slot print_timing: id  0 | task 2 | prompt eval time =     115.35 ms /     8 tokens (   14.42 ms per token,    69.36 tokens per second)
+1.02.379.048 I slot print_timing: id  0 | task 2 |        eval time =    4054.29 ms /   200 tokens (   20.37 ms per token,    49.08 tokens per second)
+1.02.379.049 I slot print_timing: id  0 | task 2 |       total time =    4169.63 ms /   208 tokens
+1.02.379.049 I slot print_timing: id  0 | task 2 |    graphs reused =        277
+1.02.379.050 I slot print_timing: id  0 | task 2 |   graph reallocs =         22    /     0        (same size) / (changed size)
+1.02.379.062 I slot      release: id  0 | task 2 | stop processing: n_tokens = 207, truncated = 0
+2.18.051.658 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 207, t_last = 71632205042
+2.18.067.554 I slot launch_slot_: id  0 | task 292 | processing task, is_child = 0
+2.21.369.779 I slot print_timing: id  0 | task 292 | prompt eval time =    1737.54 ms /   433 tokens (    4.01 ms per token,   249.20 tokens per second)
+2.21.369.783 I slot print_timing: id  0 | task 292 |        eval time =    1564.67 ms /    77 tokens (   20.59 ms per token,    48.57 tokens per second)
+2.21.369.783 I slot print_timing: id  0 | task 292 |       total time =    3302.20 ms /   510 tokens
+2.21.369.784 I slot print_timing: id  0 | task 292 |    graphs reused =        352
+2.21.369.785 I slot print_timing: id  0 | task 292 |   graph reallocs =         23    /     0        (same size) / (changed size)
+2.21.369.813 I slot      release: id  0 | task 292 | stop processing: n_tokens = 509, truncated = 0
+2.21.369.824 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 509, t_last = 71711195793
+2.21.402.284 I slot launch_slot_: id  0 | task 294 | processing task, is_child = 0
+2.23.587.051 I slot print_timing: id  0 | task 294 | prompt eval time =     107.31 ms /     7 tokens (   15.33 ms per token,    65.23 tokens per second)
+2.23.587.054 I slot print_timing: id  0 | task 294 |        eval time =    2077.43 ms /    89 tokens (   23.61 ms per token,    42.36 tokens per second)
+2.23.587.055 I slot print_timing: id  0 | task 294 |       total time =    2184.74 ms /    96 tokens
+2.23.587.055 I slot print_timing: id  0 | task 294 |    graphs reused =        439
+2.23.587.056 I slot print_timing: id  0 | task 294 |   graph reallocs =         25    /     0        (same size) / (changed size)
+2.23.587.425 I slot      release: id  0 | task 294 | stop processing: n_tokens = 11676, truncated = 0
+Received second interrupt, terminating immediately.
+Received second interrupt, terminating immediately.
+Received second interrupt, terminating immediately.
+Received second interrupt, terminating immediately.
