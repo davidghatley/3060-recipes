@@ -14,7 +14,7 @@ Method from [inference-optimisation-skill](https://github.com/sybil-solutions/in
 ## Model (from the GGUF header)
 
 - 49 layers: 2 dense FFN + 47 MoE. 256 routed experts, top-6, plus 2 shared experts. Hidden 2048, 32 query / 4 KV heads, head dim 128.
-- Attention: 13 full-attention layers; the other 36 use a 513-token sliding window.
+- Attention: 14 full-attention layers; the other 35 use a 513-token sliding window.
 - Tensor bytes: routed experts 19.83 GiB (21.3 GB, Q4_K), shared experts 0.29 GiB (Q8_0), everything else 1.66 GiB.
 
 ## Decode ceiling (single user)
@@ -45,6 +45,6 @@ GPU compute is not the limit: the 3060 has ~50 TFLOPS of fp16 tensor throughput 
 
 ## KV cache
 
-- Full-attention layers: 13 × 2 × 4 heads × 128 × 2 bytes = 26.6 KB/token in f16, so **3.25 GiB at 128k** (q8_0: ~1.7 GiB).
+- Full-attention layers: 14 × 2 × 4 heads × 128 × 2 bytes = 28.7 KB/token in f16, so **3.5 GiB at 128k** (q8_0: ~1.9 GiB).
 - Sliding-window layers hold only window + micro-batch tokens per layer.
 - 262k (the model's native context) in f16 would need ~6.5 GiB, which only fits by moving all experts back to RAM and shrinking `-ub`.

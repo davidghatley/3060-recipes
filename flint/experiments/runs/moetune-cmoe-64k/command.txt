@@ -1,0 +1,1 @@
+bash -c 'sleep 8; exec "$@"' _ /home/davidhatley/anime-pipeline/tools/gpu_run --need 10500 --wait 600 /mnt/scratch/llama.cpp/b12242/bin/llama-b12242/llama-server -m /mnt/models/llm/flint/Flint-Q4_K_M.gguf -ngl 99 -cmoe --fit off -c 65536 -np 1 -t 6 -b 4096 -ub 4096 --load-mode none -fa on -ctk f16 -ctv f16

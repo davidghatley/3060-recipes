@@ -14,7 +14,7 @@ llama-bench numbers are mean ± sd of 3–4 repetitions; server numbers are medi
 |---|---|---|---|---|---|
 | 1 | `-ub` 512 → 1024/2048/4096 (`-b 4096`) | bench pp4096 | 375.4, 375.6 | 635 / 1,048 / **1,546** | **Accept 4096.** Prefill is PCIe-transfer bound; bigger chunks amortize the expert copy. |
 | 2 | `-ub` 4096 → 8192 | bench pp16384 | 1,423 | 1,648 (+16%) | **Reject for now.** Needs ~3 GB more VRAM; does not fit next to 128k f16 KV. |
-| 3 | KV q8_0 → f16 | bench tg128 @ depth 0 / 32k | 50.2/34.0, 50.5/34.1 | 51.5 / **43.9** | **Accept.** +29% decode at 32k. Matches the skill's llama.cpp gotcha: quantized KV is slow on models with few KV layers (Flint: 13 of 49). |
+| 3 | KV q8_0 → f16 | bench tg128 @ depth 0 / 32k | 50.2/34.0, 50.5/34.1 | 51.5 / **43.9** | **Accept.** +29% decode at 32k. Matches the skill's llama.cpp gotcha: quantized KV is slow on models with few KV layers (Flint: 14 of 49). |
 | 4 | `-ncmoe` 47 → 43/39/35 | bench pp4096 / tg128 | 1,570/51.4, 1,569/51.3 | 43: 1,639/53.4 · 39: 1,722/55.4 · 35: 1,816/57.8 | **Accept 43 (server).** ~+4% decode and +5% prefill per 4 layers, ~1.7 GB VRAM each; 128k f16 KV leaves room for 4 layers. |
 | 5 | threads `-t` 4/5/8/12 vs 6 | bench tg128 | 51.5, 51.2 | 48.1 / 50.1 / 51.4 / 48.4 | **Keep 6.** Matches RAM bandwidth saturating at 6 threads (57 GB/s). |
 | 6 | `--poll` 0 / 100 vs 50 | bench tg128 | 51.5 | 51.0 / 51.3 | **Reject.** Noise. |
@@ -33,8 +33,9 @@ Not tried, and why:
 
 ## Status
 
-Best config is now the default in `serve.sh`:
-`-ncmoe 43 -c 131072 -b 4096 -ub 4096 -ctk f16 -ctv f16 --load-mode none --spec-type ngram-map-k -t 6 -fa on`.
+Best config is now the default in `serve.sh` (2026-11-19, `FLINT_PROFILE=128k`):
+`-ncmoe 49 --moe-cache-mib 2944 --moe-cache-cpu-share 0.95 -c 131072 -b 4096 -ub 4096 -ctk f16 -ctv f16 --load-mode none --spec-type ngram-map-k -t 6 -fa on`.
+It decodes 58.8 tok/s (prose), vs 51.9 for the first tuned config, which remains as `FLINT_PROFILE=nocache` (`-ncmoe 43`, no cache). `FLINT_PROFILE=64k` gives 63.4. Evidence: `experiments/RESULTS.md` exp 5 and `experiments/runs/phaseF*.log`.
 
 What limits further gains:
 - Prefill: PCIe transfer of 19.5 GB of experts per 4096-token chunk. Bigger chunks need VRAM held by the 128k KV cache. Gains would need overlapping copy with compute inside llama.cpp, or a smaller quant.

@@ -1,0 +1,10 @@
+0.00.180.640 I srv  llama_server: initializing ...
+0.00.180.650 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.181.005 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.182.478 I srv    load_model: loading model '/mnt/models/llm/flint/Flint-Q4_K_M.gguf'
+0.15.922.191 I cmn          init: llama threadpool init, n_threads = 6
+0.16.069.461 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 131072, kv_unified = 'false'
+0.16.077.375 W srv          init: chat template supports preserving reasoning, it is enabled by default (may use more tokens, disable via --no-reasoning-preserve)
+0.16.077.411 I srv  server_run_i: model loaded
+0.16.077.414 I srv  server_on_li: listening on http://127.0.0.1:8081
+363.26.440.327 I srv    operator(): operator(): cleaning up before exit...

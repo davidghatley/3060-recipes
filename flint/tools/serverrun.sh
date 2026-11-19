@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Start serve.sh with the given env overrides, wait for health, run servertest.py, then stop the server cleanly.
 #   FLINT_CPU_MOE=43 tools/serverrun.sh <label> [servertest args...] [-- extra llama-server args]
+#   FLINT_SERVE=<other serve script> and FLINT_LOGDIR=<dir> are optional overrides.
 set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 label=${1:?label}; shift
@@ -9,8 +10,9 @@ while [ $# -gt 0 ]; do
   if [ "$1" = "--" ]; then shift; sargs=("$@"); break; fi
   targs+=("$1"); shift
 done
-log="$ROOT/runs/server-$label.log"
-setsid "$ROOT/serve.sh" "${sargs[@]}" > "$log" 2>&1 < /dev/null &
+SERVE=${FLINT_SERVE:-$ROOT/serve.sh}
+log="${FLINT_LOGDIR:-$ROOT/runs}/server-$label.log"
+setsid "$SERVE" "${sargs[@]}" > "$log" 2>&1 < /dev/null &
 top=$!
 descendants() { local p; for p in $(pgrep -P "$1"); do echo "$p"; descendants "$p"; done; }
 stop() {

@@ -1,0 +1,75 @@
+diff --git i/ggml/src/ggml-backend.cpp w/ggml/src/ggml-backend.cpp
+index 39556673f..921f9f39b 100644
+--- i/ggml/src/ggml-backend.cpp
++++ w/ggml/src/ggml-backend.cpp
+@@ -2211,6 +2211,16 @@ static int ggml_sched_prof_level() {
+     return level;
+ }
+ 
++// [FLINT-ASYNC] GGML_SCHED_ASYNC=1: copy split inputs between a host (CPU) split and a device split with the
++// device stream's async get/set instead of a blocking copy plus stream synchronizations per input:
++// - inputs of a CPU split computed on a device: queue all reads on the device stream, then synchronize once
++// - inputs of a device split computed on the CPU (host memory): queue the uploads on the device stream, no host wait
++static int ggml_sched_async_level() {
++    static int level = -1;
++    if (level < 0) { const char * e = getenv("GGML_SCHED_ASYNC"); level = e ? atoi(e) : 0; }
++    return level;
++}
++
+ static enum ggml_status ggml_backend_sched_compute_splits(ggml_backend_sched_t sched) {
+     GGML_ASSERT(sched);
+     struct ggml_backend_sched_split * splits = sched->splits;
+@@ -2218,6 +2228,8 @@ static enum ggml_status ggml_backend_sched_compute_splits(ggml_backend_sched_t s
+     int prev_backend_id = -1;
+ 
+     const int prof = ggml_sched_prof_level();
++    const int async_io = ggml_sched_async_level();
++    static ggml_backend_t async_upload_backend = NULL; // device with uploads from host memory still queued
+     static int64_t prof_calls = 0;
+     prof_calls++;
+     const bool prof_detail = prof >= 2 && (prof_calls % 64) == 0;
+@@ -2244,12 +2256,44 @@ static enum ggml_status ggml_backend_sched_compute_splits(ggml_backend_sched_t s
+ 
+         // copy the input tensors to the split backend
+         // the weights in host memory are copied last, so that the copy callback can read the other inputs of the split
++        const bool split_is_host = split_backend_id == sched->n_backends - 1;
++        if (split_is_host && async_upload_backend != NULL) {
++            // host memory read by uploads queued on a device stream may be reused by this split
++            ggml_backend_synchronize(async_upload_backend);
++            async_upload_backend = NULL;
++        }
++        ggml_backend_t async_read_backends[GGML_SCHED_MAX_BACKENDS];
++        int n_async_read = 0;
+         for (int input_id = 0; input_id < split->n_inputs; input_id++) {
+             struct ggml_tensor * input = split->inputs[input_id];
+             if (!ggml_backend_sched_is_host_weight(input) && sched->hv_tensor_requires_copy[hash_id(input)]) {
++                if (async_io && !(input->flags & GGML_TENSOR_FLAG_INPUT) && ggml_is_contiguous(input) &&
++                    sched->events[split_backend_id][sched->cur_copy] == NULL &&
++                    !(split == &sched->splits[sched->prefetch_split] && sched->n_prefetched > 0)) {
++                    ggml_backend_t input_backend = ggml_backend_sched_get_tensor_backend(sched, input);
++                    struct ggml_tensor * input_cpy = tensor_copy(input, split_backend_id, sched->cur_copy);
++                    if (split_is_host && input_backend != split_backend && input_backend->iface.get_tensor_async != NULL &&
++                        input_cpy->buffer != NULL && ggml_backend_buffer_is_host(input_cpy->buffer)) {
++                        ggml_backend_tensor_get_async(input_backend, input, input_cpy->data, 0, ggml_nbytes(input));
++                        bool seen = false;
++                        for (int k = 0; k < n_async_read; k++) { seen = seen || async_read_backends[k] == input_backend; }
++                        if (!seen) { async_read_backends[n_async_read++] = input_backend; }
++                        continue;
++                    }
++                    if (!split_is_host && split_backend->iface.set_tensor_async != NULL &&
++                        input_backend == sched->backends[sched->n_backends - 1] &&
++                        input->buffer != NULL && ggml_backend_buffer_is_host(input->buffer)) {
++                        ggml_backend_tensor_set_async(split_backend, input_cpy, input->data, 0, ggml_nbytes(input));
++                        async_upload_backend = split_backend;
++                        continue;
++                    }
++                }
+                 ggml_backend_sched_copy_input(sched, split, input);
+             }
+         }
++        for (int k = 0; k < n_async_read; k++) {
++            ggml_backend_synchronize(async_read_backends[k]);
++        }
+         // after the copies above, which may read host memory reused by the copies of the next split
+         // before the weights, whose copy callback may queue large uploads
+         ggml_backend_sched_prefetch_inputs(sched, split_id);

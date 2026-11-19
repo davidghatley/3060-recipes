@@ -76,9 +76,10 @@ def main():
     ap.add_argument("--needles", default="")
     ap.add_argument("--skip", default="", help="comma list of cases to skip: cold11k,code,prose")
     ap.add_argument("--code-max", type=int, default=1500, help="max_tokens for the code case (includes reasoning)")
+    ap.add_argument("--ledger", default=os.path.join(ROOT, "runs", "server-ledger.jsonl"))
     a = ap.parse_args()
     skip = set(filter(None, a.skip.split(",")))
-    ledger = open(os.path.join(ROOT, "runs", "server-ledger.jsonl"), "a")
+    ledger = open(a.ledger, "a")
     text = corpus()
     rng = random.Random()
 

@@ -1,0 +1,22 @@
+1/6 1984 MiB, share 0: 39.6 t/s
+2/6 1984 MiB, share 0.5: 49.0 t/s
+3/6 1984 MiB, share 0.95: 54.9 t/s
+4/6 5248 MiB, share 0: 48.9 t/s
+5/6 5248 MiB, share 0.5: 56.4 t/s
+6/6 5248 MiB, share 0.95: 59.9 t/s
+Traceback (most recent call last):
+  File "/mnt/scratch/src/llama.cpp-flint/scripts/moe-cache-tune.py", line 630, in <module>
+    main()
+    ~~~~^^
+  File "/mnt/scratch/src/llama.cpp-flint/scripts/moe-cache-tune.py", line 626, in main
+    tune(cmd, args.out, args.max_mib)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/scratch/src/llama.cpp-flint/scripts/moe-cache-tune.py", line 575, in tune
+    trace = concat_traces([os.path.join(out, f"run-{r['mib']}-{r['share']:g}.trace") for r in runs])
+  File "/mnt/scratch/src/llama.cpp-flint/scripts/moe-cache-tune.py", line 94, in concat_traces
+    traces = [read_trace(p) for p in paths]
+              ~~~~~~~~~~^^^
+  File "/mnt/scratch/src/llama.cpp-flint/scripts/moe-cache-tune.py", line 86, in read_trace
+    il, n_used, n_ids = struct.unpack_from("<3i", data, pos)
+                        ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+struct.error: unpack_from requires a buffer of at least 1744904 bytes for unpacking 12 bytes at offset 1744892 (actual buffer size is 1744896)

@@ -1,0 +1,173 @@
+{
+ "hw": {
+  "gpu": "RTX 3060 12 GB",
+  "cpu": "i5-12500",
+  "ram": "62 GB DDR5",
+  "pcie": "PCIe 4.0 x16",
+  "ram_gbps": 57.0,
+  "vram_total_mib": 12288,
+  "src": "runs/membw.txt, runs/pcie-under-load.txt"
+ },
+ "model": {
+  "name": "Flint",
+  "maker": "Recursive",
+  "quant": "Q4_K_M",
+  "file_gb": 23.4,
+  "total_b": 39.8,
+  "active_b": 2.5,
+  "experts": 256,
+  "top_k": 6,
+  "layers": 49,
+  "full_attn_layers": 14,
+  "experts_gb": 21.3,
+  "src": "GGUF header (flint/THEORY.md), huggingface.co/RecursiveSI/flint"
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "build": "b12242",
+  "commit": "3b4d6ab3f",
+  "patched": false
+ },
+ "ttft": {
+  "old_s": 33.4,
+  "new_s": 6.4,
+  "old_tps": 329,
+  "new_tps": 1708,
+  "old_line": "prompt eval time =   33064.11 ms / 10931 tokens (    3.02 ms per token,   330.60 tokens per second)",
+  "new_line": "prompt eval time =    6284.25 ms / 10929 tokens (    0.58 ms per token,  1739.11 tokens per second)",
+  "prompt_tokens": 10931,
+  "src": "runs/server-ledger.jsonl (old-config, final), runs/server-*.log; cache profile: experiments/runs/phaseF.log (F-c2944-128k-spec cold11k median 1708.4 t/s, TTFT 6.4 s)"
+ },
+ "prefill_steps": [
+  {
+   "label": "-ub 512 (old)",
+   "tps": 375.4
+  },
+  {
+   "label": "-ub 1024",
+   "tps": 635.5
+  },
+  {
+   "label": "-ub 2048",
+   "tps": 1047.9
+  },
+  {
+   "label": "-ub 4096",
+   "tps": 1545.8
+  },
+  {
+   "label": "--load-mode none",
+   "tps": 1948.3
+  }
+ ],
+ "kv": {
+  "q8_32k": 34.0,
+  "f16_32k": 43.9,
+  "q8_0": 50.2,
+  "f16_0": 51.5,
+  "src": "runs/bench-kv-*.jsonl"
+ },
+ "decode": {
+  "old_prose": 48.2,
+  "new_prose": 58.8,
+  "old_code": 46.7,
+  "new_code": 55.0,
+  "spec_best": 72.2,
+  "new_32k": 46.8,
+  "nocache_prose": 51.9,
+  "nocache_code": 50.0,
+  "src": "experiments/RESULTS.md exp 5 (cache 2944 MiB, cpu-share 0.95, all experts on host); runs/phaseF.log (same with ngram spec: prose 58.8, code 55.0, 32k 47.2)"
+ },
+ "needles": {
+  "k60": "3/3",
+  "k120": "3/3",
+  "prompt_120k": 120895,
+  "prefill_120k": 988.8,
+  "vram_mib": 11585,
+  "vram_old_mib": 5849,
+  "src": "experiments/runs/server-ledger.jsonl (E-128k-all-c2944-95-ndl)"
+ },
+ "pcie": {
+  "chunk_gb": 19.5,
+  "trips_512": 22,
+  "trips_4096": 3,
+  "peak_gbps": 14.1,
+  "src": "flint/THEORY.md, runs/bench-ub-big-dmon.txt"
+ },
+ "flags_old": [
+  "-ngl 99 -ncmoe 47 --fit off",
+  "-c 131072 -np 1 -t 6",
+  "-fa on -ctk q8_0 -ctv q8_0",
+  "--jinja --reasoning-format deepseek"
+ ],
+ "flags_new": [
+  "-ngl 99 -cmoe --moe-cache-mib 2944 --moe-cache-cpu-share 0.95 --fit off --spec-type ngram-map-k",
+  "-c 131072 -np 1 -t 6",
+  "-b 4096 -ub 4096 --load-mode none",
+  "-fa on -ctk f16 -ctv f16",
+  "--jinja --reasoning-format deepseek"
+ ],
+ "cache": {
+  "mib": 2944,
+  "cpu_share": 0.95,
+  "hit_rate": 0.447,
+  "tg_gain_pct": 14,
+  "vram_mib": 11609,
+  "curve": [
+   {
+    "mib": 0,
+    "tps": 48.8,
+    "hit": 0
+   },
+   {
+    "mib": 1024,
+    "tps": 54.0,
+    "hit": 25.1
+   },
+   {
+    "mib": 1984,
+    "tps": 56.5,
+    "hit": 34.8
+   },
+   {
+    "mib": 2944,
+    "tps": 58.8,
+    "hit": 44.7
+   }
+  ],
+  "ncmoe43_tps": 51.6,
+  "skew_top25": 58,
+  "src": "experiments/RESULTS.md exp 5 (128k, all experts on host, cpu-share 0.95; steady-state t/s) and exp 4 (routing skew on code: top 25% of experts take 57-59% of picks)"
+ },
+ "depth": {
+  "tuned": [
+   [
+    0,
+    58.8
+   ],
+   [
+    32,
+    46.8
+   ],
+   [
+    60,
+    42.9
+   ],
+   [
+    120,
+    35.9
+   ]
+  ],
+  "stock": [
+   [
+    0,
+    48.2
+   ],
+   [
+    32,
+    34.0
+   ]
+  ],
+  "src": "tuned: exp 5 prose + depth32k; 60k/120k from needle runs E-128k-all-c2944-95-ndl (decode after the prompt). stock: old serve.sh prose and q8_0 KV at 32k (llama-bench)"
+ }
+}

@@ -1,0 +1,35 @@
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+PROF call=1 splits=84 total_us=61765 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=792 comp_us=49520 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=471 comp_us=10968
+PROF call=2 splits=84 total_us=26451 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=744 comp_us=14886 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=477 comp_us=10330
+PROF call=3 splits=84 total_us=20643 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=921 comp_us=9700 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=420 comp_us=9592
+PROF call=4 splits=84 total_us=19082 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=687 comp_us=8556 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=416 comp_us=9410
+PROF call=5 splits=84 total_us=19115 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=696 comp_us=8536 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=417 comp_us=9454
+PROF call=6 splits=84 total_us=19106 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=691 comp_us=8547 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=415 comp_us=9442
+PROF call=7 splits=84 total_us=19173 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=689 comp_us=8554 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=417 comp_us=9509
+PROF call=8 splits=84 total_us=19088 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=686 comp_us=8551 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=413 comp_us=9428
+PROF call=9 splits=84 total_us=19068 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=685 comp_us=8529 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=413 comp_us=9428
+PROF call=10 splits=84 total_us=19085 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=689 comp_us=8547 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=420 comp_us=9414
+PROF call=11 splits=84 total_us=19110 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=691 comp_us=8539 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=415 comp_us=9461
+PROF call=12 splits=84 total_us=19234 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=685 comp_us=8596 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=441 comp_us=9498
+PROF call=13 splits=84 total_us=19140 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=686 comp_us=8569 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=414 comp_us=9462
+PROF call=14 splits=84 total_us=19068 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=687 comp_us=8537 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=415 comp_us=9419
+PROF call=15 splits=84 total_us=19073 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=685 comp_us=8546 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=413 comp_us=9419
+PROF call=16 splits=84 total_us=19220 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=686 comp_us=8529 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=420 comp_us=9576
+PROF call=17 splits=84 total_us=19085 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=684 comp_us=8342 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=413 comp_us=9634
+PROF call=18 splits=84 total_us=20042 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=688 comp_us=8323 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=408 comp_us=10617
+PROF call=19 splits=84 total_us=19349 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=704 comp_us=8329 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=409 comp_us=9894
+PROF call=20 splits=84 total_us=18901 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=672 comp_us=8327 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=408 comp_us=9482
+PROF call=21 splits=84 total_us=19062 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=698 comp_us=8322 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=409 comp_us=9621
+PROF call=22 splits=84 total_us=18834 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=673 comp_us=8311 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=412 comp_us=9430
+PROF call=23 splits=84 total_us=18838 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=678 comp_us=8311 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=404 comp_us=9432
+PROF call=24 splits=84 total_us=20618 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=756 comp_us=8360 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=447 comp_us=11044
+PROF call=25 splits=84 total_us=21804 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=793 comp_us=8397 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=470 comp_us=12127
+PROF call=26 splits=84 total_us=18810 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=673 comp_us=8306 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=409 comp_us=9413
+PROF call=27 splits=84 total_us=18891 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=675 comp_us=8300 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=408 comp_us=9497
+PROF call=28 splits=84 total_us=19186 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=678 comp_us=8317 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=401 comp_us=9776
+PROF call=29 splits=84 total_us=19110 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=701 comp_us=8326 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=410 comp_us=9660
+PROF call=30 splits=84 total_us=18945 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=678 comp_us=8313 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=403 comp_us=9540
+PROF call=31 splits=84 total_us=19564 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=694 comp_us=8337 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=412 comp_us=10110
+PROF call=32 splits=84 total_us=18815 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=676 comp_us=8323 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=396 comp_us=9407
+PROF call=33 splits=84 total_us=18892 | gpu: n=42 nodes=3000 inputs=94 in_bytes=2041864 copy_us=686 comp_us=8304 | cpu: n=42 nodes=576 inputs=82 in_bytes=336856 copy_us=407 comp_us=9486
