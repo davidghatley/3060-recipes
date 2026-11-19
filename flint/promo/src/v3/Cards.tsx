@@ -74,7 +74,7 @@ export const ThreadFlags3: React.FC<{theme?: Theme}> = ({theme = 'light'}) => {
     ['-b 4096 -ub 4096', 'pp 4.1×', `PCIe expert copies ${D.pcie.trips_512} → ${D.pcie.trips_4096} per 11k prompt`],
     ['--load-mode none', 'pp +24%', 'no mmap'],
     ['-ctk f16 -ctv f16', 'tg @ 32k +29%', `${D.model.full_attn_layers}/${D.model.layers} full attn, rest SWA`],
-    ['-cmoe --moe-cache-mib 2944', `tg +${D.cache.tg_gain_pct}%`, 'hot experts cached in VRAM'],
+    ['--moe-cache-mib 2944', `tg +${D.cache.tg_gain_pct}%`, 'hot experts cached in VRAM'],
     ['--spec-type ngram-map-k', `tg ${Math.round(D.decode.new_code)}–${Math.round(D.decode.spec_best)}`, 'code and repetitive output only'],
     ['-t 6', 'kept', `DDR5 read saturates at ${D.hw.ram_gbps} GB/s`],
   ];
