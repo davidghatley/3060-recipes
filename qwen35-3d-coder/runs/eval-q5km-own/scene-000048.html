@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bamboo Box Kite</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #26332d;
+      --glass: rgba(255, 255, 255, 0.68);
+      --line: rgba(38, 51, 45, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #dce8df;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      width: min(360px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--glass);
+      box-shadow: 0 18px 50px rgba(38, 51, 45, 0.13);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.62;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.65rem, 4vw, 2.35rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .description {
+      margin: 10px 0 0;
+      max-width: 310px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      opacity: 0.72;
+    }
+
+    .controls {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--glass);
+      box-shadow: 0 12px 35px rgba(38, 51, 45, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .hint {
+      font-size: 0.76rem;
+      font-weight: 650;
+      white-space: nowrap;
+      opacity: 0.7;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 13px;
+      background: #33453c;
+      color: white;
+      font: inherit;
+      font-size: 0.76rem;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    button:hover {
+      background: #496054;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 620px) {
+      .panel {
+        top: 14px;
+        left: 14px;
+        width: calc(100vw - 28px);
+        padding: 14px 16px;
+      }
+
+      .description {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <section class="panel">
+    <p class="eyebrow">Traditional craft</p>
+    <h1>Bamboo Box Kite</h1>
+    <p class="description">
+      A hand-built box kite with woven bamboo ribs, translucent paper panels,
+      a tapered tail, and a fine flying line.
+    </p>
+  </section>
+
+  <div class="controls">
+    <span class="hint">Drag to orbit · Scroll to zoom</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xdce8df, 18, 58);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xf5fbff,
+      0x6c7054,
+      2.1
+    );
+    scene.add(hemisphere);
+
+    const sunLight = new THREE.DirectionalLight(0xfff1cf, 3.2);
+    sunLight.position.set(-7, 12, 8);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -10;
+    sunLight.shadow.camera.right = 10;
+    sunLight.shadow.camera.top = 12;
+    sunLight.shadow.camera.bottom = -10;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 35;
+    sunLight.shadow.bias = -0.00025;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0xb8d9e8, 0.65);
+    fillLight.position.set(8, 4, -7);
+    scene.add(fillLight);
+
+    // ------------------------------------------------------------
+    // Procedural sky
+    // ------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(55, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x8fc9dd) },
+          horizonColor: { value: new THREE.Color(0xf2e8d2) },
+          lowColor: { value: new THREE.Color(0xc8d7c6) }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          uniform vec3 lowColor;
+          varying vec3 vWorldPosition;
+
+          void main() {
+            float height = normalize(vWorldPosition).y;
+            float upper = smoothstep(-0.08, 0.82, height);
+            float lower = smoothstep(-0.45, 0.08, height);
+            vec3 color = mix(lowColor, horizonColor, lower);
+            color = mix(color, topColor, upper);
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+    scene.add(sky);
+
+    // ------------------------------------------------------------
+    // Materials
+    // ------------------------------------------------------------
+
+    const bambooLight = new THREE.MeshStandardMaterial({
+      color: 0xc99548,
+      roughness: 0.72,
+      metalness: 0
+    });
+
+    const bambooMid = new THREE.MeshStandardMaterial({
+      color: 0xb98238,
+      roughness: 0.78,
+      metalness: 0
+    });
+
+    const bambooNode = new THREE.MeshStandardMaterial({
+      color: 0x795027,
+      roughness: 0.9
+    });
+
+    const paperMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf4ead2,
+      roughness: 0.94,
+      metalness: 0,
+      side: THREE.DoubleSide
+    });
+
+    const stringMaterial = new THREE.LineBasicMaterial({
+      color: 0x493c2d,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    const redAccent = new THREE.MeshStandardMaterial({
+      color: 0xa94732,
+      roughness: 0.85
+    });
+
+    // ------------------------------------------------------------
+    // Small procedural paper texture
+    // ------------------------------------------------------------
+
+    function createPaperTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#f4ead2";
+      context.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 6500; i++) {
+        const value = 180 + Math.random() * 80;
+        const alpha = 0.015 + Math.random() * 0.045;
+        const size = 0.4 + Math.random() * 1.7;
+
+        context.fillStyle = `rgba(${value}, ${value - 8}, ${
+          value - 20
+        }, ${alpha})`;
+
+        context.fillRect(
+          Math.random() * 512,
+          Math.random() * 512,
+          size,
+          size
+        );
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1.4, 1.4);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      return texture;
+    }
+
+    paperMaterial.map = createPaperTexture();
+
+    // ------------------------------------------------------------
+    // Bamboo construction helpers
+    // ------------------------------------------------------------
+
+    const upAxis = new THREE.Vector3(0, 1, 0);
+    const zAxis = new THREE.Vector3(0, 0, 1);
+
+    function cylinderBetween(start, end, radius, material, radialSegments = 10) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        radialSegments,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        upAxis,
+        direction.clone().normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      return mesh;
+    }
+
+    function addBambooRibs(parent, width, height, depth) {
+      const halfWidth = width / 2;
+      const halfDepth = depth / 2;
+      const halfHeight = height / 2;
+
+      const corners = [
+        new THREE.Vector3(-halfWidth, -halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, -halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, -halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, -halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, halfHeight, halfDepth)
+      ];
+
+      // Four vertical corner ribs.
+      for (const corner of corners) {
+        parent.add(
+          cylinderBetween(
+            corner.clone().setY(-halfHeight),
+            corner.clone().setY(halfHeight),
+            0.048,
+            bambooLight
+          )
+        );
+      }
+
+      // Top and bottom perimeter ribs.
+      for (const y of [-halfHeight, halfHeight]) {
+        for (const z of [-halfDepth, halfDepth]) {
+          parent.add(
+            cylinderBetween(
+              new THREE.Vector3(-halfWidth, y, z),
+              new THREE.Vector3(halfWidth, y, z),
+              0.045,
+              bambooMid
+            )
+          );
+        }
+      }
+
+      // Front and back middle ribs.
+      for (const z of [-halfDepth, halfDepth]) {
+        parent.add(
+          cylinderBetween(
+            new THREE.Vector3(-halfWidth, 0, z),
+            new THREE.Vector3(halfWidth, 0, z),
+            0.04,
+            bambooMid
+          )
+        );
+      }
+
+      // Side ribs.
+      for (const x of [-halfWidth, halfWidth]) {
+        for (const y of [-halfHeight, halfHeight, 0]) {
+          parent.add(
+            cylinderBetween(
+              new THREE.Vector3(x, y, -halfDepth),
+              new THREE.Vector3(x, y, halfDepth),
+              0.038,
+              bambooLight
+            )
+          );
+        }
+      }
+
+      // Visible bamboo joints.
+      const jointPositions = [
+        new THREE.Vector3(-halfWidth, -halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, -halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, -halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, -halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, halfHeight, -halfDepth),
+        new THREE.Vector3(halfWidth, halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, halfHeight, halfDepth),
+        new THREE.Vector3(-halfWidth, 0, -halfDepth),
+        new THREE.Vector3(halfWidth, 0, -halfDepth),
+        new THREE.Vector3(-halfWidth, 0, halfDepth),
+        new THREE.Vector3(halfWidth, 0, halfDepth)
+      ];
+
+      for (const position of jointPositions) {
+        const joint = new THREE.Mesh(
+          new THREE.SphereGeometry(0.067, 10, 8),
+          bambooNode
+        );
+        joint.position.copy(position);
+        joint.castShadow = true;
+        parent.add(joint);
+      }
+
+      // Bamboo nodes along the longer ribs.
+      for (const corner of corners) {
+        for (const t of [0.22, 0.44, 0.66, 0.82]) {
+          const point = corner.clone().setY(
+            THREE.MathUtils.lerp(-halfHeight, halfHeight, t)
+          );
+
+          const node = new THREE.Mesh(
+            new THREE.TorusGeometry(0.052, 0.013, 6, 12),
+            bambooNode
+          );
+
+          node.position.copy(point);
+          node.quaternion.setFromUnitVectors(zAxis, corner.clone().normalize());
+          parent.add(node);
+        }
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Kite assembly
+    // ------------------------------------------------------------
+
+    const kite = new THREE.Group();
+    kite.position.set(0, 6.35, 0);
+    scene.add(kite);
+
+    const kiteWidth = 4.6;
+    const kiteHeight = 3.25;
+    const kiteDepth = 1.35;
+
+    addBambooRibs(kite, kiteWidth, kiteHeight, kiteDepth);
+
+    // Four paper panels surrounding the bamboo cage.
+    const frontPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(kiteWidth - 0.13, kiteHeight - 0.13, 0.025),
+      paperMaterial
+    );
+    frontPanel.position.z = kiteDepth / 2 + 0.018;
+    frontPanel.castShadow = true;
+    frontPanel.receiveShadow = true;
+    kite.add(frontPanel);
+
+    const backPanel = frontPanel.clone();
+    backPanel.position.z = -kiteDepth / 2 - 0.018;
+    kite.add(backPanel);
+
+    const leftPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.025, kiteHeight - 0.13, kiteDepth - 0.13),
+      paperMaterial
+    );
+    leftPanel.position.x = -kiteWidth / 2 - 0.018;
+    leftPanel.castShadow = true;
+    leftPanel.receiveShadow = true;
+    kite.add(leftPanel);
+
+    const rightPanel = leftPanel.clone();
+    rightPanel.position.x = kiteWidth / 2 + 0.018;
+    kite.add(rightPanel);
+
+    // Fine corner braces and central string hub.
+    const bracePoints = [
+      new THREE.Vector3(0, 0, kiteDepth / 2 + 0.055),
+      new THREE.Vector3(-kiteWidth / 2 + 0.06, -kiteHeight / 2 + 0.06, kiteDepth / 2 + 0.055),
+      new THREE.Vector3(kiteWidth / 2 - 0.06, -kiteHeight / 2 + 0.06, kiteDepth / 2 + 0.055),
+      new THREE.Vector3(-kiteWidth / 2 + 0.06, kiteHeight / 2 - 0.06, kiteDepth / 2 + 0.055),
+      new THREE.Vector3(kiteWidth / 2 - 0.06, kiteHeight / 2 - 0.06, kiteDepth / 2 + 0.055)
+    ];
+
+    const braceGeometry = new THREE.BufferGeometry().setFromPoints(
+      bracePoints
+    );
+    kite.add(
+      new THREE.Line(
+        braceGeometry,
+        new THREE.LineBasicMaterial({ color: 0x5d4932 })
+      )
+    );
+
+    const hub = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 12, 10),
+      bambooNode
+    );
+    hub.position.set(0, 0, kiteDepth / 2 + 0.07);
+    kite.add(hub);
+
+    // Tapered, slightly fanned tail.
+    const tail = new THREE.Group();
+    tail.position.y = -1.66;
+    kite.add(tail);
+
+    for (let i = 0; i < 3; i++) {
+      const strip = new THREE.Mesh(
+        new THREE.BoxGeometry(0.105, 2.75, 0.025),
+        i === 1 ? bambooMid : bambooLight
+      );
+
+      strip.position.x = (i - 1) * 0.23;
+      strip.rotation.z = (i - 1) * 0.085;
+      strip.castShadow = true;
+      tail.add(strip);
+    }
+
+    // Small red corner tabs.
+    for (const x of [-2.12, 2.12]) {
+      for (const y of [-1.48, 1.48]) {
+        const tab = new THREE.Mesh(
+          new THREE.BoxGeometry(0.18, 0.24, 0.035),
+          redAccent
+        );
+        tab.position.set(x, y, kiteDepth / 2 + 0.055);
+        tab.rotation.z = x < 0 ? -0.25 : 0.25;
+        kite.add(tab);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Flying line and line spool
+    // ------------------------------------------------------------
+
+    const spool = new THREE.Group();
+    spool.position.set(0.72, 0.12, 1.45);
+    scene.add(spool);
+
+    const spoolBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.22, 0.22, 0.62, 28),
+      new THREE.MeshStandardMaterial({
+        color: 0x74502f,
+        roughness: 0.82
+      })
+    );
+    spoolBody.rotation.z = Math.PI / 2;
+    spoolBody.castShadow = true;
+    spool.add(spoolBody);
+
+    for (const x of [-0.32, 0.32]) {
+      const flange = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.27, 0.27, 0.055, 28),
+        bambooMid
+      );
+      flange.rotation.z = Math.PI / 2;
+      flange.position.x = x;
+      flange.castShadow = true;
+      spool.add(flange);
+    }
+
+    const spoolHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.035, 0.55, 12),
+      bambooLight
+    );
+    spoolHandle.rotation.z = Math.PI / 2;
+    spoolHandle.position.x = 0.52;
+    spoolHandle.castShadow = true;
+    spool.add(spoolHandle);
+
+    const stringStart = new THREE.Vector3(0.72, 1.12, 1.45);
+    const stringGeometry = new THREE.BufferGeometry();
+    stringGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute([
+        stringStart.x,
+        stringStart.y,
+        stringStart.z,
+        stringStart.x,
+        stringStart.y,
+        stringStart.z
+      ], 3)
+    );
+
+    const flyingString = new THREE.Line(stringGeometry, stringMaterial);
+    scene.add(flyingString);
+
+    // ------------------------------------------------------------
+    // Ground and environment
+    // ------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      new THREE.MeshStandardMaterial({
+        color: 0x82917a,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -5.05;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const platform = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.7, 2.9, 0.12, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x687663,
+        roughness: 1
+      })
+    );
+    platform.position.set(0.72, -4.99, 1.45);
+    platform.receiveShadow = true;
+    platform.castShadow = true;
+    scene.add(platform);
+
+    const hillMaterial = new THREE.MeshStandardMaterial({
+      color: 0x849888,
+      roughness: 1
+    });
+
+    const hillData = [
+      [-12, -4.75, -20, 7, 2.6, 4],
+      [2, -4.9, -24, 9, 3, 5],
+      [14, -4.8, -21, 7, 2.5, 4],
+      [-20, -5, -13, 6, 2.2, 4]
+    ];
+
+    for (const [x, y, z, sx, sy, sz] of hillData) {
+      const hill = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 24, 14),
+        hillMaterial
+      );
+      hill.position.set(x, y, z);
+      hill.scale.set(sx, sy, sz);
+      hill.receiveShadow = true;
+      scene.add(hill);
+    }
+
+    // Soft clouds.
+    const cloudMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf5f1e5,
+      roughness: 1,
+      transparent: true,
+      opacity: 0.82,
+      depthWrite: false
+    });
+
+    const cloudGroups = [
+      [-9, 10, -18, 1.2],
+      [8, 12, -22, 1.6],
+      [14, 8, -15, 1.0],
+      [-16, 7, -20, 0.8]
+    ];
+
+    for (const [x, y, z, scale] of cloudGroups) {
+      const cloud = new THREE.Group();
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+
+      const pieces = [
+        [-0.7, 0, 0, 0.65],
+        [0, 0.18, 0, 0.85],
+        [0.72, 0, 0.05, 0.62],
+        [0.15, -0.1, 0.12, 0.75]
+      ];
+
+      for (const [px, py, pz, radius] of pieces) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 16, 12),
+          cloudMaterial
+        );
+        puff.position.set(px, py, pz);
+        puff.scale.y = 0.62;
+        cloud.add(puff);
+      }
+
+      scene.add(cloud);
+    }
+
+    // Visible sun disc.
+    const sun = new THREE.Mesh(
+      new THREE.CircleGeometry(1.25, 48),
+      new THREE.MeshBasicMaterial({ color: 0xffe8a5 })
+    );
+    sun.position.set(-13, 13, -25);
+    scene.add(sun);
+
+    // ------------------------------------------------------------
+    // Custom camera controls
+    // ------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(0, 2.7, 0);
+
+    const defaultView = {
+      radius: 11.2,
+      theta: 0.58,
+      phi: 1.13
+    };
+
+    const desired = { ...defaultView };
+    const current = { ...defaultView };
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function updateCamera() {
+      current.radius = THREE.MathUtils.lerp(
+        current.radius,
+        desired.radius,
+        0.08
+      );
+      current.theta = THREE.MathUtils.lerp(
+        current.theta,
+        desired.theta,
+        0.08
+      );
+      current.phi = THREE.MathUtils.lerp(
+        current.phi,
+        desired.phi,
+        0.08
+      );
+
+      const sinPhi = Math.sin(current.phi);
+
+      camera.position.set(
+        cameraTarget.x +
+          current.radius * sinPhi * Math.sin(current.theta),
+        cameraTarget.y + current.radius * Math.cos(current.phi),
+        cameraTarget.z +
+          current.radius * sinPhi * Math.cos(current.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetView() {
+      desired.radius = defaultView.radius;
+      desired.theta = defaultView.theta;
+      desired.phi = defaultView.phi;
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      desired.theta -= deltaX * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.005,
+        0.28,
+        1.48
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          22
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const attachmentPoint = new THREE.Vector3();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+
+      // Gentle airborne motion.
+      kite.rotation.z = Math.sin(elapsed * 0.58) * 0.018;
+      kite.rotation.x = Math.sin(elapsed * 0.43 + 1.1) * 0.012;
+      kite.rotation.y = Math.sin(elapsed * 0.36) * 0.025;
+      kite.position.y = 6.35 + Math.sin(elapsed * 0.78) * 0.055;
+
+      scene.updateMatrixWorld(true);
+      kite.localToWorld(attachmentPoint.set(0, 1.55, 0));
+
+      const positions = stringGeometry.attributes.position;
+      positions.setXYZ(
+        1,
+        attachmentPoint.x,
+        attachmentPoint.y,
+        attachmentPoint.z
+      );
+      positions.needsUpdate = true;
+      stringGeometry.computeBoundingSphere();
+
+      // Keep the sun disc facing the camera.
+      sun.lookAt(camera.position);
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

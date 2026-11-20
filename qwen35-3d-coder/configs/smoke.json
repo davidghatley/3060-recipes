@@ -1,0 +1,177 @@
+{
+ "name": "smoke",
+ "bench": [
+  "decode",
+  "prefill"
+ ],
+ "n_predict": 64,
+ "prompts": 1,
+ "order": [
+  "none",
+  "mtp2",
+  "mtp3",
+  "mtp4",
+  "mtp6",
+  "ngram",
+  "dflash",
+  "d08b",
+  "mtp3ng"
+ ],
+ "configs": {
+  "none": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1"
+   ]
+  },
+  "mtp2": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "2"
+   ]
+  },
+  "mtp3": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "3"
+   ]
+  },
+  "mtp4": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "4"
+   ]
+  },
+  "mtp6": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "6"
+   ]
+  },
+  "ngram": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "ngram-map-k"
+   ]
+  },
+  "dflash": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-dflash",
+    "-md",
+    "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-DFlash-Q8_0.gguf",
+    "-ngld",
+    "99",
+    "--spec-draft-n-max",
+    "15"
+   ]
+  },
+  "d08b": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-simple",
+    "-md",
+    "/mnt/models/llm/qwen3.5-4b-3d-coder/draft/Qwen3.5-0.8B-Q8_0.gguf",
+    "-ngld",
+    "99",
+    "--spec-draft-n-max",
+    "4"
+   ]
+  },
+  "mtp3ng": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp,ngram-map-k",
+    "--spec-draft-n-max",
+    "3"
+   ]
+  }
+ }
+}

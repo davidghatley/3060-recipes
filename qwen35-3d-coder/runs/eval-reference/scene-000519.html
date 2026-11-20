@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banyan Tree — Aerial Root Study</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b8d1c2;
+    }
+
+    #scene,
+    #scene canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #scene canvas {
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 44%, transparent 48%, rgba(12, 28, 20, 0.18) 100%);
+      z-index: 2;
+    }
+
+    .panel {
+      position: fixed;
+      top: 22px;
+      left: 22px;
+      z-index: 5;
+      width: min(350px, calc(100vw - 44px));
+      padding: 18px 19px 16px;
+      color: #f3f5e9;
+      background: rgba(18, 34, 27, 0.78);
+      border: 1px solid rgba(225, 240, 218, 0.18);
+      border-radius: 16px;
+      box-shadow: 0 14px 50px rgba(13, 29, 21, 0.2);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      color: #a9ca92;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(27px, 4vw, 38px);
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: rgba(241, 247, 231, 0.72);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .divider {
+      height: 1px;
+      margin: 15px 0 12px;
+      background: rgba(231, 242, 223, 0.13);
+    }
+
+    .help {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 12px;
+      color: rgba(241, 247, 231, 0.69);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .help span {
+      white-space: nowrap;
+    }
+
+    kbd {
+      padding: 2px 5px;
+      color: #eff6e7;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      font: inherit;
+      font-size: 10px;
+    }
+
+    .reset {
+      position: absolute;
+      right: 14px;
+      bottom: 13px;
+      padding: 6px 9px;
+      color: #e8f0de;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 7px;
+      font: inherit;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .reset:hover {
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    .root-badge {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 5;
+      padding: 11px 14px;
+      color: #eaf2df;
+      background: rgba(23, 40, 30, 0.75);
+      border: 1px solid rgba(225, 240, 218, 0.16);
+      border-radius: 12px;
+      box-shadow: 0 10px 35px rgba(13, 29, 21, 0.16);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      text-align: right;
+      pointer-events: none;
+    }
+
+    .root-badge strong {
+      display: block;
+      color: #b6d598;
+      font-size: 21px;
+      font-weight: 650;
+      line-height: 1;
+    }
+
+    .root-badge span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(239, 246, 231, 0.66);
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: #294534;
+      background: #b8d1c2;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 620px) {
+      .panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 14px 15px 13px;
+      }
+
+      .root-badge {
+        right: 12px;
+        bottom: 12px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .divider {
+        margin-top: 11px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+  <div class="vignette"></div>
+
+  <section class="panel" aria-label="Scene information">
+    <div class="eyebrow">Ficus benghalensis</div>
+    <h1>Banyan Tree</h1>
+    <p class="subtitle">A study of branching form and descending aerial roots</p>
+
+    <div class="divider"></div>
+
+    <div class="help">
+      <span><kbd>Drag</kbd> orbit</span>
+      <span><kbd>Wheel</kbd> zoom</span>
+      <span><kbd>Right-drag</kbd> pan</span>
+      <span><kbd>R</kbd> reset</span>
+    </div>
+
+    <button class="reset" id="reset" type="button">Reset view</button>
+  </section>
+
+  <aside class="root-badge" aria-label="Aerial root statistics">
+    <strong>8</strong>
+    <span>aerial roots · 4 clusters</span>
+  </aside>
+
+  <div id="loading">Growing the banyan…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const sceneHost = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    // ---------------------------------------------------------------------
+    // Renderer, camera, lighting
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional banyan tree with eight aerial root pillars"
+    );
+
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9d1c3);
+    scene.fog = new THREE.Fog(0xb9d1c3, 23, 65);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      140
+    );
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xe7f3ff,
+      0x35452b,
+      1.7
+    );
+    scene.add(hemisphere);
+
+    const sunLight = new THREE.DirectionalLight(0xffeac2, 3.25);
+    sunLight.position.set(11, 18, 9);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -14;
+    sunLight.shadow.camera.right = 14;
+    sunLight.shadow.camera.top = 15;
+    sunLight.shadow.camera.bottom = -12;
+    sunLight.shadow.camera.near = 1;
+    sunLight.shadow.camera.far = 48;
+    sunLight.shadow.bias = -0.00025;
+    sunLight.shadow.normalBias = 0.035;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0x9bc4c4, 1.05);
+    fillLight.position.set(-10, 8, -12);
+    scene.add(fillLight);
+
+    // ---------------------------------------------------------------------
+    // Deterministic random utility
+    // ---------------------------------------------------------------------
+
+    function mulberry32(seed) {
+      return function () {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    const random = mulberry32(73921);
+    const V3 = THREE.Vector3;
+    const UP = new V3(0, 1, 0);
+    const RIGHT = new V3(1, 0, 0);
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function piecewise(stops) {
+      return function (t) {
+        for (let i = 1; i < stops.length; i++) {
+          if (t <= stops[i][0]) {
+            const [t0, v0] = stops[i - 1];
+            const [t1, v1] = stops[i];
+            const f = (t - t0) / (t1 - t0);
+            return THREE.MathUtils.lerp(v0, v1, clamp(f, 0, 1));
+          }
+        }
+        return stops[stops.length - 1][1];
+      };
+    }
+
+    // ---------------------------------------------------------------------
+    // Gradient sky and atmospheric sun
+    // ---------------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(95, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        toneMapped: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x75a9bd) },
+          horizonColor: { value: new THREE.Color(0xc6dac6) },
+          bottomColor: { value: new THREE.Color(0x71866c) }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          uniform vec3 bottomColor;
+          varying vec3 vWorldPosition;
+
+          void main() {
+            float h = normalize(vWorldPosition).y;
+            vec3 upper = mix(horizonColor, topColor, smoothstep(0.0, 0.85, h));
+            vec3 color = mix(bottomColor, upper, smoothstep(-0.45, 0.05, h));
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+
+    sky.frustumCulled = false;
+    sky.renderOrder = -100;
+    scene.add(sky);
+
+    function createSunTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(64, 64, 2, 64, 64, 64);
+      gradient.addColorStop(0, "rgba(255,247,207,1)");
+      gradient.addColorStop(0.18, "rgba(255,231,164,0.95)");
+      gradient.addColorStop(0.48, "rgba(255,218,139,0.28)");
+      gradient.addColorStop(1, "rgba(255,218,139,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const sun = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createSunTexture(),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        fog: false
+      })
+    );
+
+    sun.position.set(-24, 20, -34);
+    sun.scale.set(13, 13, 1);
+    scene.add(sun);
+
+    // ---------------------------------------------------------------------
+    // Ground texture and terrain
+    // ---------------------------------------------------------------------
+
+    function createGroundTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#526b3d";
+      context.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 9000; i++) {
+        const x = Math.floor(random() * 256);
+        const y = Math.floor(random() * 256);
+        const light = random() > 0.52;
+        const alpha = 0.035 + random() * 0.09;
+        const size = 1 + Math.floor(random() * 3);
+
+        context.fillStyle = light
+          ? `rgba(151,169,102,${alpha})`
+          : `rgba(28,48,28,${alpha})`;
+
+        context.fillRect(x, y, size, size);
+      }
+
+      for (let i = 0; i < 45; i++) {
+        const x = random() * 256;
+        const y = random() * 256;
+        const radius = 5 + random() * 18;
+
+        const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, "rgba(33,57,30,0.11)");
+        gradient.addColorStop(1, "rgba(33,57,30,0)");
+
+        context.fillStyle = gradient;
+        context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(15, 15);
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      return texture;
+    }
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(52, 128),
+      new THREE.MeshStandardMaterial({
+        color: 0x70805a,
+        map: createGroundTexture(),
+        roughness: 1,
+        metalness: 0
+      })
+    );
+
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.035;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ---------------------------------------------------------------------
+    // Variable-radius organic tube geometry
+    // ---------------------------------------------------------------------
+
+    function createTaperedTube(
+      points,
+      radiusAt,
+      {
+        tubularSegments = 44,
+        radialSegments = 10,
+        radialJitter = 0.045
+      } = {}
+    ) {
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "catmullrom",
+        0.32
+      );
+
+      const positions = [];
+      const colors = [];
+      const indices = [];
+
+      let previousNormal = null;
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        const center = curve.getPointAt(t);
+        const tangent = curve.getTangentAt(t).normalize();
+
+        let normal;
+
+        if (!previousNormal) {
+          const reference = Math.abs(tangent.dot(UP)) < 0.92 ? UP : RIGHT;
+          normal = new V3().crossVectors(tangent, reference).normalize();
+        } else {
+          normal = previousNormal.clone();
+          normal.addScaledVector(tangent, -normal.dot(tangent));
+
+          if (normal.lengthSq() < 0.000001) {
+            const reference = Math.abs(tangent.dot(UP)) < 0.92 ? UP : RIGHT;
+            normal.crossVectors(tangent, reference);
+          }
+
+          normal.normalize();
+        }
+
+        const binormal = new V3()
+          .crossVectors(tangent, normal)
+          .normalize();
+
+        previousNormal = normal.clone();
+
+        const baseRadius = radiusAt(t);
+
+        for (let j = 0; j < radialSegments; j++) {
+          const angle = (j / radialSegments) * Math.PI * 2;
+          const irregularity =
+            1 +
+            radialJitter *
+              (
+                Math.sin(angle * 3.0 + t * 18.0) +
+                0.42 * Math.sin(angle * 7.0 - t * 13.0)
+              );
+
+          const radius = baseRadius * irregularity;
+
+          const radial = new V3()
+            .copy(normal)
+            .multiplyScalar(Math.cos(angle))
+            .addScaledVector(binormal, Math.sin(angle));
+
+          const vertex = center.clone().addScaledVector(radial, radius);
+          positions.push(vertex.x, vertex.y, vertex.z);
+
+          const shade = clamp(
+            0.84 +
+            0.11 * Math.sin(t * 29 + angle * 2.1) +
+            0.045 * Math.sin(angle * 5 - t * 19),
+            0.62,
+            1.06
+          );
+
+          colors.push(shade, shade * 0.98, shade * 0.92);
+        }
+      }
+
+      for (let i = 0; i < tubularSegments; i++) {
+        for (let j = 0; j < radialSegments; j++) {
+          const a = i * radialSegments + j;
+          const b = i * radialSegments + (j + 1) % radialSegments;
+          const c = (i + 1) * radialSegments + (j + 1) % radialSegments;
+          const d = (i + 1) * radialSegments + j;
+
+          indices.push(a, b, d, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(colors, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      geometry.computeBoundingSphere();
+
+      return geometry;
+    }
+
+    const barkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6a492f,
+      roughness: 0.96,
+      metalness: 0,
+      vertexColors: true
+    });
+
+    const rootMaterial = new THREE.MeshStandardMaterial({
+      color: 0x7a6248,
+      roughness: 0.93,
+      metalness: 0,
+      vertexColors: true
+    });
+
+    const branchMaterial = new THREE.MeshStandardMaterial({
+      color: 0x64452f,
+      roughness: 0.94,
+      metalness: 0,
+      vertexColors: true
+    });
+
+    function addTube(
+      points,
+      radiusAt,
+      material,
+      options = {},
+      name = "Organic tube"
+    ) {
+      const mesh = new THREE.Mesh(
+        createTaperedTube(points, radiusAt, options),
+        material
+      );
+
+      mesh.name = name;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      return mesh;
+    }
+
+    // ---------------------------------------------------------------------
+    // Central trunk
+    // ---------------------------------------------------------------------
+
+    const trunkRadius = piecewise([
+      [0.00, 1.28],
+      [0.16, 1.05],
+      [0.38, 0.83],
+      [0.64, 0.59],
+      [0.84, 0.40],
+      [1.00, 0.24]
+    ]);
+
+    addTube(
+      [
+        new V3(-0.12, 0.02, 0.05),
+        new V3(0.10, 1.25, -0.03),
+        new V3(-0.18, 2.75, 0.12),
+        new V3(0.24, 4.30, -0.08),
+        new V3(0.00, 5.85, 0.05),
+        new V3(0.10, 7.45, 0.00)
+      ],
+      trunkRadius,
+      barkMaterial,
+      {
+        tubularSegments: 58,
+        radialSegments: 13,
+        radialJitter: 0.065
+      },
+      "Central trunk"
+    );
+
+    // Heavy buttress roots radiating from the trunk base.
+    const buttressRadius = piecewise([
+      [0.00, 0.58],
+      [0.25, 0.49],
+      [0.56, 0.29],
+      [0.82, 0.14],
+      [1.00, 0.035]
+    ]);
+
+    for (let i = 0; i < 9; i++) {
+      const angle = (i / 9) * Math.PI * 2 + (random() - 0.5) * 0.18;
+      const length = 3.8 + random() * 1.45;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+
+      addTube(
+        [
+          new V3(cos * 0.28, 1.58, sin * 0.28),
+          new V3(cos * 0.95, 0.93, sin * 0.95),
+          new V3(cos * length * 0.48, 0.36, sin * length * 0.48),
+          new V3(cos * length, 0.055, sin * length)
+        ],
+        buttressRadius,
+        barkMaterial,
+        {
+          tubularSegments: 38,
+          radialSegments: 11,
+          radialJitter: 0.085
+        },
+        `Buttress root ${i + 1}`
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Horizontal branches supporting the canopy
+    // ---------------------------------------------------------------------
+
+    const branchSpecs = [
+      {
+        points: [
+          [0.10, 6.20, 0.00],
+          [1.30, 7.05, 0.35],
+          [2.55, 7.45, 0.45],
+          [4.40, 7.15, 2.90]
+        ],
+        radius: 0.44
+      },
+      {
+        points: [
+          [-0.10, 6.45, 0.00],
+          [-1.50, 7.20, -0.65],
+          [-2.85, 7.60, -1.00],
+          [-4.20, 7.00, -3.20]
+        ],
+        radius: 0.43
+      },
+      {
+        points: [
+          [0.10, 6.45, 0.00],
+          [0.20, 7.40, 1.45],
+          [0.10, 7.10, 2.65],
+          [0.00, 7.30, 4.60]
+        ],
+        radius: 0.42
+      },
+      {
+        points: [
+          [-0.10, 6.00, 0.00],
+          [-0.10, 6.80, -1.80],
+          [-0.30, 6.40, -3.10],
+          [-1.70, 6.70, -4.70]
+        ],
+        radius: 0.40
+      },
+      {
+        points: [
+          [0.10, 5.80, 0.00],
+          [2.10, 6.90, -1.20],
+          [4.20, 6.70, -2.50]
+        ],
+        radius: 0.35
+      },
+      {
+        points: [
+          [0.10, 5.70, 0.00],
+          [2.20, 6.40, 2.10],
+          [4.80, 6.30, 1.40]
+        ],
+        radius: 0.34
+      }
+    ];
+
+    branchSpecs.forEach((spec, index) => {
+      addTube(
+        spec.points.map((point) => new V3(...point)),
+        (t) => spec.radius * (1 - t) + 0.055 * t,
+        branchMaterial,
+        {
+          tubularSegments: 42,
+          radialSegments: 10,
+          radialJitter: 0.055
+        },
+        `Horizontal branch ${index + 1}`
+      );
+    });
+
+    // Smaller forks, visible between the leaf masses.
+    const twigSpecs = [
+      [[4.40, 7.15, 2.90], [4.75, 7.85, 3.05], [5.10, 8.35, 3.20]],
+      [[-4.20, 7.00, -3.20], [-4.60, 7.65, -3.45], [-4.95, 8.15, -3.65]],
+      [[0.00, 7.30, 4.60], [0.15, 7.95, 4.95], [0.00, 8.45, 5.25]],
+      [[-1.70, 6.70, -4.70], [-2.05, 7.25, -4.95], [-2.25, 7.80, -5.10]],
+      [[4.20, 6.70, -2.50], [4.60, 7.15, -2.80], [5.00, 7.55, -2.95]],
+      [[4.80, 6.30, 1.40], [5.05, 6.85, 1.55], [5.40, 7.25, 1.70]]
+    ];
+
+    twigSpecs.forEach((points, index) => {
+      addTube(
+        points.map((point) => new V3(...point)),
+        piecewise([
+          [0, 0.13],
+          [0.55, 0.08],
+          [1, 0.025]
+        ]),
+        branchMaterial,
+        {
+          tubularSegments: 22,
+          radialSegments: 8,
+          radialJitter: 0.04
+        },
+        `Twig ${index + 1}`
+      );
+    });
+
+    // ---------------------------------------------------------------------
+    // Exactly eight descending aerial-root pillars
+    // ---------------------------------------------------------------------
+
+    const aerialRootDefinitions = [
+      {
+        attach: [1.30, 7.05, 0.35],
+        end: [2.30, 0.065, 1.25],
+        bend: 0.20
+      },
+      {
+        attach: [2.55, 7.45, 0.45],
+        end: [3.35, 0.065, 2.15],
+        bend: -0.16
+      },
+      {
+        attach: [-1.50, 7.20, -0.65],
+        end: [-2.45, 0.065, -2.00],
+        bend: -0.21
+      },
+      {
+        attach: [-2.85, 7.60, -1.00],
+        end: [-3.65, 0.065, -2.75],
+        bend: 0.17
+      },
+      {
+        attach: [0.20, 7.40, 1.45],
+        end: [0.85, 0.065, 3.00],
+        bend: 0.18
+      },
+      {
+        attach: [0.10, 7.10, 2.65],
+        end: [-0.05, 0.065, 4.10],
+        bend: -0.15
+      },
+      {
+        attach: [-0.10, 6.80, -1.80],
+        end: [-0.80, 0.065, -3.20],
+        bend: 0.19
+      },
+      {
+        attach: [-0.30, 6.40, -3.10],
+        end: [-1.55, 0.065, -4.30],
+        bend: -0.18
+      }
+    ];
+
+    const aerialRootMeshes = [];
+    const aerialRootBases = [];
+
+    const aerialRootRadius = piecewise([
+      [0.00, 0.085],
+      [0.13, 0.105],
+      [0.36, 0.125],
+      [0.62, 0.160],
+      [0.82, 0.235],
+      [1.00, 0.385]
+    ]);
+
+    aerialRootDefinitions.forEach((definition, index) => {
+      const start = new V3(...definition.attach);
+      const end = new V3(...definition.end);
+      const delta = end.clone().sub(start);
+
+      const horizontal = new V3(delta.x, 0, delta.z);
+      const perpendicular = new V3(-horizontal.z, 0, horizontal.x).normalize();
+
+      const p1 = start.clone().lerp(end, 0.07);
+      p1.y = start.y - 1.05;
+
+      const p2 = start.clone().lerp(end, 0.22);
+      p2.addScaledVector(perpendicular, definition.bend * 0.35);
+      p2.y = start.y - 2.35;
+
+      const p3 = start.clone().lerp(end, 0.47);
+      p3.addScaledVector(perpendicular, definition.bend);
+      p3.y = start.y - 4.25;
+
+      const p4 = start.clone().lerp(end, 0.77);
+      p4.addScaledVector(perpendicular, definition.bend * 0.45);
+      p4.y = 0.95;
+
+      const mesh = addTube(
+        [start, p1, p2, p3, p4, end],
+        aerialRootRadius,
+        rootMaterial,
+        {
+          tubularSegments: 58,
+          radialSegments: 11,
+          radialJitter: 0.075
+        },
+        `Aerial root ${index + 1}`
+      );
+
+      mesh.userData.isAerialRoot = true;
+      aerialRootMeshes.push(mesh);
+      aerialRootBases.push(end.clone());
+    });
+
+    scene.userData.aerialRootCount = aerialRootMeshes.length;
+
+    // ---------------------------------------------------------------------
+    // Four grounded pillar clusters
+    //
+    // The vertical pillars remain the eight aerial roots above. These
+    // additional low tubes are surface runners joining and spreading from
+    // the rooted bases, making the bases read as clustered root systems.
+    // ---------------------------------------------------------------------
+
+    const collarGeometry = new THREE.DodecahedronGeometry(1, 1);
+
+    aerialRootBases.forEach((base, index) => {
+      const collar = new THREE.Mesh(
+        collarGeometry,
+        barkMaterial
+      );
+
+      collar.position.copy(base);
+      collar.position.y = 0.055;
+      collar.scale.set(0.43, 0.18, 0.43);
+      collar.rotation.set(random(), random(), random());
+      collar.castShadow = true;
+      collar.receiveShadow = true;
+      scene.add(collar);
+
+      const baseAngle = Math.atan2(base.z, base.x);
+
+      for (let runner = 0; runner < 3; runner++) {
+        const angle =
+          baseAngle +
+          (runner - 1) * 1.23 +
+          (random() - 0.5) * 0.30;
+
+        const length = 1.35 + random() * 1.05;
+        const direction = new V3(
+          Math.cos(angle),
+          0,
+          Math.sin(angle)
+        );
+
+        const p0 = base.clone();
+        p0.y = 0.08;
+
+        const p1 = base.clone().addScaledVector(direction, 0.55);
+        p1.y = 0.10;
+
+        const p2 = base.clone().addScaledVector(direction, length * 0.78);
+        p2.y = 0.045;
+
+        const p3 = base.clone().addScaledVector(direction, length);
+        p3.y = 0.012;
+
+        addTube(
+          [p0, p1, p2, p3],
+          piecewise([
+            [0.00, 0.17],
+            [0.28, 0.135],
+            [0.68, 0.070],
+            [1.00, 0.012]
+          ]),
+          barkMaterial,
+          {
+            tubularSegments: 28,
+            radialSegments: 9,
+            radialJitter: 0.065
+          },
+          `Surface runner ${index + 1}.${runner + 1}`
+        );
+      }
+    });
+
+    // Low joining roots connect each pair of pillars in a cluster.
+    for (let cluster = 0; cluster < 4; cluster++) {
+      const a = aerialRootBases[cluster * 2];
+      const b = aerialRootBases[cluster * 2 + 1];
+      const middle = a.clone().lerp(b, 0.5);
+      middle.y = 0.115;
+
+      addTube(
+        [a.clone(), middle, b.clone()],
+        piecewise([
+          [0.00, 0.16],
+          [0.50, 0.13],
+          [1.00, 0.16]
+        ]),
+        barkMaterial,
+        {
+          tubularSegments: 26,
+          radialSegments: 9,
+          radialJitter: 0.07
+        },
+        `Cluster join ${cluster + 1}`
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Broad, irregular banyan canopy
+    // ---------------------------------------------------------------------
+
+    function createBlobGeometry(seed) {
+      const geometry = new THREE.IcosahedronGeometry(1, 2);
+      const positions = geometry.attributes.position;
+      const localRandom = mulberry32(seed);
+
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+
+        const factor =
+          0.91 +
+          localRandom() * 0.16 +
+          0.035 * Math.sin(x * 5.1 + y * 3.7 + z * 4.4);
+
+        positions.setXYZ(i, x * factor, y * factor, z * factor);
+      }
+
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const blobGeometries = Array.from(
+      { length: 5 },
+      (_, index) => createBlobGeometry(1400 + index * 97)
+    );
+
+    const foliageMaterials = [
+      0x315d2b,
+      0x3e6b2f,
+      0x4b7833,
+      0x2e5427,
+      0x577f38
+    ].map(
+      (color) =>
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.95,
+          metalness: 0
+        })
+    );
+
+    const canopyGroup = new THREE.Group();
+    canopyGroup.name = "Banyan canopy";
+    scene.add(canopyGroup);
+
+    const canopyClumps = [
+      [ 0.00, 8.85,  0.00, 2.25, 1.45, 2.00],
+      [ 1.25, 8.65,  0.35, 1.75, 1.20, 1.55],
+      [ 2.70, 8.80,  0.80, 1.80, 1.18, 1.60],
+      [ 3.95, 8.20,  1.75, 1.60, 1.05, 1.40],
+      [ 4.50, 7.80,  2.80, 1.35, 0.95, 1.20],
+      [ 2.45, 8.45,  2.15, 1.50, 1.00, 1.30],
+
+      [-1.15, 8.75, -0.35, 1.80, 1.20, 1.60],
+      [-2.60, 8.65, -0.95, 1.75, 1.15, 1.55],
+      [-3.95, 8.25, -1.75, 1.60, 1.00, 1.35],
+      [-4.50, 7.80, -3.00, 1.35, 0.95, 1.15],
+      [-2.55, 8.45, -2.25, 1.45, 1.00, 1.25],
+
+      [ 0.00, 8.85,  1.40, 1.55, 1.15, 1.45],
+      [ 0.20, 8.60,  2.70, 1.60, 1.05, 1.40],
+      [ 0.00, 8.25,  4.00, 1.45, 0.95, 1.25],
+      [-0.50, 8.00,  4.85, 1.05, 0.80, 0.90],
+
+      [ 0.00, 8.55, -1.40, 1.55, 1.10, 1.40],
+      [-0.20, 8.25, -2.75, 1.50, 1.00, 1.35],
+      [-0.70, 8.00, -4.00, 1.35, 0.90, 1.15],
+      [-1.55, 7.80, -4.90, 1.05, 0.80, 0.90],
+
+      [ 1.70, 7.95, -1.30, 1.50, 1.00, 1.35],
+      [ 3.05, 7.80, -2.05, 1.45, 0.95, 1.25],
+      [ 4.55, 7.20, -2.70, 1.25, 0.85, 1.05],
+
+      [ 1.75, 7.65,  1.75, 1.40, 0.95, 1.25],
+      [ 3.05, 7.45,  2.35, 1.40, 0.90, 1.20],
+      [ 4.70, 7.10,  1.55, 1.25, 0.85, 1.10],
+
+      [ 0.80, 8.35, -0.85, 1.40, 1.10, 1.35],
+      [-0.85, 8.30,  0.80, 1.35, 1.05, 1.30]
+    ];
+
+    const canopyMeshes = [];
+
+    canopyClumps.forEach((clump, index) => {
+      const [x, y, z, sx, sy, sz] = clump;
+
+      const mesh = new THREE.Mesh(
+        blobGeometries[index % blobGeometries.length],
+        foliageMaterials[index % foliageMaterials.length]
+      );
+
+      mesh.position.set(x, y, z);
+      mesh.scale.set(sx, sy, sz);
+      mesh.rotation.set(
+        random() * 0.45,
+        random() * Math.PI * 2,
+        random() * 0.32
+      );
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      canopyGroup.add(mesh);
+      canopyMeshes.push(mesh);
+    });
+
+    // Small individual leaves add a softer, more botanical canopy edge.
+    const leafGeometry = new THREE.CircleGeometry(0.12, 5);
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.95,
+      metalness: 0,
+      side: THREE.DoubleSide
+    });
+
+    const leavesPerClump = 15;
+    const leafCount = canopyClumps.length * leavesPerClump;
+    const leafInstances = new THREE.InstancedMesh(
+      leafGeometry,
+      leafMaterial,
+      leafCount
+    );
+
+    const leafColors = [
+      new THREE.Color(0x6f963d),
+      new THREE.Color(0x5f8736),
+      new THREE.Color(0x7ba247),
+      new THREE.Color(0x4f772f)
+    ];
+
+    const dummy = new THREE.Object3D();
+    let leafIndex = 0;
+
+    canopyClumps.forEach((clump) => {
+      const [x, y, z, sx, sy, sz] = clump;
+
+      for (let i = 0; i < leavesPerClump; i++) {
+        const theta = random() * Math.PI * 2;
+        const vertical = random() * 2 - 1;
+        const radial = Math.sqrt(1 - vertical * vertical);
+        const surface = 0.83 + random() * 0.23;
+
+        dummy.position.set(
+          x + Math.cos(theta) * radial * sx * surface,
+          y + vertical * sy * surface,
+          z + Math.sin(theta) * radial * sz * surface
+        );
+
+        dummy.rotation.set(
+          random() * Math.PI,
+          random() * Math.PI,
+          random() * Math.PI
+        );
+
+        const leafScale = 0.60 + random() * 0.95;
+        dummy.scale.set(
+          leafScale * (0.75 + random() * 0.45),
+          leafScale,
+          leafScale
+        );
+
+        dummy.updateMatrix();
+        leafInstances.setMatrixAt(leafIndex, dummy.matrix);
+        leafInstances.setColorAt(
+          leafIndex,
+          leafColors[Math.floor(random() * leafColors.length)]
+        );
+
+        leafIndex++;
+      }
+    });
+
+    leafInstances.instanceMatrix.needsUpdate = true;
+    if (leafInstances.instanceColor) {
+      leafInstances.instanceColor.needsUpdate = true;
+    }
+
+    leafInstances.receiveShadow = true;
+    canopyGroup.add(leafInstances);
+
+    // ---------------------------------------------------------------------
+    // Scattered stones around the tree
+    // ---------------------------------------------------------------------
+
+    const rockGeometry = new THREE.DodecahedronGeometry(1, 0);
+    const rockMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0x68705c, roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: 0x777764, roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: 0x56634e, roughness: 1 })
+    ];
+
+    for (let i = 0; i < 30; i++) {
+      const angle = random() * Math.PI * 2;
+      const radius = 7.2 + random() * 12.5;
+      const size = 0.10 + random() * 0.27;
+
+      const rock = new THREE.Mesh(
+        rockGeometry,
+        rockMaterials[i % rockMaterials.length]
+      );
+
+      rock.position.set(
+        Math.cos(angle) * radius,
+        size * 0.32,
+        Math.sin(angle) * radius
+      );
+
+      rock.scale.set(
+        size * (0.8 + random() * 0.8),
+        size * (0.45 + random() * 0.35),
+        size * (0.8 + random() * 0.8)
+      );
+
+      rock.rotation.set(random(), random() * Math.PI, random());
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // ---------------------------------------------------------------------
+    // Directly implemented camera controls
+    // ---------------------------------------------------------------------
+
+    const defaultView = {
+      theta: 0.72,
+      phi: 1.13,
+      radius: 19
+    };
+
+    const desired = { ...defaultView };
+    const current = { ...defaultView };
+
+    const target = new V3(0, 4.15, 0);
+    const desiredTarget = target.clone();
+
+    const pointers = new Map();
+    let dragMode = null;
+    let lastX = 0;
+    let lastY = 0;
+    let pinchStartDistance = 0;
+    let pinchStartRadius = desired.radius;
+    let lastInteraction = performance.now();
+
+    function resetView() {
+      desired.theta = defaultView.theta;
+      desired.phi = defaultView.phi;
+      desired.radius = defaultView.radius;
+      desiredTarget.set(0, 4.15, 0);
+      lastInteraction = performance.now();
+    }
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") {
+        resetView();
+      }
+    });
+
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      lastInteraction = performance.now();
+
+      if (pointers.size === 1) {
+        dragMode = event.button === 2 ? "pan" : "orbit";
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        dragMode = "pinch";
+        const values = [...pointers.values()];
+        pinchStartDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+        pinchStartRadius = desired.radius;
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) {
+        return;
+      }
+
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      lastInteraction = performance.now();
+
+      if (dragMode === "pinch" && pointers.size >= 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (pinchStartDistance > 0 && distance > 0) {
+          desired.radius = clamp(
+            pinchStartRadius * pinchStartDistance / distance,
+            8,
+            34
+          );
+        }
+
+        return;
+      }
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      if (dragMode === "orbit") {
+        desired.theta -= dx * 0.0052;
+        desired.phi = clamp(desired.phi - dy * 0.0046, 0.25, 1.47);
+      } else if (dragMode === "pan") {
+        camera.updateMatrixWorld();
+
+        const right = new V3().setFromMatrixColumn(camera.matrix, 0);
+        const up = new V3().setFromMatrixColumn(camera.matrix, 1);
+        const panScale = desired.radius * 0.00125;
+
+        desiredTarget.addScaledVector(right, -dx * panScale);
+        desiredTarget.addScaledVector(up, dy * panScale);
+        desiredTarget.x = clamp(desiredTarget.x, -8, 8);
+        desiredTarget.y = clamp(desiredTarget.y, 1.5, 8);
+        desiredTarget.z = clamp(desiredTarget.z, -8, 8);
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 0) {
+        dragMode = null;
+      } else if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        dragMode = "orbit";
+        lastX = remaining.x;
+        lastY = remaining.y;
+      }
+
+      lastInteraction = performance.now();
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          8,
+          34
+        );
+        lastInteraction = performance.now();
+      },
+      { passive: false }
+    );
+
+    // ---------------------------------------------------------------------
+    // Resize and render loop
+    // ---------------------------------------------------------------------
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    const spherical = new THREE.Spherical();
+    const cameraOffset = new V3();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      if (!dragMode && now - lastInteraction > 6500) {
+        desired.theta += 0.00045;
+      }
+
+      current.theta += (desired.theta - current.theta) * 0.085;
+      current.phi += (desired.phi - current.phi) * 0.085;
+      current.radius += (desired.radius - current.radius) * 0.09;
+
+      target.lerp(desiredTarget, 0.1);
+
+      spherical.set(current.radius, current.phi, current.theta);
+      cameraOffset.setFromSpherical(spherical);
+
+      camera.position.copy(target).add(cameraOffset);
+      camera.lookAt(target);
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.render(scene, camera);
+    loading.classList.add("hidden");
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

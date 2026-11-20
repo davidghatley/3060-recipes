@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coastal Buoy Tender</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #9bc8d7;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: #efffff;
+      text-shadow: 0 2px 12px rgba(0, 20, 30, 0.35);
+    }
+
+    .title-card {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: min(390px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      background: linear-gradient(
+        135deg,
+        rgba(5, 28, 38, 0.82),
+        rgba(10, 48, 61, 0.55)
+      );
+      box-shadow: 0 16px 40px rgba(0, 18, 27, 0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #83d7e8;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 750;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: rgba(235, 255, 255, 0.72);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .status {
+      padding: 6px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .status::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #72e6a4;
+      box-shadow: 0 0 8px #72e6a4;
+    }
+
+    .controls {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      background: rgba(5, 27, 37, 0.72);
+      color: #f0fdff;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(18, 65, 79, 0.9);
+      transform: translateY(-1px);
+    }
+
+    button.active {
+      border-color: rgba(131, 215, 232, 0.55);
+      color: #a8f1ff;
+    }
+
+    .hint {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: rgba(5, 27, 37, 0.55);
+      color: rgba(238, 255, 255, 0.75);
+      font-size: 11px;
+      backdrop-filter: blur(8px);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 10;
+      background: #102c38;
+      color: #d9f6ff;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        width: calc(100vw - 28px);
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">Preparing coastal scene…</div>
+
+  <div class="hud">
+    <section class="title-card">
+      <div class="eyebrow">Coastal Operations Unit</div>
+      <h1>Buoy Tender 07</h1>
+      <p class="subtitle">
+        Working deck, stern crane, navigation equipment, and a live coastal environment.
+      </p>
+      <div class="status-row">
+        <span class="status">Crane ready</span>
+        <span class="status">Deck secured</span>
+        <span class="status">Navigation nominal</span>
+      </div>
+    </section>
+
+    <div class="hint">
+      Drag to orbit · Wheel to zoom · Right-drag to pan · Double-click to reset
+    </div>
+
+    <div class="controls">
+      <button id="reset">Reset view</button>
+      <button id="topView">Top view</button>
+      <button id="orbit">Auto orbit</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xa8c8d4, 28, 105);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      220
+    );
+
+    const hemi = new THREE.HemisphereLight(0xdaf4ff, 0x17333b, 2.1);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff0cf, 3.2);
+    sun.position.set(-12, 19, 9);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.0003;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x8ed9ee, 0.65);
+    fill.position.set(10, 7, -12);
+    scene.add(fill);
+
+    // ------------------------------------------------------------
+    // Materials
+    // ------------------------------------------------------------
+
+    const materials = {
+      hull: new THREE.MeshStandardMaterial({
+        color: 0x0b3440,
+        roughness: 0.4,
+        metalness: 0.24,
+        side: THREE.DoubleSide
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xa92f2b,
+        roughness: 0.52,
+        metalness: 0.12
+      }),
+      deck: new THREE.MeshStandardMaterial({
+        color: 0x344247,
+        roughness: 0.88,
+        metalness: 0.04
+      }),
+      foredeck: new THREE.MeshStandardMaterial({
+        color: 0x9a6f48,
+        roughness: 0.84
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xe9eeea,
+        roughness: 0.55,
+        metalness: 0.08
+      }),
+      cabin: new THREE.MeshStandardMaterial({
+        color: 0xf2f0e5,
+        roughness: 0.5,
+        metalness: 0.12
+      }),
+      window: new THREE.MeshStandardMaterial({
+        color: 0x183d4b,
+        roughness: 0.2,
+        metalness: 0.35
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x71838a,
+        roughness: 0.3,
+        metalness: 0.75
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x26363b,
+        roughness: 0.42,
+        metalness: 0.65
+      }),
+      rope: new THREE.MeshStandardMaterial({
+        color: 0xb9a06a,
+        roughness: 0.95
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x805736,
+        roughness: 0.9
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xe85d24,
+        roughness: 0.6
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x172125,
+        roughness: 0.75
+      }),
+      redLight: new THREE.MeshStandardMaterial({
+        color: 0xff3028,
+        emissive: 0xff160d,
+        emissiveIntensity: 1
+      }),
+      greenLight: new THREE.MeshStandardMaterial({
+        color: 0x42ff9a,
+        emissive: 0x08d96e,
+        emissiveIntensity: 1
+      })
+    };
+
+    // ------------------------------------------------------------
+    // Geometry helpers
+    // ------------------------------------------------------------
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    function addBox(parent, size, position, material, castShadow = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size.x, size.y, size.z),
+        material
+      );
+      mesh.position.copy(position);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      position,
+      material,
+      radialSegments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          radialSegments
+        ),
+        material
+      );
+      mesh.position.copy(position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinderBetween(parent, a, b, radius, material, segments = 12) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 1, segments),
+        material
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      setCylinderBetween(mesh, a, b);
+      return mesh;
+    }
+
+    function setCylinderBetween(mesh, a, b) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.scale.set(1, length, 1);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+    }
+
+    function makeTextTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 160;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#dce9e5";
+      ctx.font = "700 78px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("COASTAL 07", canvas.width / 2, canvas.height / 2 + 3);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // ------------------------------------------------------------
+    // Hull and working deck
+    // ------------------------------------------------------------
+
+    const boat = new THREE.Group();
+    boat.name = "Buoy Tender 07";
+    scene.add(boat);
+
+    const stations = [
+      { z: 6.4, w: 0.06, top: 1.15, chine: 0.55, bottom: 0.25 },
+      { z: 5.8, w: 0.55, top: 1.12, chine: 0.38, bottom: 0.08 },
+      { z: 4.7, w: 0.95, top: 1.02, chine: 0.25, bottom: -0.12 },
+      { z: 2.5, w: 1.18, top: 0.90, chine: 0.10, bottom: -0.32 },
+      { z: 0.0, w: 1.25, top: 0.82, chine: 0.00, bottom: -0.42 },
+      { z: -2.4, w: 1.18, top: 0.88, chine: 0.12, bottom: -0.36 },
+      { z: -4.3, w: 0.92, top: 0.95, chine: 0.30, bottom: -0.18 },
+      { z: -5.2, w: 0.62, top: 1.02, chine: 0.48, bottom: 0.12 },
+      { z: -5.55, w: 0.32, top: 1.08, chine: 0.58, bottom: 0.38 }
+    ];
+
+    function buildHullGeometry() {
+      const positions = [];
+      const indices = [];
+
+      for (const station of stations) {
+        positions.push(
+          -station.w, station.top, station.z,
+          -station.w * 0.78, station.chine, station.z,
+          -station.w * 0.55, station.bottom, station.z,
+
+          station.w, station.top, station.z,
+          station.w * 0.78, station.chine, station.z,
+          station.w * 0.55, station.bottom, station.z
+        );
+      }
+
+      for (let i = 0; i < stations.length - 1; i++) {
+        const a = i * 3;
+        const b = (i + 1) * 3;
+
+        indices.push(
+          a, b, a + 1,
+          b, b + 1, a + 1,
+
+          a + 1, a + 2, b + 1,
+          a + 2, b + 2, b + 1,
+
+          a + 2, b + 2, a + 4,
+          a + 4, b + 2, b + 4
+        );
+      }
+
+      const last = (stations.length - 1) * 3;
+      indices.push(
+        0, 1, 2,
+        3, 5, 4,
+        last, last + 2, last + 1,
+        last + 1, last + 2, last + 3
+      );
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const hull = new THREE.Mesh(buildHullGeometry(), materials.hull);
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    boat.add(hull);
+
+    // Red rubbing strake around the waterline.
+    for (const side of [-1, 1]) {
+      const points = stations.map(
+        (station) =>
+          new THREE.Vector3(
+            side * station.w * 0.8,
+            station.chine - 0.025,
+            station.z
+          )
+      );
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const rubRail = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 80, 0.045, 6, false),
+        materials.red
+      );
+      rubRail.castShadow = true;
+      boat.add(rubRail);
+    }
+
+    function makeDeckGeometry(points, y) {
+      const geometry = new THREE.ShapeGeometry(
+        new THREE.Shape(points.map((point) => new THREE.Vector2(point.x, -point.z)))
+      );
+      geometry.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geometry, materials.deck);
+      mesh.position.y = y;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    boat.add(makeDeckGeometry(stations, 0.985));
+
+    const foredeckPoints = stations
+      .filter((station) => station.z > 4.2)
+      .map((station) => new THREE.Vector3(station.x ?? station.w, station.z));
+
+    boat.add(makeDeckGeometry(foredeckPoints, 1.025));
+
+    // ------------------------------------------------------------
+    // Railings
+    // ------------------------------------------------------------
+
+    function addRailing(a, b) {
+      const length = a.distanceTo(b);
+      const count = Math.max(2, Math.ceil(length / 1.1));
+
+      for (let i = 0; i <= count; i++) {
+        const point = a.clone().lerp(b, i / count);
+        cylinderBetween(
+          boat,
+          new THREE.Vector3(point.x, 0.99, point.z),
+          new THREE.Vector3(point.x, 1.56, point.z),
+          0.035,
+          materials.steel,
+          8
+        );
+      }
+
+      cylinderBetween(
+        boat,
+        new THREE.Vector3(a.x, 1.56, a.z),
+        new THREE.Vector3(b.x, 1.56, b.z),
+        0.042,
+        materials.steel,
+        10
+      );
+    }
+
+    addRailing(
+      new THREE.Vector3(-1.22, 0, -4.7),
+      new THREE.Vector3(-1.22, 0, 4.8)
+    );
+    addRailing(
+      new THREE.Vector3(1.22, 0, -4.7),
+      new THREE.Vector3(1.22, 0, 4.8)
+    );
+    addRailing(
+      new THREE.Vector3(-1.18, 0, -4.75),
+      new THREE.Vector3(1.18, 0, -4.75)
+    );
+    addRailing(
+      new THREE.Vector3(-0.75, 0, 5.9),
+      new THREE.Vector3(0.75, 0, 5.9)
+    );
+
+    // ------------------------------------------------------------
+    // Cabin and navigation equipment
+    // ------------------------------------------------------------
+
+    addBox(
+      boat,
+      new THREE.Vector3(1.82, 1.5, 3.12),
+      new THREE.Vector3(0, 1.76, 2.25),
+      materials.cabin
+    );
+
+    addBox(
+      boat,
+      new THREE.Vector3(2.04, 0.13, 3.36),
+      new THREE.Vector3(0, 2.64, 2.25),
+      materials.white
+    );
+
+    addBox(
+      boat,
+      new THREE.Vector3(1.55, 0.48, 0.045),
+      new THREE.Vector3(0, 2.15, 3.825),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.72, 0.48, 0.045),
+      new THREE.Vector3(-0.38, 2.15, 0.685),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.55, 0.76, 0.045),
+      new THREE.Vector3(0.56, 1.43, 0.685),
+      materials.darkSteel
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.045, 0.48, 1.47),
+      new THREE.Vector3(0.915, 2.15, 2.25),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.045, 0.48, 1.47),
+      new THREE.Vector3(-0.915, 2.15, 2.25),
+      materials.window
+    );
+
+    // Door handle and small cabin details.
+    const handle = addBox(
+      boat,
+      new THREE.Vector3(0.035, 0.28, 0.04),
+      new THREE.Vector3(0.84, 1.45, 0.72),
+      materials.darkSteel
+    );
+    handle.rotation.z = -0.15;
+
+    // Mast, radar, antennas, and navigation lights.
+    cylinderBetween(
+      boat,
+      new THREE.Vector3(0, 2.72, 2.2),
+      new THREE.Vector3(0, 4.55, 2.2),
+      0.045,
+      materials.white,
+      10
+    );
+
+    const radar = new THREE.Group();
+    radar.position.set(0, 4.48, 2.2);
+    boat.add(radar);
+
+    addBox(radar, new THREE.Vector3(0.72, 0.08, 0.12), new THREE.Vector3(0, 0, 0), materials.white);
+    cylinderBetween(
+      boat,
+      new THREE.Vector3(0.5, 2.78, 2.2),
+      new THREE.Vector3(0.5, 4.38, 2.2),
+      0.012,
+      materials.darkSteel,
+      6
+    );
+
+    const portLight = addBox(
+      boat,
+      new THREE.Vector3(0.12, 0.16, 0.12),
+      new THREE.Vector3(-0.98, 2.48, 3.84),
+      materials.redLight
+    );
+
+    const starboardLight = addBox(
+      boat,
+      new THREE.Vector3(0.12, 0.16, 0.12),
+      new THREE.Vector3(0.98, 2.48, 3.84),
+      materials.greenLight
+    );
+
+    // ------------------------------------------------------------
+    // Stern crane
+    // ------------------------------------------------------------
+
+    const crane = new THREE.Group();
+    crane.position.set(0, 1.0, -4.45);
+    boat.add(crane);
+
+    addCylinder(
+      crane,
+      0.48,
+      0.55,
+      0.5,
+      new THREE.Vector3(0, 0.25, 0),
+      materials.darkSteel,
+      20
+    );
+
+    addCylinder(
+      crane,
+      0.39,
+      0.43,
+      0.12,
+      new THREE.Vector3(0, 0.54, 0),
+      materials.steel,
+      20
+    );
+
+    const slew = new THREE.Group();
+    slew.position.y = 0.61;
+    crane.add(slew);
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.92, 0.48, 0.88),
+      new THREE.Vector3(0, 0, 0),
+      materials.cabin
+    );
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.72, 0.28, 0.25),
+      new THREE.Vector3(0, 0.18, -0.48),
+      materials.darkSteel
+    );
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.48, 0.4, 0.62),
+      new THREE.Vector3(0.72, 0.1, 0.16),
+      materials.darkSteel
+    );
+    addBox(
+      slew,
+      new THREE.Vector3(0.42, 0.31, 0.58),
+      new THREE.Vector3(0.72, 0.1, 0.16),
+      materials.window
+    );
+
+    const boomLowerA = new THREE.Vector3(0, 0.65, 0);
+    const boomLowerB = new THREE.Vector3(0, 1.85, 1.45);
+    const boomUpperA = boomLowerB;
+    const boomUpperB = new THREE.Vector3(0, 3.15, 2.3);
+    const boomTip = new THREE.Vector3(0, 3.45, 2.45);
+
+    cylinderBetween(
+      slew,
+      boomLowerA,
+      boomLowerB,
+      0.115,
+      materials.yellow || materials.orange,
+      14
+    );
+    cylinderBetween(
+      slew,
+      boomLowerB,
+      boomUpperB,
+      0.095,
+      materials.orange,
+      14
+    );
+    cylinderBetween(
+      slew,
+      boomUpperB,
+      boomTip,
+      0.075,
+      materials.orange,
+      12
+    );
+
+    cylinderBetween(
+      slew,
+      new THREE.Vector3(0.28, 0.66, 0.18),
+      new THREE.Vector3(0.03, 1.48, 1.22),
+      0.055,
+      materials.steel,
+      10
+    );
+
+    const hydraulicJoint = addCylinder(
+      slew,
+      0.15,
+      0.15,
+      0.18,
+      new THREE.Vector3(0.28, 0.66, 0.18),
+      materials.darkSteel,
+      12
+    );
+    hydraulicJoint.rotation.z = Math.PI / 2;
+
+    // Sheave and hoist cable.
+    const sheave = addCylinder(
+      slew,
+      0.16,
+      0.16,
+      0.1,
+      boomTip,
+      materials.darkSteel,
+      16
+    );
+    sheave.rotation.z = Math.PI / 2;
+
+    const cable = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, 1, 8),
+      materials.darkSteel
+    );
+    cable.castShadow = true;
+    slew.add(cable);
+
+    const hookGroup = new THREE.Group();
+    hookGroup.position.set(0, 1.72, 2.45);
+    slew.add(hookGroup);
+
+    const hook = new THREE.Mesh(
+      new THREE.TorusGeometry(0.13, 0.035, 8, 18, Math.PI * 1.65),
+      materials.darkSteel
+    );
+    hook.rotation.z = Math.PI * 0.2;
+    hook.castShadow = true;
+    hookGroup.add(hook);
+
+    addBox(
+      hookGroup,
+      new THREE.Vector3(0.12, 0.18, 0.12),
+      new THREE.Vector3(0, 0.17, 0),
+      materials.darkSteel
+    );
+
+    // ------------------------------------------------------------
+    // Deck equipment
+    // ------------------------------------------------------------
+
+    // Winch.
+    const winch = new THREE.Group();
+    winch.position.set(0.78, 1.08, 0.85);
+    winch.rotation.y = -0.25;
+    boat.add(winch);
+
+    addBox(
+      winch,
+      new THREE.Vector3(0.9, 0.12, 0.58),
+      new THREE.Vector3(0, 0, 0),
+      materials.darkSteel
+    );
+
+    for (const x of [-0.2, 0.2]) {
+      const drum = addCylinder(
+        winch,
+        0.25,
+        0.25,
+        0.18,
+        new THREE.Vector3(x, 0.28, 0),
+        materials.wood,
+        20
+      );
+      drum.rotation.z = Math.PI / 2;
+
+      const flange = new THREE.Mesh(
+        new THREE.TorusGeometry(0.25, 0.045, 8, 24),
+        materials.steel
+      );
+      flange.rotation.y = Math.PI / 2;
+      flange.position.set(x + Math.sign(x) * 0.1, 0.28, 0);
+      winch.add(flange);
+    }
+
+    // Coiled rope on the foredeck.
+    for (let i = 0; i < 4; i++) {
+      const coil = new THREE.Mesh(
+        new THREE.TorusGeometry(0.28 + i * 0.045, 0.035, 7, 28),
+        materials.rope
+      );
+      coil.rotation.x = Math.PI / 2;
+      coil.position.set(-0.35, 1.08 + i * 0.045, 4.25);
+      coil.castShadow = true;
+      boat.add(coil);
+    }
+
+    // Crates.
+    function addCrate(x, y, z, size) {
+      addBox(
+        boat,
+        new THREE.Vector3(size, size, size),
+        new THREE.Vector3(x, y + size / 2, z),
+        materials.wood
+      );
+
+      for (let i = 0; i < 4; i++) {
+        addBox(
+          boat,
+          new THREE.Vector3(size + 0.02, 0.035, 0.035),
+          new THREE.Vector3(x, y + size / 2, z + size * 0.5),
+          materials.darkSteel,
+          false
+        );
+      }
+    }
+
+    addCrate(-0.67, 1.02, -2.6, 0.58);
+    addCrate(-0.67, 1.62, -2.6, 0.58);
+
+    // Tool chest.
+    addBox(
+      boat,
+      new THREE.Vector3(0.62, 0.48, 0.48),
+      new THREE.Vector3(0.62, 1.28, -2.55),
+      materials.red
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.38, 0.05, 0.05),
+      new THREE.Vector3(0.62, 1.34, -2.3),
+      materials.darkSteel
+    );
+
+    // Life ring.
+    const lifeRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.3, 0.075, 8, 20),
+      materials.orange
+    );
+    lifeRing.position.set(-0.98, 1.55, -2.45);
+    lifeRing.rotation.y = Math.PI / 2;
+    lifeRing.castShadow = true;
+    boat.add(lifeRing);
+
+    // Bollards.
+    function addBollard(x, z) {
+      addCylinder(
+        boat,
+        0.13,
+        0.17,
+        0.16,
+        new THREE.Vector3(x, 1.08, z),
+        materials.darkSteel,
+        12
+      );
+      addCylinder(
+        boat,
+        0.07,
+        0.11,
+        0.32,
+        new THREE.Vector3(x, 1.27, z),
+        materials.darkSteel,
+        10
+      );
+    }
+
+    addBollard(-0.85, 4.45);
+    addBollard(0.85, 4.45);
+    addBollard(-0.85, -4.55);
+    addBollard(0.85, -4.55);
+
+    // Side fenders.
+    for (const side of [-1, 1]) {
+      for (const z of [-0.7, 2.4, 4.0]) {
+        const fender = addCylinder(
+          boat,
+          0.13,
+          0.16,
+          0.34,
+          new THREE.Vector3(side * 1.25, 0.68, z),
+          materials.black,
+          12
+        );
+        fender.rotation.z = Math.PI / 2;
+      }
+    }
+
+    // Bow anchor.
+    const anchor = new THREE.Group();
+    anchor.position.set(-1.15, 0.72, 4.55);
+    anchor.rotation.z = -0.12;
+    boat.add(anchor);
+
+    const anchorRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.18, 0.045, 8, 18, Math.PI * 1.55),
+      materials.darkSteel
+    );
+    anchorRing.rotation.z = Math.PI * 0.25;
+    anchor.add(anchorRing);
+
+    cylinderBetween(
+      anchor,
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, -0.55, 0),
+      0.035,
+      materials.darkSteel,
+      8
+    );
+
+    const stock = addBox(
+      anchor,
+      new THREE.Vector3(0.48, 0.045, 0.045),
+      new THREE.Vector3(0, -0.42, 0),
+      materials.darkSteel
+    );
+    stock.rotation.z = -0.25;
+
+    // Name on both sides.
+    const nameTexture = makeTextTexture();
+    const nameMaterial = new THREE.MeshBasicMaterial({
+      map: nameTexture,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const starboardName = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.85, 0.39),
+      nameMaterial
+    );
+    starboardName.position.set(1.265, 0.75, 0.15);
+    starboardName.rotation.y = Math.PI / 2;
+    boat.add(starboardName);
+
+    const portName = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.85, 0.39),
+      nameMaterial
+    );
+    portName.position.set(-1.265, 0.75, 0.15);
+    portName.rotation.y = -Math.PI / 2;
+    boat.add(portName);
+
+    // ------------------------------------------------------------
+    // Water
+    // ------------------------------------------------------------
+
+    const waterGeometry = new THREE.PlaneGeometry(180, 180, 120, 120);
+    waterGeometry.rotateX(-Math.PI / 2);
+
+    const waterMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uSunDirection: {
+          value: new THREE.Vector3(-0.45, 0.8, 0.35).normalize()
+        },
+        uDeep: { value: new THREE.Color(0x176075) },
+        uShallow: { value: new THREE.Color(0x4c9cad) },
+        uHorizon: { value: new THREE.Color(0xa8c8d4) }
+      },
+      vertexShader: `
+        uniform float uTime;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          vec3 p = position;
+          float waveA = sin(p.x * 0.18 + uTime * 0.72) * 0.11;
+          float waveB = cos(p.z * 0.23 - uTime * 0.54) * 0.075;
+          float waveC = sin((p.x + p.z) * 0.11 + uTime * 0.41) * 0.055;
+          p.y += waveA + waveB + waveC;
+
+          vec4 worldPosition = modelMatrix * vec4(p, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          vWave = waveA + waveB + waveC;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uSunDirection;
+        uniform vec3 uDeep;
+        uniform vec3 uShallow;
+        uniform vec3 uHorizon;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          vec3 normal = normalize(vec3(
+            -0.025 * cos(vWorldPosition.x * 0.18 + uTime * 0.72),
+            1.0,
+            -0.022 * cos(vWorldPosition.z * 0.23 - uTime * 0.54)
+          ));
+
+          vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+          vec3 lightDirection = normalize(uSunDirection);
+
+          float diffuse = max(dot(normal, lightDirection), 0.0);
+          float specular = pow(
+            max(dot(reflect(-lightDirection, normal), viewDirection), 0.0),
+            110.0
+          );
+
+          float fresnel = pow(
+            1.0 - max(dot(normal, viewDirection), 0.0),
+            3.0
+          );
+
+          float distanceToCamera = length(cameraPosition.xz - vWorldPosition.xz);
+          float haze = exp(-distanceToCamera * 0.011);
+
+          vec3 color = mix(uDeep, uShallow, 0.35 + vWave * 1.4);
+          color += vec3(0.38, 0.48, 0.43) * fresnel * 0.48;
+          color += vec3(1.0, 0.82, 0.5) * specular * 1.8;
+
+          color = mix(color, uHorizon, haze * 0.68);
+          gl_FragColor = vec4(color, 1.0);
+
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `
+    });
+
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.receiveShadow = true;
+    scene.add(water);
+
+    // ------------------------------------------------------------
+    // Sky, clouds, distant islands, and buoy
+    // ------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(110, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          uTop: { value: new THREE.Color(0x4f9fbe) },
+          uHorizon: { value: new THREE.Color(0xc3dce3) }
+        },
+        vertexShader: `
+          varying vec3 vDirection;
+          void main() {
+            vDirection = normalize(position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uTop;
+          uniform vec3 uHorizon;
+          varying vec3 vDirection;
+          void main() {
+            float h = smoothstep(-0.12, 0.75, vDirection.y);
+            vec3 color = mix(uHorizon, uTop, h);
+            gl_FragColor = vec4(color, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }
+        `
+      })
+    );
+    scene.add(sky);
+
+    const cloudMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf2f7f3,
+      roughness: 1,
+      fog: true
+    });
+
+    function addCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+
+      const pieces = [
+        [-1.2, 0, 0, 0.9],
+        [-0.4, 0.25, 0, 1.15],
+        [0.65, 0.12, 0, 1.0],
+        [1.35, -0.05, 0, 0.65],
+        [0.1, -0.2, 0.15, 1.2]
+      ];
+
+      for (const [px, py, pz, size] of pieces) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(size, 12, 8),
+          cloudMaterial
+        );
+        puff.position.set(px, py, pz);
+        puff.scale.y = 0.58;
+        cloud.add(puff);
+      }
+
+      scene.add(cloud);
+    }
+
+    addCloud(-18, 13, -32, 1.8);
+    addCloud(22, 16, -40, 2.1);
+    addCloud(-30, 18, 12, 1.5);
+
+    const islandMaterial = new THREE.MeshStandardMaterial({
+      color: 0x466c61,
+      roughness: 1,
+      flatShading: true
+    });
+
+    function addIsland(x, z, scale) {
+      const island = new THREE.Group();
+      island.position.set(x, 0, z);
+      island.scale.setScalar(scale);
+
+      const hill = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(2.2, 0),
+        islandMaterial
+      );
+      hill.position.y = -0.3;
+      hill.scale.set(1.5, 0.6, 1);
+      hill.receiveShadow = true;
+      island.add(hill);
+
+      scene.add(island);
+    }
+
+    addIsland(-34, -48, 2.2);
+    addIsland(38, -55, 1.8);
+
+    // Foreground navigation buoy.
+    const buoy = new THREE.Group();
+    buoy.position.set(8.2, 0, 5.4);
+    scene.add(buoy);
+
+    addCylinder(
+      buoy,
+      0.46,
+      0.55,
+      0.75,
+      new THREE.Vector3(0, 0.38, 0),
+      materials.white,
+      20
+    );
+    addCylinder(
+      buoy,
+      0.34,
+      0.4,
+      0.58,
+      new THREE.Vector3(0, 0.98, 0),
+      materials.red,
+      20
+    );
+
+    const buoyRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.39, 0.055, 8, 24),
+      materials.white
+    );
+    buoyRing.rotation.x = Math.PI / 2;
+    buoyRing.position.y = 0.78;
+    buoy.add(buoyRing);
+
+    addCylinder(
+      buoy,
+      0.035,
+      0.05,
+      0.75,
+      new THREE.Vector3(0, 1.62, 0),
+      materials.darkSteel,
+      8
+    );
+
+    const buoyLight = addCylinder(
+      buoy,
+      0.12,
+      0.16,
+      0.22,
+      new THREE.Vector3(0, 2.02, 0),
+      materials.redLight,
+      12
+    );
+
+    // ------------------------------------------------------------
+    // Custom orbit / pan / zoom controls
+    // ------------------------------------------------------------
+
+    const target = new THREE.Vector3(0, 1.25, 0);
+    const spherical = new THREE.Spherical(16.5, 1.08, -2.28);
+    const pointers = new Map();
+    let autoOrbit = false;
+
+    function updateCamera() {
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(target).add(offset);
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      target.set(0, 1.25, 0);
+      spherical.set(16.5, 1.08, -2.28);
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+
+      previous.x = event.clientX;
+      previous.y = event.clientY;
+
+      if (event.button === 2) {
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+        const panScale = spherical.radius * 0.0013;
+
+        target.addScaledVector(right, -dx * panScale);
+        target.addScaledVector(up, dy * panScale);
+      } else {
+        spherical.theta -= dx * 0.005;
+        spherical.phi = THREE.MathUtils.clamp(
+          spherical.phi - dy * 0.005,
+          0.22,
+          1.47
+        );
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          6.5,
+          38
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    document.getElementById("topView").addEventListener("click", () => {
+      target.set(0, 1.1, 0);
+      spherical.set(17, 0.2, -0.15);
+      updateCamera();
+    });
+
+    const orbitButton = document.getElementById("orbit");
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateCamera();
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let frame = 0;
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      waterMaterial.uniforms.uTime.value = elapsed;
+
+      // Gentle boat motion.
+      boat.position.y = Math.sin(elapsed * 0.72) * 0.065;
+      boat.rotation.z = Math.sin(elapsed * 0.48) * 0.008;
+      boat.rotation.x = Math.cos(elapsed * 0.43) * 0.005;
+
+      // Crane motion and moving hook.
+      slew.rotation.y = -0.12 + Math.sin(elapsed * 0.2) * 0.025;
+      hookGroup.position.x = Math.sin(elapsed * 0.38) * 0.13;
+      hookGroup.position.y = 1.72 + Math.sin(elapsed * 0.31) * 0.1;
+      hookGroup.rotation.z = Math.sin(elapsed * 0.42) * 0.08;
+
+      const hookTop = new THREE.Vector3(
+        hookGroup.position.x,
+        hookGroup.position.y + 0.2,
+        hookGroup.position.z
+      );
+      setCylinderBetween(cable, boomTip, hookTop);
+
+      radar.rotation.y = elapsed * 0.38;
+      radar.rotation.z = Math.sin(elapsed * 0.6) * 0.08;
+
+      // Navigation lights.
+      const redPulse = Math.pow(Math.max(0, Math.sin(elapsed * 2.2)), 8);
+      materials.redLight.emissiveIntensity = 0.8 + redPulse * 2.2;
+      materials.greenLight.emissiveIntensity = 0.8 + redPulse * 2.2;
+
+      // Buoy motion.
+      buoy.position.y = Math.sin(elapsed * 0.85) * 0.08;
+      buoy.rotation.z = Math.sin(elapsed * 0.62) * 0.035;
+      buoy.rotation.x = Math.cos(elapsed * 0.55) * 0.025;
+      buoyLight.rotation.y = elapsed * 1.7;
+
+      // Wake animation.
+      const wakeLeft = boat.children.find(
+        (child) =>
+          child.geometry?.type === "PlaneGeometry" &&
+          child.position.x < 0
+      );
+      const wakeRight = boat.children.find(
+        (child) =>
+          child.geometry?.type === "PlaneGeometry" &&
+          child.position.x > 0
+      );
+
+      if (wakeLeft && wakeRight) {
+        wakeLeft.material.opacity = 0.13 + Math.sin(elapsed * 1.2) * 0.045;
+        wakeRight.material.opacity = 0.13 + Math.sin(elapsed * 1.2 + 0.8) * 0.045;
+        wakeLeft.position.x = -1.32 + Math.sin(elapsed * 0.45) * 0.08;
+        wakeRight.position.x = 1.32 - Math.sin(elapsed * 0.45 + 0.5) * 0.08;
+      }
+
+      renderer.render(scene, camera);
+
+      if (autoOrbit) {
+        spherical.theta += delta * 0.08;
+        updateCamera();
+      }
+
+      frame++;
+      if (frame === 2) {
+        document.getElementById("loading").classList.add("hidden");
+      }
+    }
+
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>
+```

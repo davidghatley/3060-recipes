@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automated Regolith Sintering Plant</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(8, 17, 27, 0.84);
+      --border: rgba(124, 190, 220, 0.22);
+      --cyan: #69d7ff;
+      --orange: #ff9b42;
+      --green: #65e3a4;
+      --text: #e9f6ff;
+      --muted: #91a9ba;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #07111b;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app canvas {
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #app canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    #title-panel {
+      top: 20px;
+      left: 20px;
+      width: min(430px, calc(100vw - 40px));
+      padding: 18px 20px;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #process-panel {
+      top: 20px;
+      right: 20px;
+      width: 286px;
+      padding: 16px;
+    }
+
+    .process-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--green);
+    }
+
+    .live::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    #stage {
+      min-height: 38px;
+      margin-bottom: 11px;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .metric {
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: 4px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      font-size: 17px;
+      font-weight: 750;
+    }
+
+    .progress-track {
+      height: 4px;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--orange));
+      box-shadow: 0 0 12px rgba(105, 215, 255, 0.5);
+    }
+
+    #cycle-readout {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #controls {
+      left: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 7px;
+      padding: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #bcd3df;
+      background: rgba(255, 255, 255, 0.045);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+
+    button:hover {
+      color: white;
+      border-color: rgba(105, 215, 255, 0.45);
+      background: rgba(105, 215, 255, 0.1);
+    }
+
+    button.active {
+      color: #061019;
+      border-color: var(--cyan);
+      background: var(--cyan);
+    }
+
+    #hint {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 10;
+      max-width: 340px;
+      padding: 10px 13px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.55;
+      text-align: right;
+      background: rgba(8, 17, 27, 0.66);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      background: #07111b;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      #title-panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      #process-panel {
+        top: 112px;
+        right: 12px;
+        width: 230px;
+        padding: 12px;
+      }
+
+      #controls {
+        left: 12px;
+        bottom: 12px;
+      }
+
+      #hint {
+        display: none;
+      }
+
+      button {
+        padding: 8px 9px;
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <section id="title-panel" class="panel">
+    <div class="eyebrow">Lunar Materials Facility / Line 04</div>
+    <h1>Automated Regolith Sintering Plant</h1>
+    <p class="subtitle">
+      Gantry-assisted press line with bucket-elevator feed, rail-mounted kiln cars,
+      and a continuous tunnel kiln.
+    </p>
+  </section>
+
+  <section id="process-panel" class="panel">
+    <div class="process-heading">
+      <span>Process Control</span>
+      <span class="live">Live</span>
+    </div>
+
+    <div id="stage">INITIALIZING LINE</div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Kiln Temperature</div>
+        <div class="metric-value" id="temperature">580 °C</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Cars Sintered</div>
+        <div class="metric-value" id="cars-sintered">0 / 3</div>
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <div id="progress-fill"></div>
+    </div>
+
+    <div id="cycle-readout">
+      <span>Press Cycle</span>
+      <span id="cycle-time">00.0 s</span>
+    </div>
+  </section>
+
+  <nav id="controls" class="panel" aria-label="Scene controls">
+    <button class="active" data-view="overview">Overview</button>
+    <button data-view="gantry">Gantry</button>
+    <button data-view="kiln">Kiln</button>
+    <button id="pause">Pause</button>
+  </nav>
+
+  <div id="hint">
+    Drag to orbit · Shift/right-drag to pan · Scroll to zoom<br>
+    Double-click to reset the camera
+  </div>
+
+  <div id="loading">Initializing sintering line…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera, and lighting
+    // -------------------------------------------------------------------------
+
+    const app = document.getElementById("app");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07111b);
+    scene.fog = new THREE.FogExp2(0x07111b, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      250
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    app.appendChild(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0x9ddcff, 0x15130f, 1.65);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff1d6, 3.2);
+    sun.position.set(-18, 30, 18);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -42;
+    sun.shadow.camera.right = 42;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 90;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const rim = new THREE.DirectionalLight(0x3b8fff, 1.4);
+    rim.position.set(25, 12, -25);
+    scene.add(rim);
+
+    const kilnLights = [];
+    for (const x of [-16, 0, 16]) {
+      const light = new THREE.PointLight(0xff681d, 34, 13, 2);
+      light.position.set(x, 2.4, 0);
+      scene.add(light);
+      kilnLights.push(light);
+    }
+
+    // -------------------------------------------------------------------------
+    // Materials and geometry helpers
+    // -------------------------------------------------------------------------
+
+    const material = {
+      shell: new THREE.MeshStandardMaterial({
+        color: 0x202d38,
+        metalness: 0.72,
+        roughness: 0.44
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0x111b24,
+        metalness: 0.78,
+        roughness: 0.38
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x090e13,
+        metalness: 0.55,
+        roughness: 0.5
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x71818d,
+        metalness: 0.86,
+        roughness: 0.3
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xf0a51b,
+        metalness: 0.48,
+        roughness: 0.38
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xe86c22,
+        metalness: 0.42,
+        roughness: 0.42
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x080b0d,
+        metalness: 0.08,
+        roughness: 0.88
+      }),
+      rail: new THREE.MeshStandardMaterial({
+        color: 0x343c42,
+        metalness: 0.9,
+        roughness: 0.28
+      }),
+      ballast: new THREE.MeshStandardMaterial({
+        color: 0x171b1d,
+        roughness: 1
+      }),
+      rock: new THREE.MeshStandardMaterial({
+        color: 0x685447,
+        roughness: 0.98,
+        flatShading: true
+      }),
+      glass: new THREE.MeshPhysicalMaterial({
+        color: 0x79c9e8,
+        metalness: 0,
+        roughness: 0.08,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }),
+      hot: new THREE.MeshStandardMaterial({
+        color: 0xff7b27,
+        emissive: 0xff3b08,
+        emissiveIntensity: 3.2,
+        roughness: 0.45
+      }),
+      cyan: new THREE.MeshStandardMaterial({
+        color: 0x65d9ff,
+        emissive: 0x1b8fb6,
+        emissiveIntensity: 1.8,
+        roughness: 0.3
+      })
+    };
+
+    function addBox(parent, size, position, mat, castShadow = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        mat
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      position,
+      mat,
+      segments = 20
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        mat
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addBeam(parent, a, b, width, depth, mat) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = addBox(
+        parent,
+        [width, length, depth],
+        start.clone().add(end).multiplyScalar(0.5).toArray(),
+        mat
+      );
+
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function addTorus(
+      parent,
+      radius,
+      tube,
+      position,
+      mat,
+      arc = Math.PI * 2
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tube, 8, 36, arc),
+        mat
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeLabel(title, subtitle, color = "#69d7ff") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 192;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(6, 15, 24, 0.88)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 5;
+      ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 9, canvas.height);
+
+      ctx.font = "700 38px system-ui, sans-serif";
+      ctx.fillText(title, 38, 76);
+
+      ctx.fillStyle = "#91a9ba";
+      ctx.font = "600 22px system-ui, sans-serif";
+      ctx.fillText(subtitle, 39, 125);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          depthTest: false
+        })
+      );
+
+      sprite.scale.set(5.2, 1.3, 1);
+      sprite.renderOrder = 20;
+      return sprite;
+    }
+
+    function makeDecal(text, color = "#dcecff") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = color;
+      ctx.font = "800 170px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 512, 260);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      return new THREE.MeshStandardMaterial({
+        map: texture,
+        transparent: true,
+        roughness: 0.65,
+        metalness: 0.15
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Ground, rail, and tunnel kiln
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(140, 90),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b1117,
+        roughness: 0.96,
+        metalness: 0.08
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.03;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(120, 60, 0x244153, 0x142633);
+    grid.position.y = 0.012;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.32;
+    scene.add(grid);
+
+    // Ballast bed.
+    addBox(scene, [65, 0.18, 7.4], [0, 0.02, 0], material.ballast, false);
+
+    // Rails and sleepers.
+    for (const z of [-2.25, 2.25]) {
+      addBox(scene, [64, 0.18, 0.18], [0, 0.22, z], material.rail, false);
+      addBox(scene, [64, 0.08, 0.42], [0, 0.1, z], material.dark, false);
+    }
+
+    for (let x = -31; x <= 31; x += 2) {
+      addBox(scene, [0.22, 0.16, 4.7], [x, 0.08, 0], material.dark, false);
+    }
+
+    // Kiln foundation and side walls.
+    addBox(scene, [48, 0.55, 6.8], [0, 0.34, 0], material.dark);
+    addBox(scene, [48, 3.7, 0.38], [0, 2.35, -3.12], material.shell);
+    addBox(scene, [48, 3.7, 0.38], [0, 2.35, 3.12], material.shell);
+
+    // Arched roof, built as an extruded cross-section.
+    const roofShape = new THREE.Shape();
+    roofShape.moveTo(-3.12, 0);
+    roofShape.lineTo(3.12, 0);
+    roofShape.lineTo(3.12, 4.18);
+    roofShape.quadraticCurveTo(0, 5.78, -3.12, 4.18);
+    roofShape.closePath();
+
+    const roofGeometry = new THREE.ExtrudeGeometry(roofShape, {
+      depth: 48,
+      bevelEnabled: false,
+      curveSegments: 16
+    });
+    roofGeometry.rotateY(Math.PI / 2);
+
+    const roof = new THREE.Mesh(roofGeometry, material.roof);
+    roof.position.x = -24;
+    roof.castShadow = true;
+    roof.receiveShadow = true;
+    scene.add(roof);
+
+    // Interior floor and glowing furnace channels.
+    addBox(scene, [47.5, 0.16, 5.85], [0, 0.68, 0], material.dark, false);
+
+    for (const z of [-2.92, 2.92]) {
+      addBox(
+        scene,
+        [46.5, 3.1, 0.08],
+        [0, 2.35, z],
+        material.hot,
+        false
+      );
+    }
+
+    // Structural ribs.
+    for (let x = -22; x <= 22; x += 4) {
+      const rib = addTorus(
+        scene,
+        3.08,
+        0.095,
+        [x, 4.18, 0],
+        material.steel,
+        Math.PI
+      );
+      rib.rotation.y = Math.PI / 2;
+    }
+
+    // Heating ports and flange rings.
+    for (const x of [-20, -14, -8, -2, 4, 10, 16, 22]) {
+      const port = addCylinder(
+        scene,
+        0.43,
+        0.43,
+        0.38,
+        [x, 2.25, 3.34],
+        material.hot,
+        24
+      );
+      port.rotation.x = Math.PI / 2;
+
+      addTorus(
+        scene,
+        0.47,
+        0.08,
+        [x, 2.25, 3.56],
+        material.steel
+      );
+    }
+
+    // External service pipe.
+    const pipe = addCylinder(
+      scene,
+      0.16,
+      0.16,
+      46,
+      [0, 4.05, 3.6],
+      material.steel,
+      18
+    );
+    pipe.rotation.z = Math.PI / 2;
+
+    for (let x = -20; x <= 20; x += 5) {
+      addTorus(
+        scene,
+        0.19,
+        0.035,
+        [x, 4.05, 3.6],
+        material.dark
+      );
+    }
+
+    // Kiln access ladder.
+    for (const z of [-3.72, -3.42]) {
+      addBox(scene, [0.08, 4.2, 0.08], [-23.2, 2.7, z], material.steel);
+    }
+
+    for (let y = 0.4; y < 5.1; y += 0.42) {
+      addBox(
+        scene,
+        [0.48, 0.055, 0.055],
+        [-23.2, y, -3.57],
+        material.steel
+      );
+    }
+
+    const kilnLabel = makeLabel(
+      "TUNNEL KILN",
+      "48 m continuous sintering zone",
+      "#ff9b42"
+    );
+    kilnLabel.position.set(8, 6.4, 4.3);
+    scene.add(kilnLabel);
+
+    // -------------------------------------------------------------------------
+    // Rail-mounted kiln cars
+    // -------------------------------------------------------------------------
+
+    const carCenters = [-12, 0, 12];
+    const carWheels = [];
+
+    function buildCar(centerX, carIndex) {
+      const car = new THREE.Group();
+      car.position.x = centerX;
+      scene.add(car);
+
+      addBox(car, [8.2, 0.42, 4.05], [0, 1.0, 0], material.dark);
+      addBox(car, [7.45, 2.15, 3.6], [0, 2.3, 0], material.shell);
+      addBox(car, [7.8, 0.18, 3.95], [0, 3.52, 0], material.steel);
+
+      // Side panels and windows.
+      for (const z of [-1.815, 1.815]) {
+        for (const x of [-2.55, -1.35, -0.15, 1.05, 2.25]) {
+          addBox(
+            car,
+            [1.05, 0.58, 0.045],
+            [x, 2.72, z],
+            material.glass,
+            false
+          );
+        }
+
+        addBox(
+          car,
+          [7.1, 0.12, 0.08],
+          [0, 1.48, z],
+          material.steel
+        );
+      }
+
+      // End doors.
+      for (const x of [-3.73, 3.73]) {
+        addBox(car, [0.08, 1.9, 2.7], [x, 2.35, 0], material.shell);
+        addBox(car, [0.1, 0.16, 0.8], [x + Math.sign(x) * 0.06, 2.25, 0], material.steel);
+      }
+
+      // Wheels.
+      for (const x of [-2.7, 2.7]) {
+        for (const z of [-2.25, 2.25]) {
+          const wheelGroup = new THREE.Group();
+          wheelGroup.position.set(x, 0.56, z);
+          car.add(wheelGroup);
+
+          const tire = addCylinder(
+            wheelGroup,
+            0.52,
+            0.52,
+            0.28,
+            [0, 0, 0],
+            material.rubber,
+            24
+          );
+          tire.rotation.x = Math.PI / 2;
+
+          const hub = addCylinder(
+            wheelGroup,
+            0.22,
+            0.22,
+            0.31,
+            [0, 0, 0],
+            material.steel,
+            18
+          );
+          hub.rotation.x = Math.PI / 2;
+
+          carWheels.push(wheelGroup);
+        }
+      }
+
+      // Car identification decal.
+      const decal = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.25, 1.12),
+        makeDecal(`RS-0${carIndex + 1}`)
+      );
+      decal.position.set(0, 1.83, 1.835);
+      car.add(decal);
+
+      const decalBack = decal.clone();
+      decalBack.rotation.y = Math.PI;
+      decalBack.position.z = -1.835;
+      car.add(decalBack);
+
+      // Small side status lamp.
+      addBox(
+        car,
+        [0.22, 0.14, 0.06],
+        [2.9, 2.18, 1.84],
+        material.cyan,
+        false
+      );
+    }
+
+    carCenters.forEach(buildCar);
+
+    // -------------------------------------------------------------------------
+    // Loading gantry
+    // -------------------------------------------------------------------------
+
+    const gantry = new THREE.Group();
+    scene.add(gantry);
+
+    // Main portal legs.
+    for (const z of [-3.65, 3.65]) {
+      addBox(gantry, [0.7, 8.6, 0.7], [0, 4.3, z], material.yellow);
+      addBox(gantry, [1.25, 0.28, 1.25], [0, 0.18, z], material.dark);
+      addBox(gantry, [0.78, 0.42, 0.78], [0, 1.0, z], material.dark);
+    }
+
+    // Portal top and longitudinal beam.
+    addBox(gantry, [0.72, 0.72, 8.05], [0, 8.6, 0], material.yellow);
+    addBox(gantry, [34, 0.58, 0.68], [0, 8.6, 0], material.yellow);
+
+    // End towers.
+    for (const x of [-16.5, 16.5]) {
+      for (const z of [-3.65, 3.65]) {
+        addBox(gantry, [0.62, 8.3, 0.62], [x, 4.15, z], material.yellow);
+      }
+
+      addBox(gantry, [0.72, 0.72, 8.05], [x, 8.6, 0], material.yellow);
+
+      addBeam(
+        gantry,
+        [x, 6.4, -3.65],
+        [x, 8.35, 0],
+        0.22,
+        0.25,
+        material.yellow
+      );
+
+      addBeam(
+        gantry,
+        [x, 6.4, 3.65],
+        [x, 8.35, 0],
+        0.22,
+        0.25,
+        material.yellow
+      );
+    }
+
+    // Portal diagonal bracing.
+    addBeam(
+      gantry,
+      [0, 6.35, -3.65],
+      [0, 8.35, 0],
+      0.22,
+      0.25,
+      material.yellow
+    );
+
+    addBeam(
+      gantry,
+      [0, 6.35, 3.65],
+      [0, 8.35, 0],
+      0.22,
+      0.25,
+      material.yellow
+    );
+
+    // Control cabin.
+    addBox(gantry, [2.5, 2.2, 1.2], [0, 7.05, -4.35], material.shell);
+    addBox(gantry, [1.9, 1.15, 0.05], [0, 7.15, -3.73], material.glass, false);
+    addBox(gantry, [0.05, 1.15, 0.8], [-1.27, 7.15, -4.35], material.glass, false);
+
+    const gantryLabel = makeLabel(
+      "LOADING GANTRY",
+      "Automated press trolley and hopper",
+      "#69d7ff"
+    );
+    gantryLabel.position.set(0, 10.1, 0);
+    scene.add(gantryLabel);
+
+    // -------------------------------------------------------------------------
+    // Bucket elevator and elevated feed hopper
+    // -------------------------------------------------------------------------
+
+    const elevator = new THREE.Group();
+    elevator.position.set(-16.5, 0, -4.7);
+    scene.add(elevator);
+
+    // Elevator frame.
+    for (const x of [-0.78, 0.78]) {
+      for (const z of [-0.78, 0.78]) {
+        addBox(elevator, [0.14, 12.1, 0.14], [x, 6.05, z], material.steel);
+      }
+    }
+
+    addBox(elevator, [1.7, 0.18, 1.7], [0, 0.12, 0], material.dark);
+    addBox(elevator, [1.7, 0.18, 1.7], [0, 12.05, 0], material.dark);
+
+    // Transparent elevator casing.
+    const casing = addBox(
+      elevator,
+      [1.5, 11.7, 1.45],
+      [0, 6.1, 0],
+      material.glass,
+      false
+    );
+    casing.castShadow = false;
+
+    // Visible moving buckets.
+    const elevatorBuckets = [];
+    const bucketGroup = new THREE.Group();
+    elevator.add(bucketGroup);
+
+    for (let i = 0; i < 10; i++) {
+      const bucket = new THREE.Group();
+      addBox(bucket, [0.72, 0.28, 0.62], [0, 0, 0], material.orange);
+      addBox(bucket, [0.82, 0.08, 0.72], [0, -0.17, 0], material.dark);
+      bucketGroup.add(bucket);
+      elevatorBuckets.push(bucket);
+    }
+
+    // Elevator ladder.
+    for (const z of [-0.96, -0.68]) {
+      addBox(elevator, [0.06, 11.8, 0.06], [-0.91, 6, z], material.steel);
+    }
+
+    for (let y = 0.3; y < 11.8; y += 0.42) {
+      addBox(
+        elevator,
+        [0.34, 0.055, 0.055],
+        [-0.91, y, -0.82],
+        material.steel
+      );
+    }
+
+    // Sloped feed chute from the bucket elevator to the central hopper.
+    addBeam(
+      scene,
+      [-16.5, 12.1, -4.7],
+      [0, 9.05, 0],
+      1.0,
+      0.72,
+      material.steel
+    );
+
+    // Chute support.
+    addBeam(
+      scene,
+      [-12.5, 10.6, -3.4],
+      [-5.5, 9.65, -1.6],
+      0.13,
+      0.15,
+      material.yellow
+    );
+
+    // Central hopper.
+    const hopper = new THREE.Group();
+    hopper.position.set(0, 0, 0);
+    scene.add(hopper);
+
+    const hopperBody = addCylinder(
+      hopper,
+      1.08,
+      0.62,
+      1.2,
+      [0, 10.0, 0],
+      material.shell,
+      4
+    );
+    hopperBody.rotation.y = Math.PI / 4;
+
+    // Hopper rim.
+    addBox(hopper, [2.1, 0.12, 0.13], [0, 11.06, 0.85], material.yellow);
+    addBox(hopper, [2.1, 0.12, 0.13], [0, 11.06, -0.85], material.yellow);
+    addBox(hopper, [0.13, 0.12, 1.7], [0.85, 11.06, 0], material.yellow);
+    addBox(hopper, [0.13, 0.12, 1.7], [-0.85, 11.06, 0], material.yellow);
+
+    // Regolith visible in the hopper.
+    for (let i = 0; i < 12; i++) {
+      const rock = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.13 + (i % 3) * 0.035, 0),
+        material.rock
+      );
+      rock.position.set(
+        (Math.random() - 0.5) * 1.45,
+        10.78 + Math.random() * 0.12,
+        (Math.random() - 0.5) * 1.45
+      );
+      rock.scale.y = 0.6 + Math.random() * 0.5;
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+      hopper.add(rock);
+    }
+
+    // Discharge stem and press assembly.
+    addCylinder(
+      hopper,
+      0.27,
+      0.27,
+      4.35,
+      [0, 6.65, 0],
+      material.steel,
+      20
+    );
+
+    addCylinder(
+      hopper,
+      0.36,
+      0.36,
+      0.32,
+      [0, 9.02, 0],
+      material.orange,
+      20
+    );
+
+    const pressAssembly = new THREE.Group();
+    scene.add(pressAssembly);
+
+    // Trolley carriage.
+    addBox(pressAssembly, [1.75, 0.55, 1.7], [0, 8.2, 0], material.dark);
+    addBox(pressAssembly, [1.25, 0.3, 1.2], [0, 8.55, 0], material.yellow);
+
+    for (const x of [-0.55, 0.55]) {
+      for (const z of [-0.58, 0.58]) {
+        const wheel = addCylinder(
+          pressAssembly,
+          0.22,
+          0.22,
+          0.16,
+          [x, 8.2, z],
+          material.steel,
+          16
+        );
+        wheel.rotation.x = Math.PI / 2;
+      }
+    }
+
+    // Moving press head.
+    const pressHead = new THREE.Group();
+    pressAssembly.add(pressHead);
+
+    addCylinder(
+      pressHead,
+      0.78,
+      0.82,
+      0.75,
+      [0, 4.025, 0],
+      material.steel,
+      28
+    );
+
+    addCylinder(
+      pressHead,
+      0.9,
+      0.9,
+      0.12,
+      [0, 3.62, 0],
+      material.orange,
+      28
+    );
+
+    addCylinder(
+      pressHead,
+      0.25,
+      0.25,
+      0.38,
+      [0, 4.5, 0],
+      material.dark,
+      18
+    );
+
+    const pressLabel = makeLabel(
+      "PRESSING HEAD",
+      "Sequential hot pressing and densification",
+      "#ff9b42"
+    );
+    pressLabel.position.set(0, 9.2, 0);
+    scene.add(pressLabel);
+
+    // Falling regolith particles during pressing.
+    const fallingParticles = [];
+    for (let i = 0; i < 24; i++) {
+      const particle = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.075, 0),
+        material.rock
+      );
+      particle.visible = false;
+      scene.add(particle);
+
+      fallingParticles.push({
+        mesh: particle,
+        offsetX: (Math.random() - 0.5) * 1.25,
+        offsetZ: (Math.random() - 0.5) * 1.25,
+        phase: Math.random(),
+        speed: 0.8 + Math.random() * 0.8
+      });
+    }
+
+    // Regolith stockpile beside the elevator.
+    for (let i = 0; i < 20; i++) {
+      const rock = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.25 + Math.random() * 0.3, 0),
+        material.rock
+      );
+      rock.position.set(
+        -18.5 + Math.random() * 4.2,
+        0.2 + Math.random() * 0.7,
+        -6.2 + Math.random() * 2.7
+      );
+      rock.scale.y = 0.65 + Math.random() * 0.6;
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+      rock.castShadow = true;
+      scene.add(rock);
+    }
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, pan, zoom, and touch support
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      target: new THREE.Vector3(0, 4, 0),
+      radius: 44,
+      theta: 0.72,
+      phi: 1.08
+    };
+
+    const cameraGoal = {
+      target: cameraState.target.clone(),
+      radius: cameraState.radius,
+      theta: cameraState.theta,
+      phi: cameraState.phi
+    };
+
+    function setCameraView(view) {
+      const views = {
+        overview: {
+          target: new THREE.Vector3(0, 4, 0),
+          radius: 44,
+          theta: 0.72,
+          phi: 1.08
+        },
+        gantry: {
+          target: new THREE.Vector3(0, 5, 0),
+          radius: 20,
+          theta: 0.15,
+          phi: 1.18
+        },
+        kiln: {
+          target: new THREE.Vector3(0, 2, 0),
+          radius: 30,
+          theta: 1.15,
+          phi: 1.25
+        }
+      };
+
+      const selected = views[view];
+      cameraGoal.target.copy(selected.target);
+      cameraGoal.radius = selected.radius;
+      cameraGoal.theta = selected.theta;
+      cameraGoal.phi = selected.phi;
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === view);
+      });
+    }
+
+    const canvas = renderer.domElement;
+    const pointer = {
+      active: false,
+      x: 0,
+      y: 0,
+      button: 0
+    };
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", (event) => {
+      pointer.active = true;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      pointer.button = event.button;
+      canvas.setPointerCapture(event.pointerId);
+      canvas.classList.add("dragging");
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointer.active) return;
+
+      const dx = event.clientX - pointer.x;
+      const dy = event.clientY - pointer.y;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (event.shiftKey || pointer.button === 2) {
+        const scale = cameraGoal.radius * 0.0015;
+        const right = new THREE.Vector3(
+          Math.cos(cameraGoal.theta),
+          0,
+          -Math.sin(cameraGoal.theta)
+        );
+
+        cameraGoal.target.addScaledVector(right, -dx * scale);
+        cameraGoal.target.y += dy * scale;
+        cameraGoal.target.x = THREE.MathUtils.clamp(
+          cameraGoal.target.x,
+          -25,
+          25
+        );
+        cameraGoal.target.y = THREE.MathUtils.clamp(
+          cameraGoal.target.y,
+          0,
+          15
+        );
+        cameraGoal.target.z = THREE.MathUtils.clamp(
+          cameraGoal.target.z,
+          -12,
+          12
+        );
+      } else {
+        cameraGoal.theta -= dx * 0.006;
+        cameraGoal.phi = THREE.MathUtils.clamp(
+          cameraGoal.phi - dy * 0.005,
+          0.25,
+          1.46
+        );
+      }
+
+      cameraState.target.copy(cameraGoal.target);
+      cameraState.radius = cameraGoal.radius;
+      cameraState.theta = cameraGoal.theta;
+      cameraState.phi = cameraGoal.phi;
+    });
+
+    function endPointer(event) {
+      pointer.active = false;
+      canvas.classList.remove("dragging");
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraGoal.radius = THREE.MathUtils.clamp(
+          cameraGoal.radius * Math.exp(event.deltaY * 0.001),
+          8,
+          75
+        );
+        cameraState.radius = cameraGoal.radius;
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => setCameraView("overview"));
+
+    // -------------------------------------------------------------------------
+    // Process animation
+    // -------------------------------------------------------------------------
+
+    const stageElement = document.getElementById("stage");
+    const temperatureElement = document.getElementById("temperature");
+    const carsElement = document.getElementById("cars-sintered");
+    const progressElement = document.getElementById("progress-fill");
+    const cycleElement = document.getElementById("cycle-time");
+    const pauseButton = document.getElementById("pause");
+
+    let simulationTime = 0;
+    let running = true;
+    const cycleDuration = 18;
+
+    pauseButton.addEventListener("click", () => {
+      running = !running;
+      pauseButton.textContent = running ? "Pause" : "Resume";
+      pauseButton.classList.toggle("active", !running);
+    });
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setCameraView(button.dataset.view);
+      });
+    });
+
+    function smooth01(value) {
+      const t = THREE.MathUtils.clamp(value, 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+
+    function updateProcess(time) {
+      const phase = time % cycleDuration;
+      let carX = -12;
+      let pressDrop = 0;
+
+      // Position, press, lift, transfer, and return sequence.
+      if (phase >= 2 && phase < 3.5) {
+        pressDrop = smooth01((phase - 2) / 1.5);
+      } else if (phase >= 3.5 && phase < 4.5) {
+        pressDrop = 1;
+      } else if (phase >= 4.5 && phase < 6) {
+        pressDrop = 1 - smooth01((phase - 4.5) / 1.5);
+        carX = THREE.MathUtils.lerp(-12, 0, smooth01((phase - 4.5) / 1.5));
+      } else if (phase >= 6 && phase < 8.5) {
+        carX = 0;
+      } else if (phase >= 8.5 && phase < 10) {
+        pressDrop = 1 - smooth01((phase - 8.5) / 1.5);
+        carX = THREE.MathUtils.lerp(0, 12, smooth01((phase - 8.5) / 1.5));
+      } else if (phase >= 10 && phase < 11.5) {
+        pressDrop = smooth01((phase - 10) / 1.5);
+        carX = 12;
+      } else if (phase >= 11.5 && phase < 12.5) {
+        pressDrop = 1;
+        carX = 12;
+      } else if (phase >= 12.5 && phase < 14.5) {
+        pressDrop = 1 - smooth01((phase - 12.5) / 2);
+        carX = THREE.MathUtils.lerp(12, -12, smooth01((phase - 12.5) / 2));
+      } else {
+        carX = -12;
+      }
+
+      pressAssembly.position.x = carX;
+      pressHead.position.y = -pressDrop;
+
+      let stage;
+      if (phase < 2) {
+        stage = "POSITIONING OVER CAR 01";
+      } else if (phase < 3.5) {
+        stage = "HYDRAULIC PRESSURE";
+      } else if (phase < 4.5) {
+        stage = "HEAT DISTRIBUTION";
+      } else if (phase < 6) {
+        stage = "TRANSFERRING TO CAR 02";
+      } else if (phase < 7.5) {
+        stage = "PRESSING CAR 02";
+      } else if (phase < 8.5) {
+        stage = "HEAT DISTRIBUTION";
+      } else if (phase < 10) {
+        stage = "TRANSFERRING TO CAR 03";
+      } else if (phase < 11.5) {
+        stage = "PRESSING CAR 03";
+      } else if (phase < 12.5) {
+        stage = "HEAT DISTRIBUTION";
+      } else if (phase < 14.5) {
+        stage = "RETURNING TO START";
+      } else {
+        stage = "CYCLE COMPLETE / RESET";
+      }
+
+      stageElement.textContent = stage;
+
+      const temperature = 580 + pressDrop * 150;
+      temperatureElement.textContent = `${Math.round(temperature)} °C`;
+
+      let carsSintered = 0;
+      if (phase >= 14.5) carsSintered = 3;
+      else if (phase >= 12.5) carsSintered = 2;
+      else if (phase >= 11.5) carsSintered = 2;
+      else if (phase >= 10) carsSintered = 1;
+      else if (phase >= 7.5) carsSintered = 1;
+      else if (phase >= 5) carsSintered = 0;
+
+      carsElement.textContent = `${carsSintered} / 3`;
+      progressElement.style.width = `${(phase / cycleDuration) * 100}%`;
+      cycleElement.textContent = `${phase.toFixed(1).padStart(4, "0")} s`;
+
+      // Animate the bucket elevator.
+      for (let i = 0; i < elevatorBuckets.length; i++) {
+        const bucket = elevatorBuckets[i];
+        const travel = 0.7 + ((i * 1.18 + simulationTime * 1.12) % 11.2);
+        bucket.position.y = travel;
+        bucket.rotation.z = Math.sin(simulationTime * 2.2 + i) * 0.035;
+      }
+
+      // Falling material appears only while the press is active.
+      const activePress =
+        phase >= 3.3 && phase < 12.7 && pressDrop > 0.05;
+
+      for (const particle of fallingParticles) {
+        particle.mesh.visible = activePress;
+
+        if (activePress) {
+          const progress = (simulationTime * particle.speed + particle.phase) % 1;
+          const targetY = 4.4 - pressDrop;
+          const startY = 9.05;
+
+          particle.mesh.position.y = THREE.MathUtils.lerp(
+            startY,
+            targetY,
+            progress
+          );
+
+          particle.mesh.position.x =
+            carX + particle.offsetX * (1 - progress * 0.7);
+
+          particle.mesh.position.z =
+            particle.offsetZ * (1 - progress * 0.55);
+
+          const scale = 0.55 + progress * 2.2;
+          particle.mesh.scale.setScalar(scale);
+        }
+      }
+
+      kilnLights.forEach((light, index) => {
+        light.intensity =
+          31 + Math.sin(simulationTime * 3.2 + index * 1.7) * 4;
+      });
+
+      hopperBody.material.emissive.setHex(0x000000);
+      hopperBody.material.emissiveIntensity =
+        activePress ? 0.8 + Math.sin(simulationTime * 5) * 0.35 : 0;
+    }
+
+    // -------------------------------------------------------------------------
+    // Resize and render loop
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (running) {
+        simulationTime += dt;
+      }
+
+      updateProcess(simulationTime);
+
+      // Smooth camera preset transitions.
+      const cameraBlend = 1 - Math.exp(-dt * 8);
+      cameraState.target.lerp(cameraGoal.target, cameraBlend);
+      cameraState.radius = THREE.MathUtils.lerp(
+        cameraState.radius,
+        cameraGoal.radius,
+        cameraBlend
+      );
+      cameraState.theta = THREE.MathUtils.lerp(
+        cameraState.theta,
+        cameraGoal.theta,
+        cameraBlend
+      );
+      cameraState.phi = THREE.MathUtils.lerp(
+        cameraState.phi,
+        cameraGoal.phi,
+        cameraBlend
+      );
+
+      const sinPhi = Math.sin(cameraState.phi);
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * sinPhi * Math.sin(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z +
+          cameraState.radius * sinPhi * Math.cos(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+
+      renderer.render(scene, camera);
+    }
+
+    updateProcess(0);
+    animate();
+
+    requestAnimationFrame(() => {
+      document.getElementById("loading").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

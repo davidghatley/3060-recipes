@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bicycle Service Workshop</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #111719;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 22px;
+      left: 24px;
+      z-index: 10;
+      padding: 13px 17px;
+      color: #f4ead8;
+      background: rgba(20, 28, 29, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .title-card h1 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .title-card p {
+      margin: 0;
+      color: #b9c3bf;
+      font-size: 12px;
+    }
+
+    .controls {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #d7dfdc;
+      background: rgba(20, 28, 29, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 7px;
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+    }
+
+    button {
+      padding: 7px 10px;
+      color: #f2eee4;
+      background: #a94732;
+      border: 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover {
+      background: #8e3828;
+    }
+
+    @media (max-width: 650px) {
+      .title-card {
+        top: 12px;
+        left: 12px;
+      }
+
+      .title-card h1 {
+        font-size: 14px;
+      }
+
+      .controls {
+        right: 12px;
+        bottom: 12px;
+      }
+
+      .controls span {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div class="title-card">
+    <h1>Bicycle Service Workshop</h1>
+    <p>Frame repair · wheel truing · parts</p>
+  </div>
+
+  <div class="controls">
+    <span>Drag to orbit · Scroll or pinch to zoom</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ---------------------------------------------------------------------
+
+    const canvas = document.querySelector("#scene");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x171d1e);
+    scene.fog = new THREE.Fog(0x171d1e, 18, 31);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 1.75, -1.65);
+    const spherical = new THREE.Spherical(14.4, 1.03, 0.52);
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // ---------------------------------------------------------------------
+    // Materials and geometry helpers
+    // ---------------------------------------------------------------------
+
+    const material = (color, roughness = 0.75, metalness = 0) =>
+      new THREE.MeshStandardMaterial({ color, roughness, metalness });
+
+    const M = {
+      wall: material(0x777d76, 0.96),
+      wallDark: material(0x555e59, 0.98),
+      trim: material(0x303a38, 0.88),
+      floorA: material(0x594432, 0.94),
+      floorB: material(0x66503b, 0.94),
+      wood: material(0x825a37, 0.82),
+      woodLight: material(0xa7794b, 0.78),
+      woodDark: material(0x4c3325, 0.88),
+      steel: material(0x7f8988, 0.38, 0.78),
+      darkSteel: material(0x252d2e, 0.45, 0.72),
+      black: material(0x111414, 0.92),
+      rubber: material(0x171a19, 0.98),
+      red: material(0xa93628, 0.68),
+      orange: material(0xd16a2e, 0.7),
+      blue: material(0x315d70, 0.72),
+      green: material(0x496a52, 0.75),
+      yellow: material(0xd5a63c, 0.7),
+      cream: material(0xe3d8c2, 0.8),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x8bb9c4,
+        roughness: 0.2,
+        metalness: 0.05,
+        transparent: true,
+        opacity: 0.48
+      }),
+      pegboard: material(0xb09161, 0.95),
+      board: material(0x9c7d4f, 0.95),
+      light: material(0xffe2ad, 0.45)
+    };
+
+    function box(parent, w, h, d, mat, x = 0, y = 0, z = 0) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        mat
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(
+      parent,
+      rTop,
+      rBottom,
+      height,
+      mat,
+      x = 0,
+      y = 0,
+      z = 0,
+      segments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(rTop, rBottom, height, segments),
+        mat
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function tube(parent, a, b, radius, mat, segments = 10) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, segments),
+        mat
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function torus(
+      parent,
+      radius,
+      tubeRadius,
+      mat,
+      x = 0,
+      y = 0,
+      z = 0,
+      arc = Math.PI * 2
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tubeRadius, 10, 56, arc),
+        mat
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeLabelTexture(title, subtitle) {
+      const c = document.createElement("canvas");
+      c.width = 1024;
+      c.height = 256;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = "#202a2b";
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.strokeStyle = "#d5b67a";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(14, 14, c.width - 28, c.height - 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#efe4ca";
+      ctx.font = "700 74px Arial";
+      ctx.fillText(title, 512, 112);
+
+      ctx.fillStyle = "#b9ad8e";
+      ctx.font = "28px Arial";
+      ctx.fillText(subtitle, 512, 170);
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makePegboardTexture() {
+      const c = document.createElement("canvas");
+      c.width = 512;
+      c.height = 256;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = "#b09161";
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.strokeStyle = "rgba(67,48,27,0.48)";
+      ctx.lineWidth = 3;
+
+      const cols = 24;
+      const rows = 12;
+      const cellW = c.width / cols;
+      const cellH = c.height / rows;
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const px = x * cellW + cellW * 0.5;
+          const py = y * cellH + cellH * 0.5;
+
+          ctx.beginPath();
+          ctx.arc(px, py, 3.2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // ---------------------------------------------------------------------
+    // Workshop shell
+    // ---------------------------------------------------------------------
+
+    box(scene, 13.2, 0.12, 10.4, M.floorA, 0, -0.08, 0);
+
+    for (let i = 0; i < 20; i++) {
+      const plank = box(
+        scene,
+        13.0,
+        0.035,
+        0.535,
+        i % 2 ? M.floorB : M.floorA,
+        0,
+        0.005,
+        -4.9 + i * 0.55
+      );
+      plank.receiveShadow = true;
+    }
+
+    box(scene, 13.2, 5.5, 0.2, M.wall, 0, 2.75, -4.7);
+    box(scene, 0.2, 5.5, 10.4, M.wall, -6.4, 2.75, 0);
+
+    box(scene, 13.0, 0.22, 0.12, M.trim, 0, 0.12, -4.56);
+    box(scene, 0.12, 0.22, 10.2, M.trim, -6.26, 0.12, 0);
+    box(scene, 13.2, 0.25, 0.24, M.woodDark, 0, 5.22, -4.55);
+    box(scene, 0.24, 0.25, 10.4, M.woodDark, -6.25, 5.22, 0);
+
+    // Vertical wall battens.
+    for (let x = -5.8; x <= 5.8; x += 1.45) {
+      box(scene, 0.035, 4.9, 0.035, M.wallDark, x, 2.7, -4.575);
+    }
+
+    // Left-wall window.
+    box(scene, 0.13, 1.9, 0.13, M.trim, -6.25, 2.9, -2.25);
+    box(scene, 0.13, 1.9, 0.13, M.trim, -6.25, 2.9, 0.15);
+    box(scene, 0.13, 0.13, 1.75, M.trim, -6.25, 3.88, -1.05);
+    box(scene, 0.13, 0.13, 1.75, M.trim, -6.25, 1.92, -1.05);
+    box(scene, 0.08, 1.58, 1.42, M.glass, -6.24, 2.9, -1.05);
+    box(scene, 0.1, 1.62, 0.05, M.woodLight, -6.18, 2.9, -1.05);
+
+    // ---------------------------------------------------------------------
+    // Wall sign and clock
+    // ---------------------------------------------------------------------
+
+    box(scene, 4.8, 1.22, 0.12, M.woodDark, 0, 4.25, -4.48);
+
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.65, 1.16),
+      new THREE.MeshBasicMaterial({
+        map: makeLabelTexture("BIKE SERVICE", "FRAME REPAIR  •  WHEEL TRUING")
+      })
+    );
+    sign.position.set(0, 4.25, -4.405);
+    scene.add(sign);
+
+    const clock = new THREE.Group();
+    clock.position.set(4.85, 4.18, -4.44);
+    scene.add(clock);
+
+    torus(clock, 0.29, 0.035, M.darkSteel, 0, 0, 0);
+    const clockFace = new THREE.Mesh(
+      new THREE.CircleGeometry(0.255, 32),
+      M.cream
+    );
+    clockFace.position.z = 0.012;
+    clock.add(clockFace);
+
+    const hourHand = box(clock, 0.025, 0.16, 0.018, M.black, 0, 0.055, 0.035);
+    hourHand.rotation.z = -0.7;
+    const minuteHand = box(clock, 0.018, 0.22, 0.018, M.black, 0.035, 0.09, 0.039);
+    minuteHand.rotation.z = 0.8;
+
+    // ---------------------------------------------------------------------
+    // Workbench along the back wall
+    // ---------------------------------------------------------------------
+
+    const bench = new THREE.Group();
+    bench.position.set(-3.45, 0, -3.75);
+    scene.add(bench);
+
+    box(bench, 4.8, 0.18, 1.65, M.wood, 0, 1.65, 0);
+    box(bench, 4.55, 0.12, 1.42, M.woodDark, 0, 1.46, 0);
+
+    for (const x of [-2.15, 2.15]) {
+      for (const z of [-0.62, 0.62]) {
+        box(bench, 0.16, 1.55, 0.16, M.woodDark, x, 0.77, z);
+        box(bench, 0.34, 0.08, 0.34, M.darkSteel, x, 0.04, z);
+      }
+    }
+
+    box(bench, 1.25, 0.48, 0.08, M.woodDark, -0.8, 1.15, 0.79);
+    box(bench, 0.055, 0.07, 0.28, M.steel, -0.8, 1.16, 0.84);
+
+    // Bench vise.
+    box(bench, 0.16, 0.2, 0.48, M.darkSteel, 2.18, 1.78, 0.05);
+    box(bench, 0.48, 0.16, 0.16, M.darkSteel, 2.18, 1.91, 0.3);
+    box(bench, 0.12, 0.28, 0.12, M.steel, 2.18, 1.91, 0.3);
+
+    // Toolbox and parts on the bench.
+    box(scene, 1.05, 0.58, 0.62, M.red, -4.85, 1.98, -2.45);
+    box(scene, 1.12, 0.08, 0.69, M.woodDark, -4.85, 2.3, -2.45);
+    box(scene, 0.1, 0.25, 0.1, M.darkSteel, -4.85, 2.38, -2.45);
+
+    for (let i = 0; i < 5; i++) {
+      cylinder(
+        scene,
+        0.075,
+        0.085,
+        0.045,
+        M.steel,
+        -2.75 + i * 0.18,
+        1.78,
+        -3.1,
+        12
+      );
+    }
+
+    // Stool.
+    const stool = new THREE.Group();
+    stool.position.set(-3.25, 0, -1.55);
+    scene.add(stool);
+
+    cylinder(stool, 0.38, 0.4, 0.12, M.red, 0, 0.78, 0, 24);
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * Math.PI * 2;
+      tube(
+        stool,
+        [Math.cos(a) * 0.28, 0.74, Math.sin(a) * 0.28],
+        [Math.cos(a) * 0.48, 0.08, Math.sin(a) * 0.48],
+        0.035,
+        M.darkSteel
+      );
+    }
+
+    // Coiled cable on the floor.
+    for (let i = 0; i < 5; i++) {
+      const ring = torus(
+        scene,
+        0.48 + i * 0.055,
+        0.025,
+        M.black,
+        4.3,
+        0.055,
+        1.55,
+        Math.PI * 1.65
+      );
+      ring.rotation.x = Math.PI / 2;
+    }
+
+    // ---------------------------------------------------------------------
+    // Wheel construction
+    // ---------------------------------------------------------------------
+
+    function makeWheel(parent, radius, z, rimMaterial = M.steel) {
+      const wheel = new THREE.Group();
+      wheel.position.z = z;
+      parent.add(wheel);
+
+      torus(wheel, radius, 0.058, M.rubber, 0, 0, 0);
+
+      // Small tread blocks give the tires a workshop-reality silhouette.
+      for (let i = 0; i < 20; i++) {
+        const a = (i / 20) * Math.PI * 2;
+        const tread = box(
+          wheel,
+          0.075,
+          0.15,
+          0.085,
+          M.rubber,
+          Math.cos(a) * (radius + 0.008),
+          Math.sin(a) * (radius + 0.008),
+          0
+        );
+        tread.rotation.z = a - Math.PI / 2;
+      }
+
+      torus(wheel, radius * 0.82, 0.024, rimMaterial, 0, 0, 0.018);
+      torus(wheel, radius * 0.5, 0.026, M.darkSteel, 0, 0, 0.025);
+
+      const hub = cylinder(
+        wheel,
+        0.075,
+        0.075,
+        0.25,
+        M.steel,
+        0,
+        0,
+        0.04,
+        16
+      );
+      hub.rotation.x = Math.PI / 2;
+
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        tube(
+          wheel,
+          [0, 0, 0.025],
+          [Math.cos(a) * radius * 0.8, Math.sin(a) * radius * 0.8, 0.025],
+          0.011,
+          M.steel,
+          6
+        );
+      }
+
+      return wheel;
+    }
+
+    // ---------------------------------------------------------------------
+    // Bicycle repair stand and mounted bicycle frame
+    // ---------------------------------------------------------------------
+
+    const repairStand = new THREE.Group();
+    repairStand.position.set(-0.55, 0, -3.55);
+    scene.add(repairStand);
+
+    box(repairStand, 1.45, 0.12, 0.6, M.darkSteel, 0, 0.12, 0);
+    box(repairStand, 0.14, 2.25, 0.14, M.steel, 0, 1.25, 0);
+    box(repairStand, 1.45, 0.14, 0.14, M.steel, 0, 2.25, 0);
+
+    for (const x of [-0.58, 0.58]) {
+      box(repairStand, 0.12, 0.1, 0.55, M.darkSteel, x, 0.05, 0.04);
+    }
+
+    // Clamp around the seat tube.
+    box(repairStand, 0.45, 0.11, 0.18, M.darkSteel, 0, 2.25, 0.56);
+    tube(
+      repairStand,
+      [-0.22, 2.25, 0.58],
+      [0.22, 2.25, 0.58],
+      0.035,
+      M.steel
+    );
+    box(repairStand, 0.07, 0.3, 0.07, M.darkSteel, -0.2, 2.25, 0.58);
+    box(repairStand, 0.07, 0.3, 0.07, M.darkSteel, 0.2, 2.25, 0.58);
+
+    const bike = new THREE.Group();
+    bike.position.set(0, 0, 0.35);
+    repairStand.add(bike);
+
+    const rear = [0, 1.65, 0];
+    const bottomBracket = [0, 1.05, 0];
+    const seatJoint = [0, 2.25, 0];
+    const headBottom = [0, 2.85, 0];
+    const headTop = [0, 3.35, 0];
+
+    tube(bike, rear, bottomBracket, 0.045, M.red);
+    tube(bike, bottomBracket, seatJoint, 0.047, M.red);
+    tube(bike, seatJoint, rear, 0.043, M.red);
+    tube(bike, seatJoint, headTop, 0.045, M.red);
+    tube(bike, bottomBracket, headBottom, 0.05, M.red);
+    tube(bike, headBottom, headTop, 0.055, M.red);
+    tube(bike, bottomBracket, rear, 0.025, M.darkSteel);
+    tube(bike, seatJoint, rear, 0.025, M.darkSteel);
+
+    // Front fork and wheel.
+    tube(bike, headBottom, [0, 1.65, 0.18], 0.035, M.darkSteel);
+    tube(bike, [headBottom[0] - 0.075, headBottom[1], headBottom[2]], [0, 1.65, 0.18], 0.03, M.steel);
+    tube(bike, [headBottom[0] + 0.075, headBottom[1], headBottom[2]], [0, 1.65, 0.18], 0.03, M.steel);
+
+    makeWheel(bike, 0.69, 0.18);
+
+    // Seat, handlebar, crank, and pedals.
+    box(bike, 0.5, 0.08, 0.28, M.black, 0, 2.48, 0.08);
+    tube(bike, [0, 3.2, 0.08], [0, 3.43, 0.08], 0.025, M.darkSteel);
+    tube(bike, [-0.34, 3.43, 0.08], [0.34, 3.43, 0.08], 0.025, M.darkSteel);
+    tube(bike, [-0.34, 3.43, 0.08], [-0.34, 3.2, 0.08], 0.025, M.darkSteel);
+    tube(bike, [0.34, 3.43, 0.08], [0.34, 3.2, 0.08], 0.025, M.darkSteel);
+
+    tube(bike, bottomBracket, [-0.18, 1.04, 0.08], 0.035, M.darkSteel);
+    tube(bike, bottomBracket, [0.18, 1.04, 0.08], 0.035, M.darkSteel);
+    box(bike, 0.28, 0.05, 0.12, M.darkSteel, 0, 1.04, 0.12);
+
+    for (const side of [-1, 1]) {
+      tube(
+        bike,
+        [side * 0.18, 1.04, 0.12],
+        [side * 0.3, 0.9, 0.3],
+        0.025,
+        M.steel
+      );
+      box(bike, 0.22, 0.035, 0.1, M.darkSteel, side * 0.3, 0.88, 0.3);
+    }
+
+    // ---------------------------------------------------------------------
+    // Wheel truing stand
+    // ---------------------------------------------------------------------
+
+    const truingStand = new THREE.Group();
+    truingStand.position.set(1.8, 0, -3.55);
+    scene.add(truingStand);
+
+    box(truingStand, 1.35, 0.12, 0.62, M.darkSteel, 0, 0.12, 0);
+    box(truingStand, 0.14, 2.25, 0.14, M.steel, 0.48, 1.25, 0);
+    box(truingStand, 0.72, 0.14, 0.14, M.steel, -0.02, 2.25, 0);
+
+    for (const x of [-0.55, 0.55]) {
+      box(truingStand, 0.12, 0.1, 0.55, M.darkSteel, x, 0.05, 0.04);
+    }
+
+    // Axle clamp.
+    box(truingStand, 0.3, 0.1, 0.2, M.darkSteel, 0, 2.08, 0.36);
+    tube(
+      truingStand,
+      [0, 2.08, 0.38],
+      [0, 1.65, 0.38],
+      0.035,
+      M.steel
+    );
+    box(truingStand, 0.28, 0.08, 0.2, M.darkSteel, 0, 1.65, 0.38);
+
+    const truingWheel = makeWheel(truingStand, 0.72, 0.2);
+    truingWheel.rotation.z = 0.08;
+
+    // Small spoke-tensioning tool and red service indicator.
+    tube(
+      truingStand,
+      [0.62, 1.2, 0.62],
+      [0.85, 1.62, 0.66],
+      0.025,
+      M.red
+    );
+    box(truingStand, 0.18, 0.08, 0.1, M.darkSteel, 0.85, 1.62, 0.66);
+    box(truingStand, 0.11, 0.22, 0.11, M.red, 0.48, 1.82, 0.5);
+
+    // ---------------------------------------------------------------------
+    // Pegboard and hanging tires
+    // ---------------------------------------------------------------------
+
+    const pegboard = new THREE.Group();
+    pegboard.position.set(-4.65, 2.95, -4.43);
+    scene.add(pegboard);
+
+    box(pegboard, 4.7, 1.7, 0.12, M.board, 0, 0, 0);
+
+    const pegTexture = makePegboardTexture();
+    const pegPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.65, 1.65),
+      new THREE.MeshStandardMaterial({ map: pegTexture, roughness: 0.95 })
+    );
+    pegPlane.position.set(0, 0, 0.066);
+    pegPlane.receiveShadow = true;
+    pegboard.add(pegPlane);
+
+    function addHook(parent, x, y) {
+      const hook = new THREE.Group();
+      hook.position.set(x, y, 0.1);
+      parent.add(hook);
+
+      tube(
+        hook,
+        [0, -0.12, 0],
+        [0, 0.18, 0],
+        0.014,
+        M.steel,
+        6
+      );
+
+      const loop = torus(hook, 0.055, 0.014, M.steel, 0, 0.19, 0, Math.PI * 1.55);
+      loop.rotation.z = -0.35;
+
+      return hook;
+    }
+
+    const tireXs = [-5.65, -4.35, -3.05];
+
+    tireXs.forEach((x, index) => {
+      addHook(pegboard, x, 3.58);
+
+      const tire = new THREE.Group();
+      tire.position.set(x, 3.08, 0.18);
+      pegboard.add(tire);
+
+      torus(tire, 0.39, 0.105, M.rubber, 0, 0, 0);
+
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2;
+        const tread = box(
+          tire,
+          0.075,
+          0.145,
+          0.09,
+          M.rubber,
+          Math.cos(a) * 0.395,
+          Math.sin(a) * 0.395,
+          0
+        );
+        tread.rotation.z = a - Math.PI / 2;
+      }
+
+      torus(tire, 0.255, 0.022, M.steel, 0, 0, 0.015);
+      tube(
+        tire,
+        [0, 0.31, 0.02],
+        [0, 0.48, 0.02],
+        0.012,
+        M.steel,
+        6
+      );
+
+      // Slight variation in tire orientation.
+      tire.rotation.z = (index - 1) * 0.04;
+    });
+
+    // ---------------------------------------------------------------------
+    // Parts shelf with open bins
+    // ---------------------------------------------------------------------
+
+    const shelf = new THREE.Group();
+    shelf.position.set(4.25, 1.28, -4.05);
+    scene.add(shelf);
+
+    box(shelf, 3.75, 0.12, 0.8, M.wood, 0, 0, 0);
+    box(shelf, 3.75, 0.08, 0.08, M.woodDark, 0, -0.3, -0.34);
+
+    for (const x of [-1.65, 1.65]) {
+      box(shelf, 0.09, 1.0, 0.09, M.woodDark, x, -0.5, 0.25);
+      box(shelf, 0.09, 1.0, 0.09, M.woodDark, x, -0.5, -0.25);
+    }
+
+    function makePartsBin(x, y, z, bodyMaterial, labelColor) {
+      const bin = new THREE.Group();
+      bin.position.set(x, y, z);
+      scene.add(bin);
+
+      box(bin, 0.66, 0.07, 0.48, bodyMaterial, 0, 0, 0);
+      box(bin, 0.66, 0.36, 0.055, bodyMaterial, 0, 0.18, 0.235);
+      box(bin, 0.66, 0.36, 0.055, bodyMaterial, 0, 0.18, -0.235);
+      box(bin, 0.055, 0.36, 0.48, bodyMaterial, 0.325, 0.18, 0);
+      box(bin, 0.055, 0.36, 0.48, bodyMaterial, -0.325, 0.18, 0);
+
+      // Small parts visible in the open bins.
+      box(bin, 0.13, 0.09, 0.1, labelColor, -0.12, 0.12, 0.04);
+      cylinder(bin, 0.055, 0.065, 0.1, M.steel, 0.1, 0.13, -0.04, 12);
+      box(bin, 0.1, 0.06, 0.12, M.yellow, 0.14, 0.11, 0.11);
+    }
+
+    makePartsBin(-1.25, 0.07, 0, M.blue, M.cream);
+    makePartsBin(-0.6, 0.07, 0, M.green, M.cream);
+    makePartsBin(0.05, 0.07, 0, M.orange, M.cream);
+    makePartsBin(0.7, 0.07, 0, M.red, M.cream);
+    makePartsBin(1.3, 0.07, 0, M.gray || material(0x69716e, 0.8), M.cream);
+
+    // ---------------------------------------------------------------------
+    // Hand tools hanging on the pegboard
+    // ---------------------------------------------------------------------
+
+    function addScrewdriver(parent, x, y, z, rotation = 0) {
+      const tool = new THREE.Group();
+      tool.position.set(x, y, z);
+      tool.rotation.z = rotation;
+      parent.add(tool);
+
+      cylinder(tool, 0.075, 0.09, 0.25, M.red, 0, 0.1, 0, 16);
+      cylinder(tool, 0.018, 0.018, 0.22, M.steel, 0, -0.18, 0, 10);
+      box(tool, 0.045, 0.05, 0.04, M.steel, 0, -0.31, 0);
+    }
+
+    function addWrench(parent, x, y, z, rotation = 0) {
+      const tool = new THREE.Group();
+      tool.position.set(x, y, z);
+      tool.rotation.z = rotation;
+      parent.add(tool);
+
+      box(tool, 0.055, 0.34, 0.055, M.steel, -0.12, 0, 0);
+      box(tool, 0.055, 0.34, 0.055, M.steel, 0.12, 0, 0);
+      cylinder(tool, 0.04, 0.04, 0.48, M.woodDark, 0, 0, 0, 12);
+    }
+
+    function addPliers(parent, x, y, z, rotation = 0) {
+      const tool = new THREE.Group();
+      tool.position.set(x, y, z);
+      tool.rotation.z = rotation;
+      parent.add(tool);
+
+      tube(tool, [-0.07, 0.12, 0], [0.07, -0.22, 0], 0.022, M.steel);
+      tube(tool, [0.07, 0.12, 0], [-0.07, -0.22, 0], 0.022, M.steel);
+      box(tool, 0.16, 0.08, 0.07, M.darkSteel, 0, 0.12, 0);
+    }
+
+    function addHammer(parent, x, y, z, rotation = 0) {
+      const tool = new THREE.Group();
+      tool.position.set(x, y, z);
+      tool.rotation.z = rotation;
+      parent.add(tool);
+
+      cylinder(tool, 0.035, 0.04, 0.5, M.woodLight, 0, 0, 0, 12);
+      box(tool, 0.28, 0.09, 0.12, M.steel, 0, 0.27, 0);
+    }
+
+    addHook(pegboard, -6.45, 2.86);
+    addHammer(pegboard, -6.45, 2.58, 0.12, 0.12);
+
+    addHook(pegboard, -5.8, 2.78);
+    addWrench(pegboard, -5.8, 2.48, 0.12, 0.1);
+
+    addHook(pegboard, -5.15, 2.92);
+    addScrewdriver(pegboard, -5.15, 2.62, 0.12, -0.12);
+
+    addHook(pegboard, -4.5, 2.68);
+    addWrench(pegboard, -4.5, 2.38, 0.12, -0.08);
+
+    addHook(pegboard, -3.85, 3.0);
+    addPliers(pegboard, -3.85, 2.68, 0.12, 0.1);
+
+    addHook(pegboard, -3.2, 2.82);
+    addScrewdriver(pegboard, -3.2, 2.5, 0.12, 0.15);
+
+    // Wall-mounted service lamp.
+    box(scene, 0.55, 0.08, 0.3, M.darkSteel, -3.5, 4.78, -3.7);
+    const shade = torus(scene, 0.27, 0.1, M.orange, -3.5, 4.56, -3.7);
+    shade.rotation.x = Math.PI / 2;
+
+    const lampLight = new THREE.PointLight(0xffc77b, 18, 7, 2);
+    lampLight.position.set(-3.5, 4.35, -3.5);
+    scene.add(lampLight);
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xdce9eb, 0x3b2b20, 1.55));
+
+    const keyLight = new THREE.DirectionalLight(0xffe4bd, 3.1);
+    keyLight.position.set(4.5, 9, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -10;
+    keyLight.shadow.camera.right = 10;
+    keyLight.shadow.camera.top = 9;
+    keyLight.shadow.camera.bottom = -5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 28;
+    keyLight.shadow.bias = -0.00035;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xaec9d1, 1.1);
+    fillLight.position.set(-6, 5, 2);
+    scene.add(fillLight);
+
+    const warmLight = new THREE.PointLight(0xffb85c, 24, 9, 2);
+    warmLight.position.set(-0.8, 3.5, -2.5);
+    scene.add(warmLight);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: orbit, zoom, and touch pinch
+    // ---------------------------------------------------------------------
+
+    const pointers = new Map();
+    let lastX = 0;
+    let lastY = 0;
+    let pinchDistance = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1) {
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        pinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+
+        spherical.theta -= dx * 0.006;
+        spherical.phi -= dy * 0.005;
+        spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.32, 1.48);
+
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        const distance = pointerDistance();
+
+        if (pinchDistance > 0 && distance > 0) {
+          spherical.radius *= pinchDistance / distance;
+          spherical.radius = THREE.MathUtils.clamp(spherical.radius, 8, 22);
+        }
+
+        pinchDistance = distance;
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        lastX = remaining.x;
+        lastY = remaining.y;
+      }
+
+      pinchDistance = pointers.size === 2 ? pointerDistance() : 0;
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius *= Math.exp(event.deltaY * 0.001);
+        spherical.radius = THREE.MathUtils.clamp(spherical.radius, 8, 22);
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      cameraTarget.set(0, 1.75, -1.65);
+      spherical.set(14.4, 1.03, 0.52);
+      updateCamera();
+    }
+
+    document.querySelector("#reset").addEventListener("click", resetView);
+    canvas.addEventListener("dblclick", resetView);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    // ---------------------------------------------------------------------
+    // Render loop
+    // ---------------------------------------------------------------------
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

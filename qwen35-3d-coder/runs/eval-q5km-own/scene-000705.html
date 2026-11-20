@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cryogenic Dilution Refrigerator</title>
+
+  <style>
+    :root {
+      --bg: #050912;
+      --panel: rgba(10, 18, 31, 0.78);
+      --panel-border: rgba(126, 194, 255, 0.18);
+      --text: #eaf7ff;
+      --muted: #8da6bb;
+      --cyan: #63dcff;
+      --cyan-bright: #a9f3ff;
+      --red: #ff647c;
+      --green: #75f0b5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 44%, transparent 35%, rgba(0, 0, 0, 0.48) 100%),
+        linear-gradient(180deg, rgba(2, 6, 13, 0.2), transparent 30%, rgba(2, 6, 13, 0.45));
+      z-index: 2;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      right: 28px;
+      z-index: 10;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 12px 16px;
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      background: rgba(7, 14, 25, 0.66);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(99, 220, 255, 0.35);
+      border-radius: 10px;
+      background: rgba(99, 220, 255, 0.08);
+      color: var(--cyan-bright);
+      font-size: 18px;
+      box-shadow: inset 0 0 18px rgba(99, 220, 255, 0.08);
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      background: rgba(7, 14, 25, 0.66);
+      color: #bcd2e6;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(14px);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.45;
+        transform: scale(0.75);
+      }
+    }
+
+    .panel {
+      position: fixed;
+      top: 118px;
+      left: 28px;
+      z-index: 10;
+      width: 286px;
+      padding: 20px;
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+      backdrop-filter: blur(18px);
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 17px;
+    }
+
+    .panel-heading h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .panel-heading p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .temperature {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin-bottom: 6px;
+    }
+
+    #tempValue {
+      color: var(--cyan-bright);
+      font-size: 48px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    #kelvin {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .stage-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 13px;
+      border-top: 1px solid rgba(130, 180, 220, 0.11);
+    }
+
+    #stageValue {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .stage-index {
+      color: var(--cyan);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      margin: 15px 0 7px;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
+    .progress {
+      height: 3px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: rgba(125, 170, 210, 0.1);
+    }
+
+    #progressFill {
+      width: 89%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #3b8cff, #8cecff);
+      box-shadow: 0 0 12px rgba(99, 220, 255, 0.65);
+      transition: width 0.15s linear;
+    }
+
+    .layer-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    .stat {
+      padding: 11px 12px;
+      border: 1px solid rgba(130, 180, 220, 0.1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 17px;
+    }
+
+    .control-button {
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 1px solid rgba(125, 185, 230, 0.15);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.035);
+      color: #bcd2e6;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .control-button:hover {
+      border-color: rgba(99, 220, 255, 0.45);
+      color: white;
+      background: rgba(99, 220, 255, 0.07);
+    }
+
+    .control-button.active {
+      border-color: rgba(99, 220, 255, 0.45);
+      color: var(--cyan-bright);
+      background: rgba(99, 220, 255, 0.1);
+    }
+
+    .control-button.wide {
+      grid-column: 1 / -1;
+    }
+
+    .legend {
+      position: fixed;
+      right: 28px;
+      bottom: 27px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .legend-title {
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #b9ccd9;
+      font-size: 10px;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      box-shadow: 0 0 7px currentColor;
+    }
+
+    .hint {
+      position: fixed;
+      left: 50%;
+      bottom: 25px;
+      z-index: 10;
+      transform: translateX(-50%);
+      padding: 9px 14px;
+      border: 1px solid rgba(125, 185, 230, 0.1);
+      border-radius: 99px;
+      background: rgba(5, 11, 21, 0.58);
+      color: #7890a8;
+      font-size: 10px;
+      letter-spacing: 0.03em;
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .world-label {
+      position: fixed;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border: 1px solid rgba(113, 185, 235, 0.18);
+      border-radius: 6px;
+      background: rgba(5, 13, 24, 0.72);
+      color: #b8d5e8;
+      font-size: 9px;
+      letter-spacing: 0.035em;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.15s ease;
+    }
+
+    .world-label::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    .world-label::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -18px;
+      width: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(99, 220, 255, 0.65), transparent);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      background: #050912;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader {
+      text-align: center;
+    }
+
+    .loader-ring {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 15px;
+      border: 2px solid rgba(99, 220, 255, 0.15);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loader strong {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .loader span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+      }
+
+      .brand {
+        padding: 10px;
+      }
+
+      .brand-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      .live-badge {
+        display: none;
+      }
+
+      .panel {
+        top: 76px;
+        left: 12px;
+        width: min(286px, calc(100vw - 24px));
+        padding: 16px;
+      }
+
+      .legend {
+        display: none;
+      }
+
+      .hint {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        transform: none;
+        text-align: center;
+      }
+
+      .world-label {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="scene"></canvas>
+  <div class="vignette"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">❖</div>
+      <div>
+        <p class="eyebrow">CryoLab / Experimental Systems</p>
+        <h1>Dilution Refrigerator</h1>
+      </div>
+    </div>
+
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      Live model
+    </div>
+  </header>
+
+  <aside class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Current temperature</h2>
+        <p>Cold-stage setpoint</p>
+      </div>
+    </div>
+
+    <div class="temperature">
+      <span id="tempValue">30.00</span>
+      <span id="kelvin">K</span>
+    </div>
+
+    <div class="stage-row">
+      <div id="stageValue">Warm-up / vacuum pre-conditioning</div>
+      <div class="stage-index" id="stageIndex">Stage 01</div>
+    </div>
+
+    <div class="range-label">
+      <span>Setpoint</span>
+      <span id="setpointValue">2400 mK</span>
+    </div>
+
+    <input
+      id="temperatureSlider"
+      type="range"
+      min="0"
+      max="1000"
+      step="1"
+      value="972"
+      aria-label="Target temperature"
+    >
+
+    <div class="progress">
+      <div id="progressFill"></div>
+    </div>
+
+    <div class="layer-stats">
+      <div class="stat">
+        <div class="stat-label">Plate stages</div>
+        <div class="stat-value">18</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Heat exchanger</div>
+        <div class="stat-value">Cu / Ag</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="control-button" id="pauseButton">Pause cooling</button>
+      <button class="control-button active" id="xrayButton">X-ray shell</button>
+      <button class="control-button" id="orbitButton">Auto orbit</button>
+      <button class="control-button wide" id="resetButton">Reset view</button>
+    </div>
+  </aside>
+
+  <div class="legend">
+    <div class="legend-title">Signal routing</div>
+    <div class="legend-item">
+      <span class="legend-line" style="color:#ff647c;background:#ff647c"></span>
+      Power bus
+    </div>
+    <div class="legend-item">
+      <span class="legend-line" style="color:#63dcff;background:#63dcff"></span>
+      Cryo line
+    </div>
+    <div class="legend-item">
+      <span class="legend-line" style="color:#ffd166;background:#ffd166"></span>
+      Control bus
+    </div>
+  </div>
+
+  <div class="hint">
+    Drag to orbit · Shift/right-drag to pan · Scroll to zoom · R to reset
+  </div>
+
+  <div id="loading">
+    <div class="loader">
+      <div class="loader-ring"></div>
+      <strong>Initializing cryogenic system</strong>
+      <span>Preparing layered plate assembly</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const $ = (id) => document.getElementById(id);
+    const canvas = $("scene");
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    let renderer;
+
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: false,
+        powerPreference: "high-performance"
+      });
+    } catch (error) {
+      $("loading").innerHTML = `
+        <div class="loader">
+          <strong>WebGL could not be initialized</strong>
+          <span>Please use a browser with hardware acceleration enabled.</span>
+        </div>`;
+      throw error;
+    }
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050912);
+    scene.fog = new THREE.FogExp2(0x050912, 0.027);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const clock = new THREE.Clock();
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const materials = {
+      steel: new THREE.MeshStandardMaterial({
+        color: 0xa7b7c2,
+        metalness: 0.92,
+        roughness: 0.24
+      }),
+      paleSteel: new THREE.MeshStandardMaterial({
+        color: 0xd0d9df,
+        metalness: 0.86,
+        roughness: 0.2
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x263441,
+        metalness: 0.82,
+        roughness: 0.31
+      }),
+      blackSteel: new THREE.MeshStandardMaterial({
+        color: 0x111820,
+        metalness: 0.72,
+        roughness: 0.38
+      }),
+      copper: new THREE.MeshStandardMaterial({
+        color: 0xc87842,
+        metalness: 0.9,
+        roughness: 0.25,
+        side: THREE.DoubleSide
+      }),
+      gold: new THREE.MeshStandardMaterial({
+        color: 0xd5a84d,
+        metalness: 0.88,
+        roughness: 0.24
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x090c11,
+        metalness: 0.05,
+        roughness: 0.82
+      }),
+      glass: new THREE.MeshPhysicalMaterial({
+        color: 0x83ddff,
+        metalness: 0,
+        roughness: 0.08,
+        transmission: 0.28,
+        transparent: true,
+        opacity: 0.16,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }),
+      cyanGlow: new THREE.MeshStandardMaterial({
+        color: 0x63dcff,
+        emissive: 0x20bde9,
+        emissiveIntensity: 2.2,
+        metalness: 0.2,
+        roughness: 0.25
+      }),
+      redGlow: new THREE.MeshStandardMaterial({
+        color: 0xff647c,
+        emissive: 0xff284f,
+        emissiveIntensity: 2.4,
+        metalness: 0.15,
+        roughness: 0.25
+      }),
+      greenGlow: new THREE.MeshStandardMaterial({
+        color: 0x75f0b5,
+        emissive: 0x38d978,
+        emissiveIntensity: 2.1,
+        metalness: 0.15,
+        roughness: 0.25
+      })
+    };
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+
+    function addMesh(
+      parent,
+      geometry,
+      material,
+      position = [0, 0, 0],
+      rotation = [0, 0, 0]
+    ) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...position);
+      mesh.rotation.set(...rotation);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addEdges(mesh, color = 0x72d8ff, opacity = 0.45) {
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(mesh.geometry, 28),
+        new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity
+        })
+      );
+      edges.position.copy(mesh.position);
+      edges.rotation.copy(mesh.rotation);
+      mesh.parent.add(edges);
+      return edges;
+    }
+
+    function makeGlowTexture() {
+      const glowCanvas = document.createElement("canvas");
+      glowCanvas.width = 128;
+      glowCanvas.height = 128;
+
+      const context = glowCanvas.getContext("2d");
+      const gradient = context.createRadialGradient(
+        64, 64, 0,
+        64, 64, 64
+      );
+
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(0.12, "rgba(255,255,255,0.8)");
+      gradient.addColorStop(0.4, "rgba(255,255,255,0.18)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(glowCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const glowTexture = makeGlowTexture();
+
+    function addGlow(position, color, size, opacity = 0.55) {
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: glowTexture,
+          color,
+          transparent: true,
+          opacity,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.set(...position);
+      sprite.scale.set(size, size, 1);
+      scene.add(sprite);
+      return sprite;
+    }
+
+    function makeScreenTexture() {
+      const screenCanvas = document.createElement("canvas");
+      screenCanvas.width = 512;
+      screenCanvas.height = 256;
+
+      const context = screenCanvas.getContext("2d");
+      context.fillStyle = "#06111c";
+      context.fillRect(0, 0, 512, 256);
+
+      context.strokeStyle = "rgba(85,220,255,0.12)";
+      context.lineWidth = 1;
+
+      for (let x = 0; x < 512; x += 32) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, 256);
+        context.stroke();
+      }
+
+      for (let y = 0; y < 256; y += 32) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(512, y);
+        context.stroke();
+      }
+
+      context.fillStyle = "#63dcff";
+      context.font = "600 44px monospace";
+      context.fillText("0.16 mK", 28, 88);
+
+      context.fillStyle = "#7899ad";
+      context.font = "22px monospace";
+      context.fillText("STABLE", 29, 132);
+      context.fillText("VACUUM  8.4 × 10⁻⁸", 29, 176);
+      context.fillText("PULSE  4.8 Hz", 29, 210);
+
+      const texture = new THREE.CanvasTexture(screenCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const screenTexture = makeScreenTexture();
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x8fc9ff, 0x080b12, 1.15));
+
+    const keyLight = new THREE.DirectionalLight(0xd9efff, 3.2);
+    keyLight.position.set(5, 10, 7);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -7;
+    keyLight.shadow.camera.right = 7;
+    keyLight.shadow.camera.top = 9;
+    keyLight.shadow.camera.bottom = -4;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 30;
+    keyLight.shadow.bias = -0.0003;
+    scene.add(keyLight);
+
+    const cyanLight = new THREE.PointLight(0x36cfff, 22, 12, 2);
+    cyanLight.position.set(-3.5, 3.5, 2.5);
+    scene.add(cyanLight);
+
+    const rimLight = new THREE.PointLight(0x687bff, 18, 11, 2);
+    rimLight.position.set(4, 5, -3);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xff8b66, 8, 7, 2);
+    warmLight.position.set(-2, 1.2, -2);
+    scene.add(warmLight);
+
+    // ---------------------------------------------------------------------
+    // Floor and laboratory platform
+    // ---------------------------------------------------------------------
+
+    const floor = addMesh(
+      scene,
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x070d16,
+        metalness: 0.28,
+        roughness: 0.72
+      }),
+      [0, -0.015, 0],
+      [-Math.PI / 2, 0, 0]
+    );
+    floor.castShadow = false;
+
+    const grid = new THREE.GridHelper(30, 60, 0x1b5370, 0x102333);
+    grid.position.y = 0.002;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.28;
+    scene.add(grid);
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(3.25, 3.35, 0.08, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x0d1723,
+        metalness: 0.7,
+        roughness: 0.4
+      }),
+      [0, 0.04, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.TorusGeometry(3.05, 0.012, 6, 128),
+      new THREE.MeshBasicMaterial({
+        color: 0x2b789b,
+        transparent: true,
+        opacity: 0.45
+      }),
+      [0, 0.09, 0],
+      [Math.PI / 2, 0, 0]
+    );
+
+    // ---------------------------------------------------------------------
+    // Base and support structure
+    // ---------------------------------------------------------------------
+
+    addMesh(
+      scene,
+      new THREE.BoxGeometry(4.25, 0.34, 3.2),
+      materials.blackSteel,
+      [0, 0.23, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.BoxGeometry(3.75, 0.12, 2.72),
+      materials.darkSteel,
+      [0, 0.44, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(1.72, 1.78, 0.4, 64),
+      materials.darkSteel,
+      [0, 0.72, 0]
+    );
+
+    for (const x of [-1.45, 1.45]) {
+      for (const z of [-1.08, 1.08]) {
+        addMesh(
+          scene,
+          new THREE.CylinderGeometry(0.22, 0.27, 0.18, 24),
+          materials.blackSteel,
+          [x, 0.1, z]
+        );
+      }
+    }
+
+    addMesh(
+      scene,
+      new THREE.BoxGeometry(0.65, 0.55, 0.12),
+      materials.darkSteel,
+      [0, 0.26, 1.68]
+    );
+
+    // ---------------------------------------------------------------------
+    // Main dewar vessel
+    // ---------------------------------------------------------------------
+
+    const shell = addMesh(
+      scene,
+      new THREE.CylinderGeometry(
+        1.68,
+        1.68,
+        4.72,
+        96,
+        1,
+        true,
+        1.2,
+        Math.PI * 2 - 1.05
+      ),
+      materials.glass,
+      [0, 3.38, 0]
+    );
+    shell.castShadow = false;
+    shell.receiveShadow = false;
+    shell.renderOrder = 2;
+
+    addEdges(shell, 0x6bdfff, 0.35);
+
+    const lowerShell = addMesh(
+      scene,
+      new THREE.CylinderGeometry(1.7, 1.7, 0.4, 64),
+      materials.darkSteel,
+      [0, 1.02, 0]
+    );
+
+    for (const y of [1.02, 5.74]) {
+      addMesh(
+        scene,
+        new THREE.TorusGeometry(1.66, 0.075, 12, 96),
+        materials.steel,
+        [0, y, 0],
+        [Math.PI / 2, 0, 0]
+      );
+    }
+
+    // Vertical frame rails at the cutaway boundaries.
+    for (const theta of [0.2, 1.2]) {
+      const x = Math.sin(theta) * 1.68;
+      const z = Math.cos(theta) * 1.68;
+
+      addMesh(
+        scene,
+        new THREE.BoxGeometry(0.065, 4.78, 0.065),
+        materials.steel,
+        [x, 3.38, z]
+      );
+    }
+
+    // Top lid and fasteners.
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(1.72, 1.68, 0.3, 64),
+      materials.darkSteel,
+      [0, 5.98, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(1.42, 1.5, 0.1, 64),
+      materials.steel,
+      [0, 6.18, 0]
+    );
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const x = Math.cos(angle) * 1.38;
+      const z = Math.sin(angle) * 1.38;
+
+      addMesh(
+        scene,
+        new THREE.CylinderGeometry(0.09, 0.09, 0.09, 12),
+        materials.paleSteel,
+        [x, 6.25, z]
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Layered plate stack
+    // ---------------------------------------------------------------------
+
+    const plateCount = 18;
+    const firstPlateY = 1.2;
+    const plateSpacing = 0.285;
+    const plateDepth = 0.065;
+
+    const outerPlateShape = new THREE.Shape();
+    outerPlateShape.absarc(0, 0, 1.48, 0, Math.PI * 2, false);
+
+    const outerPlateHole = new THREE.Path();
+    outerPlateHole.absarc(0, 0, 0.48, 0, Math.PI * 2, true);
+    outerPlateShape.holes.push(outerPlateHole);
+
+    const innerPlateShape = new THREE.Shape();
+    innerPlateShape.absarc(0, 0, 0.72, 0, Math.PI * 2, false);
+
+    const innerPlateHole = new THREE.Path();
+    innerPlateHole.absarc(0, 0, 0.28, 0, Math.PI * 2, true);
+    innerPlateShape.holes.push(innerPlateHole);
+
+    const outerPlateGeometry = new THREE.ExtrudeGeometry(
+      outerPlateShape,
+      {
+        depth: plateDepth,
+        steps: 1,
+        bevelEnabled: true,
+        bevelSegments: 1,
+        bevelSize: 0.012,
+        bevelThickness: 0.012,
+        curveSegments: 64
+      }
+    );
+    outerPlateGeometry.rotateX(-Math.PI / 2);
+    outerPlateGeometry.computeVertexNormals();
+
+    const innerPlateGeometry = new THREE.ExtrudeGeometry(
+      innerPlateShape,
+      {
+        depth: 0.045,
+        steps: 1,
+        bevelEnabled: true,
+        bevelSegments: 1,
+        bevelSize: 0.009,
+        bevelThickness: 0.009,
+        curveSegments: 64
+      }
+    );
+    innerPlateGeometry.rotateX(-Math.PI / 2);
+    innerPlateGeometry.computeVertexNormals();
+
+    const plateGroups = [];
+
+    for (let i = 0; i < plateCount; i++) {
+      const group = new THREE.Group();
+      group.position.y = firstPlateY + i * plateSpacing;
+      scene.add(group);
+      plateGroups.push(group);
+
+      addMesh(
+        group,
+        outerPlateGeometry,
+        i % 3 === 0 ? materials.paleSteel : materials.steel,
+        [0, 0, 0]
+      );
+
+      addMesh(
+        group,
+        innerPlateGeometry,
+        materials.copper,
+        [0, 0.018, 0]
+      );
+
+      addMesh(
+        group,
+        new THREE.CylinderGeometry(0.285, 0.285, 0.085, 32),
+        materials.gold,
+        [0, 0.045, 0]
+      );
+
+      if (i % 4 === 0) {
+        addMesh(
+          group,
+          new THREE.TorusGeometry(0.61, 0.012, 6, 64),
+          materials.cyanGlow,
+          [0, 0.055, 0],
+          [Math.PI / 2, 0, 0]
+        );
+      }
+    }
+
+    // Instanced bolts around every plate.
+    const boltGeometry = new THREE.CylinderGeometry(0.034, 0.034, 0.045, 8);
+    const boltMaterial = materials.blackSteel;
+    const boltCount = plateCount * 8;
+    const bolts = new THREE.InstancedMesh(
+      boltGeometry,
+      boltMaterial,
+      boltCount
+    );
+
+    const boltDummy = new THREE.Object3D();
+    let boltIndex = 0;
+
+    for (let i = 0; i < plateCount; i++) {
+      for (let j = 0; j < 8; j++) {
+        const angle = (j / 8) * Math.PI * 2;
+        boltDummy.position.set(
+          Math.cos(angle) * 1.42,
+          firstPlateY + i * plateSpacing + 0.095,
+          Math.sin(angle) * 1.42
+        );
+        boltDummy.updateMatrix();
+        bolts.setMatrixAt(boltIndex++, boltDummy.matrix);
+      }
+    }
+
+    bolts.instanceMatrix.needsUpdate = true;
+    bolts.castShadow = true;
+    scene.add(bolts);
+
+    // Central cold column and heat exchangers.
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(0.15, 0.15, 5.1, 32),
+      materials.darkSteel,
+      [0, 3.4, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(0.94, 0.88, 0.24, 64),
+      materials.copper,
+      [0, 1.0, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(0.72, 0.72, 0.18, 64),
+      materials.gold,
+      [0, 1.17, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(0.78, 0.78, 0.18, 64),
+      materials.steel,
+      [0, 5.98, 0]
+    );
+
+    // ---------------------------------------------------------------------
+    // Wiring harness
+    // ---------------------------------------------------------------------
+
+    const cableColors = [
+      0xff647c,
+      0x63dcff,
+      0xffd166,
+      0x75f0b5,
+      0xa98aff,
+      0x5b6278
+    ];
+
+    const cableMaterials = cableColors.map(
+      (color) =>
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.18,
+          metalness: 0.2,
+          roughness: 0.34
+        })
+    );
+
+    for (let i = 0; i < cableMaterials.length; i++) {
+      const points = [];
+      const phase = (i / cableMaterials.length) * Math.PI * 2;
+
+      for (let j = 0; j <= 14; j++) {
+        const t = j / 14;
+        const angle = -0.25 + phase + t * Math.PI * 3.2;
+        const radius = 0.43 + Math.sin(t * Math.PI * 2 + phase) * 0.075;
+
+        points.push(
+          new THREE.Vector3(
+            Math.cos(angle) * radius,
+            0.86 + t * 5.03,
+            Math.sin(angle) * radius
+          )
+        );
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const radius = i === cableMaterials.length - 1 ? 0.043 : 0.025;
+
+      addMesh(
+        scene,
+        new THREE.TubeGeometry(curve, 90, radius, 8, false),
+        cableMaterials[i]
+      );
+    }
+
+    addMesh(
+      scene,
+      new THREE.BoxGeometry(0.72, 0.22, 0.58),
+      materials.blackSteel,
+      [0, 6.2, 0]
+    );
+
+    addMesh(
+      scene,
+      new THREE.BoxGeometry(0.82, 0.18, 0.64),
+      materials.darkSteel,
+      [0, 0.58, 0]
+    );
+
+    // ---------------------------------------------------------------------
+    // Vacuum line, flange, and pressure gauge
+    // ---------------------------------------------------------------------
+
+    const vacuumCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 6.25, 0),
+      new THREE.Vector3(0.35, 6.7, 0.12),
+      new THREE.Vector3(0.85, 6.85, 0.4),
+      new THREE.Vector3(1.35, 6.45, 0.72),
+      new THREE.Vector3(1.48, 5.45, 0.88),
+      new THREE.Vector3(1.5, 1.05, 1.02)
+    ]);
+
+    addMesh(
+      scene,
+      new THREE.TubeGeometry(vacuumCurve, 100, 0.065, 12, false),
+      materials.paleSteel
+    );
+
+    function addFlange(position, direction, radius) {
+      const flange = addMesh(
+        scene,
+        new THREE.CylinderGeometry(radius, radius, 0.13, 32),
+        materials.steel,
+        position
+      );
+
+      const axis = new THREE.Vector3(0, 1, 0);
+      const directionVector = new THREE.Vector3(...direction).normalize();
+      flange.quaternion.setFromUnitVectors(axis, directionVector);
+      return flange;
+    }
+
+    addFlange(
+      new THREE.Vector3(0.85, 6.85, 0.4),
+      [0.45, 0.2, 0.87],
+      0.12
+    );
+
+    addFlange(
+      new THREE.Vector3(1.48, 5.45, 0.88),
+      [-0.2, -0.35, -0.87],
+      0.14
+    );
+
+    const gauge = new THREE.Group();
+    gauge.position.set(0.95, 6.95, 0.55);
+    gauge.rotation.y = -0.35;
+    scene.add(gauge);
+
+    addMesh(
+      gauge,
+      new THREE.CylinderGeometry(0.43, 0.43, 0.5, 48),
+      materials.darkSteel,
+      [0, 0, 0]
+    );
+
+    addMesh(
+      gauge,
+      new THREE.CircleGeometry(0.36, 48),
+      new THREE.MeshStandardMaterial({
+        color: 0xd7e1e8,
+        metalness: 0.5,
+        roughness: 0.35
+      }),
+      [0, 0.256, 0],
+      [-Math.PI / 2, 0, 0]
+    );
+
+    addMesh(
+      gauge,
+      new THREE.BoxGeometry(0.022, 0.32, 0.015),
+      materials.redGlow,
+      [0.07, 0.31, 0],
+      [0, -0.72, 0]
+    );
+
+    addMesh(
+      gauge,
+      new THREE.CircleGeometry(0.07, 24),
+      materials.blackSteel,
+      [0.07, 0.31, 0.01],
+      [0, -0.72, 0]
+    );
+
+    // ---------------------------------------------------------------------
+    // Control interface
+    // ---------------------------------------------------------------------
+
+    addMesh(
+      scene,
+      new THREE.CylinderGeometry(0.11, 0.13, 2.15, 24),
+      materials.darkSteel,
+      [2.2, 1.58, 0.35]
+    );
+
+    const controlPanel = new THREE.Group();
+    controlPanel.position.set(2.45, 4.15, 0.42);
+    controlPanel.rotation.y = 0.55;
+    scene.add(controlPanel);
+
+    addMesh(
+      controlPanel,
+      new THREE.BoxGeometry(1.3, 1.0, 0.48),
+      materials.blackSteel,
+      [0, 0, 0]
+    );
+
+    addMesh(
+      controlPanel,
+      new THREE.BoxGeometry(1.12, 0.78, 0.035),
+      new THREE.MeshBasicMaterial({ map: screenTexture }),
+      [0, 0.12, 0.255]
+    );
+
+    addMesh(
+      controlPanel,
+      new THREE.CylinderGeometry(0.12, 0.12, 0.08, 24),
+      materials.steel,
+      [-0.34, -0.27, 0.31],
+      [Math.PI / 2, 0, 0]
+    );
+
+    addMesh(
+      controlPanel,
+      new THREE.CylinderGeometry(0.09, 0.09, 0.07, 20),
+      materials.steel,
+      [0.34, -0.27, 0.31],
+      [Math.PI / 2, 0, 0]
+    );
+
+    addMesh(
+      controlPanel,
+      new THREE.CylinderGeometry(0.065, 0.065, 0.055, 18),
+      materials.greenGlow,
+      [0.03, 0.36, 0.31],
+      [Math.PI / 2, 0, 0]
+    );
+
+    addMesh(
+      controlPanel,
+      new THREE.BoxGeometry(0.55, 0.045, 0.035),
+      materials.darkSteel,
+      [-0.04, 0.4, 0.31]
+    );
+
+    // Harness-to-control cable.
+    const controlCableCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.95, 4.2, 0.42),
+      new THREE.Vector3(1.55, 4.55, 0.55),
+      new THREE.Vector3(1.1, 4.8, 0.58),
+      new THREE.Vector3(0.55, 4.25, 0.48)
+    ]);
+
+    addMesh(
+      scene,
+      new THREE.TubeGeometry(controlCableCurve, 50, 0.045, 8, false),
+      materials.rubber
+    );
+
+    // ---------------------------------------------------------------------
+    // Animated diagnostic rings
+    // ---------------------------------------------------------------------
+
+    const coolingRings = [];
+
+    for (let i = 0; i < 3; i++) {
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x63dcff,
+        transparent: true,
+        opacity: 0.3,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      const ring = addMesh(
+        scene,
+        new THREE.TorusGeometry(0.62, 0.012, 6, 80),
+        material,
+        [0, 1.35 + i * 1.45, 0],
+        [Math.PI / 2, 0, 0]
+      );
+
+      ring.castShadow = false;
+      ring.receiveShadow = false;
+      coolingRings.push(ring);
+    }
+
+    addGlow([0, 3.2, 0], 0x43d7ff, 5.4, 0.1);
+    addGlow([2.45, 4.4, 0.8], 0x55ddff, 1.2, 0.7);
+    addGlow([0, 6.4, 0], 0x706bff, 2.2, 0.35);
+
+    // ---------------------------------------------------------------------
+    // World-space HTML labels
+    // ---------------------------------------------------------------------
+
+    const labelDefinitions = [
+      {
+        text: "Vacuum dewar vessel",
+        position: [-0.85, 4.4, 0.95],
+        offset: [0, -4]
+      },
+      {
+        text: "18-stage plate assembly",
+        position: [0.15, 3.25, 0.45],
+        offset: [72, -8]
+      },
+      {
+        text: "Copper / silver heat exchanger",
+        position: [-0.85, 1.2, 0.75],
+        offset: [-78, 12]
+      },
+      {
+        text: "Multi-conductor wiring harness",
+        position: [0.8, 3.3, 0.55],
+        offset: [82, 10]
+      },
+      {
+        text: "Vacuum / cryogenic line",
+        position: [1.45, 5.8, 0.85],
+        offset: [58, 16]
+      },
+      {
+        text: "Control interface",
+        position: [2.45, 4.15, 0.75],
+        offset: [58, -8]
+      }
+    ];
+
+    const labels = labelDefinitions.map((definition) => {
+      const element = document.createElement("div");
+      element.className = "world-label";
+      element.textContent = definition.text;
+      document.body.appendChild(element);
+
+      return {
+        ...definition,
+        element
+      };
+    });
+
+    const projected = new THREE.Vector3();
+
+    function updateLabels() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      for (const label of labels) {
+        projected.copy(label.position).project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.2 &&
+          Math.abs(projected.y) < 1.2;
+
+        label.element.style.opacity = visible ? "1" : "0";
+
+        if (!visible) continue;
+
+        const x = (projected.x * 0.5 + 0.5) * width + label.offset[0];
+        const y = (-projected.y * 0.5 + 0.5) * height + label.offset[1];
+
+        label.element.style.left = `${x}px`;
+        label.element.style.top = `${y}px`;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: orbit, pan, wheel zoom, keyboard
+    // ---------------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(0, 3.05, 0);
+    const spherical = new THREE.Spherical(10.8, 1.08, 0.72);
+    const initialCamera = {
+      target: cameraTarget.clone(),
+      spherical: spherical.clone()
+    };
+
+    let autoOrbit = false;
+    let paused = false;
+    let xrayEnabled = true;
+
+    const pointers = new Map();
+    let dragMode = "orbit";
+    let previousPointer = { x: 0, y: 0 };
+    let previousPinchDistance = 0;
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetCamera() {
+      cameraTarget.copy(initialCamera.target);
+      spherical.copy(initialCamera.spherical);
+      updateCamera();
+    }
+
+    function panCamera(deltaX, deltaY) {
+      const right = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrix,
+        0
+      );
+      const up = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrix,
+        1
+      );
+      const scale = spherical.radius * 0.00125;
+
+      cameraTarget.addScaledVector(right, -deltaX * scale);
+      cameraTarget.addScaledVector(up, deltaY * scale);
+
+      cameraTarget.y = THREE.MathUtils.clamp(cameraTarget.y, 0.8, 6.2);
+      updateCamera();
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragMode =
+          event.button === 2 || event.shiftKey ? "pan" : "orbit";
+        previousPointer = {
+          x: event.clientX,
+          y: event.clientY
+        };
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        previousPinchDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const deltaX = event.clientX - previousPointer.x;
+        const deltaY = event.clientY - previousPointer.y;
+
+        previousPointer = {
+          x: event.clientX,
+          y: event.clientY
+        };
+
+        if (dragMode === "pan") {
+          panCamera(deltaX, deltaY);
+        } else {
+          spherical.theta -= deltaX * 0.006;
+          spherical.phi = THREE.MathUtils.clamp(
+            spherical.phi - deltaY * 0.005,
+            0.22,
+            1.48
+          );
+          updateCamera();
+        }
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        const distance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+
+        if (previousPinchDistance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius *
+              (previousPinchDistance / Math.max(distance, 1)),
+            5.2,
+            19
+          );
+          updateCamera();
+        }
+
+        previousPinchDistance = distance;
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        previousPointer = { x: remaining.x, y: remaining.y };
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          19
+        );
+
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") {
+        resetCamera();
+      }
+
+      if (event.key === "ArrowLeft") {
+        spherical.theta += 0.08;
+      } else if (event.key === "ArrowRight") {
+        spherical.theta -= 0.08;
+      } else if (event.key === "ArrowUp") {
+        spherical.phi = Math.max(0.22, spherical.phi - 0.06);
+      } else if (event.key === "ArrowDown") {
+        spherical.phi = Math.min(1.48, spherical.phi + 0.06);
+      } else if (event.key === "+" || event.key === "=") {
+        spherical.radius = Math.max(5.2, spherical.radius - 0.4);
+      } else if (event.key === "-") {
+        spherical.radius = Math.min(19, spherical.radius + 0.4);
+      } else {
+        return;
+      }
+
+      updateCamera();
+    });
+
+    // ---------------------------------------------------------------------
+    // Interface
+    // ---------------------------------------------------------------------
+
+    const temperatureSlider = $("temperatureSlider");
+    const tempValue = $("tempValue");
+    const kelvinValue = document.createElement("span");
+    kelvinValue.textContent = "K";
+    tempValue.appendChild(kelvinValue);
+
+    const stageValue = $("stageValue");
+    const stageIndex = $("stageIndex");
+    const setpointValue = $("setpointValue");
+    const progressFill = $("progressFill");
+    const pauseButton = $("pauseButton");
+    const xrayButton = $("xrayButton");
+    const orbitButton = $("orbitButton");
+    const resetButton = $("resetButton");
+
+    let currentTemperature = 30;
+    let targetTemperature = 2.5;
+    let previousStage = "";
+
+    function setTargetTemperature(millikelvin) {
+      const value = Math.round(millikelvin);
+      temperatureSlider.value = value;
+      setpointValue.textContent = `${value} mK`;
+
+      targetTemperature = Math.max(
+        0,
+        Math.min(300, 300 - value * 2.86)
+      );
+    }
+
+    temperatureSlider.addEventListener("input", () => {
+      setTargetTemperature(Number(temperatureSlider.value));
+    });
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume cooling" : "Pause cooling";
+      pauseButton.classList.toggle("active", paused);
+    });
+
+    xrayButton.addEventListener("click", () => {
+      xrayEnabled = !xrayEnabled;
+      shell.material.opacity = xrayEnabled ? 0.16 : 0.025;
+      shell.material.transmission = xrayEnabled ? 0.28 : 0.06;
+      xrayButton.classList.toggle("active", xrayEnabled);
+      xrayButton.setAttribute("aria-pressed", String(xrayEnabled));
+    });
+
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+    });
+
+    resetButton.addEventListener("click", resetCamera);
+
+    setTargetTemperature(2500);
+
+    // ---------------------------------------------------------------------
+    // Animation
+    // ---------------------------------------------------------------------
+
+    let stageCounter = 0;
+
+    function updateStage() {
+      const kelvin = currentTemperature;
+      let stage;
+
+      if (kelvin < 0.1) {
+        stage = "mK regime • dilute phase";
+        stageCounter = 18;
+      } else if (kelvin < 1) {
+        stage = "mmK regime • nuclear freeze";
+        stageCounter = 17;
+      } else if (kelvin < 4) {
+        stage = "Superfluid transition";
+        stageCounter = 16;
+      } else if (kelvin < 20) {
+        stage = "Low-temperature plate stack";
+        stageCounter = 15;
+      } else {
+        stage = "Warm-up / vacuum pre-conditioning";
+        stageCounter = 1;
+      }
+
+      if (stage !== previousStage) {
+        stageValue.textContent = stage;
+        stageIndex.textContent = `Stage ${String(stageCounter).padStart(2, "0")}`;
+        previousStage = stage;
+      }
+    }
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
+
+      if (!paused) {
+        currentTemperature +=
+          (targetTemperature - currentTemperature) *
+          (1 - Math.exp(-delta * 0.24));
+
+        if (Math.abs(targetTemperature - currentTemperature) < 0.01) {
+          currentTemperature = targetTemperature;
+        }
+
+        updateStage();
+
+        const setpointMillikelvin = Number(temperatureSlider.value);
+        tempValue.textContent = currentTemperature.toFixed(2);
+
+        const kelvin = 300 - setpointMillikelvin * 2.86;
+        tempValue.textContent = currentTemperature.toFixed(2);
+
+        const progress = THREE.MathUtils.clamp(
+          (300 - currentTemperature) / 300,
+          0,
+          1
+        );
+
+        progressFill.style.width = `${progress * 100}%`;
+      }
+
+      if (autoOrbit) {
+        spherical.theta += delta * 0.13;
+        updateCamera();
+      }
+
+      const ringOffset = (time * 0.36 + stageCounter * 0.47) % 4.2;
+
+      coolingRings.forEach((ring, index) => {
+        ring.position.y = 1.25 + ringOffset + index * 1.45;
+        ring.material.opacity =
+          0.22 * Math.exp(-((ringOffset + index * 1.45) / 1.45));
+      });
+
+      materials.cyanGlow.emissiveIntensity =
+        1.8 + Math.sin(time * 2.2) * 0.35;
+
+      materials.redGlow.emissiveIntensity =
+        2.0 + Math.sin(time * 3.1 + 1.2) * 0.3;
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+    }
+
+    window.addEventListener("resize", resize);
+
+    updateCamera();
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      $("loading").classList.add("hide");
+    });
+  </script>
+</body>
+</html>

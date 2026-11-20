@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tram Priority Scramble Junction</title>
+
+  <style>
+    :root {
+      --ink: #173247;
+      --muted: #60798a;
+      --panel: rgba(250, 253, 255, 0.88);
+      --line: rgba(23, 50, 71, 0.14);
+      --green: #35d991;
+      --amber: #ffbd55;
+      --red: #ff6577;
+      --blue: #558dff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #b9d2df;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 24px;
+      left: 26px;
+      max-width: 440px;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #477083;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 3vw, 39px);
+      line-height: 1;
+      letter-spacing: -0.045em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status-card {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: min(320px, calc(100vw - 48px));
+      padding: 17px 18px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.68);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 16px 45px rgba(31, 61, 80, 0.18);
+      backdrop-filter: blur(14px);
+    }
+
+    .status-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    .phase-dot {
+      width: 11px;
+      height: 11px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(53, 217, 145, 0.14);
+    }
+
+    .status-title {
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.015em;
+    }
+
+    .status-description {
+      min-height: 38px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .timeline-label {
+      padding-top: 7px;
+      border-top: 1px solid var(--line);
+      color: #7f95a3;
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.055em;
+      text-transform: uppercase;
+    }
+
+    .timeline-fill {
+      position: relative;
+      height: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(23, 50, 71, 0.1);
+    }
+
+    .timeline-progress {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+    }
+
+    .legend {
+      position: absolute;
+      left: 26px;
+      bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 520px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 999px;
+      background: rgba(250, 253, 255, 0.78);
+      box-shadow: 0 8px 24px rgba(31, 61, 80, 0.1);
+      color: #526d7e;
+      font-size: 10px;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+    }
+
+    .swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .controls {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 12px;
+      background: rgba(250, 253, 255, 0.88);
+      box-shadow: 0 8px 24px rgba(31, 61, 80, 0.14);
+      color: var(--ink);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: #fff;
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #pause {
+      color: white;
+      border-color: transparent;
+      background: var(--ink);
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(23, 50, 71, 0.72);
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.025em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        top: 16px;
+        left: 16px;
+      }
+
+      .subtitle {
+        max-width: 280px;
+      }
+
+      .status-card {
+        top: auto;
+        right: 16px;
+        bottom: 68px;
+        width: calc(100vw - 32px);
+      }
+
+      .legend {
+        left: 16px;
+        bottom: 16px;
+        max-width: calc(100vw - 130px);
+      }
+
+      .controls {
+        right: 16px;
+        bottom: 16px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="hud">
+    <header class="topbar">
+      <div class="eyebrow">Interactive traffic study</div>
+      <h1>Scramble Junction</h1>
+      <p class="subtitle">
+        A four-way pedestrian scramble coordinated around a tram priority phase.
+      </p>
+    </header>
+
+    <section class="status-card">
+      <div class="status-head">
+        <span class="phase-dot" id="phaseDot"></span>
+        <span class="status-title" id="phaseTitle">TRAM APPROACH</span>
+      </div>
+      <p class="status-description" id="phaseDescription"></p>
+
+      <div class="timeline">
+        <div class="timeline-label">Tram approach</div>
+        <div class="timeline-label">Tram pass</div>
+        <div class="timeline-label">Scramble</div>
+        <div class="timeline-label">Clear</div>
+        <div class="timeline-label">Depart</div>
+      </div>
+      <div class="timeline-fill">
+        <div class="timeline-progress" id="timelineProgress"></div>
+      </div>
+    </section>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="swatch" style="background:#ff6577"></span>
+        Tram approach
+      </div>
+      <div class="legend-item">
+        <span class="swatch" style="background:#558dff"></span>
+        Scramble crossing
+      </div>
+      <div class="legend-item">
+        <span class="swatch" style="background:#35d991"></span>
+        Pedestrians crossing
+      </div>
+      <div class="legend-item">
+        <span class="swatch" style="background:#f3f0e8"></span>
+        Zebra crossings
+      </div>
+    </div>
+
+    <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset view</div>
+
+    <div class="controls">
+      <button id="pause" type="button">Pause</button>
+      <button id="resetView" type="button">Reset view</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, lighting, and camera
+    // -------------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9d2df);
+    scene.fog = new THREE.Fog(0xb9d2df, 42, 105);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      innerWidth / innerHeight,
+      0.1,
+      180
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.domElement.id = "scene";
+    document.body.prepend(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xeaf7ff, 0x65765b, 2.15);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff4dc, 3.2);
+    sun.position.set(-24, 38, 25);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -42;
+    sun.shadow.camera.right = 42;
+    sun.shadow.camera.top = 42;
+    sun.shadow.camera.bottom = -42;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 100;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9ec9e5, 0.75);
+    fill.position.set(25, 18, -30);
+    scene.add(fill);
+
+    const cameraState = {
+      radius: 49,
+      theta: 0.76,
+      phi: 0.86,
+      target: new THREE.Vector3(0, 0, 0)
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(cameraState.phi);
+
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * sinPhi * Math.sin(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z +
+          cameraState.radius * sinPhi * Math.cos(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+    }
+
+    updateCamera();
+
+    // Custom orbit controls; no external control modules are used.
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - pointerX;
+      const dy = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      cameraState.theta -= dx * 0.006;
+      cameraState.phi = THREE.MathUtils.clamp(
+        cameraState.phi - dy * 0.005,
+        0.38,
+        1.34
+      );
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event.pointerId !== undefined) {
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", stopDragging);
+    renderer.domElement.addEventListener("pointercancel", stopDragging);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          28,
+          82
+        );
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      cameraState.radius = 49;
+      cameraState.theta = 0.76;
+      cameraState.phi = 0.86;
+      cameraState.target.set(0, 0, 0);
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    // -------------------------------------------------------------------------
+    // Materials and geometry helpers
+    // -------------------------------------------------------------------------
+
+    const material = (color, options = {}) =>
+      new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.82,
+        metalness: 0.02,
+        ...options
+      });
+
+    const mats = {
+      grass: material(0x91ad78),
+      grassLight: material(0xa5bb82),
+      road: material(0x34444b, { roughness: 0.94 }),
+      roadEdge: material(0x526168),
+      sidewalk: material(0xd8d6cb),
+      curb: material(0xe8e5da),
+      white: material(0xf5f3e9),
+      yellow: material(0xf3c85b),
+      dark: material(0x263840),
+      window: material(0x183c55, {
+        roughness: 0.2,
+        metalness: 0.35
+      }),
+      building: material(0xf0e6d4),
+      roof: material(0x647b83),
+      trunk: material(0x796044),
+      leaves: material(0x528b58),
+      leavesLight: material(0x78a95f),
+      lamp: material(0xffe1a1)
+    };
+
+    function box(w, h, d, mat, x, y, z, parent = scene) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(radius, height, mat, x, y, z, parent = scene, segments = 12) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, height, segments),
+        mat
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeLabelTexture(text, background = "#173247", foreground = "#ffffff") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 128;
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = foreground;
+      context.font = "800 54px Arial, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      return texture;
+    }
+
+    function makeLabel(text, w, d, x, y, z, rotationY = 0) {
+      const texture = makeLabelTexture(text);
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, d),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.rotation.z = rotationY;
+      mesh.position.set(x, y, z);
+      scene.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Ground, roads, sidewalks, and markings
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(110, 86),
+      mats.grass
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.08;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Horizontal and vertical road surfaces.
+    box(66, 0.12, 31, mats.road, 0, 0.02, 0);
+    box(14, 0.12, 70, mats.road, 0, 0.035, 0);
+
+    // Sidewalks.
+    box(66, 0.24, 10, mats.sidewalk, 0, 0.12, 20);
+    box(66, 0.24, 10, mats.sidewalk, 0, 0.12, -20);
+    box(10, 0.24, 70, mats.sidewalk, 15, 0.12, 0);
+    box(10, 0.24, 70, mats.sidewalk, -15, 0.12, 0);
+
+    // Curb strips.
+    box(66, 0.32, 0.45, mats.curb, 0, 0.16, 15.65);
+    box(66, 0.32, 0.45, mats.curb, 0, 0.16, -15.65);
+    box(0.45, 0.32, 70, mats.curb, 6.7, 0.16, 0);
+    box(0.45, 0.32, 70, mats.curb, -6.7, 0.16, 0);
+
+    // Dashed center lines, leaving the intersection clear.
+    for (let x = -30; x <= 30; x += 6) {
+      if (Math.abs(x) < 8) continue;
+      box(3.2, 0.025, 0.14, mats.white, x, 0.105, -25);
+      box(3.2, 0.025, 0.14, mats.white, x, 0.105, 25);
+    }
+
+    for (let z = -28; z <= 28; z += 6) {
+      if (Math.abs(z) < 8) continue;
+      box(0.14, 0.025, 3.2, mats.white, -25, 0.105, z);
+      box(0.14, 0.025, 3.2, mats.white, 25, 0.105, z);
+    }
+
+    // Tram stop lines.
+    for (let x = -3; x <= 3; x += 0.75) {
+      box(0.42, 0.025, 0.15, mats.white, x, 0.12, 10.8);
+    }
+    for (let z = -6.5; z <= 6.5; z += 0.75) {
+      box(0.15, 0.025, 0.42, mats.white, 10.8, 0.12, z);
+    }
+
+    // Zebra crossings for the scramble junction.
+    // Horizontal-road crossings: bars run across the road in the Z direction.
+    for (const laneX of [-5, 5]) {
+      for (const z of [-12, -6, 0, 6, 12]) {
+        box(3.4, 0.025, 0.42, mats.white, laneX, 0.125, z);
+      }
+    }
+
+    // Vertical-road crossings.
+    for (const laneZ of [-5, 5]) {
+      for (const x of [-24, -18, -12, -6, 0, 6, 12, 18, 24]) {
+        box(0.42, 0.025, 3.4, mats.white, x, 0.125, laneZ);
+      }
+    }
+
+    makeLabel("TRAM LINE", 10, 1.25, 0, 0.15, 25);
+    makeLabel("NORTH", 5, 1.1, -22, 0.15, -25);
+    makeLabel("SOUTH", 5, 1.1, 22, 0.15, 25);
+    makeLabel("WEST", 3.5, 1.1, -25, 0.15, -25);
+    makeLabel("EAST", 3.5, 1.1, 25, 0.15, -25);
+
+    // -------------------------------------------------------------------------
+    // Pedestrian signals
+    // -------------------------------------------------------------------------
+
+    const signals = [];
+
+    function createSignal(x, z, rotationY = 0) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.rotation.y = rotationY;
+
+      cylinder(0.075, 3.6, mats.dark, 0, 1.95, 0, group);
+      box(0.62, 0.9, 0.28, mats.dark, 0, 3.85, 0, group);
+
+      const redMaterial = new THREE.MeshStandardMaterial({
+        color: 0xff5968,
+        emissive: 0xff2d46,
+        emissiveIntensity: 0
+      });
+      const amberMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffc45b,
+        emissive: 0xff9d21,
+        emissiveIntensity: 0
+      });
+      const greenMaterial = new THREE.MeshStandardMaterial({
+        color: 0x62ff9a,
+        emissive: 0x28d868,
+        emissiveIntensity: 0
+      });
+
+      const red = new THREE.Mesh(
+        new THREE.SphereGeometry(0.13, 12, 8),
+        redMaterial
+      );
+      red.position.set(0, 4.12, 0.16);
+      group.add(red);
+
+      const amber = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 12, 8),
+        amberMaterial
+      );
+      amber.position.set(0, 3.78, 0.16);
+      group.add(amber);
+
+      const green = new THREE.Mesh(
+        new THREE.SphereGeometry(0.13, 12, 8),
+        greenMaterial
+      );
+      green.position.set(0, 3.44, 0.16);
+      group.add(green);
+
+      scene.add(group);
+      signals.push({ red, amber, green });
+    }
+
+    createSignal(-10, -10, 0);
+    createSignal(10, -10, 0);
+    createSignal(-10, 10, Math.PI);
+    createSignal(10, 10, Math.PI);
+
+    function updateSignal(signal, state) {
+      signal.red.visible = state === "red" || state === "amber";
+      signal.amber.visible = state === "amber";
+      signal.green.visible = state === "green";
+
+      if (state === "red") {
+        signal.red.material.emissiveIntensity = 1.4;
+      } else if (state === "amber") {
+        signal.amber.material.emissiveIntensity = 1.5;
+      } else if (state === "green") {
+        signal.green.material.emissiveIntensity = 1.4;
+      } else {
+        signal.red.material.emissiveIntensity = 0;
+        signal.amber.material.emissiveIntensity = 0;
+        signal.green.material.emissiveIntensity = 0;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Tram
+    // -------------------------------------------------------------------------
+
+    const tram = new THREE.Group();
+    scene.add(tram);
+
+    box(2.15, 1.4, 7.8, material(0xf4f0e7), 0, 1.15, 0, tram);
+    box(2.3, 0.24, 8.05, material(0x66808a), 0, 1.98, 0, tram);
+    box(2.2, 0.25, 7.8, material(0xe7e3d8), 0, 0.6, 0, tram);
+
+    for (const side of [-1, 1]) {
+      for (const z of [-2.7, -1.35, 0, 1.35, 2.7]) {
+        box(
+          0.06,
+          0.68,
+          0.95,
+          mats.window,
+          side * 1.085,
+          1.43,
+          z,
+          tram
+        );
+      }
+    }
+
+    box(1.55, 0.64, 0.06, mats.window, 0, 1.48, -3.92, tram);
+    box(1.55, 0.64, 0.06, mats.window, 0, 1.48, 3.92, tram);
+
+    box(0.48, 0.18, 0.08, mats.lamp, -0.68, 0.82, -3.98, tram);
+    box(0.48, 0.18, 0.08, mats.lamp, 0.68, 0.82, -3.98, tram);
+    box(0.42, 0.16, 0.08, material(0xff304d), -0.7, 1.18, 3.98, tram);
+    box(0.42, 0.16, 0.08, material(0xff304d), 0.7, 1.18, 3.98, tram);
+
+    for (const x of [-1.04, 1.04]) {
+      for (const z of [-2.55, 2.55]) {
+        const wheel = cylinder(
+          0.34,
+          0.2,
+          mats.dark,
+          x,
+          0.43,
+          z,
+          tram,
+          16
+        );
+        wheel.rotation.z = Math.PI / 2;
+      }
+    }
+
+    const destinationCanvas = document.createElement("canvas");
+    destinationCanvas.width = 512;
+    destinationCanvas.height = 96;
+    const destinationContext = destinationCanvas.getContext("2d");
+    destinationContext.fillStyle = "#173247";
+    destinationContext.fillRect(0, 0, 512, 96);
+    destinationContext.fillStyle = "#ffffff";
+    destinationContext.font = "800 38px Arial, sans-serif";
+    destinationContext.textAlign = "center";
+    destinationContext.textBaseline = "middle";
+    destinationContext.fillText("CITY 04", 256, 49);
+
+    const destinationTexture = new THREE.CanvasTexture(destinationCanvas);
+    destinationTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const destination = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.7, 0.32),
+      new THREE.MeshBasicMaterial({ map: destinationTexture })
+    );
+    destination.position.set(0, 2.08, -4.04);
+    tram.add(destination);
+
+    // -------------------------------------------------------------------------
+    // Cars
+    // -------------------------------------------------------------------------
+
+    const cars = [];
+
+    function createCar(color, x, z, direction, vertical = false) {
+      const group = new THREE.Group();
+      const bodyMaterial = material(color, {
+        roughness: 0.38,
+        metalness: 0.2
+      });
+
+      box(1.8, 0.55, 3.7, bodyMaterial, 0, 0.58, 0, group);
+      box(1.55, 0.58, 2.15, material(0x263840), 0, 1.08, -0.05, group);
+
+      for (const side of [-1, 1]) {
+        box(
+          0.04,
+          0.36,
+          1.2,
+          mats.window,
+          side * 0.79,
+          1.1,
+          -0.05,
+          group
+        );
+      }
+
+      for (const wheelX of [-0.92, 0.92]) {
+        for (const wheelZ of [-1.2, 1.2]) {
+          const wheel = cylinder(
+            0.3,
+            0.18,
+            mats.dark,
+            wheelX,
+            0.34,
+            wheelZ,
+            group,
+            14
+          );
+          wheel.rotation.z = Math.PI / 2;
+        }
+      }
+
+      if (vertical) {
+        group.position.set(x, 0.12, z);
+      } else {
+        group.position.set(x, 0.12, z);
+        group.rotation.y =
+          direction > 0 ? Math.PI / 2 : -Math.PI / 2;
+      }
+
+      scene.add(group);
+
+      cars.push({
+        group,
+        homeX: x,
+        targetX: x > 0 ? -9 : 9,
+        homeZ: z,
+        targetZ: z > 0 ? -9 : 9,
+        direction,
+        vertical
+      });
+    }
+
+    createCar(0xc95b4b, -23, -7, 1);
+    createCar(0x4a7e9f, -13, 7, -1);
+    createCar(0xe0ad45, 13, -7, -1);
+    createCar(0x486b62, 23, 7, 1);
+
+    createCar(0x526f91, -22, 0, 1);
+    createCar(0xc49b52, 22, 0, -1);
+    createCar(0x8a5d78, 0, -22, -1);
+
+    // -------------------------------------------------------------------------
+    // Pedestrians
+    // -------------------------------------------------------------------------
+
+    const pedestrians = [];
+
+    function createPedestrian(shirtColor, x, z, direction) {
+      const group = new THREE.Group();
+
+      const shirt = material(shirtColor);
+      const trousers = material(0x293843);
+      const skin = material(0xc98e68);
+
+      cylinder(0.19, 0.62, shirt, 0, 0.86, 0, group);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 10),
+        skin
+      );
+      head.position.set(0, 1.31, 0);
+      head.castShadow = true;
+      group.add(head);
+
+      const leftLeg = cylinder(
+        0.07,
+        0.58,
+        trousers,
+        -0.1,
+        0.38,
+        0,
+        group,
+        10
+      );
+      const rightLeg = cylinder(
+        0.07,
+        0.58,
+        trousers,
+        0.1,
+        0.38,
+        0,
+        group,
+        10
+      );
+
+      const leftArm = cylinder(
+        0.055,
+        0.5,
+        shirt,
+        -0.24,
+        0.88,
+        0,
+        group,
+        10
+      );
+      const rightArm = cylinder(
+        0.055,
+        0.5,
+        shirt,
+        0.24,
+        0.88,
+        0,
+        group,
+        10
+      );
+
+      group.position.set(x, 0.28, z);
+      group.rotation.y = direction > 0 ? Math.PI / 2 : -Math.PI / 2;
+      scene.add(group);
+
+      pedestrians.push({
+        group,
+        leftLeg,
+        rightLeg,
+        leftArm,
+        rightArm,
+        direction,
+        axis: "x",
+        lane: x,
+        startPosition: new THREE.Vector3(-14, 0.28, z),
+        endPosition: new THREE.Vector3(14, 0.28, z),
+        start: 0,
+        duration: 4.2,
+        lastProgress: 0
+      });
+    }
+
+    createPedestrian(0xe56b51, -5, -5, 1);
+    createPedestrian(0x3f83c8, 5, 5, 1);
+    createPedestrian(0x6c9b55, -5, 5, 1);
+    createPedestrian(0xd6a13c, 5, -5, 1);
+
+    function updatePedestrians(time) {
+      for (const p of pedestrians) {
+        const active = time >= 11 && time < 16;
+        const localTime = active
+          ? ((time - p.start) % p.duration + p.duration) % p.duration
+          : p.duration;
+
+        const moving = active && localTime < p.duration;
+        const position = moving
+          ? p.startPosition.clone().lerp(p.endPosition, localTime / p.duration)
+          : p.endPosition;
+
+        p.group.position.copy(position);
+        p.group.position.y = 0.28 + Math.abs(Math.sin(time * 8)) * 0.025;
+
+        const swing = moving ? Math.sin(time * 10) * 0.48 : 0;
+
+        p.leftLeg.rotation.x = swing;
+        p.rightLeg.rotation.x = -swing;
+        p.leftArm.rotation.x = -swing * 0.72;
+        p.rightArm.rotation.x = swing * 0.72;
+
+        if (p.axis === "x") {
+          p.group.rotation.y =
+            p.direction > 0 ? Math.PI / 2 : -Math.PI / 2;
+        } else {
+          p.group.rotation.y =
+            p.direction > 0 ? 0 : Math.PI;
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Surroundings: buildings, trees, lamps, and signs
+    // -------------------------------------------------------------------------
+
+    function createBuilding(x, z, w, d, h, color) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+
+      const bodyMaterial = material(color);
+      box(w, h, d, bodyMaterial, 0, h / 2, 0, group);
+      box(w + 0.4, 0.35, d + 0.4, mats.roof, 0, h + 0.15, 0, group);
+
+      const windowMaterial = material(0x31546b, {
+        roughness: 0.25,
+        metalness: 0.25
+      });
+
+      const columns = Math.max(2, Math.floor(w / 2.2));
+      const rows = Math.max(2, Math.floor(h / 2.1));
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          const wx =
+            -w / 2 + ((col + 1) * w) / (columns + 1);
+          const wy = 1.2 + row * 1.8;
+
+          if (wy + 0.35 > h - 0.2) continue;
+
+          box(
+            0.9,
+            0.75,
+            0.07,
+            windowMaterial,
+            wx,
+            wy,
+            d / 2 + 0.04,
+            group
+          );
+        }
+      }
+
+      scene.add(group);
+    }
+
+    createBuilding(-27, -22, 12, 10, 8, 0xe4d7c4);
+    createBuilding(-27, 22, 12, 10, 10, 0xc8d8d2);
+    createBuilding(27, -22, 12, 10, 7, 0xd8c7b2);
+    createBuilding(27, 22, 12, 10, 9, 0xb9c9cf);
+    createBuilding(-35, -2, 9, 18, 6, 0xe2d6c2);
+    createBuilding(35, 2, 9, 18, 7, 0xd0d8d2);
+
+    function createTree(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+
+      cylinder(0.13, 1.5, mats.trunk, 0, 0.75, 0, group);
+
+      const foliage = new THREE.Mesh(
+        new THREE.SphereGeometry(1.05, 12, 10),
+        mats.leaves
+      );
+      foliage.position.y = 1.85;
+      foliage.scale.set(1, 1.18, 1);
+      foliage.castShadow = true;
+      group.add(foliage);
+
+      const foliageLight = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 10, 8),
+        mats.leavesLight
+      );
+      foliageLight.position.set(0.45, 2.25, 0.1);
+      foliageLight.castShadow = true;
+      group.add(foliageLight);
+
+      scene.add(group);
+    }
+
+    [
+      [-24, -18, 1.1],
+      [-24, 18, 0.9],
+      [24, -18, 1.15],
+      [24, 18, 0.85],
+      [-18, -24, 0.9],
+      [18, -24, 1.05],
+      [-18, 24, 0.8],
+      [18, 24, 1.1]
+    ].forEach(([x, z, s]) => createTree(x, z, s));
+
+    function createStreetLamp(x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+
+      cylinder(0.065, 5.2, mats.dark, 0, 2.6, 0, group);
+      box(1.1, 0.12, 0.12, mats.dark, 0.5, 5.1, 0, group);
+      box(0.55, 0.12, 0.35, mats.lamp, 1.0, 5.0, 0, group);
+
+      scene.add(group);
+    }
+
+    createStreetLamp(-19, -15.7);
+    createStreetLamp(19, -15.7);
+    createStreetLamp(-19, 15.7);
+    createStreetLamp(19, 15.7);
+
+    // Tram priority sign.
+    const signCanvas = document.createElement("canvas");
+    signCanvas.width = 512;
+    signCanvas.height = 256;
+    const signContext = signCanvas.getContext("2d");
+    signContext.fillStyle = "#173247";
+    signContext.fillRect(0, 0, 512, 256);
+    signContext.fillStyle = "#ffffff";
+    signContext.font = "800 54px Arial, sans-serif";
+    signContext.textAlign = "center";
+    signContext.fillText("TRAM", 256, 92);
+    signContext.font = "800 62px Arial, sans-serif";
+    signContext.fillText("PRIORITY", 256, 170);
+
+    const signTexture = new THREE.CanvasTexture(signCanvas);
+    signTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.2, 2.1),
+      new THREE.MeshBasicMaterial({ map: signTexture })
+    );
+    sign.position.set(8.7, 3.2, 15.6);
+    scene.add(sign);
+
+    cylinder(0.07, 3.4, mats.dark, 8.7, 1.7, 15.6);
+
+    // -------------------------------------------------------------------------
+    // Simulation state and UI
+    // -------------------------------------------------------------------------
+
+    const cycleDuration = 24;
+    let simulationTime = 0;
+    let paused = false;
+    let previousTime = performance.now();
+
+    const phaseTitle = document.getElementById("phaseTitle");
+    const phaseDescription = document.getElementById("phaseDescription");
+    const phaseDot = document.getElementById("phaseDot");
+    const timelineProgress = document.getElementById("timelineProgress");
+    const pauseButton = document.getElementById("pause");
+
+    const phases = [
+      {
+        start: 0,
+        title: "TRAM APPROACH",
+        description:
+          "The tram has priority. Vehicles and the pedestrian scramble are held.",
+        color: 0xff6577
+      },
+      {
+        start: 4,
+        title: "TRAM STOPPED",
+        description:
+          "The tram is stopped at its dedicated platform. Crossing traffic remains clear.",
+        color: 0xffbd55
+      },
+      {
+        start: 7,
+        title: "TRAM PASSING",
+        description:
+          "The tram is passing the intersection. All road users must yield.",
+        color: 0xff6577
+      },
+      {
+        start: 9,
+        title: "INTERSECTION CLEAR",
+        description:
+          "The tram has cleared. Pedestrians prepare for the scramble sequence.",
+        color: 0x558dff
+      },
+      {
+        start: 11,
+        title: "SCRAMBLE CROSSING",
+        description:
+          "All four crossing streams are open simultaneously. Vehicles remain stopped.",
+        color: 0x35d991
+      },
+      {
+        start: 16,
+        title: "TRAM DEPARTING",
+        description:
+          "The scramble has ended. The tram is leaving the intersection.",
+        color: 0xffbd55
+      },
+      {
+        start: 21,
+        title: "TRAM EXCHANGE",
+        description:
+          "The tram is moving to the exchange corridor. The junction is clear.",
+        color: 0x558dff
+      }
+    ];
+
+    function updateSignals(time) {
+      const state =
+        time < 10.5
+          ? "red"
+          : time < 11
+            ? "amber"
+            : time < 16
+              ? "green"
+              : "red";
+
+      for (const signal of signals) {
+        updateSignal(signal, state);
+      }
+    }
+
+    function updateTram(time) {
+      let z;
+
+      if (time < 4) {
+        z = THREE.MathUtils.lerp(24, 8.5, time / 4);
+      } else if (time < 7) {
+        z = 8.5;
+      } else if (time < 9) {
+        z = THREE.MathUtils.lerp(8.5, -8.5, (time - 7) / 2);
+      } else if (time < 11) {
+        z = -8.5;
+      } else if (time < 18) {
+        z = THREE.MathUtils.lerp(-8.5, -24, (time - 11) / 7);
+      } else if (time < 21) {
+        z = -24;
+      } else {
+        z = null;
+      }
+
+      tram.visible = z !== null;
+      if (tram.visible) {
+        tram.position.z = z;
+      }
+    }
+
+    function updateCars(time) {
+      const moving = time >= 18;
+      const progress = moving
+        ? THREE.MathUtils.clamp((time - 18) / 3, 0, 1)
+        : 0;
+      const eased = progress * progress * (3 - 2 * progress);
+
+      for (const car of cars) {
+        if (car.vertical) {
+          car.group.position.z = THREE.MathUtils.lerp(
+            car.homeZ,
+            car.targetZ,
+            eased
+          );
+        } else {
+          car.group.position.x = THREE.MathUtils.lerp(
+            car.homeX,
+            car.targetX,
+            eased
+          );
+        }
+      }
+    }
+
+    function updateUI(time) {
+      let phase = phases[0];
+
+      for (const item of phases) {
+        if (time >= item.start) phase = item;
+      }
+
+      phaseTitle.textContent = phase.title;
+      phaseDescription.textContent = phase.description;
+      phaseDot.style.background = `#${phase.color.toString(16).padStart(6, "0")}`;
+      phaseDot.style.boxShadow = `0 0 0 5px rgba(${phase.color}, 0.14)`;
+      timelineProgress.style.width = `${(time / cycleDuration) * 100}%`;
+    }
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume" : "Pause";
+    });
+
+    document.getElementById("resetView").addEventListener("click", resetView);
+
+    // -------------------------------------------------------------------------
+    // Main loop
+    // -------------------------------------------------------------------------
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min((now - previousTime) / 1000, 0.05);
+      previousTime = now;
+
+      if (!paused) {
+        simulationTime = (simulationTime + dt) % cycleDuration;
+      }
+
+      updateTram(simulationTime);
+      updateCars(simulationTime);
+      updatePedestrians(simulationTime);
+      updateSignals(simulationTime);
+      updateUI(simulationTime);
+      updateCamera();
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

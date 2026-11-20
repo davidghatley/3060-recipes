@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Folding Wooden Clothes Drying Rack</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #e9e4dc;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      width: min(330px, calc(100vw - 40px));
+      padding: 17px 18px;
+      border: 1px solid rgba(75, 61, 44, 0.17);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.84);
+      box-shadow: 0 12px 36px rgba(59, 47, 31, 0.12);
+      backdrop-filter: blur(12px);
+      color: #40372c;
+    }
+
+    .panel h1 {
+      margin: 0 0 5px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .panel p {
+      margin: 0;
+      color: #756a5d;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(76, 59, 39, 0.2);
+      border-radius: 9px;
+      padding: 8px 11px;
+      background: #f7f1e7;
+      color: #493b2c;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background 150ms, transform 150ms;
+    }
+
+    button:hover {
+      background: #eee3d2;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .hint {
+      position: fixed;
+      right: 18px;
+      bottom: 16px;
+      z-index: 10;
+      padding: 8px 11px;
+      border-radius: 9px;
+      background: rgba(255, 253, 248, 0.7);
+      color: #6c6155;
+      font-size: 11px;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    @media (max-width: 620px) {
+      .panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+      }
+
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <section class="panel">
+    <h1>Folding Clothes Drying Rack</h1>
+    <p>Wooden A-frame rack with three notched rails and a hinged folding shelf.</p>
+    <div class="buttons">
+      <button id="toggleShelf" type="button">Open shelf</button>
+      <button id="resetView" type="button">Reset view</button>
+    </div>
+  </section>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, camera, and lights
+    // ---------------------------------------------------------------------
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe9e4dc);
+    scene.fog = new THREE.Fog(0xe9e4dc, 10, 21);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      50
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xfff9ee, 0x766a5c, 2.25);
+    scene.add(hemisphere);
+
+    const keyLight = new THREE.DirectionalLight(0xfff1d8, 4.0);
+    keyLight.position.set(4.8, 8.5, 5.2);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -6.5;
+    keyLight.shadow.camera.right = 6.5;
+    keyLight.shadow.camera.top = 6.5;
+    keyLight.shadow.camera.bottom = -6.5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.bias = -0.00025;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xc9dcff, 1.15);
+    fillLight.position.set(-5, 4, -4);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffd7a1, 1.0);
+    rimLight.position.set(1, 5, -6);
+    scene.add(rimLight);
+
+    // ---------------------------------------------------------------------
+    // Procedural wood texture — no external assets
+    // ---------------------------------------------------------------------
+    function makeWoodTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 512, 0);
+      gradient.addColorStop(0, "#c99b62");
+      gradient.addColorStop(0.18, "#d8ad72");
+      gradient.addColorStop(0.5, "#b9834b");
+      gradient.addColorStop(0.76, "#d6aa6f");
+      gradient.addColorStop(1, "#b87c45");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 256);
+
+      for (let i = 0; i < 95; i++) {
+        const y = Math.random() * 256;
+        const amplitude = 1.5 + Math.random() * 7;
+        const frequency = 0.008 + Math.random() * 0.025;
+        const phase = Math.random() * Math.PI * 2;
+
+        ctx.beginPath();
+        for (let x = 0; x <= 512; x += 5) {
+          const wave = Math.sin(x * frequency + phase) * amplitude;
+          const yy = y + wave + Math.sin(x * 0.08 + phase) * 0.8;
+          if (x === 0) ctx.moveTo(x, yy);
+          else ctx.lineTo(x, yy);
+        }
+
+        const dark = Math.random() > 0.48;
+        ctx.strokeStyle = dark
+          ? `rgba(89, 49, 19, ${0.035 + Math.random() * 0.09})`
+          : `rgba(255, 220, 160, ${0.035 + Math.random() * 0.08})`;
+        ctx.lineWidth = 0.5 + Math.random() * 2.0;
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 20; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        const rx = 12 + Math.random() * 45;
+        const ry = 1 + Math.random() * 3;
+
+        ctx.beginPath();
+        ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(91, 48, 17, 0.10)";
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1.7, 2.4);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const woodTexture = makeWoodTexture();
+
+    const wood = new THREE.MeshStandardMaterial({
+      color: 0xf0c487,
+      map: woodTexture,
+      roughness: 0.67,
+      metalness: 0.02
+    });
+
+    const darkWood = new THREE.MeshStandardMaterial({
+      color: 0xb67a42,
+      map: woodTexture,
+      roughness: 0.72,
+      metalness: 0.01
+    });
+
+    const lightWood = new THREE.MeshStandardMaterial({
+      color: 0xf5d19b,
+      map: woodTexture,
+      roughness: 0.63,
+      metalness: 0.01
+    });
+
+    const notchMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6f4527,
+      roughness: 0.9,
+      metalness: 0
+    });
+
+    const steel = new THREE.MeshStandardMaterial({
+      color: 0x7e8589,
+      roughness: 0.31,
+      metalness: 0.88
+    });
+
+    const darkSteel = new THREE.MeshStandardMaterial({
+      color: 0x343a3e,
+      roughness: 0.42,
+      metalness: 0.8
+    });
+
+    const brass = new THREE.MeshStandardMaterial({
+      color: 0xb08a48,
+      roughness: 0.35,
+      metalness: 0.72
+    });
+
+    // ---------------------------------------------------------------------
+    // Geometry helpers
+    // ---------------------------------------------------------------------
+    const rack = new THREE.Group();
+    scene.add(rack);
+
+    function addBox(parent, size, position, material, rotation = null) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size.x, size.y, size.z),
+        material
+      );
+      mesh.position.copy(position);
+      if (rotation) mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(parent, radius, length, position, material, axis = "x", radialSegments = 20) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, radialSegments),
+        material
+      );
+      mesh.position.copy(position);
+
+      if (axis === "x") mesh.rotation.z = Math.PI / 2;
+      if (axis === "z") mesh.rotation.x = Math.PI / 2;
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addBeamBetween(parent, start, end, thicknessX, widthZ, material) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+      const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(thicknessX, length, widthZ),
+        material
+      );
+      beam.position.copy(midpoint);
+      beam.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      beam.castShadow = true;
+      beam.receiveShadow = true;
+      parent.add(beam);
+      return beam;
+    }
+
+    function addBoltHead(parent, position, radius = 0.055, material = steel) {
+      const head = addCylinder(parent, radius, 0.045, position, material, "x", 24);
+      const slot = addBox(
+        parent,
+        new THREE.Vector3(0.049, 0.009, radius * 0.95),
+        position.clone().add(new THREE.Vector3(0, 0, 0)),
+        darkSteel
+      );
+      slot.rotation.x = Math.PI / 2;
+      return head;
+    }
+
+    // ---------------------------------------------------------------------
+    // Two A-frame side supports made from broad, flat wooden slats
+    // ---------------------------------------------------------------------
+    const sideX = 2.28;
+    const apexY = 3.12;
+    const footY = 0.12;
+    const footSpread = 1.18;
+
+    function buildAFrame(x) {
+      const group = new THREE.Group();
+      group.position.x = x;
+      rack.add(group);
+
+      const apex = new THREE.Vector3(0, apexY, 0);
+      const frontFoot = new THREE.Vector3(0, footY, footSpread);
+      const backFoot = new THREE.Vector3(0, footY, -footSpread);
+
+      addBeamBetween(group, frontFoot, apex, 0.18, 0.27, wood);
+      addBeamBetween(group, backFoot, apex, 0.18, 0.27, wood);
+
+      // Broad top cap and lower stabilizing crosspiece.
+      addBox(
+        group,
+        new THREE.Vector3(0.19, 0.25, 0.76),
+        new THREE.Vector3(0, apexY - 0.02, 0),
+        darkWood
+      );
+
+      const lowerY = 0.73;
+      const lowerHalfWidth = footSpread * (1 - (lowerY - footY) / (apexY - footY));
+      addBox(
+        group,
+        new THREE.Vector3(0.16, 0.19, lowerHalfWidth * 2),
+        new THREE.Vector3(0, lowerY, 0),
+        wood
+      );
+
+      // Narrow notched center board supports the three drying rails.
+      addBox(
+        group,
+        new THREE.Vector3(0.13, 1.15, 0.24),
+        new THREE.Vector3(0, 2.45, 0),
+        darkWood
+      );
+
+      // Dark rubber feet.
+      for (const z of [-footSpread, footSpread]) {
+        addBox(
+          group,
+          new THREE.Vector3(0.29, 0.11, 0.34),
+          new THREE.Vector3(0, 0.055, z),
+          darkSteel,
+          new THREE.Euler(0, 0, 0)
+        );
+      }
+
+      // Small steel folding plates at the apex, with exposed pivot pins.
+      for (const z of [-0.11, 0.11]) {
+        addBox(
+          group,
+          new THREE.Vector3(0.035, 0.34, 0.13),
+          new THREE.Vector3(x > 0 ? 0.112 : -0.112, 2.99, z),
+          steel,
+          new THREE.Euler(z > 0 ? -0.12 : 0.12, 0, 0)
+        );
+      }
+
+      addCylinder(
+        group,
+        0.052,
+        0.38,
+        new THREE.Vector3(0, 2.99, 0),
+        brass,
+        "x",
+        24
+      );
+
+      addBoltHead(
+        group,
+        new THREE.Vector3(x > 0 ? 0.205 : -0.205, 2.99, 0),
+        0.061,
+        brass
+      );
+
+      return group;
+    }
+
+    buildAFrame(-sideX);
+    buildAFrame(sideX);
+
+    // ---------------------------------------------------------------------
+    // Three slender rounded drying rails
+    // ---------------------------------------------------------------------
+    const railLength = sideX * 2;
+    const railYPositions = [2.03, 2.43, 2.83];
+
+    function addRail(y) {
+      const rail = new THREE.Group();
+      rack.add(rail);
+
+      const shaft = addCylinder(
+        rail,
+        0.057,
+        railLength,
+        new THREE.Vector3(0, y, 0),
+        lightWood,
+        "x",
+        24
+      );
+
+      // Rounded wooden end caps.
+      for (const x of [-railLength / 2, railLength / 2]) {
+        const cap = new THREE.Mesh(
+          new THREE.SphereGeometry(0.057, 18, 12),
+          lightWood
+        );
+        cap.position.set(x, y, 0);
+        cap.scale.x = 0.55;
+        cap.castShadow = true;
+        rail.add(cap);
+      }
+
+      // Fine dark grooves suggest the small notches cut into the upper surface.
+      for (let i = -3; i <= 3; i++) {
+        const x = i * 0.59;
+        const groove = addBox(
+          rail,
+          new THREE.Vector3(0.082, 0.004, 0.011),
+          new THREE.Vector3(x, y + 0.055, 0),
+          notchMaterial
+        );
+        groove.rotation.y = i % 2 === 0 ? 0.30 : -0.30;
+      }
+
+      // Steel end brackets connect the wooden rail to the frame.
+      for (const x of [-sideX, sideX]) {
+        addBox(
+          rail,
+          new THREE.Vector3(0.14, 0.20, 0.16),
+          new THREE.Vector3(x, y, 0),
+          steel
+        );
+
+        addCylinder(
+          rail,
+          0.035,
+          0.17,
+          new THREE.Vector3(x, y, 0.083),
+          darkSteel,
+          "z",
+          20
+        );
+      }
+
+      return shaft;
+    }
+
+    railYPositions.forEach(addRail);
+
+    // ---------------------------------------------------------------------
+    // Lower support beam and hinged swinging shelf
+    // ---------------------------------------------------------------------
+    const hingeY = 0.68;
+    const hingeZ = -0.73;
+
+    // Rear support member where the shelf hinge is mounted.
+    addBox(
+      rack,
+      new THREE.Vector3(sideX * 2 - 0.15, 0.15, 0.19),
+      new THREE.Vector3(0, hingeY, hingeZ),
+      darkWood
+    );
+
+    // Side support members running toward the front.
+    for (const x of [-1.87, 1.87]) {
+      addBox(
+        rack,
+        new THREE.Vector3(0.12, 0.12, 1.78),
+        new THREE.Vector3(x, 0.59, 0.03),
+        wood
+      );
+    }
+
+    const shelf = new THREE.Group();
+    shelf.position.set(0, hingeY + 0.055, hingeZ);
+    rack.add(shelf);
+
+    const shelfWidth = 3.58;
+    const shelfDepth = 1.55;
+
+    // Individual shelf slats.
+    const slatCount = 8;
+    for (let i = 0; i < slatCount; i++) {
+      const z = 0.10 + (i / (slatCount - 1)) * (shelfDepth - 0.20);
+      addBox(
+        shelf,
+        new THREE.Vector3(shelfWidth, 0.075, 0.165),
+        new THREE.Vector3(0, 0, z),
+        i % 3 === 0 ? lightWood : wood
+      );
+    }
+
+    // Shelf edge frame.
+    addBox(
+      shelf,
+      new THREE.Vector3(shelfWidth + 0.12, 0.11, 0.13),
+      new THREE.Vector3(0, -0.005, shelfDepth),
+      darkWood
+    );
+
+    for (const x of [-shelfWidth / 2, shelfWidth / 2]) {
+      addBox(
+        shelf,
+        new THREE.Vector3(0.12, 0.11, shelfDepth + 0.10),
+        new THREE.Vector3(x, -0.005, shelfDepth / 2),
+        darkWood
+      );
+    }
+
+    // Two visible shelf hinge assemblies and pivot bolts.
+    for (const x of [-1.48, 1.48]) {
+      // Fixed plate attached to the rear support.
+      addBox(
+        rack,
+        new THREE.Vector3(0.43, 0.035, 0.20),
+        new THREE.Vector3(x, hingeY + 0.095, hingeZ + 0.015),
+        steel
+      );
+
+      // Moving plate belongs to the shelf and rotates with it.
+      addBox(
+        shelf,
+        new THREE.Vector3(0.34, 0.032, 0.19),
+        new THREE.Vector3(x, 0.025, 0.10),
+        steel
+      );
+
+      // Pivot bolt axis follows the shelf's X-axis.
+      addCylinder(
+        rack,
+        0.047,
+        0.49,
+        new THREE.Vector3(x, hingeY + 0.12, hingeZ),
+        brass,
+        "x",
+        24
+      );
+
+      addBoltHead(
+        rack,
+        new THREE.Vector3(x + 0.255, hingeY + 0.12, hingeZ),
+        0.057,
+        brass
+      );
+
+      addBoltHead(
+        rack,
+        new THREE.Vector3(x - 0.255, hingeY + 0.12, hingeZ),
+        0.057,
+        brass
+      );
+
+      // Small dark fastener heads on the fixed plate.
+      for (const dx of [-0.14, 0.14]) {
+        addCylinder(
+          rack,
+          0.023,
+          0.016,
+          new THREE.Vector3(x + dx, hingeY + 0.12, hingeZ + 0.055),
+          darkSteel,
+          "y",
+          16
+        );
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground and subtle contact details
+    // ---------------------------------------------------------------------
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0xddd6ca,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.005;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // A second faint circular mat beneath the rack for visual grounding.
+    const mat = new THREE.Mesh(
+      new THREE.CircleGeometry(3.7, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0xd1c7b8,
+        roughness: 1,
+        transparent: true,
+        opacity: 0.22
+      })
+    );
+    mat.rotation.x = -Math.PI / 2;
+    mat.position.y = 0.001;
+    mat.receiveShadow = true;
+    scene.add(mat);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls implemented without addons
+    // ---------------------------------------------------------------------
+    const controls = {
+      target: new THREE.Vector3(0, 1.45, 0),
+      radius: 7.25,
+      theta: 0.72,
+      phi: 1.10,
+      minRadius: 4.2,
+      maxRadius: 12,
+      dragging: false,
+      pointerX: 0,
+      pointerY: 0
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(controls.phi);
+      camera.position.set(
+        controls.target.x + controls.radius * sinPhi * Math.sin(controls.theta),
+        controls.target.y + controls.radius * Math.cos(controls.phi),
+        controls.target.z + controls.radius * sinPhi * Math.cos(controls.theta)
+      );
+      camera.lookAt(controls.target);
+    }
+
+    function resetCamera() {
+      controls.target.set(0, 1.45, 0);
+      controls.radius = 7.25;
+      controls.theta = 0.72;
+      controls.phi = 1.10;
+      updateCamera();
+    }
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      controls.dragging = true;
+      controls.pointerX = event.clientX;
+      controls.pointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!controls.dragging) return;
+
+      const dx = event.clientX - controls.pointerX;
+      const dy = event.clientY - controls.pointerY;
+      controls.pointerX = event.clientX;
+      controls.pointerY = event.clientY;
+
+      controls.theta -= dx * 0.006;
+      controls.phi = THREE.MathUtils.clamp(
+        controls.phi - dy * 0.005,
+        0.32,
+        Math.PI / 2 - 0.03
+      );
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      controls.dragging = false;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+
+    canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      controls.radius = THREE.MathUtils.clamp(
+        controls.radius * Math.exp(event.deltaY * 0.001),
+        controls.minRadius,
+        controls.maxRadius
+      );
+      updateCamera();
+    }, { passive: false });
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    document.getElementById("resetView").addEventListener("click", resetCamera);
+
+    // ---------------------------------------------------------------------
+    // Shelf animation and interaction
+    // ---------------------------------------------------------------------
+    let shelfOpen = true;
+    let shelfTarget = 0.30;
+    let shelfAngle = 0.30;
+    let shelfMotionEnabled = true;
+    const toggleButton = document.getElementById("toggleShelf");
+
+    toggleButton.addEventListener("click", () => {
+      shelfOpen = !shelfOpen;
+      shelfTarget = shelfOpen ? 0.30 : 0.015;
+      toggleButton.textContent = shelfOpen ? "Close shelf" : "Open shelf";
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      if (shelfMotionEnabled) {
+        // A gentle breathing movement clearly demonstrates the hinge.
+        const motion = Math.sin(elapsed * 0.8) * 0.012;
+        const desired = shelfTarget + motion;
+        shelfAngle = THREE.MathUtils.lerp(shelfAngle, desired, 0.075);
+      }
+
+      shelf.rotation.x = shelfAngle;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

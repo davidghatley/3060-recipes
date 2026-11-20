@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated SMT Assembly Plant</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --cyan: #63e6ff;
+      --green: #74f2a8;
+      --amber: #ffc65c;
+      --panel: rgba(7, 18, 27, 0.84);
+      --border: rgba(112, 218, 255, 0.22);
+      --muted: #8196a3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #071018;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #app canvas {
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #app canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .panel {
+      background: linear-gradient(135deg, rgba(10, 26, 38, 0.94), rgba(5, 13, 20, 0.78));
+      border: 1px solid var(--border);
+      box-shadow: 0 14px 45px rgba(0, 0, 0, 0.28),
+        inset 0 1px rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(14px);
+    }
+
+    #title {
+      top: 22px;
+      left: 24px;
+      padding: 17px 20px;
+      min-width: 310px;
+      border-radius: 4px 18px 18px 18px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: 0.23em;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 5px;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      font-weight: 680;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 13px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.45;
+        transform: scale(0.8);
+      }
+    }
+
+    #metrics {
+      top: 22px;
+      right: 24px;
+      width: 215px;
+      padding: 14px 16px;
+      border-radius: 16px 4px 16px 16px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .metric:last-child {
+      border: 0;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric strong.cyan {
+      color: var(--cyan);
+    }
+
+    .metric strong.green {
+      color: var(--green);
+    }
+
+    #controls {
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 7px;
+      padding: 8px;
+      border-radius: 14px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.055);
+      color: #c6d6df;
+      border-radius: 9px;
+      padding: 10px 13px;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      cursor: pointer;
+      transition: 160ms ease;
+      white-space: nowrap;
+    }
+
+    button:hover,
+    button.active {
+      color: #031017;
+      border-color: var(--cyan);
+      background: var(--cyan);
+      box-shadow: 0 0 24px rgba(99, 230, 255, 0.16);
+    }
+
+    button.primary {
+      color: #062018;
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    button.primary:hover {
+      background: #9bffbd;
+    }
+
+    #hint {
+      bottom: 88px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(193, 219, 231, 0.58);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-align: center;
+      text-shadow: 0 1px 4px #000;
+    }
+
+    #loading {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #071018;
+      color: var(--cyan);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: opacity 0.4s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      #title {
+        top: 12px;
+        left: 12px;
+        min-width: 0;
+        padding: 13px 15px;
+      }
+
+      h1 {
+        font-size: 17px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      #metrics {
+        top: 12px;
+        right: 12px;
+        width: 148px;
+        padding: 9px 11px;
+      }
+
+      .metric {
+        padding: 5px 0;
+      }
+
+      .metric span {
+        font-size: 8px;
+      }
+
+      .metric strong {
+        font-size: 11px;
+      }
+
+      #controls {
+        bottom: 12px;
+        width: calc(100% - 24px);
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
+
+      button {
+        padding: 9px 10px;
+        font-size: 10px;
+      }
+
+      #hint {
+        bottom: 74px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="title" class="hud panel">
+    <div class="eyebrow">Smart Manufacturing / Cell 07</div>
+    <h1>Automated SMT Assembly</h1>
+    <div class="subtitle">Pick-and-place · inspection · reflow · material flow</div>
+    <div class="status-line">
+      <span class="status-dot"></span>
+      <span id="run-state">SYSTEM RUNNING</span>
+    </div>
+  </div>
+
+  <div id="metrics" class="hud panel">
+    <div class="metric">
+      <span>Throughput</span>
+      <strong class="cyan" id="throughput">842</strong>
+    </div>
+    <div class="metric">
+      <span>Line OEE</span>
+      <strong class="green" id="oee">96.8%</strong>
+    </div>
+    <div class="metric">
+      <span>Active nodes</span>
+      <strong id="nodes">14 / 14</strong>
+    </div>
+    <div class="metric">
+      <span>Uptime</span>
+      <strong id="uptime">08:42:16</strong>
+    </div>
+  </div>
+
+  <div id="hint" class="hud">DRAG TO ORBIT · SCROLL TO ZOOM · SPACE TO PAUSE</div>
+
+  <div id="controls" class="hud panel">
+    <button id="pause" class="primary">PAUSE</button>
+    <button data-view="overview" class="active">OVERVIEW</button>
+    <button data-view="pick">PICK &amp; PLACE</button>
+    <button data-view="inspection">INSPECTION</button>
+    <button data-view="oven">REFLOW OVEN</button>
+    <button data-view="top">TOP VIEW</button>
+  </div>
+
+  <div id="loading">Initializing automated assembly cell…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.querySelector("#app");
+    const loading = document.querySelector("#loading");
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071018);
+    scene.fog = new THREE.FogExp2(0x071018, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      140
+    );
+
+    // ------------------------------------------------------------
+    // Custom camera controller: no addons required
+    // ------------------------------------------------------------
+
+    const orbit = {
+      target: new THREE.Vector3(0, 1.4, -0.5),
+      desiredTarget: new THREE.Vector3(0, 1.4, -0.5),
+      radius: 25,
+      desiredRadius: 25,
+      theta: 0.68,
+      desiredTheta: 0.68,
+      phi: 1.03,
+      desiredPhi: 1.03,
+      dragging: false,
+      lastX: 0,
+      lastY: 0
+    };
+
+    function updateCamera(dt) {
+      const ease = 1 - Math.pow(0.001, dt);
+      orbit.radius = THREE.MathUtils.lerp(orbit.radius, orbit.desiredRadius, ease);
+      orbit.theta = THREE.MathUtils.lerp(orbit.theta, orbit.desiredTheta, ease);
+      orbit.phi = THREE.MathUtils.lerp(orbit.phi, orbit.desiredPhi, ease);
+      orbit.target.lerp(orbit.desiredTarget, ease);
+
+      orbit.phi = THREE.MathUtils.clamp(orbit.phi, 0.16, 1.48);
+      orbit.radius = THREE.MathUtils.clamp(orbit.radius, 5.5, 48);
+
+      const spherical = new THREE.Spherical(
+        orbit.radius,
+        orbit.phi,
+        orbit.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(orbit.target);
+      camera.lookAt(orbit.target);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      orbit.dragging = true;
+      orbit.lastX = event.clientX;
+      orbit.lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!orbit.dragging) return;
+
+      const dx = event.clientX - orbit.lastX;
+      const dy = event.clientY - orbit.lastY;
+      orbit.lastX = event.clientX;
+      orbit.lastY = event.clientY;
+
+      orbit.desiredTheta -= dx * 0.006;
+      orbit.desiredPhi -= dy * 0.005;
+    });
+
+    function endDrag(event) {
+      orbit.dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.desiredRadius *= Math.exp(event.deltaY * 0.001);
+      },
+      { passive: false }
+    );
+
+    const views = {
+      overview: {
+        target: [0, 1.4, -0.5],
+        radius: 25,
+        theta: 0.68,
+        phi: 1.03
+      },
+      pick: {
+        target: [-5.1, 1.7, -0.4],
+        radius: 10.5,
+        theta: 0.86,
+        phi: 1.12
+      },
+      inspection: {
+        target: [0.8, 1.8, -0.2],
+        radius: 8.5,
+        theta: 0.92,
+        phi: 1.08
+      },
+      oven: {
+        target: [6.5, 2.0, 0],
+        radius: 9.5,
+        theta: 1.05,
+        phi: 1.13
+      },
+      top: {
+        target: [0, 0, -1.5],
+        radius: 22,
+        theta: 0.55,
+        phi: 0.3
+      }
+    };
+
+    function setView(name) {
+      const view = views[name];
+      if (!view) return;
+
+      orbit.desiredTarget.set(...view.target);
+      orbit.desiredRadius = view.radius;
+      orbit.desiredTheta = view.theta;
+      orbit.desiredPhi = view.phi;
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === name);
+      });
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => setView(button.dataset.view));
+    });
+
+    // ------------------------------------------------------------
+    // Materials and geometry helpers
+    // ------------------------------------------------------------
+
+    function standard(color, metalness = 0.35, roughness = 0.5) {
+      return new THREE.MeshStandardMaterial({
+        color,
+        metalness,
+        roughness
+      });
+    }
+
+    function emissive(color, intensity = 1.5, opacity = 1) {
+      return new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: intensity,
+        metalness: 0.15,
+        roughness: 0.35,
+        transparent: opacity < 1,
+        opacity
+      });
+    }
+
+    const M = {
+      floor: standard(0x101b22, 0.12, 0.84),
+      wall: standard(0x14232d, 0.18, 0.72),
+      wallDark: standard(0x09131a, 0.3, 0.7),
+      steel: standard(0x536672, 0.78, 0.31),
+      steelDark: standard(0x1b2932, 0.72, 0.4),
+      white: standard(0xb8c9d0, 0.42, 0.38),
+      black: standard(0x080d11, 0.2, 0.66),
+      belt: standard(0x10161a, 0.05, 0.94),
+      yellow: standard(0xe8aa24, 0.35, 0.42),
+      cyan: emissive(0x38d9ff, 1.25),
+      green: emissive(0x54f09a, 1.1),
+      orange: emissive(0xff842e, 1.8),
+      red: emissive(0xff3f42, 1.2),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x6ed9ef,
+        emissive: 0x1b8fa6,
+        emissiveIntensity: 0.55,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        roughness: 0.15,
+        metalness: 0.05
+      }),
+      pcb: standard(0x155d45, 0.25, 0.58),
+      pcbDark: standard(0x0c3b30, 0.18, 0.66),
+      copper: standard(0xd5a24d, 0.8, 0.27),
+      component: standard(0x101317, 0.16, 0.55),
+      ceramic: standard(0xc8b998, 0.05, 0.72),
+      blue: standard(0x2585c9, 0.45, 0.35)
+    };
+
+    function addBox(parent, sx, sy, sz, x, y, z, material, cast = true) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      x,
+      y,
+      z,
+      material,
+      segments = 20,
+      cast = true
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addSphere(parent, radius, x, y, z, material, cast = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 16, 12),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addLabel(text, width, x, y, z, color = "#63e6ff") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 160;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "rgba(4, 13, 20, 0.88)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+      ctx.fillStyle = color;
+      ctx.fillRect(24, 28, 9, 104);
+      ctx.font = "700 48px ui-monospace, monospace";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 55, 80);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.set(x, y, z);
+      sprite.scale.set(width, width * 0.15625, 1);
+      scene.add(sprite);
+      return sprite;
+    }
+
+    // ------------------------------------------------------------
+    // Floor grid and hazard textures
+    // ------------------------------------------------------------
+
+    const floorCanvas = document.createElement("canvas");
+    floorCanvas.width = floorCanvas.height = 512;
+    const floorCtx = floorCanvas.getContext("2d");
+    floorCtx.fillStyle = "#142029";
+    floorCtx.fillRect(0, 0, 512, 512);
+    floorCtx.strokeStyle = "#20333d";
+    floorCtx.lineWidth = 2;
+    floorCtx.beginPath();
+    floorCtx.moveTo(0, 0);
+    floorCtx.lineTo(512, 512);
+    floorCtx.moveTo(512, 0);
+    floorCtx.lineTo(0, 512);
+    floorCtx.stroke();
+
+    const floorTexture = new THREE.CanvasTexture(floorCanvas);
+    floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.repeat.set(20, 14);
+    floorTexture.colorSpace = THREE.SRGBColorSpace;
+    floorTexture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      map: floorTexture,
+      color: 0x8b9ba4,
+      roughness: 0.84,
+      metalness: 0.12
+    });
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(42, 30), floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const hazardCanvas = document.createElement("canvas");
+    hazardCanvas.width = hazardCanvas.height = 128;
+    const hazardCtx = hazardCanvas.getContext("2d");
+    hazardCtx.fillStyle = "#14191b";
+    hazardCtx.fillRect(0, 0, 128, 128);
+    hazardCtx.strokeStyle = "#e8aa24";
+    hazardCtx.lineWidth = 24;
+    for (let x = -128; x < 256; x += 48) {
+      hazardCtx.beginPath();
+      hazardCtx.moveTo(x, 0);
+      hazardCtx.lineTo(x + 128, 128);
+      hazardCtx.stroke();
+    }
+
+    const hazardTexture = new THREE.CanvasTexture(hazardCanvas);
+    hazardTexture.wrapS = hazardTexture.wrapT = THREE.RepeatWrapping;
+    hazardTexture.repeat.set(5, 3);
+    hazardTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const hazardMaterial = new THREE.MeshStandardMaterial({
+      map: hazardTexture,
+      roughness: 0.75,
+      metalness: 0.05
+    });
+
+    function floorZone(x, z, width, depth) {
+      const zone = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, depth),
+        hazardMaterial
+      );
+      zone.rotation.x = -Math.PI / 2;
+      zone.position.set(x, 0.018, z);
+      zone.receiveShadow = true;
+      scene.add(zone);
+    }
+
+    floorZone(6.5, 0, 7.2, 4.7);
+    floorZone(-5.1, 0, 6.5, 5.4);
+
+    // Lane markings and safety paths.
+    for (const z of [-8.2, 7.2]) {
+      addBox(scene, 37, 0.025, 0.08, 0, 0.025, z, M.yellow, false);
+    }
+
+    for (let x = -17; x <= 17; x += 2.2) {
+      addBox(scene, 0.75, 0.03, 0.08, x, 0.03, -8.55, M.white, false);
+    }
+
+    // ------------------------------------------------------------
+    // Factory architecture
+    // ------------------------------------------------------------
+
+    addBox(scene, 42, 8.5, 0.35, 0, 4.25, -12.7, M.wallDark);
+    addBox(scene, 0.35, 8.5, 30, -20.7, 4.25, 0, M.wallDark);
+
+    for (let x = -18; x <= 18; x += 6) {
+      addBox(scene, 0.32, 8, 0.5, x, 4, -12.38, M.steelDark);
+    }
+
+    for (let z = -11; z <= 11; z += 5.5) {
+      addBox(scene, 0.5, 8, 0.32, -20.38, 4, z, M.steelDark);
+    }
+
+    addBox(scene, 40, 0.35, 0.45, 0, 7.3, -12.1, M.steelDark);
+    addBox(scene, 0.45, 0.35, 28, -20.1, 7.3, 0, M.steelDark);
+
+    // Overhead trusses.
+    for (let z = -10; z <= 8; z += 4.5) {
+      addBox(scene, 40, 0.16, 0.16, 0, 6.8, z, M.steelDark);
+    }
+
+    // Large ventilation pipe.
+    const ventilation = addCylinder(
+      scene,
+      0.34,
+      0.34,
+      32,
+      0,
+      6.2,
+      -10.5,
+      M.steel,
+      24
+    );
+    ventilation.rotation.z = Math.PI / 2;
+
+    for (let x = -12; x <= 12; x += 6) {
+      const ring = addCylinder(
+        scene,
+        0.4,
+        0.4,
+        0.12,
+        x,
+        6.2,
+        -10.5,
+        M.steelDark,
+        24
+      );
+      ring.rotation.z = Math.PI / 2;
+    }
+
+    // Ceiling lights.
+    for (const x of [-14, -7, 0, 7, 14]) {
+      for (const z of [-7.8, 3.4]) {
+        addBox(scene, 4.5, 0.13, 0.42, x, 6.5, z, M.steelDark);
+        addBox(scene, 4.1, 0.06, 0.22, x, 6.4, z, M.cyan, false);
+      }
+    }
+
+    // Wall storage shelving.
+    const shelf = new THREE.Group();
+    shelf.position.set(7.2, 0, -11.65);
+    scene.add(shelf);
+
+    for (const y of [0.65, 1.8, 2.95, 4.1]) {
+      addBox(shelf, 6.8, 0.12, 1.2, 0, y, 0, M.steelDark);
+    }
+
+    for (const x of [-3.3, 0, 3.3]) {
+      addBox(shelf, 0.14, 4.6, 0.14, x, 2.3, -0.45, M.steel);
+    }
+
+    const binMaterials = [M.blue, M.yellow, M.component, M.pcb];
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 8; col++) {
+        const bin = addBox(
+          shelf,
+          0.64,
+          0.38,
+          0.75,
+          -2.85 + col * 0.82,
+          0.9 + row * 1.15,
+          0,
+          binMaterials[(row + col) % binMaterials.length]
+        );
+        bin.castShadow = true;
+        addBox(bin, 0.48, 0.035, 0.52, 0, 0.21, 0, M.black, false);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+
+    const hemi = new THREE.HemisphereLight(0x9bdfff, 0x14212a, 1.45);
+    scene.add(hemi);
+
+    const keyLight = new THREE.DirectionalLight(0xc6ecff, 2.35);
+    keyLight.position.set(9, 17, 11);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -23;
+    keyLight.shadow.camera.right = 23;
+    keyLight.shadow.camera.top = 18;
+    keyLight.shadow.camera.bottom = -18;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 55;
+    keyLight.shadow.bias = -0.00035;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x4fa5d8, 0.75);
+    fillLight.position.set(-12, 8, -8);
+    scene.add(fillLight);
+
+    const ovenLight = new THREE.PointLight(0xff7b2f, 12, 8, 2);
+    ovenLight.position.set(6.5, 2.25, 0);
+    scene.add(ovenLight);
+
+    const scannerLight = new THREE.PointLight(0x38dcff, 8, 6, 2);
+    scannerLight.position.set(0.7, 2.1, 0);
+    scene.add(scannerLight);
+
+    // ------------------------------------------------------------
+    // Conveyor belts and moving PCBs
+    // ------------------------------------------------------------
+
+    const boardGroups = [];
+    const beltTextures = [];
+
+    function createBeltTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#151b1e";
+      ctx.fillRect(0, 0, 128, 64);
+      ctx.fillStyle = "#283137";
+      ctx.fillRect(0, 0, 5, 64);
+      ctx.fillStyle = "#20292e";
+      ctx.fillRect(61, 0, 4, 64);
+      ctx.fillStyle = "#0c1114";
+      ctx.fillRect(0, 59, 128, 5);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(12, 1);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function createPCB() {
+      const root = new THREE.Group();
+      const parts = [];
+
+      addBox(root, 1.28, 0.08, 0.78, 0, 0, 0, M.pcb, false);
+      addBox(root, 1.08, 0.012, 0.05, 0, 0.046, -0.27, M.copper, false);
+      addBox(root, 0.05, 0.012, 0.57, -0.52, 0.046, 0, M.copper, false);
+
+      for (let i = 0; i < 8; i++) {
+        addBox(
+          root,
+          0.075,
+          0.015,
+          0.16,
+          -0.42 + i * 0.12,
+          0.048,
+          0.26,
+          M.copper,
+          false
+        );
+      }
+
+      const chipA = addBox(root, 0.34, 0.12, 0.28, -0.2, 0.11, 0.03, M.component, false);
+      chipA.userData.stage = 1;
+      parts.push(chipA);
+
+      const chipB = addBox(root, 0.25, 0.09, 0.2, 0.23, 0.095, -0.08, M.component, false);
+      chipB.userData.stage = 1;
+      parts.push(chipB);
+
+      const capA = addBox(root, 0.1, 0.15, 0.12, 0.08, 0.125, 0.18, M.component, false);
+      capA.userData.stage = 2;
+      parts.push(capA);
+
+      const capB = addBox(root, 0.1, 0.15, 0.12, 0.22, 0.125, 0.18, M.component, false);
+      capB.userData.stage = 2;
+      parts.push(capB);
+
+      const connector = addBox(root, 0.34, 0.13, 0.12, 0.38, 0.11, 0.27, M.black, false);
+      connector.userData.stage = 2;
+      parts.push(connector);
+
+      root.userData.parts = parts;
+      return root;
+    }
+
+    function buildConveyor(z, name, accent) {
+      const group = new THREE.Group();
+      group.position.z = z;
+      scene.add(group);
+
+      addBox(group, 21, 0.24, 2.16, 0, 1.12, 0, M.belt);
+      addBox(group, 21.3, 0.24, 0.16, 0, 1.29, -1.17, accent);
+      addBox(group, 21.3, 0.24, 0.16, 0, 1.29, 1.17, accent);
+      addBox(group, 0.2, 0.55, 2.6, -10.55, 1.08, 0, M.steelDark);
+      addBox(group, 0.2, 0.55, 2.6, 10.55, 1.08, 0, M.steelDark);
+
+      for (let x = -9; x <= 9; x += 3) {
+        addBox(group, 0.18, 1.05, 0.18, x, 0.54, -0.87, M.steel);
+        addBox(group, 0.18, 1.05, 0.18, x, 0.54, 0.87, M.steel);
+        addBox(group, 0.22, 0.12, 2.1, x, 0.16, 0, M.steelDark);
+      }
+
+      for (let x = -10; x <= 10; x += 1.25) {
+        const roller = addCylinder(
+          group,
+          0.09,
+          0.09,
+          2.05,
+          x,
+          1.03,
+          0,
+          M.steelDark,
+          12
+        );
+        roller.rotation.x = Math.PI / 2;
+      }
+
+      addBox(group, 0.9, 0.62, 0.55, 9.55, 0.72, 1.42, M.steelDark);
+      addCylinder(group, 0.23, 0.23, 0.3, 9.55, 0.72, 1.78, M.steel, 16);
+
+      const beltTexture = createBeltTexture();
+      beltTextures.push(beltTexture);
+
+      const beltTop = new THREE.Mesh(
+        new THREE.PlaneGeometry(21, 2.12),
+        new THREE.MeshStandardMaterial({
+          map: beltTexture,
+          roughness: 0.86,
+          metalness: 0.05
+        })
+      );
+      beltTop.rotation.x = -Math.PI / 2;
+      beltTop.position.y = 1.245;
+      beltTop.receiveShadow = true;
+      group.add(beltTop);
+
+      const boards = [];
+      for (let i = 0; i < 7; i++) {
+        const board = createPCB();
+        board.position.set(-10 + i * 3.1, 1.33, 0);
+        group.add(board);
+        boards.push(board);
+      }
+
+      boardGroups.push({ boards, z, name });
+      return group;
+    }
+
+    buildConveyor(0, "SMT LINE A", M.yellow);
+    buildConveyor(-5.4, "SMT LINE B", M.steel);
+
+    addLabel("SMT LINE A  /  PRIMARY", 5.4, -3.7, 4.1, -1.7, "#ffc65c");
+    addLabel("SMT LINE B  /  FLEX ASSEMBLY", 5.8, 2.2, 3.7, -6.5, "#63e6ff");
+
+    // ------------------------------------------------------------
+    // Pick-and-place gantry and feeder bank
+    // ------------------------------------------------------------
+
+    const smt = new THREE.Group();
+    scene.add(smt);
+
+    for (const x of [-7.35, -3.55]) {
+      for (const z of [-2.45, 2.45]) {
+        addBox(smt, 0.18, 3.15, 0.18, x, 1.58, z, M.steel);
+        addBox(smt, 0.46, 0.09, 0.46, x, 0.05, z, M.steelDark);
+      }
+    }
+
+    for (const z of [-2.45, 2.45]) {
+      addBox(smt, 4.25, 0.22, 0.22, -5.45, 3.15, z, M.steel);
+    }
+
+    addBox(smt, 0.22, 0.22, 5.15, -7.35, 3.12, 0, M.steelDark);
+    addBox(smt, 0.22, 0.22, 5.15, -3.55, 3.12, 0, M.steelDark);
+
+    // Feeder trays.
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 5; col++) {
+        const feeder = new THREE.Group();
+        feeder.position.set(-7.25 + col * 0.66, 1.46 + row * 0.48, -1.95);
+        feeder.rotation.x = -0.12;
+        smt.add(feeder);
+
+        addBox(feeder, 0.54, 0.11, 0.62, 0, 0, 0, M.steelDark);
+        addBox(feeder, 0.37, 0.035, 0.42, 0, 0.075, 0, M.black, false);
+
+        const reel = addCylinder(
+          feeder,
+          0.14,
+          0.14,
+          0.07,
+          0,
+          0.13,
+          0,
+          col % 2 ? M.blue : M.ceramic,
+          16
+        );
+        reel.rotation.x = Math.PI / 2;
+      }
+    }
+
+    addBox(smt, 4.4, 0.55, 0.75, -5.5, 0.42, -2.3, M.steelDark);
+
+    // Moving bridge and pick head.
+    const gantryBridge = new THREE.Group();
+    gantryBridge.position.set(-6.8, 2.91, 0);
+    smt.add(gantryBridge);
+
+    addBox(gantryBridge, 0.3, 0.3, 5.1, 0, 0, 0, M.steel);
+    addBox(gantryBridge, 0.42, 0.18, 0.5, 0, 0, -2.4, M.yellow);
+    addBox(gantryBridge, 0.42, 0.18, 0.5, 0, 0, 2.4, M.yellow);
+
+    const pickHead = new THREE.Group();
+    gantryBridge.add(pickHead);
+
+    addBox(pickHead, 0.48, 0.42, 0.48, 0, -0.24, 0, M.steelDark);
+    addBox(pickHead, 0.14, 0.72, 0.14, 0, -0.72, 0, M.steel);
+    addCylinder(pickHead, 0.09, 0.05, 0.22, 0, -1.18, 0, M.black, 16);
+    addCylinder(pickHead, 0.16, 0.16, 0.06, 0, -1.29, 0, M.blue, 16);
+
+    const heldComponent = addBox(
+      pickHead,
+      0.14,
+      0.05,
+      0.1,
+      0,
+      -1.37,
+      0,
+      M.component,
+      false
+    );
+
+    addLabel("PICK & PLACE  /  04", 4.3, -5.25, 3.78, -0.4, "#ffc65c");
+    addLabel("FEEDER BANK", 2.4, -6.8, 2.28, -2.05, "#63e6ff");
+
+    // ------------------------------------------------------------
+    // Automated optical inspection station
+    // ------------------------------------------------------------
+
+    const inspection = new THREE.Group();
+    inspection.position.x = 0.65;
+    scene.add(inspection);
+
+    for (const z of [-1.5, 1.5]) {
+      addBox(inspection, 2.65, 2.45, 0.22, 0, 2.18, z, M.steelDark);
+      addBox(inspection, 0.2, 2.8, 0.2, -1.2, 1.4, z, M.steel);
+      addBox(inspection, 0.2, 2.8, 0.2, 1.2, 1.4, z, M.steel);
+    }
+
+    addBox(inspection, 2.85, 0.35, 3.25, 0, 3.48, 0, M.steelDark);
+    addBox(inspection, 2.3, 0.08, 0.16, 0, 3.25, 0, M.cyan, false);
+
+    const scanPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.65, 1.75),
+      M.glass
+    );
+    scanPlane.rotation.y = Math.PI / 2;
+    scanPlane.position.set(0, 2.12, 0);
+    inspection.add(scanPlane);
+
+    addLabel("AOI INSPECTION  /  2K", 4.2, 0.65, 4.05, -0.3, "#63e6ff");
+
+    // ------------------------------------------------------------
+    // Reflow oven
+    // ------------------------------------------------------------
+
+    const oven = new THREE.Group();
+    oven.position.x = 6.55;
+    scene.add(oven);
+
+    for (const z of [-1.48, 1.48]) {
+      addBox(oven, 4.5, 2.55, 0.28, 0, 2.35, z, M.steelDark);
+    }
+
+    addBox(oven, 4.65, 0.42, 3.25, 0, 3.78, 0, M.steelDark);
+    addBox(oven, 4.3, 0.12, 2.6, 0, 3.51, 0, M.orange, false);
+
+    // Orange inspection window and internal glow.
+    const ovenWindow = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.65, 0.78),
+      new THREE.MeshStandardMaterial({
+        color: 0xff7c2d,
+        emissive: 0xff5a16,
+        emissiveIntensity: 1.4,
+        transparent: true,
+        opacity: 0.38,
+        roughness: 0.25,
+        side: THREE.DoubleSide
+      })
+    );
+    ovenWindow.position.set(0, 2.46, 1.635);
+    oven.add(ovenWindow);
+
+    const ovenInner = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.8, 1.45),
+      emissive(0xff681e, 1.35, 0.32)
+    );
+    ovenInner.position.set(0, 2.08, -1.32);
+    oven.add(ovenInner);
+
+    // Entry and exit heat shields.
+    for (const x of [-2.18, 2.18]) {
+      addBox(oven, 0.22, 1.15, 2.95, x, 1.77, 0, M.steel);
+      addBox(oven, 0.24, 0.18, 2.95, x, 3.25, 0, M.orange, false);
+    }
+
+    addBox(oven, 1.2, 1.65, 1.25, 0.3, 4.68, -0.45, M.steelDark);
+    addCylinder(oven, 0.34, 0.34, 1.25, 0.3, 5.95, -0.45, M.steel, 20);
+
+    addCylinder(oven, 0.13, 0.13, 0.18, -1.4, 4.13, 0.6, M.red, 16);
+    addLabel("REFLOW OVEN  /  240°C", 4.8, 6.55, 4.25, -0.6, "#ffc65c");
+
+    // Oven exhaust particles.
+    const particleCount = 26;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleSeeds = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      particleSeeds.push({
+        phase: Math.random(),
+        radius: 0.08 + Math.random() * 0.18,
+        speed: 0.09 + Math.random() * 0.1
+      });
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffbc82,
+        size: 0.16,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    scene.add(particles);
+
+    // ------------------------------------------------------------
+    // Secondary line equipment
+    // ------------------------------------------------------------
+
+    const printer = new THREE.Group();
+    printer.position.set(-7.2, 0, -5.4);
+    scene.add(printer);
+
+    for (const z of [-1.35, 1.35]) {
+      addBox(printer, 2.3, 2.5, 0.16, 0, 2.1, z, M.steelDark);
+    }
+
+    addBox(printer, 2.5, 0.3, 2.9, 0, 3.42, 0, M.steelDark);
+    addBox(printer, 1.4, 0.14, 0.45, 0, 2.65, 0, M.blue);
+    addBox(printer, 0.45, 0.7, 0.45, 0, 2.15, 0, M.steel);
+
+    addLabel("SOLDER PASTE PRINTER", 4.6, -7.2, 4.05, -6.6, "#63e6ff");
+
+    const depalletizer = new THREE.Group();
+    depalletizer.position.set(8.9, 0, -5.4);
+    scene.add(depalletizer);
+
+    addBox(depalletizer, 1.7, 0.35, 1.8, 0, 0.2, 0, M.steelDark);
+    addBox(depalletizer, 0.18, 4.2, 0.18, -0.75, 2.2, -0.75, M.steel);
+    addBox(depalletizer, 0.18, 4.2, 0.18, 0.75, 2.2, -0.75, M.steel);
+    addBox(depalletizer, 1.7, 0.22, 0.22, 0, 4.25, -0.75, M.steel);
+    addBox(depalletizer, 0.7, 0.65, 0.7, 0, 3.85, -0.75, M.yellow);
+
+    addLabel("AUTOMATED DEPALLETIZER", 4.8, 8.9, 4.95, -6.5, "#ffc65c");
+
+    // ------------------------------------------------------------
+    // Articulated industrial robots
+    // ------------------------------------------------------------
+
+    const robots = [];
+
+    function buildRobot(x, z, yaw, accent) {
+      const root = new THREE.Group();
+      root.position.set(x, 0, z);
+      root.rotation.y = yaw;
+      scene.add(root);
+
+      addCylinder(root, 0.82, 0.95, 0.26, 0, 0.13, 0, M.steelDark, 24);
+      addCylinder(root, 0.67, 0.74, 0.5, 0, 0.48, 0, accent, 24);
+      addCylinder(root, 0.5, 0.5, 0.22, 0, 0.82, 0, M.steel, 24);
+
+      const shoulder = new THREE.Group();
+      shoulder.position.y = 0.98;
+      root.add(shoulder);
+
+      addBox(shoulder, 0.43, 1.75, 0.48, 0, 0.86, 0, accent);
+      addSphere(shoulder, 0.34, 0, 1.72, 0, M.steel, true);
+
+      const elbow = new THREE.Group();
+      elbow.position.set(0, 1.72, 0);
+      shoulder.add(elbow);
+
+      addBox(elbow, 0.35, 1.5, 0.4, 0, 0.73, 0, M.white);
+      addSphere(elbow, 0.29, 0, 1.48, 0, M.steel);
+
+      const wrist = new THREE.Group();
+      wrist.position.set(0, 1.48, 0);
+      elbow.add(wrist);
+
+      addCylinder(wrist, 0.25, 0.25, 0.35, 0, 0.13, 0, M.steelDark, 16);
+      addBox(wrist, 0.55, 0.25, 0.55, 0, 0.36, 0, accent);
+      addBox(wrist, 0.11, 0.48, 0.12, -0.21, 0.67, 0, M.steel);
+      addBox(wrist, 0.11, 0.48, 0.12, 0.21, 0.67, 0, M.steel);
+      addBox(wrist, 0.12, 0.08, 0.2, -0.21, 0.9, 0, M.black);
+      addBox(wrist, 0.12, 0.08, 0.2, 0.21, 0.9, 0, M.black);
+
+      // Cable loop.
+      const cable = new THREE.Mesh(
+        new THREE.TorusGeometry(0.38, 0.045, 8, 24, Math.PI * 1.35),
+        M.black
+      );
+      cable.position.set(0.24, 0.15, 0);
+      cable.rotation.y = Math.PI / 2;
+      shoulder.add(cable);
+
+      robots.push({ shoulder, elbow, wrist, phase: Math.random() * Math.PI * 2 });
+      return root;
+    }
+
+    buildRobot(-1.8, 4.65, -Math.PI / 2, M.yellow);
+    buildRobot(8.2, -7.7, Math.PI / 2, M.blue);
+
+    // ------------------------------------------------------------
+    // Autonomous material cart
+    // ------------------------------------------------------------
+
+    const agv = new THREE.Group();
+    scene.add(agv);
+
+    addBox(agv, 2.3, 0.3, 1.45, 0, 0.2, 0, M.steelDark);
+    addBox(agv, 1.9, 0.14, 1.18, 0, 0.43, 0, M.yellow);
+    addBox(agv, 0.95, 0.28, 0.95, 0, 0.58, 0, M.blue);
+    addCylinder(agv, 0.17, 0.17, 0.18, 0, 0.82, 0, M.cyan, 16);
+
+    for (let i = 0; i < 4; i++) {
+      addBox(
+        agv,
+        0.8,
+        0.05,
+        0.55,
+        0,
+        0.54 + i * 0.08,
+        0,
+        M.pcb,
+        false
+      );
+    }
+
+    for (const x of [-0.75, 0.75]) {
+      for (const z of [-0.58, 0.58]) {
+        const wheel = addCylinder(
+          agv,
+          0.16,
+          0.16,
+          0.12,
+          x,
+          0.14,
+          z,
+          M.black,
+          14
+        );
+        wheel.rotation.x = Math.PI / 2;
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Dynamic monitoring screen
+    // ------------------------------------------------------------
+
+    function createMonitor(width, height, x, y, z, title) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, height),
+        new THREE.MeshStandardMaterial({
+          map: texture,
+          emissiveMap: texture,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.7,
+          roughness: 0.36,
+          metalness: 0.05
+        })
+      );
+      mesh.position.set(x, y, z);
+      scene.add(mesh);
+
+      addBox(scene, width + 0.24, height + 0.24, 0.16, x, y, z - 0.12, M.steelDark);
+
+      return { canvas, ctx, texture, title };
+    }
+
+    const monitor = createMonitor(6.2, 3.1, -7.1, 4.15, -12.2, "SMT CELL CONTROL");
+
+    function drawMonitor(time) {
+      const { ctx, texture, title } = monitor;
+      ctx.fillStyle = "#06131b";
+      ctx.fillRect(0, 0, 1024, 512);
+
+      ctx.fillStyle = "#0c2631";
+      ctx.fillRect(0, 0, 1024, 72);
+      ctx.fillStyle = "#63e6ff";
+      ctx.fillRect(30, 25, 8, 22);
+      ctx.fillStyle = "#d7f8ff";
+      ctx.font = "700 30px ui-monospace, monospace";
+      ctx.fillText(title, 55, 47);
+
+      ctx.fillStyle = "#74f2a8";
+      ctx.beginPath();
+      ctx.arc(955, 36, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = "20px ui-monospace, monospace";
+      ctx.fillText("ONLINE", 770, 44);
+
+      const stages = [
+        ["FEED", "98.4%"],
+        ["PLACE", "99.1%"],
+        ["AOI", "97.8%"],
+        ["REFLOW", "96.9%"]
+      ];
+
+      stages.forEach(([name, value], index) => {
+        const x = 45 + index * 245;
+        ctx.fillStyle = "#0a1d27";
+        ctx.fillRect(x, 108, 215, 125);
+        ctx.strokeStyle = "#1d4352";
+        ctx.strokeRect(x, 108, 215, 125);
+        ctx.fillStyle = "#7f9ba8";
+        ctx.font = "18px ui-monospace, monospace";
+        ctx.fillText(name, x + 18, 140);
+        ctx.fillStyle = "#e4f8ff";
+        ctx.font = "700 31px ui-monospace, monospace";
+        ctx.fillText(value, x + 18, 188);
+        ctx.fillStyle = "#63e6ff";
+        ctx.fillRect(x + 18, 208, 175 * parseFloat(value) / 100, 5);
+      });
+
+      ctx.strokeStyle = "#183d4a";
+      ctx.beginPath();
+      ctx.moveTo(42, 390);
+      ctx.lineTo(980, 390);
+      ctx.stroke();
+
+      const points = [];
+      for (let i = 0; i < 32; i++) {
+        const px = 42 + i * 29;
+        const py = 355 - Math.sin(i * 0.58 + time * 0.7) * 22 - (i % 4) * 4;
+        points.push([px, py]);
+      }
+
+      ctx.strokeStyle = "#74f2a8";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      points.forEach(([px, py], i) => {
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "#78939f";
+      ctx.font = "17px ui-monospace, monospace";
+      ctx.fillText("REAL-TIME THROUGHPUT / LAST 60 MINUTES", 45, 445);
+      ctx.fillStyle = "#d8f6ff";
+      ctx.font = "700 24px ui-monospace, monospace";
+      ctx.fillText(
+        `${Math.floor(820 + Math.sin(time * 0.4) * 24)} PCB/H`,
+        790,
+        445
+      );
+
+      texture.needsUpdate = true;
+    }
+
+    // Large plant identification sign.
+    addLabel("AUTOMATED ELECTRONICS ASSEMBLY  //  CELL 07", 9.2, 0, 6.8, -12.1, "#63e6ff");
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let elapsed = 0;
+    let paused = false;
+    let lastMonitorUpdate = -1;
+
+    function smoothstep(value) {
+      const x = THREE.MathUtils.clamp(value, 0, 1);
+      return x * x * (3 - 2 * x);
+    }
+
+    function updateSMT(time) {
+      const cycle = (time % 8) / 8;
+      let x = -6.8;
+      let z = -1.95;
+      let descend = 0;
+
+      if (cycle < 0.22) {
+        x = -6.8;
+        z = -1.95;
+        descend = smoothstep(cycle / 0.22) * 0.48;
+      } else if (cycle < 0.42) {
+        const p = smoothstep((cycle - 0.22) / 0.2);
+        x = THREE.MathUtils.lerp(-6.8, -5.15, p);
+        z = -1.95;
+        descend = 0.48 * (1 - p);
+      } else if (cycle < 0.65) {
+        const p = smoothstep((cycle - 0.42) / 0.23);
+        x = -5.15;
+        z = THREE.MathUtils.lerp(-1.95, 0, p);
+        descend = 0;
+      } else if (cycle < 0.78) {
+        x = -5.15;
+        z = 0;
+        descend = smoothstep((cycle - 0.65) / 0.13) * 0.55;
+      } else {
+        const p = smoothstep((cycle - 0.78) / 0.22);
+        x = THREE.MathUtils.lerp(-5.15, -6.8, p);
+        z = THREE.MathUtils.lerp(0, -1.95, p);
+        descend = 0.55 * (1 - p);
+      }
+
+      gantryBridge.position.x = x;
+      pickHead.position.z = z;
+      pickHead.position.y = -0.05 - descend;
+      heldComponent.visible = cycle > 0.15 && cycle < 0.73;
+    }
+
+    function updateRobots(time) {
+      robots.forEach((robot, index) => {
+        const wave = Math.sin(time * 0.85 + robot.phase);
+        const wave2 = Math.sin(time * 0.85 + robot.phase + 1.1);
+
+        robot.shoulder.rotation.z = -0.55 + wave * 0.36;
+        robot.shoulder.rotation.x = 0.08 * wave2;
+        robot.elbow.rotation.z = 1.18 + wave2 * 0.34;
+        robot.wrist.rotation.z = -0.55 - wave * 0.18;
+
+        robot.elbow.rotation.y = Math.sin(time * 0.7 + robot.phase + index) * 0.08;
+      });
+    }
+
+    function updateAGV(time) {
+      const progress = (time * 0.075) % 1;
+      const segmentProgress = progress * 4;
+      const segment = Math.floor(segmentProgress);
+      const p = segmentProgress - segment;
+
+      if (segment === 0) {
+        agv.position.set(THREE.MathUtils.lerp(-9, 9, p), 0, 7.4);
+        agv.rotation.y = 0;
+      } else if (segment === 1) {
+        agv.position.set(9, 0, THREE.MathUtils.lerp(7.4, 4.8, p));
+        agv.rotation.y = -Math.PI / 2;
+      } else if (segment === 2) {
+        agv.position.set(THREE.MathUtils.lerp(9, -9, p), 0, 4.8);
+        agv.rotation.y = Math.PI;
+      } else {
+        agv.position.set(-9, 0, THREE.MathUtils.lerp(4.8, 7.4, p));
+        agv.rotation.y = Math.PI / 2;
+      }
+    }
+
+    function updateParticles(time) {
+      for (let i = 0; i < particleCount; i++) {
+        const seed = particleSeeds[i];
+        const life = (seed.phase + time * seed.speed) % 1;
+        const spread = seed.radius * life * 5;
+
+        particlePositions[i * 3] =
+          6.85 + Math.sin(time * 0.7 + i) * spread;
+        particlePositions[i * 3 + 1] =
+          6.45 + life * 2.2;
+        particlePositions[i * 3 + 2] =
+          -0.45 + Math.cos(time * 0.6 + i * 1.7) * spread;
+      }
+      particleGeometry.attributes.position.needsUpdate = true;
+    }
+
+    function updateBoards(time) {
+      boardGroups.forEach((line, lineIndex) => {
+        const direction = lineIndex === 0 ? 1 : -1;
+        const speed = lineIndex === 0 ? 1.05 : 0.82;
+
+        line.boards.forEach((board, index) => {
+          const phase = index * 3.05 + lineIndex * 1.4;
+          const raw = ((phase + time * speed * direction) % 21 + 21) % 21;
+          const x = -10.5 + raw;
+          board.position.x = x;
+
+          const stage =
+            x < -6.3 ? 0 : x < 0.2 ? 1 : 2;
+
+          board.userData.parts.forEach((part) => {
+            const requiredStage = part.userData.stage;
+            part.visible =
+              requiredStage === 0 ||
+              (requiredStage === 1 && stage >= 1) ||
+              (requiredStage === 2 && stage >= 2);
+          });
+        });
+      });
+    }
+
+    function updateHUD() {
+      const throughput = Math.round(842 + Math.sin(elapsed * 0.35) * 13);
+      const oee = (96.8 + Math.sin(elapsed * 0.17) * 0.3).toFixed(1);
+
+      document.querySelector("#throughput").textContent = throughput;
+      document.querySelector("#oee").textContent = `${oee}%`;
+
+      const totalSeconds = Math.floor(8 * 3600 + 42 * 60 + 16 + elapsed);
+      const hours = Math.floor(totalSeconds / 3600) % 24;
+      const minutes = Math.floor(totalSeconds / 60) % 60;
+      const seconds = totalSeconds % 60;
+
+      document.querySelector("#uptime").textContent = [
+        hours,
+        minutes,
+        seconds
+      ]
+        .map((value) => String(value).padStart(2, "0"))
+        .join(":");
+    }
+
+    const pauseButton = document.querySelector("#pause");
+
+    function togglePause() {
+      paused = !paused;
+      pauseButton.textContent = paused ? "RESUME" : "PAUSE";
+      document.querySelector("#run-state").textContent = paused
+        ? "SYSTEM PAUSED"
+        : "SYSTEM RUNNING";
+      document.querySelector(".status-dot").style.background = paused
+        ? "#ffc65c"
+        : "#74f2a8";
+      document.querySelector(".status-dot").style.boxShadow = paused
+        ? "0 0 12px #ffc65c"
+        : "0 0 12px #74f2a8";
+    }
+
+    pauseButton.addEventListener("click", togglePause);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        togglePause();
+      }
+
+      const keyViews = {
+        Digit1: "overview",
+        Digit2: "pick",
+        Digit3: "inspection",
+        Digit4: "oven",
+        Digit5: "top"
+      };
+
+      if (keyViews[event.code]) {
+        setView(keyViews[event.code]);
+      }
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min(clock.getDelta(), 0.05);
+      if (!paused) elapsed += dt;
+
+      updateCamera(dt);
+
+      beltTextures.forEach((texture, index) => {
+        texture.offset.x -= dt * (index === 0 ? 0.18 : 0.14);
+      });
+
+      updateBoards(elapsed);
+      updateSMT(elapsed);
+      updateRobots(elapsed);
+      updateAGV(elapsed);
+      updateParticles(elapsed);
+
+      ovenLight.intensity = 10.5 + Math.sin(elapsed * 2.2) * 1.2;
+      scannerLight.intensity = 7.2 + Math.sin(elapsed * 4.8) * 1.1;
+
+      if (elapsed - lastMonitorUpdate > 0.35) {
+        drawMonitor(elapsed);
+        updateHUD();
+        lastMonitorUpdate = elapsed;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    });
+
+    updateCamera(1);
+    drawMonitor(0);
+    updateHUD();
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 500);
+    });
+  </script>
+</body>
+</html>

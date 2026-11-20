@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#10252a" />
+  <title>Summit Ropes Course</title>
+
+  <style>
+    :root {
+      --ink: #f5fbf8;
+      --muted: #b7cbc7;
+      --panel: rgba(9, 25, 29, 0.78);
+      --line: rgba(255, 255, 255, 0.14);
+      --orange: #ff7849;
+      --teal: #39c8bd;
+      --gold: #efbd58;
+      --purple: #9a8cff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b9dbe8;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      outline: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .brand {
+      position: absolute;
+      top: 28px;
+      left: 30px;
+      max-width: 420px;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: #eaf8f4;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 28px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--orange);
+      box-shadow: 0 0 15px rgba(255, 120, 73, 0.6);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4vw, 58px);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      font-weight: 850;
+    }
+
+    .brand p {
+      margin: 12px 0 0;
+      max-width: 350px;
+      color: rgba(244, 251, 248, 0.8);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(16px) saturate(125%);
+      -webkit-backdrop-filter: blur(16px) saturate(125%);
+    }
+
+    .route-panel {
+      position: absolute;
+      top: 26px;
+      right: 26px;
+      width: 294px;
+      overflow: hidden;
+      border-radius: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 17px 13px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head strong {
+      font-size: 12px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .route {
+      padding: 8px 15px 10px;
+    }
+
+    .route-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      align-items: center;
+      gap: 9px;
+      min-height: 45px;
+    }
+
+    .route-row:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 32px;
+      left: 14px;
+      width: 1px;
+      height: 25px;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .dot {
+      display: grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: #10252a;
+      background: #f1f6f3;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .route-row:nth-child(2) .dot { background: var(--gold); }
+    .route-row:nth-child(3) .dot { background: var(--teal); }
+    .route-row:nth-child(4) .dot { background: var(--purple); }
+    .route-row:nth-child(5) .dot { background: var(--orange); }
+
+    .route-name {
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .route-sub {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .height {
+      color: #dce9e5;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 13px;
+      padding: 12px 16px 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend i {
+      width: 14px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--gold);
+    }
+
+    .legend .net { background: var(--teal); }
+    .legend .slack { background: var(--purple); }
+    .legend .zip { background: var(--orange); }
+
+    .controls {
+      position: absolute;
+      left: 28px;
+      bottom: 26px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 13px;
+      border-radius: 14px;
+      color: rgba(244, 251, 248, 0.76);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.035em;
+    }
+
+    .controls b {
+      color: white;
+    }
+
+    .control-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--line);
+    }
+
+    .buttons {
+      position: absolute;
+      right: 26px;
+      bottom: 26px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 14px;
+      background: var(--panel);
+      color: var(--ink);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(24, 51, 55, 0.92);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--orange);
+      outline-offset: 2px;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      background: #10252a;
+      transition: opacity 500ms ease, visibility 500ms ease;
+    }
+
+    #loading.ready {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader {
+      text-align: center;
+    }
+
+    .loader-mark {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 18px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 900ms linear infinite;
+    }
+
+    .loader p {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 760px) {
+      .brand {
+        top: 18px;
+        left: 18px;
+      }
+
+      .brand p {
+        display: none;
+      }
+
+      .route-panel {
+        top: auto;
+        right: 14px;
+        bottom: 72px;
+        width: 242px;
+      }
+
+      .route-row {
+        min-height: 39px;
+      }
+
+      .route-row:not(:last-child)::after {
+        top: 28px;
+        height: 18px;
+      }
+
+      .route-sub,
+      .height {
+        display: none;
+      }
+
+      .legend {
+        display: none;
+      }
+
+      .controls {
+        left: 14px;
+        bottom: 14px;
+        padding: 9px 11px;
+      }
+
+      .controls .optional,
+      .control-divider {
+        display: none;
+      }
+
+      .buttons {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <div class="hud">
+    <header class="brand">
+      <div class="eyebrow">High Adventure / Route 04</div>
+      <h1>Summit Ropes</h1>
+      <p>
+        Cross suspended timber, thread the net tunnel, balance the twin
+        slacklines, then ride the zip line back to the landing mound.
+      </p>
+    </header>
+
+    <aside class="route-panel panel">
+      <div class="panel-head">
+        <strong>Course Route</strong>
+        <span>Climb → Descent</span>
+      </div>
+
+      <div class="route">
+        <div class="route-row">
+          <div class="dot">01</div>
+          <div>
+            <div class="route-name">Launch Deck</div>
+            <span class="route-sub">Access & safety check</span>
+          </div>
+          <div class="height">4 m</div>
+        </div>
+
+        <div class="route-row">
+          <div class="dot">02</div>
+          <div>
+            <div class="route-name">Suspended Bridge</div>
+            <span class="route-sub">Timber planks & handlines</span>
+          </div>
+          <div class="height">6 m</div>
+        </div>
+
+        <div class="route-row">
+          <div class="dot">03</div>
+          <div>
+            <div class="route-name">Net Tunnel</div>
+            <span class="route-sub">Caged traverse</span>
+          </div>
+          <div class="height">9 m</div>
+        </div>
+
+        <div class="route-row">
+          <div class="dot">04</div>
+          <div>
+            <div class="route-name">Summit Deck</div>
+            <span class="route-sub">Twin-slack branch</span>
+          </div>
+          <div class="height">12 m</div>
+        </div>
+
+        <div class="route-row">
+          <div class="dot">05</div>
+          <div>
+            <div class="route-name">Zip Descent</div>
+            <span class="route-sub">Landing mound</span>
+          </div>
+          <div class="height">↓</div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><i></i>Timber</span>
+        <span><i class="net"></i>Net</span>
+        <span><i class="slack"></i>Slack</span>
+        <span><i class="zip"></i>Zip</span>
+      </div>
+    </aside>
+
+    <div class="controls panel">
+      <span><b>Drag</b> orbit</span>
+      <span class="control-divider"></span>
+      <span><b>Shift + drag</b> pan</span>
+      <span class="control-divider"></span>
+      <span class="optional"><b>Wheel</b> zoom</span>
+    </div>
+
+    <div class="buttons">
+      <button id="labelsButton" type="button">Labels on</button>
+      <button id="resetButton" type="button">↺ Overview</button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="loader">
+      <div class="loader-mark"></div>
+      <p>Building the ropes course</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9dbe8);
+    scene.fog = new THREE.Fog(0xb9dbe8, 48, 118);
+
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    const labelsGroup = new THREE.Group();
+    scene.add(labelsGroup);
+
+    const clock = new THREE.Clock();
+    const UP = new THREE.Vector3(0, 1, 0);
+    const AXIS_Z = new THREE.Vector3(0, 0, 1);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const M = {
+      ground: new THREE.MeshStandardMaterial({
+        color: 0x597943,
+        roughness: 1
+      }),
+      clearing: new THREE.MeshStandardMaterial({
+        color: 0x6f8f50,
+        roughness: 1
+      }),
+      hill: new THREE.MeshStandardMaterial({
+        color: 0x4c6b57,
+        roughness: 1,
+        flatShading: true
+      }),
+      hillLight: new THREE.MeshStandardMaterial({
+        color: 0x68826a,
+        roughness: 1,
+        flatShading: true
+      }),
+      bark: new THREE.MeshStandardMaterial({
+        color: 0x68472e,
+        roughness: 1
+      }),
+      pine: new THREE.MeshStandardMaterial({
+        color: 0x285d48,
+        roughness: 0.95,
+        flatShading: true
+      }),
+      pineLight: new THREE.MeshStandardMaterial({
+        color: 0x397354,
+        roughness: 0.95,
+        flatShading: true
+      }),
+      leaves: new THREE.MeshStandardMaterial({
+        color: 0x4f7c43,
+        roughness: 1,
+        flatShading: true
+      }),
+      rock: new THREE.MeshStandardMaterial({
+        color: 0x7b817a,
+        roughness: 1,
+        flatShading: true
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x7b4c2a,
+        roughness: 0.87
+      }),
+      plank: new THREE.MeshStandardMaterial({
+        color: 0xb87a42,
+        roughness: 0.82
+      }),
+      plankLight: new THREE.MeshStandardMaterial({
+        color: 0xca9256,
+        roughness: 0.8
+      }),
+      frame: new THREE.MeshStandardMaterial({
+        color: 0x3c4948,
+        roughness: 0.55,
+        metalness: 0.38
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x859397,
+        roughness: 0.3,
+        metalness: 0.72
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x263a3e,
+        roughness: 0.42,
+        metalness: 0.65
+      }),
+      rope: new THREE.MeshStandardMaterial({
+        color: 0xd4b176,
+        roughness: 0.98
+      }),
+      darkRope: new THREE.MeshStandardMaterial({
+        color: 0x29313a,
+        roughness: 0.92
+      }),
+      net: new THREE.MeshStandardMaterial({
+        color: 0x35b8ad,
+        roughness: 0.68,
+        metalness: 0.06
+      }),
+      netFrame: new THREE.MeshStandardMaterial({
+        color: 0x176c70,
+        roughness: 0.58,
+        metalness: 0.16
+      }),
+      slackA: new THREE.MeshStandardMaterial({
+        color: 0x4e5272,
+        roughness: 0.9
+      }),
+      slackB: new THREE.MeshStandardMaterial({
+        color: 0x696a88,
+        roughness: 0.9
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xff7043,
+        roughness: 0.36,
+        metalness: 0.25,
+        emissive: 0x501405,
+        emissiveIntensity: 0.2
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xefb949,
+        roughness: 0.55,
+        metalness: 0.12
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xd93e35,
+        roughness: 0.55,
+        metalness: 0.1
+      }),
+      purple: new THREE.MeshStandardMaterial({
+        color: 0x8e82e7,
+        roughness: 0.65
+      }),
+      dirt: new THREE.MeshStandardMaterial({
+        color: 0x8b6a43,
+        roughness: 1
+      }),
+      landingPad: new THREE.MeshStandardMaterial({
+        color: 0x9f3d35,
+        roughness: 0.85
+      }),
+      cloud: new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.72,
+        depthWrite: false,
+        toneMapped: false
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function box(parent, size, position, material) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinderBetween(
+      parent,
+      start,
+      end,
+      radius,
+      material,
+      radialSegments = 8
+    ) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      if (length < 0.0001) return null;
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length,
+          radialSegments
+        ),
+        material
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function tube(
+      parent,
+      points,
+      radius,
+      material,
+      tubularSegments = 48,
+      radialSegments = 6
+    ) {
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "centripetal"
+      );
+
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(
+          curve,
+          tubularSegments,
+          radius,
+          radialSegments,
+          false
+        ),
+        material
+      );
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeSaggingCurve(start, end, sag, count = 28) {
+      const points = [];
+
+      for (let i = 0; i < count; i++) {
+        const t = i / (count - 1);
+        const point = start.clone().lerp(end, t);
+        point.y -= Math.sin(Math.PI * t) * sag;
+        points.push(point);
+      }
+
+      return new THREE.CatmullRomCurve3(points, false, "centripetal");
+    }
+
+    function horizontalRight(start, end) {
+      const direction = end.clone().sub(start);
+      direction.y = 0;
+      direction.normalize();
+      return new THREE.Vector3(-direction.z, 0, direction.x);
+    }
+
+    function roundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - r,
+        y + height
+      );
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    // -------------------------------------------------------------------------
+    // World labels
+    // -------------------------------------------------------------------------
+
+    function createWorldLabel(text, accent, width = 3.8) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 160;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      roundedRect(ctx, 6, 12, 756, 132, 25);
+      ctx.fillStyle = "rgba(8, 24, 28, 0.88)";
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      roundedRect(ctx, 25, 44, 14, 68, 7);
+      ctx.fillStyle = accent;
+      ctx.fill();
+
+      ctx.fillStyle = "#f7fffb";
+      ctx.font = "800 45px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text.toUpperCase(), 64, 79);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+      texture.anisotropy = Math.min(
+        4,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false
+      });
+
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(width, width * 160 / 768, 1);
+      sprite.renderOrder = 20;
+      labelsGroup.add(sprite);
+      return sprite;
+    }
+
+    function makeDeckBadge(number, accent) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, 256, 256);
+
+      ctx.beginPath();
+      ctx.arc(128, 128, 105, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(9,25,29,0.9)";
+      ctx.fill();
+
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = accent;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 104px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(number), 128, 135);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const badge = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.85, 0.85),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          toneMapped: false
+        })
+      );
+
+      badge.rotation.x = -Math.PI / 2;
+      return badge;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(0xd9f3ff, 0x4e633c, 2.05);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff0cf, 3.2);
+    sun.position.set(-18, 38, 24);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -48;
+    sun.shadow.camera.right = 48;
+    sun.shadow.camera.top = 40;
+    sun.shadow.camera.bottom = -35;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 105;
+    sun.shadow.bias = -0.00025;
+    sun.shadow.normalBias = 0.035;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9ed9ff, 0.55);
+    fill.position.set(25, 18, -28);
+    scene.add(fill);
+
+    // -------------------------------------------------------------------------
+    // Environment
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(180, 180),
+      M.ground
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.05;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const clearing = new THREE.Mesh(
+      new THREE.CircleGeometry(23, 64),
+      M.clearing
+    );
+    clearing.rotation.x = -Math.PI / 2;
+    clearing.position.set(12, -0.035, 0);
+    clearing.receiveShadow = true;
+    scene.add(clearing);
+
+    const hillData = [
+      [-27, -47, 19, 10, 13],
+      [0, -54, 22, 13, 15],
+      [29, -49, 20, 9, 14],
+      [52, -39, 17, 8, 12],
+      [-34, 36, 18, 8, 12],
+      [4, 43, 24, 12, 15],
+      [42, 39, 22, 10, 14]
+    ];
+
+    hillData.forEach((data, index) => {
+      const hill = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1, 2),
+        index % 2 ? M.hillLight : M.hill
+      );
+      hill.position.set(data[0], -2.2, data[1]);
+      hill.scale.set(data[2], data[3], data[4]);
+      hill.rotation.set(0.1 * index, 0.4 * index, 0.06 * index);
+      hill.receiveShadow = true;
+      scene.add(hill);
+    });
+
+    let randomSeed = 94721;
+    function random() {
+      randomSeed = (
+        randomSeed * 1664525 + 1013904223
+      ) >>> 0;
+      return randomSeed / 4294967296;
+    }
+
+    function makeTree(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.rotation.y = random() * Math.PI * 2;
+
+      const trunkHeight = 1.65 * scale;
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.12 * scale,
+          0.2 * scale,
+          trunkHeight,
+          7
+        ),
+        M.bark
+      );
+      trunk.position.y = trunkHeight / 2;
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      group.add(trunk);
+
+      const isPine = random() > 0.32;
+
+      if (isPine) {
+        for (let layer = 0; layer < 3; layer++) {
+          const foliage = new THREE.Mesh(
+            new THREE.ConeGeometry(
+              (1.15 - layer * 0.18) * scale,
+              1.7 * scale,
+              8
+            ),
+            layer === 1 ? M.pineLight : M.pine
+          );
+          foliage.position.y =
+            trunkHeight * 0.7 + layer * 0.72 * scale;
+          foliage.rotation.y = layer * 0.43;
+          foliage.castShadow = true;
+          foliage.receiveShadow = true;
+          group.add(foliage);
+        }
+      } else {
+        const crown = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(1.25 * scale, 1),
+          M.leaves
+        );
+        crown.position.y = trunkHeight + 0.55 * scale;
+        crown.scale.set(1, 0.92, 0.88);
+        crown.rotation.set(random(), random(), random());
+        crown.castShadow = true;
+        crown.receiveShadow = true;
+        group.add(crown);
+      }
+
+      scene.add(group);
+    }
+
+    for (let i = 0; i < 48; i++) {
+      const x = -21 + random() * 72;
+      const side = random() > 0.5 ? 1 : -1;
+      const z = side * (13 + random() * 24);
+      makeTree(x, z, 0.72 + random() * 0.9);
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const rock = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1, 0),
+        M.rock
+      );
+      rock.position.set(
+        -16 + random() * 67,
+        0.12,
+        (random() > 0.5 ? 1 : -1) * (8 + random() * 22)
+      );
+      const size = 0.3 + random() * 0.8;
+      rock.scale.set(size, size * 0.65, size * 0.8);
+      rock.rotation.set(random(), random(), random());
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    const clouds = [];
+
+    for (let i = 0; i < 7; i++) {
+      const cloud = new THREE.Group();
+      const puffCount = 4 + Math.floor(random() * 3);
+
+      for (let j = 0; j < puffCount; j++) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 12, 8),
+          M.cloud
+        );
+        puff.position.set(j * 1.35, random() * 0.45, random() * 0.5);
+        puff.scale.set(
+          1.5 + random() * 0.8,
+          0.65 + random() * 0.35,
+          0.8 + random() * 0.35
+        );
+        cloud.add(puff);
+      }
+
+      cloud.position.set(
+        -30 + i * 11 + random() * 4,
+        20 + random() * 9,
+        -32 - random() * 22
+      );
+      cloud.userData.baseX = cloud.position.x;
+      cloud.userData.phase = random() * Math.PI * 2;
+      scene.add(cloud);
+      clouds.push(cloud);
+    }
+
+    // -------------------------------------------------------------------------
+    // Elevated platforms
+    // -------------------------------------------------------------------------
+
+    function addRailSide(group, a, b, isGate) {
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+      direction.normalize();
+
+      const sections = isGate
+        ? [
+            [-length / 2, -0.76],
+            [0.76, length / 2]
+          ]
+        : [[-length / 2, length / 2]];
+
+      sections.forEach(([from, to]) => {
+        const sectionLength = to - from;
+        if (sectionLength <= 0.05) return;
+
+        const p0 = a.clone().addScaledVector(direction, from);
+        const p1 = a.clone().addScaledVector(direction, to);
+
+        cylinderBetween(
+          group,
+          new THREE.Vector3(p0.x, 1.12, p0.y),
+          new THREE.Vector3(p1.x, 1.12, p1.y),
+          0.045,
+          M.steel,
+          8
+        );
+
+        cylinderBetween(
+          group,
+          new THREE.Vector3(p0.x, 0.58, p0.y),
+          new THREE.Vector3(p1.x, 0.58, p1.y),
+          0.019,
+          M.rope,
+          6
+        );
+
+        const postCount = Math.max(1, Math.ceil(sectionLength / 1.65));
+
+        for (let i = 0; i <= postCount; i++) {
+          const t = i / postCount;
+          const p = p0.clone().lerp(p1, t);
+          cylinderBetween(
+            group,
+            new THREE.Vector3(p.x, 0.01, p.y),
+            new THREE.Vector3(p.x, 1.13, p.y),
+            0.04,
+            M.steel,
+            7
+          );
+        }
+      });
+    }
+
+    function createPlatform(config) {
+      const {
+        x,
+        y,
+        z,
+        w,
+        d,
+        number,
+        accent,
+        gates = []
+      } = config;
+
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      scene.add(group);
+
+      const accentMaterial = new THREE.MeshStandardMaterial({
+        color: accent,
+        roughness: 0.55,
+        metalness: 0.18
+      });
+
+      // Individual deck boards.
+      const slatCount = Math.max(7, Math.round(d / 0.46));
+      const slatPitch = d / slatCount;
+
+      for (let i = 0; i < slatCount; i++) {
+        box(
+          group,
+          [w - 0.08, 0.12, slatPitch - 0.055],
+          [0, -0.06, -d / 2 + slatPitch * (i + 0.5)],
+          i % 3 === 0 ? M.plankLight : M.plank
+        );
+      }
+
+      // Structural perimeter beams.
+      box(group, [w + 0.12, 0.2, 0.18], [0, -0.22, -d / 2], M.frame);
+      box(group, [w + 0.12, 0.2, 0.18], [0, -0.22, d / 2], M.frame);
+      box(group, [0.18, 0.2, d], [-w / 2, -0.22, 0], M.frame);
+      box(group, [0.18, 0.2, d], [w / 2, -0.22, 0], M.frame);
+
+      // Tall support poles.
+      const poleInsetX = Math.min(0.62, w * 0.18);
+      const poleInsetZ = Math.min(0.58, d * 0.17);
+
+      [
+        [-w / 2 + poleInsetX, -d / 2 + poleInsetZ],
+        [w / 2 - poleInsetX, -d / 2 + poleInsetZ],
+        [-w / 2 + poleInsetX, d / 2 - poleInsetZ],
+        [w / 2 - poleInsetX, d / 2 - poleInsetZ]
+      ].forEach(([px, pz]) => {
+        cylinderBetween(
+          group,
+          new THREE.Vector3(px, -y, pz),
+          new THREE.Vector3(px, -0.3, pz),
+          0.135,
+          M.steel,
+          10
+        );
+      });
+
+      // Diagonal support braces.
+      [-d / 2 + poleInsetZ, d / 2 - poleInsetZ].forEach((pz) => {
+        cylinderBetween(
+          group,
+          new THREE.Vector3(-w / 2 + 0.45, -y + 0.45, pz),
+          new THREE.Vector3(w / 2 - 0.45, -0.32, pz),
+          0.06,
+          M.frame,
+          7
+        );
+      });
+
+      // Safety rails with gate openings.
+      const gateSet = new Set(gates);
+
+      addRailSide(
+        group,
+        new THREE.Vector2(-w / 2, -d / 2),
+        new THREE.Vector2(w / 2, -d / 2),
+        gateSet.has("north")
+      );
+
+      addRailSide(
+        group,
+        new THREE.Vector2(-w / 2, d / 2),
+        new THREE.Vector2(w / 2, d / 2),
+        gateSet.has("south")
+      );
+
+      addRailSide(
+        group,
+        new THREE.Vector2(-w / 2, -d / 2),
+        new THREE.Vector2(-w / 2, d / 2),
+        gateSet.has("west")
+      );
+
+      addRailSide(
+        group,
+        new THREE.Vector2(w / 2, -d / 2),
+        new THREE.Vector2(w / 2, d / 2),
+        gateSet.has("east")
+      );
+
+      // Colored deck corner caps.
+      [
+        [-w / 2 + 0.16, -d / 2 + 0.16],
+        [w / 2 - 0.16, -d / 2 + 0.16],
+        [-w / 2 + 0.16, d / 2 - 0.16],
+        [w / 2 - 0.16, d / 2 - 0.16]
+      ].forEach(([px, pz]) => {
+        box(group, [0.28, 0.16, 0.28], [px, 0.01, pz], accentMaterial);
+      });
+
+      // Belay anchor: base, steel post, large ring, and small carabiner.
+      const ax = -w / 2 + 0.58;
+      const az = -d / 2 + 0.58;
+
+      box(group, [0.34, 0.1, 0.32], [ax, 0.05, az], M.darkSteel);
+      cylinderBetween(
+        group,
+        new THREE.Vector3(ax, 0.08, az),
+        new THREE.Vector3(ax, 1.31, az),
+        0.045,
+        M.steel,
+        8
+      );
+
+      const anchorRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.18, 0.04, 8, 20),
+        M.orange
+      );
+      anchorRing.position.set(ax, 1.13, az + 0.06);
+      anchorRing.rotation.y = 0.22;
+      anchorRing.castShadow = true;
+      group.add(anchorRing);
+
+      const carabiner = new THREE.Mesh(
+        new THREE.TorusGeometry(0.105, 0.026, 7, 16),
+        M.yellow
+      );
+      carabiner.position.set(ax, 0.82, az + 0.06);
+      carabiner.rotation.y = 0.22;
+      carabiner.scale.y = 1.25;
+      carabiner.castShadow = true;
+      group.add(carabiner);
+
+      const badge = makeDeckBadge(number, accent);
+      badge.position.set(0, 0.016, d * 0.16);
+      group.add(badge);
+
+      group.userData.platform = {
+        number,
+        x,
+        y,
+        z,
+        w,
+        d
+      };
+
+      return group;
+    }
+
+    const P0 = createPlatform({
+      x: -5,
+      y: 4.2,
+      z: 5,
+      w: 5,
+      d: 4,
+      number: 1,
+      accent: "#54b8d1",
+      gates: ["east", "north"]
+    });
+
+    const P1 = createPlatform({
+      x: 4,
+      y: 6.4,
+      z: 0,
+      w: 5,
+      d: 4.5,
+      number: 2,
+      accent: "#efbd58",
+      gates: ["west", "east"]
+    });
+
+    const P2 = createPlatform({
+      x: 13.5,
+      y: 8.7,
+      z: 0,
+      w: 5,
+      d: 4.5,
+      number: 3,
+      accent: "#39c8bd",
+      gates: ["west", "east"]
+    });
+
+    const P3 = createPlatform({
+      x: 23.5,
+      y: 11.4,
+      z: 0,
+      w: 5.8,
+      d: 5,
+      number: 4,
+      accent: "#ff7849",
+      gates: ["west", "east"]
+    });
+
+    const SLACK = createPlatform({
+      x: 2,
+      y: 6.5,
+      z: 10,
+      w: 3.2,
+      d: 3.2,
+      number: 5,
+      accent: "#9a8cff",
+      gates: ["west", "south"]
+    });
+
+    // -------------------------------------------------------------------------
+    // Suspended plank bridges
+    // -------------------------------------------------------------------------
+
+    function createPlankBridge(start, end, width = 1.5, sag = 0.42) {
+      const curve = makeSaggingCurve(start, end, sag, 30);
+      const right = horizontalRight(start, end);
+      const length = start.distanceTo(end);
+      const boardCount = Math.max(9, Math.ceil(length / 0.42));
+      const boardLength = (length / boardCount) * 0.76;
+
+      for (let i = 0; i < boardCount; i++) {
+        const t = (i + 0.5) / boardCount;
+        const point = curve.getPoint(t);
+        const tangent = curve.getTangent(t).normalize();
+
+        const plank = box(
+          scene,
+          [width, 0.12, boardLength],
+          [point.x, point.y - 0.05, point.z],
+          i % 4 === 0 ? M.plankLight : M.plank
+        );
+
+        plank.quaternion.setFromUnitVectors(AXIS_Z, tangent);
+      }
+
+      [-1, 1].forEach((side) => {
+        const upperPoints = [];
+        const lowerPoints = [];
+
+        for (let i = 0; i <= 32; i++) {
+          const point = curve.getPoint(i / 32);
+          const upper = point.clone().addScaledVector(
+            right,
+            side * width * 0.52
+          );
+          upper.y += 1.04;
+          upperPoints.push(upper);
+
+          const lower = point.clone().addScaledVector(
+            right,
+            side * width * 0.52
+          );
+          lower.y += 0.23;
+          lowerPoints.push(lower);
+        }
+
+        tube(scene, upperPoints, 0.035, M.rope, 64, 7);
+        tube(scene, lowerPoints, 0.021, M.rope, 64, 6);
+
+        for (let i = 0; i < boardCount; i += 3) {
+          const t = i / (boardCount - 1);
+          const point = curve.getPoint(t);
+          const edge = point.clone().addScaledVector(
+            right,
+            side * width * 0.49
+          );
+
+          cylinderBetween(
+            scene,
+            new THREE.Vector3(edge.x, edge.y + 0.02, edge.z),
+            new THREE.Vector3(edge.x, edge.y + 1.04, edge.z),
+            0.021,
+            M.rope,
+            6
+          );
+        }
+      });
+    }
+
+    const bridge1Start = new THREE.Vector3(
+      P0.userData.platform.x + P0.userData.platform.w / 2,
+      P0.userData.platform.y,
+      P0.userData.platform.z
+    );
+
+    const bridge1End = new THREE.Vector3(
+      P1.userData.platform.x - P1.userData.platform.w / 2,
+      P1.userData.platform.y,
+      P1.userData.platform.z
+    );
+
+    createPlankBridge(bridge1Start, bridge1End, 1.55, 0.4);
+
+    const bridge2Start = new THREE.Vector3(
+      P2.userData.platform.x + P2.userData.platform.w / 2,
+      P2.userData.platform.y,
+      P2.userData.platform.z
+    );
+
+    const bridge2End = new THREE.Vector3(
+      P3.userData.platform.x - P3.userData.platform.w / 2,
+      P3.userData.platform.y,
+      P3.userData.platform.z
+    );
+
+    createPlankBridge(bridge2Start, bridge2End, 1.5, 0.3);
+
+    // -------------------------------------------------------------------------
+    // Suspended net tunnel
+    // -------------------------------------------------------------------------
+
+    function createNetTunnel(start, end, width = 1.35, height = 1.6) {
+      const right = horizontalRight(start, end);
+      const hoopCount = 9;
+      const thetaSteps = 12;
+
+      function centerAt(t) {
+        return start.clone().lerp(end, t);
+      }
+
+      function archPoint(t, theta) {
+        const center = centerAt(t);
+        const point = center.clone().addScaledVector(
+          right,
+          width * Math.sin(theta)
+        );
+        point.y += height * Math.cos(theta);
+        return point;
+      }
+
+      // Structural hoops.
+      for (let i = 0; i < hoopCount; i++) {
+        const t = i / (hoopCount - 1);
+        const points = [];
+
+        for (let j = 0; j <= thetaSteps; j++) {
+          const theta = -Math.PI / 2 + (j / thetaSteps) * Math.PI;
+          points.push(archPoint(t, theta));
+        }
+
+        const hoopCurve = new THREE.CatmullRomCurve3(
+          points,
+          false,
+          "centripetal"
+        );
+
+        const hoop = new THREE.Mesh(
+          new THREE.TubeGeometry(hoopCurve, 26, 0.036, 6, false),
+          M.netFrame
+        );
+        hoop.castShadow = true;
+        scene.add(hoop);
+      }
+
+      // Longitudinal net ropes.
+      for (let j = 0; j <= 8; j++) {
+        const theta = -Math.PI / 2 + (j / 8) * Math.PI;
+        const points = [];
+
+        for (let i = 0; i <= 24; i++) {
+          points.push(archPoint(i / 24, theta));
+        }
+
+        tube(scene, points, 0.019, M.net, 52, 5);
+      }
+
+      // Fine diagonal mesh, batched into one LineSegments object.
+      const vertices = [];
+
+      for (let i = 0; i < hoopCount - 1; i++) {
+        const t0 = i / (hoopCount - 1);
+        const t1 = (i + 1) / (hoopCount - 1);
+
+        for (let j = 0; j < thetaSteps; j++) {
+          const theta0 = -Math.PI / 2 + (j / thetaSteps) * Math.PI;
+          const theta1 =
+            -Math.PI / 2 + ((j + 1) / thetaSteps) * Math.PI;
+
+          const a = archPoint(t0, theta0);
+          const b = archPoint(t1, theta1);
+          const c = archPoint(t0, theta1);
+          const d = archPoint(t1, theta0);
+
+          vertices.push(
+            a.x, a.y, a.z,
+            b.x, b.y, b.z,
+            c.x, c.y, c.z,
+            d.x, d.y, d.z
+          );
+        }
+      }
+
+      const meshGeometry = new THREE.BufferGeometry();
+      meshGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
+
+      const meshLines = new THREE.LineSegments(
+        meshGeometry,
+        new THREE.LineBasicMaterial({
+          color: 0x58d2c6,
+          transparent: true,
+          opacity: 0.72
+        })
+      );
+      scene.add(meshLines);
+    }
+
+    const netStart = new THREE.Vector3(
+      P1.userData.platform.x + P1.userData.platform.w / 2,
+      P1.userData.platform.y,
+      P1.userData.platform.z
+    );
+
+    const netEnd = new THREE.Vector3(
+      P2.userData.platform.x - P2.userData.platform.w / 2,
+      P2.userData.platform.y,
+      P2.userData.platform.z
+    );
+
+    createNetTunnel(netStart, netEnd);
+
+    // -------------------------------------------------------------------------
+    // Pair of slackline cables
+    // -------------------------------------------------------------------------
+
+    function createSlacklines(start, end) {
+      const right = horizontalRight(start, end);
+      const separation = 0.68;
+      const sag = 0.5;
+
+      [-1, 1].forEach((side, index) => {
+        const points = [];
+
+        for (let i = 0; i <= 32; i++) {
+          const t = i / 32;
+          const point = start.clone().lerp(end, t);
+          point.addScaledVector(right, side * separation / 2);
+          point.y -= Math.sin(Math.PI * t) * sag;
+          points.push(point);
+        }
+
+        tube(
+          scene,
+          points,
+          0.031,
+          index === 0 ? M.slackA : M.slackB,
+          64,
+          7
+        );
+
+        [0.18, 0.82].forEach((t) => {
+          const point = start.clone().lerp(end, t);
+          point.addScaledVector(right, side * separation / 2);
+          point.y -= Math.sin(Math.PI * t) * sag;
+
+          const tangent = end.clone().sub(start).normalize();
+          const wrapStart = point.clone().addScaledVector(tangent, -0.055);
+          const wrapEnd = point.clone().addScaledVector(tangent, 0.055);
+
+          cylinderBetween(
+            scene,
+            wrapStart,
+            wrapEnd,
+            0.047,
+            M.yellow,
+            8
+          );
+        });
+      });
+
+      // Small hanging balance slings.
+      [0.34, 0.66].forEach((t) => {
+        const point = start.clone().lerp(end, t);
+        point.y -= Math.sin(Math.PI * t) * sag;
+
+        cylinderBetween(
+          scene,
+          point,
+          new THREE.Vector3(point.x, point.y - 0.24, point.z),
+          0.016,
+          M.rope,
+          6
+        );
+      });
+
+      [start, end].forEach((point) => {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.12, 0.025, 7, 16),
+          M.steel
+        );
+        ring.position.copy(point);
+        ring.rotation.y = Math.PI / 2;
+        ring.castShadow = true;
+        scene.add(ring);
+      });
+    }
+
+    const slackStart = new THREE.Vector3(
+      P0.userData.platform.x,
+      P0.userData.platform.y + 0.08,
+      P0.userData.platform.z + P0.userData.platform.d / 2
+    );
+
+    const slackEnd = new THREE.Vector3(
+      SLACK.userData.platform.x - SLACK.userData.platform.w / 2,
+      SLACK.userData.platform.y + 0.08,
+      SLACK.userData.platform.z
+    );
+
+    createSlacklines(slackStart, slackEnd);
+
+    // -------------------------------------------------------------------------
+    // Landing mound
+    // -------------------------------------------------------------------------
+
+    const mound = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 40, 20),
+      M.clearing
+    );
+    mound.position.set(35.2, -0.15, 0);
+    mound.scale.set(4.2, 1.7, 3.8);
+    mound.castShadow = true;
+    mound.receiveShadow = true;
+    scene.add(mound);
+
+    const landingDirt = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.15, 2.35, 0.12, 32),
+      M.dirt
+    );
+    landingDirt.position.set(35.2, 1.5, 0);
+    landingDirt.castShadow = true;
+    landingDirt.receiveShadow = true;
+    scene.add(landingDirt);
+
+    box(
+      scene,
+      [2.6, 0.12, 1.8],
+      [35.2, 1.63, 0],
+      M.landingPad
+    );
+
+    // Small landing-mound belay post.
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(36.0, 1.55, 0.35),
+      new THREE.Vector3(36.0, 2.7, 0.35),
+      0.045,
+      M.steel,
+      8
+    );
+
+    const landingRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.16, 0.035, 8, 18),
+      M.orange
+    );
+    landingRing.position.set(36.0, 2.5, 0.42);
+    landingRing.castShadow = true;
+    scene.add(landingRing);
+
+    // -------------------------------------------------------------------------
+    // Zip line and animated trolley
+    // -------------------------------------------------------------------------
+
+    const zipStart = new THREE.Vector3(
+      P3.userData.platform.x + P3.userData.platform.w / 2 + 0.05,
+      P3.userData.platform.y + 1.55,
+      0
+    );
+
+    const zipEnd = new THREE.Vector3(34.65, 2.15, 0);
+    const zipCurve = makeSaggingCurve(zipStart, zipEnd, 0.18, 40);
+
+    const zipPoints = [];
+    const safetyPoints = [];
+
+    for (let i = 0; i <= 40; i++) {
+      const point = zipCurve.getPoint(i / 40);
+      zipPoints.push(point);
+
+      const safety = point.clone();
+      safety.y -= 0.26;
+      safetyPoints.push(safety);
+    }
+
+    tube(scene, zipPoints, 0.056, M.orange, 90, 8);
+    tube(scene, safetyPoints, 0.019, M.darkRope, 90, 6);
+
+    // Summit-side mast and arm.
+    const zipMastX = P3.userData.platform.x + P3.userData.platform.w / 2 - 0.35;
+    const zipMastTop = new THREE.Vector3(
+      zipMastX,
+      zipStart.y + 0.08,
+      0
+    );
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(zipMastX, P3.userData.platform.y, 0),
+      zipMastTop,
+      0.075,
+      M.orange,
+      10
+    );
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(zipMastX - 0.8, P3.userData.platform.y, 0),
+      zipMastTop,
+      0.045,
+      M.steel,
+      8
+    );
+
+    cylinderBetween(
+      scene,
+      zipMastTop,
+      zipStart,
+      0.06,
+      M.orange,
+      8
+    );
+
+    // Landing-side support.
+    const landingPostTop = new THREE.Vector3(35.25, 2.38, 0);
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(35.25, 1.48, 0),
+      landingPostTop,
+      0.07,
+      M.orange,
+      10
+    );
+
+    cylinderBetween(
+      scene,
+      landingPostTop,
+      zipEnd,
+      0.055,
+      M.orange,
+      8
+    );
+
+    const trolley = new THREE.Group();
+    scene.add(trolley);
+
+    box(trolley, [0.34, 0.18, 0.48], [0, -0.24, 0], M.darkSteel);
+
+    const wheel = new THREE.Mesh(
+      new THREE.TorusGeometry(0.145, 0.038, 8, 18),
+      M.steel
+    );
+    wheel.position.set(0, 0.01, 0);
+    wheel.castShadow = true;
+    trolley.add(wheel);
+
+    cylinderBetween(
+      trolley,
+      new THREE.Vector3(-0.12, -0.1, 0),
+      new THREE.Vector3(-0.12, -0.55, 0),
+      0.015,
+      M.darkRope,
+      6
+    );
+
+    cylinderBetween(
+      trolley,
+      new THREE.Vector3(0.12, -0.1, 0),
+      new THREE.Vector3(0.12, -0.55, 0),
+      0.015,
+      M.darkRope,
+      6
+    );
+
+    box(
+      trolley,
+      [0.34, 0.09, 0.1],
+      [0, -0.56, 0],
+      M.red
+    );
+
+    // -------------------------------------------------------------------------
+    // Access ladder and base sign
+    // -------------------------------------------------------------------------
+
+    const ladderX = P0.userData.platform.x - P0.userData.platform.w / 2 - 0.06;
+    const ladderZ = P0.userData.platform.z;
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(ladderX, 0.05, ladderZ - 0.48),
+      new THREE.Vector3(ladderX, P0.userData.platform.y + 0.1, ladderZ - 0.48),
+      0.05,
+      M.steel,
+      8
+    );
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(ladderX, 0.05, ladderZ + 0.48),
+      new THREE.Vector3(ladderX, P0.userData.platform.y + 0.1, ladderZ + 0.48),
+      0.05,
+      M.steel,
+      8
+    );
+
+    for (let y = 0.3; y < P0.userData.platform.y; y += 0.32) {
+      cylinderBetween(
+        scene,
+        new THREE.Vector3(ladderX, y, ladderZ - 0.48),
+        new THREE.Vector3(ladderX, y, ladderZ + 0.48),
+        0.035,
+        M.steel,
+        7
+      );
+    }
+
+    cylinderBetween(
+      scene,
+      new THREE.Vector3(-10.5, 0, 6.7),
+      new THREE.Vector3(-10.5, 2.4, 6.7),
+      0.09,
+      M.wood,
+      8
+    );
+
+    // -------------------------------------------------------------------------
+    // Labels
+    // -------------------------------------------------------------------------
+
+    const startLabel = createWorldLabel("01  Start", "#54b8d1", 3.1);
+    startLabel.position.set(-5, 6.15, 5);
+
+    const bridgeLabel = createWorldLabel("02  Plank Bridge", "#efbd58", 4.0);
+    bridgeLabel.position.copy(bridge1Start).lerp(bridge1End, 0.5);
+    bridgeLabel.position.y += 1.65;
+
+    const netLabel = createWorldLabel("03  Net Tunnel", "#39c8bd", 3.7);
+    netLabel.position.copy(netStart).lerp(netEnd, 0.5);
+    netLabel.position.y += 2.35;
+
+    const summitLabel = createWorldLabel("04  Summit", "#ff7849", 3.2);
+    summitLabel.position.set(23.5, 13.35, 0);
+
+    const slackLabel = createWorldLabel("Twin Slacklines", "#9a8cff", 3.6);
+    slackLabel.position.copy(slackStart).lerp(slackEnd, 0.5);
+    slackLabel.position.y += 1.25;
+
+    const zipLabel = createWorldLabel("Zip Line", "#ff7849", 3.2);
+    zipLabel.position.copy(zipCurve.getPoint(0.56));
+    zipLabel.position.y += 1.2;
+
+    const landingLabel = createWorldLabel("Landing", "#ff7849", 2.7);
+    landingLabel.position.set(35.2, 3.1, 0);
+
+    const baseLabel = createWorldLabel("Summit Ropes", "#54b8d1", 3.4);
+    baseLabel.position.set(-10.5, 2.75, 6.7);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no addon imports
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      target: new THREE.Vector3(12.5, 4.8, 1.2),
+      radius: 40,
+      theta: 0.72,
+      phi: 1.08,
+      minRadius: 11,
+      maxRadius: 78
+    };
+
+    function updateCamera() {
+      controls.target.x = THREE.MathUtils.clamp(
+        controls.target.x,
+        -12,
+        42
+      );
+      controls.target.y = THREE.MathUtils.clamp(
+        controls.target.y,
+        1.5,
+        15
+      );
+      controls.target.z = THREE.MathUtils.clamp(
+        controls.target.z,
+        -18,
+        20
+      );
+
+      const offset = new THREE.Vector3().setFromSphericalCoords(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+    }
+
+    function resetView() {
+      controls.target.set(12.5, 4.8, 1.2);
+      controls.radius = 40;
+      controls.theta = 0.72;
+      controls.phi = 1.08;
+      updateCamera();
+    }
+
+    const canvas = renderer.domElement;
+    const pointers = new Map();
+
+    let gestureMode = "orbit";
+    let previousPointer = null;
+    let pinchDistance = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        gestureMode =
+          event.button === 2 || event.shiftKey ? "pan" : "orbit";
+        previousPointer = {
+          x: event.clientX,
+          y: event.clientY
+        };
+      } else if (pointers.size === 2) {
+        gestureMode = "pinch";
+        pinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (gestureMode === "pinch" && pointers.size >= 2) {
+        const newDistance = pointerDistance();
+
+        if (pinchDistance > 0 && newDistance > 0) {
+          controls.radius = THREE.MathUtils.clamp(
+            controls.radius * (pinchDistance / newDistance),
+            controls.minRadius,
+            controls.maxRadius
+          );
+        }
+
+        pinchDistance = newDistance;
+        return;
+      }
+
+      if (!previousPointer) return;
+
+      const dx = event.clientX - previousPointer.x;
+      const dy = event.clientY - previousPointer.y;
+      previousPointer = {
+        x: event.clientX,
+        y: event.clientY
+      };
+
+      if (gestureMode === "orbit") {
+        controls.theta -= dx * 0.005;
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi - dy * 0.0045,
+          0.28,
+          1.47
+        );
+      } else if (gestureMode === "pan") {
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+        camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+        const panScale = controls.radius * 0.0012;
+        controls.target.addScaledVector(right, -dx * panScale);
+        controls.target.addScaledVector(up, dy * panScale);
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 0) {
+        previousPointer = null;
+        gestureMode = "orbit";
+      } else if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        previousPointer = {
+          x: remaining.x,
+          y: remaining.y
+        };
+        gestureMode = "orbit";
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        const factor = Math.exp(event.deltaY * 0.001);
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * factor,
+          controls.minRadius,
+          controls.maxRadius
+        );
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+
+      if (key === "r") {
+        resetView();
+        return;
+      }
+
+      if (key === "arrowleft") {
+        controls.theta -= 0.1;
+      } else if (key === "arrowright") {
+        controls.theta += 0.1;
+      } else if (key === "arrowup") {
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi - 0.08,
+          0.28,
+          1.47
+        );
+      } else if (key === "arrowdown") {
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi + 0.08,
+          0.28,
+          1.47
+        );
+      } else if (key === "+" || key === "=") {
+        controls.radius = Math.max(
+          controls.minRadius,
+          controls.radius * 0.9
+        );
+      } else if (key === "-") {
+        controls.radius = Math.min(
+          controls.maxRadius,
+          controls.radius * 1.1
+        );
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+    });
+
+    document.getElementById("resetButton").addEventListener(
+      "click",
+      resetView
+    );
+
+    const labelsButton = document.getElementById("labelsButton");
+    let labelsVisible = true;
+
+    labelsButton.addEventListener("click", () => {
+      labelsVisible = !labelsVisible;
+      labelsGroup.visible = labelsVisible;
+      labelsButton.textContent = labelsVisible ? "Labels on" : "Labels off";
+    });
+
+    // -------------------------------------------------------------------------
+    // Resize and animation
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      // Animate the zip trolley along the descending line.
+      const trolleyT = reducedMotion
+        ? 0.57
+        : 0.53 + Math.sin(elapsed * 0.24) * 0.44;
+
+      const trolleyPosition = zipCurve.getPoint(trolleyT);
+      const trolleyTangent = zipCurve.getTangent(trolleyT);
+
+      trolley.position.copy(trolleyPosition);
+      trolley.rotation.y = Math.atan2(
+        trolleyTangent.x,
+        trolleyTangent.z
+      );
+
+      // Gentle cloud drift.
+      clouds.forEach((cloud) => {
+        cloud.position.x =
+          cloud.userData.baseX +
+          Math.sin(elapsed * 0.055 + cloud.userData.phase) * 2.2;
+      });
+
+      updateCamera();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    updateCamera();
+    renderer.render(scene, camera);
+    loading.classList.add("ready");
+    animate();
+  </script>
+</body>
+</html>

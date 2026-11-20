@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voxel Bonsai Tree</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #263b32;
+      --muted: #617368;
+      --glass: rgba(248, 252, 247, 0.72);
+      --border: rgba(44, 73, 58, 0.16);
+      --accent: #477b61;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 72% 18%, rgba(255, 255, 255, 0.95), transparent 34%),
+        linear-gradient(145deg, #edf3eb 0%, #dce7dc 55%, #c8d8ca 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+      outline: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 2;
+      max-width: min(360px, calc(100vw - 48px));
+      padding: 17px 19px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--glass);
+      box-shadow: 0 14px 40px rgba(41, 65, 52, 0.11);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.65rem, 4vw, 2.35rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .controls {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--glass);
+      box-shadow: 0 12px 34px rgba(41, 65, 52, 0.1);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background 160ms ease,
+        color 160ms ease,
+        transform 160ms ease,
+        border-color 160ms ease;
+    }
+
+    button:hover {
+      background: white;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.active {
+      border-color: rgba(71, 123, 97, 0.25);
+      background: #e8f0e5;
+      color: #315c48;
+    }
+
+    .hint {
+      position: fixed;
+      left: 24px;
+      bottom: 26px;
+      z-index: 2;
+      color: rgba(38, 59, 50, 0.68);
+      font-size: 0.72rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: #e3eadf;
+      color: #416654;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        padding: 14px 15px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .hint {
+        left: 14px;
+        bottom: 66px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <section class="title-card" aria-label="Scene title">
+    <p class="eyebrow">Miniature study</p>
+    <h1>Voxel Bonsai</h1>
+    <p class="subtitle">A twisting trunk, weathered ceramic pot, and three rounded crowns assembled from tiny cubes.</p>
+  </section>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <nav class="controls" aria-label="Scene controls">
+    <button id="reset" type="button">Reset view</button>
+    <button id="orbit" type="button" aria-pressed="false">Auto orbit</button>
+  </nav>
+
+  <div id="loading">Growing the tree…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.querySelector("#app");
+    const loading = document.querySelector("#loading");
+    const resetButton = document.querySelector("#reset");
+    const orbitButton = document.querySelector("#orbit");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ---------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xdce6da, 13, 25);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      60
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const hemisphere = new THREE.HemisphereLight(0xf7fff8, 0x667466, 2.15);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff2d4, 3.25);
+    sun.position.set(5.5, 10, 7.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -7;
+    sun.shadow.camera.right = 7;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -5;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 25;
+    sun.shadow.normalBias = 0.025;
+    sun.shadow.bias = -0.00025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xb8d8df, 1.15);
+    fill.position.set(-6, 5, -4);
+    scene.add(fill);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0xdce6d9,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.01;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ---------------------------------------------------------------------
+    // Deterministic randomness and voxel helpers
+    // ---------------------------------------------------------------------
+
+    let randomSeed = 81723;
+
+    function random() {
+      randomSeed = (randomSeed * 1664525 + 1013904223) >>> 0;
+      return randomSeed / 4294967296;
+    }
+
+    function hash(x, y, z) {
+      const value = Math.sin(
+        x * 12.9898 + y * 78.233 + z * 37.719
+      ) * 43758.5453;
+
+      return value - Math.floor(value);
+    }
+
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+
+    function createVoxelMesh(items, material) {
+      const mesh = new THREE.InstancedMesh(
+        cubeGeometry,
+        material,
+        items.length
+      );
+
+      const matrix = new THREE.Matrix4();
+      const position = new THREE.Vector3();
+      const quaternion = new THREE.Quaternion();
+      const scale = new THREE.Vector3();
+
+      items.forEach((item, index) => {
+        position.set(item.x, item.y, item.z);
+        scale.set(item.sx, item.sy, item.sz);
+        matrix.compose(position, quaternion, scale);
+        mesh.setMatrixAt(index, matrix);
+        mesh.setColorAt(index, item.color);
+      });
+
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
+      return mesh;
+    }
+
+    // ---------------------------------------------------------------------
+    // Shallow blue ceramic pot, constructed as a one-cell-thick voxel shell
+    // ---------------------------------------------------------------------
+
+    const potGroup = new THREE.Group();
+    scene.add(potGroup);
+
+    const potItems = [];
+    const potCell = 0.38;
+    const potGridX = 13;
+    const potGridZ = 9;
+
+    function potRadius(x, z) {
+      const nx = x / 6.0;
+      const nz = z / 4.0;
+
+      // Superellipse-like rounded rectangular outline.
+      return Math.pow(
+        Math.pow(Math.abs(nx), 2) + Math.pow(Math.abs(nz), 2),
+        0.55
+      ) < 1;
+    }
+
+    for (let y = 0; y < 3; y++) {
+      for (let ix = 0; ix < potGridX; ix++) {
+        for (let iz = 0; iz < potGridZ; iz++) {
+          const x = ix - (potGridX - 1) / 2;
+          const z = iz - (potGridZ - 1) / 2;
+
+          if (!potRadius(x, z)) {
+            continue;
+          }
+
+          const isLeftEdge =
+            ix === 0 || (ix === 1 && hash(ix, y, iz) > 0.88);
+          const isRightEdge =
+            ix === potGridX - 1 ||
+            (ix === potGridX - 2 && hash(ix, y, iz) > 0.88);
+          const isFrontEdge =
+            iz === 0 || (iz === 1 && hash(ix, iz, y) > 0.86);
+          const isBackEdge =
+            iz === potGridZ - 1 ||
+            (iz === potGridZ - 2 && hash(ix, iz, y) > 0.86);
+
+          const isBoundary =
+            isLeftEdge ||
+            isRightEdge ||
+            isFrontEdge ||
+            isBackEdge;
+
+          if (y === 0) {
+            // Solid base.
+            potItems.push({
+              x,
+              y: 0.19 + y * potCell,
+              z,
+              sx: potCell * 0.94,
+              sy: potCell * 0.94,
+              sz: potCell * 0.94,
+              color: new THREE.Color()
+            });
+          } else if (isBoundary) {
+            potItems.push({
+              x,
+              y: 0.19 + y * potCell,
+              z,
+              sx: potCell * 0.94,
+              sy: potCell * 0.94,
+              sz: potCell * 0.94,
+              color: new THREE.Color()
+            });
+          }
+        }
+      }
+    }
+
+    const ceramicMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.42,
+      metalness: 0.04
+    });
+
+    potItems.forEach((item, index) => {
+      const lightness = 0.25 + hash(index, 4, 9) * 0.075;
+      const saturation = 0.52 + hash(index, 8, 1) * 0.12;
+      item.color.setHSL(
+        0.515 + hash(index, 2, 5) * 0.025,
+        saturation,
+        lightness
+      );
+    });
+
+    const pot = createVoxelMesh(potItems, ceramicMaterial);
+    potGroup.add(pot);
+
+    // Small voxel soil visible inside the pot opening.
+    const soilItems = [];
+    const soilCell = 0.27;
+
+    for (let ix = -4; ix <= 3; ix++) {
+      for (let iz = -3; iz <= 2; iz++) {
+        const x = ix * soilCell;
+        const z = iz * soilCell;
+
+        if (!potRadius(x * 1.12, z * 1.12)) {
+          continue;
+        }
+
+        if (hash(ix, 12, iz) > 0.2) {
+          soilItems.push({
+            x,
+            y: 0.965,
+            z,
+            sx: soilCell * 0.9,
+            sy: soilCell * 0.55,
+            sz: soilCell * 0.9,
+            color: new THREE.Color()
+          });
+        }
+      }
+    }
+
+    const soil = createVoxelMesh(
+      soilItems,
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 1
+      })
+    );
+    potGroup.add(soil);
+
+    // ---------------------------------------------------------------------
+    // Trunk: a quantized, twisting chain of brown cubes
+    // ---------------------------------------------------------------------
+
+    const treeGroup = new THREE.Group();
+    scene.add(treeGroup);
+
+    const trunkCurve = new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(0, 0.32, 0),
+        new THREE.Vector3(-0.18, 0.82, 0.04),
+        new THREE.Vector3(0.16, 1.34, -0.04),
+        new THREE.Vector3(-0.12, 1.86, 0.08),
+        new THREE.Vector3(0.22, 2.35, 0.02),
+        new THREE.Vector3(-0.08, 2.78, 0.06),
+        new THREE.Vector3(0.12, 3.22, 0)
+      ],
+      false,
+      "catmullrom",
+      0.45
+    );
+
+    const trunkItems = [];
+    const visited = new Set();
+
+    function addBranch(curve, target, size, quantization) {
+      const count = 18;
+
+      for (let i = 0; i < count; i++) {
+        const point = curve.getPoint(i / (count - 1));
+        const x = Math.round(point.x / quantization) * quantization;
+        const y = Math.round(point.y / quantization) * quantization;
+        const z = Math.round(point.z / quantization) * quantization;
+        const key = `${x},${y},${z}`;
+
+        if (visited.has(key)) {
+          continue;
+        }
+
+        visited.add(key);
+
+        target.push({
+          x,
+          y,
+          z,
+          sx: size,
+          sy: size,
+          sz: size,
+          color: new THREE.Color()
+        });
+      }
+    }
+
+    // Main trunk.
+    const trunkPointCount = 38;
+
+    for (let i = 0; i < trunkPointCount; i++) {
+      const point = trunkCurve.getPoint(i / (trunkPointCount - 1));
+      const x = Math.round(point.x / 0.18) * 0.18;
+      const y = Math.round(point.y / 0.18) * 0.18;
+      const z = Math.round(point.z / 0.18) * 0.18;
+      const key = `${x},${y},${z}`;
+
+      if (visited.has(key)) {
+        continue;
+      }
+
+      visited.add(key);
+
+      trunkItems.push({
+        x,
+        y,
+        z,
+        sx: 0.235,
+        sy: 0.235,
+        sz: 0.235,
+        color: new THREE.Color()
+      });
+    }
+
+    // Three branching limbs make the foliage separate into three groups.
+    const leftBranch = new THREE.QuadraticBezierCurve3(
+      trunkCurve.getPoint(0.54),
+      new THREE.Vector3(-0.88, 2.72, 0.02),
+      new THREE.Vector3(-1.32, 3.08, 0.12)
+    );
+
+    const rightBranch = new THREE.QuadraticBezierCurve3(
+      trunkCurve.getPoint(0.64),
+      new THREE.Vector3(0.88, 2.82, -0.04),
+      new THREE.Vector3(1.34, 3.18, -0.16)
+    );
+
+    const topBranch = new THREE.QuadraticBezierCurve3(
+      trunkCurve.getPoint(0.73),
+      new THREE.Vector3(0.02, 3.72, 0),
+      new THREE.Vector3(0, 4.04, 0)
+    );
+
+    addBranch(leftBranch, trunkItems, 0.205, 0.17);
+    addBranch(rightBranch, trunkItems, 0.205, 0.17);
+    addBranch(topBranch, trunkItems, 0.19, 0.16);
+
+    // Small exposed roots.
+    const rootCurves = [
+      new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0, 0.34, 0),
+        new THREE.Vector3(0.62, 0.2, 0.08),
+        new THREE.Vector3(0.92, 0.08, 0.2)
+      ),
+      new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0, 0.34, 0),
+        new THREE.Vector3(-0.68, 0.2, -0.06),
+        new THREE.Vector3(-0.95, 0.07, -0.2)
+      ),
+      new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0, 0.34, 0),
+        new THREE.Vector3(0.1, 0.19, 0.72),
+        new THREE.Vector3(0.38, 0.07, 0.78)
+      ),
+      new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0, 0.34, 0),
+        new THREE.Vector3(-0.1, 0.19, -0.7),
+        new THREE.Vector3(-0.36, 0.07, -0.76)
+      )
+    ];
+
+    rootCurves.forEach((curve) => {
+      addBranch(curve, trunkItems, 0.19, 0.16);
+    });
+
+    const barkMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.92
+    });
+
+    const trunk = createVoxelMesh(trunkItems, barkMaterial);
+    treeGroup.add(trunk);
+
+    // ---------------------------------------------------------------------
+    // Three rounded foliage clusters
+    // ---------------------------------------------------------------------
+
+    const foliageGroup = new THREE.Group();
+    treeGroup.add(foliageGroup);
+
+    const foliageItems = [];
+    const foliageCell = 0.235;
+
+    function addFoliageCluster(center, radii) {
+      const rangeX = Math.ceil(radii[0] / foliageCell) + 2;
+      const rangeY = Math.ceil(radii[1] / foliageCell) + 2;
+      const rangeZ = Math.ceil(radii[2] / foliageCell) + 2;
+
+      for (let ix = -rangeX; ix <= rangeX; ix++) {
+        for (let iy = -rangeY; iy <= rangeY; iy++) {
+          for (let iz = -rangeZ; iz <= rangeZ; iz++) {
+            const dx = (ix * foliageCell - center.x) / radii[0];
+            const dy = (iy * foliageCell - center.y) / radii[1];
+            const dz = (iz * foliageCell - center.z) / radii[2];
+
+            const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (distance > 1) {
+              continue;
+            }
+
+            const noise = hash(ix, iy, iz);
+
+            // Slightly irregular, yet rounded, cluster edges.
+            if (noise > 0.91) {
+              continue;
+            }
+
+            foliageItems.push({
+              x: center.x + ix * foliageCell,
+              y: center.y + iy * foliageCell,
+              z: center.z + iz * foliageCell,
+              sx: 0.225,
+              sy: 0.225,
+              sz: 0.225,
+              color: new THREE.Color()
+            });
+          }
+        }
+      }
+    }
+
+    addFoliageCluster(
+      new THREE.Vector3(-1.34, 3.08, 0.12),
+      new THREE.Vector3(0.84, 0.68, 0.72)
+    );
+
+    addFoliageCluster(
+      new THREE.Vector3(1.34, 3.18, -0.16),
+      new THREE.Vector3(0.86, 0.66, 0.7)
+    );
+
+    addFoliageCluster(
+      new THREE.Vector3(0, 4.04, 0),
+      new THREE.Vector3(0.72, 0.62, 0.68)
+    );
+
+    const foliagePalette = [
+      0x3f7a45,
+      0x4c8b4d,
+      0x5a9650,
+      0x62a05a,
+      0x76aa61,
+      0x366f43,
+      0x80b36a
+    ];
+
+    foliageItems.forEach((item, index) => {
+      item.color.setHex(
+        foliagePalette[Math.floor(random() * foliagePalette.length)]
+      );
+
+      const lightening = hash(index, 19, 7) * 0.08;
+      item.color.offsetHSL(0, 0, lightening);
+    });
+
+    const foliage = createVoxelMesh(
+      foliageItems,
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.88
+      })
+    );
+
+    foliageGroup.add(foliage);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls — no external controls module
+    // ---------------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(0, 2.05, 0);
+    const defaultView = {
+      theta: 0.68,
+      phi: 1.13,
+      radius: 10.6
+    };
+
+    const orbit = {
+      theta: defaultView.theta,
+      phi: defaultView.phi,
+      radius: defaultView.radius
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+
+      camera.position.set(
+        cameraTarget.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        cameraTarget.y + orbit.radius * Math.cos(orbit.phi),
+        cameraTarget.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetCamera() {
+      orbit.theta = defaultView.theta;
+      orbit.phi = defaultView.phi;
+      orbit.radius = defaultView.radius;
+      updateCamera();
+    }
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.classList.add("dragging");
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) {
+        return;
+      }
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      orbit.theta -= deltaX * 0.006;
+      orbit.phi = THREE.MathUtils.clamp(
+        orbit.phi - deltaY * 0.005,
+        0.42,
+        1.48
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      renderer.domElement.classList.remove("dragging");
+
+      if (event.pointerId !== undefined) {
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          6.4,
+          16
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    resetButton.addEventListener("click", resetCamera);
+
+    let autoOrbit = false;
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+      orbitButton.setAttribute("aria-pressed", String(autoOrbit));
+      orbitButton.textContent = autoOrbit ? "Pause orbit" : "Auto orbit";
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation
+    // ---------------------------------------------------------------------
+
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", resize);
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      if (autoOrbit) {
+        orbit.theta += delta * 0.12;
+        updateCamera();
+      }
+
+      // Very subtle breathing movement in the crown.
+      foliageGroup.rotation.z = Math.sin(elapsed * 0.62) * 0.012;
+      foliageGroup.rotation.x = Math.cos(elapsed * 0.48) * 0.007;
+
+      renderer.render(scene, camera);
+    }
+
+    updateCamera();
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 450);
+    });
+  </script>
+</body>
+</html>

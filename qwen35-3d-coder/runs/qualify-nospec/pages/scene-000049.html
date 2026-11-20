@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Molecule — Ball-and-Stick Model</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #eaf5ff;
+      background:
+        radial-gradient(circle at 50% 42%, #17314a 0%, #0b1725 42%, #050b13 100%);
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+      outline: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .header {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: #72d5ff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: rgba(220, 237, 255, 0.62);
+      font-size: 0.88rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 8px 11px;
+      border: 1px solid rgba(114, 213, 255, 0.22);
+      border-radius: 999px;
+      background: rgba(10, 25, 42, 0.55);
+      color: rgba(230, 245, 255, 0.82);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+    }
+
+    .badge::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #43dcff;
+      box-shadow: 0 0 10px #43dcff;
+      content: "";
+    }
+
+    .legend {
+      position: fixed;
+      right: clamp(18px, 3vw, 38px);
+      bottom: clamp(18px, 3vw, 30px);
+      display: flex;
+      gap: 18px;
+      padding: 11px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(7, 15, 25, 0.62);
+      color: rgba(224, 238, 255, 0.72);
+      font-size: 0.72rem;
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .legend .oxygen {
+      color: #ff4064;
+      background: #ff4064;
+    }
+
+    .legend .hydrogen {
+      color: #f4f9ff;
+      background: #f4f9ff;
+    }
+
+    .legend .bond {
+      color: #8e9baa;
+      background: #8e9baa;
+    }
+
+    .help {
+      position: fixed;
+      left: clamp(20px, 4vw, 52px);
+      bottom: clamp(20px, 3vw, 30px);
+      color: rgba(214, 231, 248, 0.48);
+      font-size: 0.72rem;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #reset {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      right: clamp(20px, 4vw, 48px);
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(10, 22, 36, 0.65);
+      color: rgba(230, 244, 255, 0.76);
+      font: inherit;
+      font-size: 0.72rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    #reset:hover {
+      border-color: rgba(114, 213, 255, 0.45);
+      color: #ffffff;
+    }
+
+    .atom-label {
+      position: fixed;
+      z-index: 3;
+      display: none;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(7, 15, 25, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 700;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+
+    .atom-label::after {
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 18px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.35);
+      content: "";
+    }
+
+    #label-oxygen {
+      color: #ff5272;
+      border-color: rgba(255, 82, 114, 0.35);
+      box-shadow: 0 0 10px rgba(255, 82, 114, 0.25);
+    }
+
+    #label-hydrogen {
+      color: #f4f9ff;
+      border-color: rgba(244, 249, 255, 0.3);
+      box-shadow: 0 0 10px rgba(244, 249, 255, 0.18);
+    }
+
+    @media (max-width: 650px) {
+      .legend {
+        right: 14px;
+        bottom: 14px;
+        gap: 10px;
+        padding: 9px 11px;
+      }
+
+      .help {
+        display: none;
+      }
+
+      .subtitle {
+        max-width: 220px;
+        line-height: 1.5;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <header class="header">
+    <div class="eyebrow">Molecular Structure</div>
+    <h1>Water</h1>
+    <div class="subtitle">A ball-and-stick representation of the H₂O molecule</div>
+    <div class="badge">104° H–O–H bond angle</div>
+  </header>
+
+  <button id="reset" type="button">Reset view</button>
+
+  <div class="legend" aria-hidden="true">
+    <span><i class="oxygen"></i>Oxygen</span>
+    <span><i class="hydrogen"></i>Hydrogen</span>
+    <span><i class="bond"></i>Bond</span>
+  </div>
+
+  <div class="help">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <div id="label-oxygen" class="atom-label">O</div>
+  <div id="label-hydrogen-1" class="atom-label">H</div>
+  <div id="label-hydrogen-2" class="atom-label">H</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional water molecule"
+    );
+    app.appendChild(renderer.domElement);
+
+    // Scene and camera
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x08131f, 9, 18);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 1.0, 0);
+
+    const cameraState = {
+      theta: 0.55,
+      phi: 1.28,
+      radius: 6.4
+    };
+
+    function updateCamera() {
+      const { theta, phi, radius } = cameraState;
+
+      camera.position.set(
+        target.x + radius * Math.sin(phi) * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * Math.sin(phi) * Math.cos(theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xc8e8ff, 0x07101a, 1.8));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    keyLight.position.set(4, 6, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 15;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x4b8cff, 2.0);
+    rimLight.position.set(-4, 2, -3);
+    scene.add(rimLight);
+
+    const oxygenGlow = new THREE.PointLight(0xff3055, 1.2, 7, 2);
+    oxygenGlow.position.set(0, 1.6, 0);
+    scene.add(oxygenGlow);
+
+    // Molecule geometry
+    const molecule = new THREE.Group();
+    molecule.rotation.y = -0.18;
+    scene.add(molecule);
+
+    const oxygenPosition = new THREE.Vector3(0, 1.6, 0);
+
+    // The two O-H bonds form a 104-degree H-O-H angle.
+    const bondLength = 0.95;
+    const halfBondAngle = THREE.MathUtils.degToRad(52);
+
+    const hydrogenPositions = [-bondLength * Math.sin(halfBondAngle),
+                                 bondLength * Math.sin(halfBondAngle)];
+
+    const hydrogenHeights = oxygenPosition.y - bondLength * Math.cos(halfBondAngle);
+
+    const oxygen = new THREE.Mesh(
+      new THREE.SphereGeometry(0.36, 64, 48),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xff3055,
+        emissive: 0x3c0008,
+        emissiveIntensity: 0.18,
+        roughness: 0.2,
+        metalness: 0,
+        clearcoat: 1,
+        clearcoatRoughness: 0.12
+      })
+    );
+
+    oxygen.position.copy(oxygenPosition);
+    molecule.add(oxygen);
+
+    const hydrogenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf4f9ff,
+      emissive: 0x101722,
+      emissiveIntensity: 0.12,
+      roughness: 0.18,
+      metalness: 0,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.15
+    });
+
+    const hydrogenGeometry = new THREE.SphereGeometry(0.235, 48, 36);
+
+    hydrogenPositions.forEach((x) => {
+      const hydrogen = new THREE.Mesh(hydrogenGeometry, hydrogenMaterial);
+      hydrogen.position.set(x, hydrogenHeights, 0);
+      molecule.add(hydrogen);
+    });
+
+    const bondMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9ba8b8,
+      roughness: 0.48,
+      metalness: 0.22
+    });
+
+    const sleeveMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8794a3,
+      roughness: 0.32,
+      metalness: 0.38,
+      clearcoat: 0.5,
+      side: THREE.DoubleSide
+    });
+
+    const ringMaterial = new THREE.MeshStandardMaterial({
+      color: 0x657487,
+      roughness: 0.3,
+      metalness: 0.65
+    });
+
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const zAxis = new THREE.Vector3(0, 0, 1);
+
+    /**
+     * Creates a cylinder between two points.
+     */
+    function addBond(a, b, radius) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        24,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, bondMaterial);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(yAxis, direction.normalize());
+      molecule.add(mesh);
+    }
+
+    /**
+     * Creates a hollow, shallow sleeve around an atom.
+     * The outer rim is placed on the atom side, and the opening faces the bond.
+     */
+    function addSleeve(center, outwardAxis, outerRadius, innerRadius, length) {
+      // CylinderGeometry(radiusTop, radiusBottom, height).
+      const geometry = new THREE.CylinderGeometry(
+        innerRadius,
+        outerRadius,
+        length,
+        32,
+        1,
+        true
+      );
+
+      const sleeve = new THREE.Mesh(geometry, sleeveMaterial);
+      sleeve.position.copy(center);
+      sleeve.quaternion.setFromUnitVectors(yAxis, outwardAxis.clone().normalize());
+      molecule.add(sleeve);
+
+      // Visible outer rim of the sleeve.
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(outerRadius * 0.94, 0.025, 12, 48),
+        ringMaterial
+      );
+
+      rim.position.copy(center).addScaledVector(
+        outwardAxis,
+        Math.sign(outwardAxis.y) * length * 0.5
+      );
+
+      rim.quaternion.setFromUnitVectors(zAxis, outwardAxis.clone().normalize());
+      molecule.add(rim);
+    }
+
+    const leftHydrogen = new THREE.Vector3(
+      hydrogenPositions[0],
+      hydrogenHeights,
+      0
+    );
+
+    const rightHydrogen = new THREE.Vector3(
+      hydrogenPositions[1],
+      hydrogenHeights,
+      0
+    );
+
+    // Main O-H bonds
+    addBond(oxygenPosition, leftHydrogen, 0.068);
+    addBond(oxygenPosition, rightHydrogen, 0.068);
+
+    // Shallow sleeves at both ends of each bond
+    addSleeve(
+      oxygenPosition,
+      new THREE.Vector3().subVectors(leftHydrogen, oxygenPosition),
+      0.145,
+      0.105,
+      0.18
+    );
+
+    addSleeve(
+      leftHydrogen,
+      new THREE.Vector3().subVectors(oxygenPosition, leftHydrogen),
+      0.125,
+      0.09,
+      0.15
+    );
+
+    addSleeve(
+      oxygenPosition,
+      new THREE.Vector3().subVectors(rightHydrogen, oxygenPosition),
+      0.145,
+      0.105,
+      0.18
+    );
+
+    addSleeve(
+      rightHydrogen,
+      new THREE.Vector3().subVectors(oxygenPosition, rightHydrogen),
+      0.125,
+      0.09,
+      0.15
+    );
+
+    // Subtle contact shadow plane
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.ShadowMaterial({
+        color: 0x000000,
+        opacity: 0.18
+      })
+    );
+
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -0.72;
+    shadowPlane.receiveShadow = true;
+    scene.add(shadowPlane);
+
+    molecule.traverse((object) => {
+      if (object.isMesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+      }
+    });
+
+    // Projected atom labels
+    const labels = [
+      {
+        element: document.getElementById("label-oxygen"),
+        position: oxygenPosition
+      },
+      {
+        element: document.getElementById("label-hydrogen-1"),
+        position: leftHydrogen
+      },
+      {
+        element: document.getElementById("label-hydrogen-2"),
+        position: rightHydrogen
+      }
+    ];
+
+    const projected = new THREE.Vector3();
+
+    function updateLabels() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      labels.forEach((label) => {
+        projected.copy(label.position);
+        molecule.localToWorld(projected);
+        projected.project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.15 &&
+          Math.abs(projected.y) < 1.15;
+
+        label.element.style.display = visible ? "block" : "none";
+
+        if (visible) {
+          const x = (projected.x * 0.5 + 0.5) * width;
+          const y = (-projected.y * 0.5 + 0.5) * height;
+
+          label.element.style.left = `${x}px`;
+          label.element.style.top = `${y}px`;
+        }
+      });
+    }
+
+    // Direct camera controls: pointer drag, wheel, touch, keyboard
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      canvas.classList.add("dragging");
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      cameraState.theta -= deltaX * 0.006;
+      cameraState.phi = THREE.MathUtils.clamp(
+        cameraState.phi - deltaY * 0.006,
+        0.25,
+        Math.PI - 0.25
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      canvas.classList.remove("dragging");
+
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("lostpointercapture", () => {
+      dragging = false;
+      canvas.classList.remove("dragging");
+    });
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          3.6,
+          10
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      cameraState.theta = 0.55;
+      cameraState.phi = 1.28;
+      cameraState.radius = 6.4;
+      updateCamera();
+    }
+
+    canvas.addEventListener("dblclick", resetView);
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      let handled = true;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          cameraState.theta -= 0.08;
+          break;
+        case "ArrowRight":
+          cameraState.theta += 0.08;
+          break;
+        case "ArrowUp":
+          cameraState.phi = THREE.MathUtils.clamp(
+            cameraState.phi - 0.06,
+            0.25,
+            Math.PI - 0.25
+          );
+          break;
+        case "ArrowDown":
+          cameraState.phi = THREE.MathUtils.clamp(
+            cameraState.phi + 0.06,
+            0.25,
+            Math.PI - 0.25
+          );
+          break;
+        case "+":
+        case "=":
+          cameraState.radius = Math.max(3.6, cameraState.radius - 0.3);
+          break;
+        case "-":
+          cameraState.radius = Math.min(10, cameraState.radius + 0.3);
+          break;
+        case "r":
+        case "R":
+          resetView();
+          break;
+        default:
+          handled = false;
+      }
+
+      if (handled) {
+        event.preventDefault();
+        updateCamera();
+      }
+    });
+
+    // Resize handling
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Render loop
+    renderer.setAnimationLoop(() => {
+      updateLabels();
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
+```

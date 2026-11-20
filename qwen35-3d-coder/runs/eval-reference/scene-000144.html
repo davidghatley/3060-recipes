@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adjustable Ground-Mounted Photovoltaic Module</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 72% 18%, #f8fcfc 0, #dce7e8 46%, #c8d1cf 100%);
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .info {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      width: min(370px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 16px;
+      background: rgba(247, 251, 251, 0.76);
+      box-shadow: 0 16px 45px rgba(30, 49, 52, 0.14);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #237ca2;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: #17323d;
+      font-size: clamp(20px, 3vw, 28px);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    .info p {
+      margin: 10px 0 0;
+      color: #4e646b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 20;
+      width: min(560px, calc(100vw - 32px));
+      padding: 15px 17px 13px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      border-radius: 16px;
+      background: rgba(248, 251, 251, 0.84);
+      box-shadow: 0 18px 48px rgba(26, 43, 47, 0.18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .tilt-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #29434b;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    output {
+      min-width: 46px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #dceef4;
+      color: #146989;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      margin: 0 0 14px;
+      appearance: none;
+      border-radius: 999px;
+      outline: none;
+      background: linear-gradient(
+        90deg,
+        #1a91b7 0%,
+        #1a91b7 52%,
+        #cbd5d7 52%,
+        #cbd5d7 100%
+      );
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 18px;
+      height: 18px;
+      appearance: none;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: #167fa4;
+      box-shadow: 0 2px 8px rgba(15, 70, 91, 0.35);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: #167fa4;
+      box-shadow: 0 2px 8px rgba(15, 70, 91, 0.35);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid #cbd7da;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.86);
+      color: #36515a;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background 140ms ease,
+        border-color 140ms ease,
+        transform 140ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: #87b5c4;
+      background: #f1f9fb;
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: #708187;
+      font-size: 10px;
+      text-align: center;
+      letter-spacing: 0.025em;
+    }
+
+    @media (max-width: 640px) {
+      .info {
+        top: 14px;
+        left: 14px;
+        width: calc(100vw - 28px);
+        padding: 14px 16px;
+      }
+
+      .info p {
+        display: none;
+      }
+
+      .controls {
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        padding: 13px;
+      }
+
+      .hint {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <section class="info">
+    <div class="eyebrow">Ground-Mounted PV</div>
+    <h1>Adjustable photovoltaic module</h1>
+    <p>
+      A 60-cell module on twin aluminum rails, four telescoping steel struts,
+      and a pair of concrete footings. Use the rear view to inspect the
+      junction box and cable.
+    </p>
+  </section>
+
+  <section class="controls" aria-label="Scene controls">
+    <div class="tilt-row">
+      <label for="tilt">Module tilt</label>
+      <output id="tiltValue" for="tilt">52°</output>
+    </div>
+
+    <input
+      id="tilt"
+      type="range"
+      min="25"
+      max="70"
+      step="1"
+      value="52"
+      aria-label="Photovoltaic module tilt"
+    >
+
+    <div class="buttons">
+      <button type="button" data-view="front">Front</button>
+      <button type="button" data-view="rear">Rear / junction box</button>
+      <button type="button" data-view="reset">3/4 view</button>
+    </div>
+
+    <div class="hint">
+      Drag to orbit · Wheel or pinch to zoom · Right-drag / Shift-drag to pan
+    </div>
+  </section>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene and camera
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xdce7e8);
+    scene.fog = new THREE.Fog(0xdce7e8, 14, 32);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 1.55, 0);
+    const spherical = {
+      radius: 9.5,
+      theta: 0.68,
+      phi: 1.16
+    };
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+    const X_AXIS = new THREE.Vector3(1, 0, 0);
+    const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+    function updateCamera() {
+      const sinPhi = Math.sin(spherical.phi);
+
+      camera.position.set(
+        cameraTarget.x +
+          spherical.radius * sinPhi * Math.sin(spherical.theta),
+        cameraTarget.y + spherical.radius * Math.cos(spherical.phi),
+        cameraTarget.z +
+          spherical.radius * sinPhi * Math.cos(spherical.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+      camera.updateMatrixWorld();
+    }
+
+    updateCamera();
+
+    // -------------------------------------------------------------------------
+    // Lighting and ground
+    // -------------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xe9f7ff,
+      0x6d6559,
+      2.15
+    );
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff5df, 3.4);
+    sun.position.set(-4.5, 9.5, 7.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 25;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0xbad8ef, 1.15);
+    fillLight.position.set(7, 5, -6);
+    scene.add(fillLight);
+
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc4cbc6,
+      roughness: 1,
+      metalness: 0
+    });
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(42, 42),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(32, 32, 0x75827e, 0x9da8a3);
+    grid.position.y = 0.006;
+    const gridMaterials = Array.isArray(grid.material)
+      ? grid.material
+      : [grid.material];
+
+    gridMaterials.forEach((material) => {
+      material.transparent = true;
+      material.opacity = 0.16;
+      material.depthWrite = false;
+    });
+    scene.add(grid);
+
+    // -------------------------------------------------------------------------
+    // Procedural textures
+    // -------------------------------------------------------------------------
+
+    function roundedRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width * 0.5, height * 0.5);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - r,
+        y + height
+      );
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function makeSolarTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1536;
+      canvas.height = 832;
+
+      const ctx = canvas.getContext("2d");
+      const columns = 6;
+      const rows = 10;
+      const margin = 8;
+      const gap = 6;
+      const cellWidth = (canvas.width - margin * 2 - gap * (columns - 1)) / columns;
+      const cellHeight = (canvas.height - margin * 2 - gap * (rows - 1)) / rows;
+
+      ctx.fillStyle = "#050b16";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const x = margin + column * (cellWidth + gap);
+          const y = margin + row * (cellHeight + gap);
+
+          const gradient = ctx.createLinearGradient(x, y, x + cellWidth, y + cellHeight);
+          gradient.addColorStop(0, "#153761");
+          gradient.addColorStop(0.48, "#0d274d");
+          gradient.addColorStop(1, "#07182f");
+
+          roundedRectPath(ctx, x, y, cellWidth, cellHeight, 5);
+          ctx.fillStyle = gradient;
+          ctx.fill();
+
+          ctx.save();
+          roundedRectPath(ctx, x, y, cellWidth, cellHeight, 5);
+          ctx.clip();
+
+          // Subtle crystalline texture.
+          ctx.strokeStyle = "rgba(125, 166, 200, 0.055)";
+          ctx.lineWidth = 2;
+
+          for (let d = -cellHeight; d < cellWidth; d += 34) {
+            ctx.beginPath();
+            ctx.moveTo(x + d, y);
+            ctx.lineTo(x + d + cellHeight, y + cellHeight);
+            ctx.stroke();
+          }
+
+          // Fine horizontal cell fingers.
+          ctx.strokeStyle = "rgba(172, 203, 222, 0.17)";
+          ctx.lineWidth = 1;
+
+          for (let fy = 7; fy < cellHeight; fy += 9) {
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y + fy);
+            ctx.lineTo(x + cellWidth - 2, y + fy);
+            ctx.stroke();
+          }
+
+          // Vertical busbars.
+          ctx.strokeStyle = "rgba(191, 213, 226, 0.55)";
+          ctx.lineWidth = 2.4;
+
+          [0.34, 0.67].forEach((fraction) => {
+            const busX = x + cellWidth * fraction;
+            ctx.beginPath();
+            ctx.moveTo(busX, y + 2);
+            ctx.lineTo(busX, y + cellHeight - 2);
+            ctx.stroke();
+          });
+
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(4, 10, 22, 0.9)";
+          ctx.lineWidth = 2;
+          roundedRectPath(ctx, x, y, cellWidth, cellHeight, 5);
+          ctx.stroke();
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+      return texture;
+    }
+
+    function makeConcreteTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const ctx = canvas.getContext("2d");
+      let seed = 31891;
+
+      const random = () => {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+
+      ctx.fillStyle = "#91958e";
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 2600; i++) {
+        const shade = Math.floor(105 + random() * 80);
+        const alpha = 0.08 + random() * 0.19;
+        ctx.fillStyle = `rgba(${shade},${shade},${shade - 4},${alpha})`;
+        ctx.fillRect(
+          random() * 256,
+          random() * 256,
+          0.5 + random() * 1.8,
+          0.5 + random() * 1.8
+        );
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 2);
+      return texture;
+    }
+
+    function makeLabelTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 224;
+
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#e8ece8";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#1c3036";
+      ctx.font = "700 42px Arial";
+      ctx.fillText("PV-60 / 400 W", 24, 58);
+
+      ctx.font = "25px Arial";
+      ctx.fillText("ISO 9001 · 1000 V DC", 25, 100);
+      ctx.fillText("SN 24-A07-00382", 25, 140);
+
+      for (let i = 0; i < 58; i++) {
+        const width = 1 + (i % 4);
+        ctx.fillRect(25 + i * 5, 170, width, 29);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const frameMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc6ced1,
+      metalness: 0.88,
+      roughness: 0.24
+    });
+
+    const railMaterial = new THREE.MeshStandardMaterial({
+      color: 0xaeb8bc,
+      metalness: 0.82,
+      roughness: 0.3
+    });
+
+    const darkMetalMaterial = new THREE.MeshStandardMaterial({
+      color: 0x252d31,
+      metalness: 0.72,
+      roughness: 0.34
+    });
+
+    const galvanizedMaterial = new THREE.MeshStandardMaterial({
+      color: 0x89969b,
+      metalness: 0.78,
+      roughness: 0.32
+    });
+
+    const polishedSteelMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd9dfe0,
+      metalness: 0.96,
+      roughness: 0.17
+    });
+
+    const rubberMaterial = new THREE.MeshStandardMaterial({
+      color: 0x111719,
+      roughness: 0.82,
+      metalness: 0.08
+    });
+
+    const orangeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xec7c28,
+      roughness: 0.42,
+      metalness: 0.22
+    });
+
+    const concreteMaterial = new THREE.MeshStandardMaterial({
+      color: 0xaaaDa7,
+      map: makeConcreteTexture(),
+      roughness: 0.98,
+      metalness: 0
+    });
+
+    // -------------------------------------------------------------------------
+    // Photovoltaic module
+    // -------------------------------------------------------------------------
+
+    const PANEL_WIDTH = 5.0;
+    const PANEL_HEIGHT = 2.8;
+    const FRAME_WIDTH = 0.09;
+    const RAIL_Y = [-0.68, 0.68];
+    const SUPPORT_X = [-1.65, 1.65];
+
+    const panel = new THREE.Group();
+    panel.position.set(0, 2.62, 0.12);
+    panel.rotation.x = -THREE.MathUtils.degToRad(52);
+    scene.add(panel);
+
+    const backingMaterial = new THREE.MeshStandardMaterial({
+      color: 0x111920,
+      roughness: 0.72,
+      metalness: 0.12
+    });
+
+    const backing = new THREE.Mesh(
+      new THREE.BoxGeometry(
+        PANEL_WIDTH - FRAME_WIDTH * 1.3,
+        PANEL_HEIGHT - FRAME_WIDTH * 1.3,
+        0.10
+      ),
+      backingMaterial
+    );
+    backing.position.z = -0.025;
+    backing.castShadow = true;
+    backing.receiveShadow = true;
+    panel.add(backing);
+
+    const cellMaterial = new THREE.MeshPhysicalMaterial({
+      map: makeSolarTexture(),
+      color: 0xffffff,
+      roughness: 0.24,
+      metalness: 0.2,
+      clearcoat: 0.9,
+      clearcoatRoughness: 0.12
+    });
+
+    const cellSurface = new THREE.Mesh(
+      new THREE.PlaneGeometry(
+        PANEL_WIDTH - FRAME_WIDTH * 2 - 0.035,
+        PANEL_HEIGHT - FRAME_WIDTH * 2 - 0.035
+      ),
+      cellMaterial
+    );
+    cellSurface.position.z = 0.071;
+    cellSurface.receiveShadow = true;
+    panel.add(cellSurface);
+
+    // Thin silver perimeter frame.
+    const horizontalFrameGeometry = new THREE.BoxGeometry(
+      PANEL_WIDTH,
+      FRAME_WIDTH,
+      0.14
+    );
+    const verticalFrameGeometry = new THREE.BoxGeometry(
+      FRAME_WIDTH,
+      PANEL_HEIGHT - FRAME_WIDTH * 2,
+      0.14
+    );
+
+    [-1, 1].forEach((side) => {
+      const horizontal = new THREE.Mesh(
+        horizontalFrameGeometry,
+        frameMaterial
+      );
+      horizontal.position.set(
+        0,
+        side * (PANEL_HEIGHT * 0.5 - FRAME_WIDTH * 0.5),
+        0
+      );
+      horizontal.castShadow = true;
+      panel.add(horizontal);
+
+      const vertical = new THREE.Mesh(
+        verticalFrameGeometry,
+        frameMaterial
+      );
+      vertical.position.set(
+        side * (PANEL_WIDTH * 0.5 - FRAME_WIDTH * 0.5),
+        0,
+        0
+      );
+      vertical.castShadow = true;
+      panel.add(vertical);
+    });
+
+    // Frame corner fasteners.
+    const frameScrewGeometry = new THREE.CylinderGeometry(
+      0.022,
+      0.022,
+      0.014,
+      12
+    );
+
+    [-1, 1].forEach((xSign) => {
+      [-1, 1].forEach((ySign) => {
+        const screw = new THREE.Mesh(frameScrewGeometry, darkMetalMaterial);
+        screw.rotation.x = Math.PI / 2;
+        screw.position.set(
+          xSign * (PANEL_WIDTH * 0.5 - FRAME_WIDTH * 0.5),
+          ySign * (PANEL_HEIGHT * 0.5 - FRAME_WIDTH * 0.5),
+          0.078
+        );
+        panel.add(screw);
+      });
+    });
+
+    // Two structural rails on the back of the module.
+    RAIL_Y.forEach((railY) => {
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(PANEL_WIDTH + 0.16, 0.13, 0.18),
+        railMaterial
+      );
+      rail.position.set(0, railY, -0.22);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      panel.add(rail);
+
+      const groove = new THREE.Mesh(
+        new THREE.BoxGeometry(PANEL_WIDTH + 0.12, 0.035, 0.014),
+        darkMetalMaterial
+      );
+      groove.position.set(0, railY, -0.316);
+      panel.add(groove);
+    });
+
+    // Rail clamps at the four strut attachment points.
+    SUPPORT_X.forEach((x) => {
+      RAIL_Y.forEach((railY) => {
+        const clamp = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.21, 0.14),
+          darkMetalMaterial
+        );
+        clamp.position.set(x, railY, -0.37);
+        clamp.castShadow = true;
+        panel.add(clamp);
+      });
+    });
+
+    // Junction box on the rear of the module.
+    const junctionBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.62, 0.46, 0.18),
+      darkMetalMaterial
+    );
+    junctionBox.position.set(0.88, -0.08, -0.18);
+    junctionBox.castShadow = true;
+    panel.add(junctionBox);
+
+    const junctionLid = new THREE.Mesh(
+      new THREE.BoxGeometry(0.56, 0.40, 0.04),
+      rubberMaterial
+    );
+    junctionLid.position.set(0.88, -0.08, -0.285);
+    junctionLid.castShadow = true;
+    panel.add(junctionLid);
+
+    const lidScrewGeometry = new THREE.CylinderGeometry(
+      0.022,
+      0.022,
+      0.018,
+      12
+    );
+
+    [
+      [-0.22, -0.14],
+      [0.22, -0.14],
+      [-0.22, 0.14],
+      [0.22, 0.14]
+    ].forEach(([x, y]) => {
+      const screw = new THREE.Mesh(lidScrewGeometry, frameMaterial);
+      screw.rotation.x = Math.PI / 2;
+      screw.position.set(0.88 + x, -0.08 + y, -0.316);
+      panel.add(screw);
+    });
+
+    const cableGland = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.07, 0.15, 12),
+      rubberMaterial
+    );
+    cableGland.position.set(1.05, -0.43, -0.18);
+    panel.add(cableGland);
+
+    const cableCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.05, -0.49, -0.18),
+      new THREE.Vector3(1.18, -0.62, -0.22),
+      new THREE.Vector3(1.05, -0.82, -0.30),
+      new THREE.Vector3(0.75, -0.82, -0.37),
+      new THREE.Vector3(0.57, -0.68, -0.38)
+    ]);
+
+    const cable = new THREE.Mesh(
+      new THREE.TubeGeometry(cableCurve, 36, 0.024, 8, false),
+      rubberMaterial
+    );
+    cable.castShadow = true;
+    panel.add(cable);
+
+    // Rear identification label.
+    const label = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.62, 0.27),
+      new THREE.MeshBasicMaterial({
+        map: makeLabelTexture(),
+        toneMapped: false
+      })
+    );
+    label.position.set(-0.72, -0.06, -0.319);
+    label.rotation.y = Math.PI;
+    panel.add(label);
+
+    // -------------------------------------------------------------------------
+    // Concrete footing pair
+    // -------------------------------------------------------------------------
+
+    function createFooting(x) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, 0.05);
+
+      const slab = new THREE.Mesh(
+        new THREE.BoxGeometry(1.18, 0.13, 2.12),
+        concreteMaterial
+      );
+      slab.position.y = 0.065;
+      slab.castShadow = true;
+      slab.receiveShadow = true;
+      group.add(slab);
+
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(0.94, 0.36, 1.88),
+        concreteMaterial
+      );
+      block.position.y = 0.31;
+      block.castShadow = true;
+      block.receiveShadow = true;
+      group.add(block);
+
+      const edgeMaterial = new THREE.LineBasicMaterial({
+        color: 0x4f5c58,
+        transparent: true,
+        opacity: 0.16
+      });
+
+      const slabEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(slab.geometry),
+        edgeMaterial
+      );
+      slabEdges.position.copy(slab.position);
+      group.add(slabEdges);
+
+      const blockEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(block.geometry),
+        edgeMaterial
+      );
+      blockEdges.position.copy(block.position);
+      group.add(blockEdges);
+
+      scene.add(group);
+    }
+
+    SUPPORT_X.forEach(createFooting);
+
+    // -------------------------------------------------------------------------
+    // Telescoping adjustable struts
+    // -------------------------------------------------------------------------
+
+    function setCylinderBetween(mesh, start, end) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      mesh.scale.set(1, length, 1);
+    }
+
+    function createStrut(x, railY) {
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const outerTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.072, 0.072, 1, 18),
+        galvanizedMaterial
+      );
+      outerTube.castShadow = true;
+      group.add(outerTube);
+
+      const innerTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.043, 0.043, 1, 16),
+        polishedSteelMaterial
+      );
+      innerTube.castShadow = true;
+      group.add(innerTube);
+
+      const collar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.105, 0.105, 0.15, 18),
+        darkMetalMaterial
+      );
+      collar.castShadow = true;
+      group.add(collar);
+
+      const adjustmentKnob = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.052, 0.052, 0.075, 12),
+        orangeMaterial
+      );
+      adjustmentKnob.quaternion.setFromUnitVectors(Y_AXIS, X_AXIS);
+      adjustmentKnob.castShadow = true;
+      group.add(adjustmentKnob);
+
+      const threadRings = [];
+      const ringGeometry = new THREE.TorusGeometry(0.046, 0.007, 6, 20);
+
+      for (let i = 0; i < 4; i++) {
+        const ring = new THREE.Mesh(ringGeometry, darkMetalMaterial);
+        group.add(ring);
+        threadRings.push(ring);
+      }
+
+      const topPin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.058, 0.058, 0.29, 12),
+        darkMetalMaterial
+      );
+      topPin.quaternion.setFromUnitVectors(Y_AXIS, X_AXIS);
+      topPin.castShadow = true;
+      group.add(topPin);
+
+      const footPin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.058, 0.058, 0.29, 12),
+        darkMetalMaterial
+      );
+      footPin.quaternion.setFromUnitVectors(Y_AXIS, X_AXIS);
+      footPin.castShadow = true;
+      group.add(footPin);
+
+      // Slotted-looking anchor plate with four anchor bolts.
+      const anchorPlate = new THREE.Group();
+      scene.add(anchorPlate);
+
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 0.05, 0.38),
+        galvanizedMaterial
+      );
+      plate.castShadow = true;
+      plate.receiveShadow = true;
+      anchorPlate.add(plate);
+
+      const boltGeometry = new THREE.CylinderGeometry(
+        0.026,
+        0.026,
+        0.035,
+        6
+      );
+
+      [
+        [-0.13, -0.13],
+        [0.13, -0.13],
+        [-0.13, 0.13],
+        [0.13, 0.13]
+      ].forEach(([bx, bz]) => {
+        const bolt = new THREE.Mesh(boltGeometry, darkMetalMaterial);
+        bolt.position.set(bx, 0.042, bz);
+        bolt.castShadow = true;
+        anchorPlate.add(bolt);
+      });
+
+      return {
+        x,
+        railY,
+        group,
+        outerTube,
+        innerTube,
+        collar,
+        adjustmentKnob,
+        threadRings,
+        topPin,
+        footPin,
+        anchorPlate
+      };
+    }
+
+    const struts = [];
+
+    RAIL_Y.forEach((railY) => {
+      SUPPORT_X.forEach((x) => {
+        struts.push(createStrut(x, railY));
+      });
+    });
+
+    function updateStrut(strut) {
+      panel.updateMatrixWorld(true);
+
+      const top = panel.localToWorld(
+        new THREE.Vector3(strut.x, strut.railY, -0.46)
+      );
+      const bottom = new THREE.Vector3(strut.x, 0.565, top.z);
+
+      const direction = new THREE.Vector3().subVectors(top, bottom);
+      const length = direction.length();
+      direction.normalize();
+
+      const pointAt = (t) =>
+        bottom.clone().lerp(top, THREE.MathUtils.clamp(t, 0, 1));
+
+      setCylinderBetween(strut.outerTube, bottom, pointAt(0.64));
+      setCylinderBetween(strut.innerTube, pointAt(0.50), top);
+
+      const collarPosition = pointAt(0.60);
+      strut.collar.position.copy(collarPosition);
+      strut.collar.quaternion.setFromUnitVectors(Y_AXIS, direction);
+
+      strut.adjustmentKnob.position.copy(collarPosition);
+      strut.adjustmentKnob.position.x += 0.115;
+
+      strut.threadRings.forEach((ring, index) => {
+        const t = 0.68 + index * 0.06;
+        ring.position.copy(pointAt(t));
+        ring.quaternion.setFromUnitVectors(Z_AXIS, direction);
+      });
+
+      strut.topPin.position.copy(top);
+      strut.footPin.position.copy(bottom);
+
+      strut.anchorPlate.position.set(strut.x, 0.515, top.z);
+
+      // Keep the lower end visually attached to the anchor plate.
+      strut.footPin.position.y = 0.565;
+    }
+
+    function setTilt(degrees) {
+      panel.rotation.x = -THREE.MathUtils.degToRad(degrees);
+      panel.updateMatrixWorld(true);
+      struts.forEach(updateStrut);
+
+      const output = document.getElementById("tiltValue");
+      output.textContent = `${degrees}°`;
+
+      const slider = document.getElementById("tilt");
+      const percentage =
+        ((degrees - Number(slider.min)) /
+          (Number(slider.max) - Number(slider.min))) *
+        100;
+
+      slider.style.background = `linear-gradient(
+        90deg,
+        #1a91b7 0%,
+        #1a91b7 ${percentage}%,
+        #cbd5d7 ${percentage}%,
+        #cbd5d7 100%
+      )`;
+    }
+
+    document.getElementById("tilt").addEventListener("input", (event) => {
+      setTilt(Number(event.target.value));
+    });
+
+    setTilt(52);
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, pan, zoom, keyboard and touch pinch
+    // -------------------------------------------------------------------------
+
+    let cameraTween = null;
+
+    function shortestAngleDifference(from, to) {
+      return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+    }
+
+    function tweenCamera(destination, duration = 750) {
+      cameraTween = {
+        startTime: performance.now(),
+        duration,
+        from: {
+          radius: spherical.radius,
+          theta: spherical.theta,
+          phi: spherical.phi,
+          target: cameraTarget.clone()
+        },
+        to: {
+          radius: destination.radius ?? spherical.radius,
+          theta: destination.theta ?? spherical.theta,
+          phi: destination.phi ?? spherical.phi,
+          target: destination.target?.clone() ?? cameraTarget.clone()
+        }
+      };
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = button.dataset.view;
+
+        if (view === "front") {
+          tweenCamera({
+            radius: 8.9,
+            theta: 0.12,
+            phi: 1.16,
+            target: new THREE.Vector3(0, 1.65, 0)
+          });
+        } else if (view === "rear") {
+          tweenCamera({
+            radius: 8.9,
+            theta: Math.PI - 0.15,
+            phi: 1.14,
+            target: new THREE.Vector3(0, 1.65, 0)
+          });
+        } else {
+          tweenCamera({
+            radius: 9.5,
+            theta: 0.68,
+            phi: 1.16,
+            target: new THREE.Vector3(0, 1.55, 0)
+          });
+        }
+      });
+    });
+
+    const canvas = renderer.domElement;
+    const pointers = new Map();
+    let dragMode = "orbit";
+    let previousPinchDistance = 0;
+
+    function pointerDistance() {
+      const points = [...pointers.values()];
+      if (points.length < 2) return 0;
+      return Math.hypot(
+        points[0].x - points[1].x,
+        points[0].y - points[1].y
+      );
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      cameraTween = null;
+      canvas.setPointerCapture(event.pointerId);
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragMode =
+          event.button === 2 || event.shiftKey ? "pan" : "orbit";
+      } else if (pointers.size === 2) {
+        dragMode = "pinch";
+        previousPinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const oldPoint = pointers.get(event.pointerId);
+      const oldDistance = pointerDistance();
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - oldPoint.x;
+        const dy = event.clientY - oldPoint.y;
+
+        if (dragMode === "orbit") {
+          spherical.theta -= dx * 0.006;
+          spherical.phi = THREE.MathUtils.clamp(
+            spherical.phi - dy * 0.006,
+            0.28,
+            1.46
+          );
+        } else if (dragMode === "pan") {
+          const right = new THREE.Vector3();
+          const up = new THREE.Vector3();
+
+          camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+          const panScale = spherical.radius * 0.00125;
+          cameraTarget.addScaledVector(right, -dx * panScale);
+          cameraTarget.addScaledVector(up, dy * panScale);
+          cameraTarget.y = THREE.MathUtils.clamp(
+            cameraTarget.y,
+            0.35,
+            4.0
+          );
+        }
+
+        updateCamera();
+      } else if (pointers.size === 2) {
+        const newDistance = pointerDistance();
+
+        if (oldDistance > 0 && newDistance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (oldDistance / newDistance),
+            4.8,
+            18
+          );
+          updateCamera();
+        }
+
+        previousPinchDistance = newDistance;
+      }
+    });
+
+    function endPointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        dragMode = "orbit";
+        previousPinchDistance = 0;
+      } else if (pointers.size === 0) {
+        dragMode = "orbit";
+        previousPinchDistance = 0;
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraTween = null;
+
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          4.8,
+          18
+        );
+
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => {
+      tweenCamera({
+        radius: 9.5,
+        theta: 0.68,
+        phi: 1.16,
+        target: new THREE.Vector3(0, 1.55, 0)
+      });
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.target instanceof HTMLInputElement) return;
+
+      cameraTween = null;
+
+      if (event.key === "ArrowLeft") {
+        spherical.theta -= 0.08;
+      } else if (event.key === "ArrowRight") {
+        spherical.theta += 0.08;
+      } else if (event.key === "ArrowUp") {
+        spherical.phi = Math.max(0.28, spherical.phi - 0.06);
+      } else if (event.key === "ArrowDown") {
+        spherical.phi = Math.min(1.46, spherical.phi + 0.06);
+      } else if (event.key === "+" || event.key === "=") {
+        spherical.radius = Math.max(4.8, spherical.radius - 0.45);
+      } else if (event.key === "-" || event.key === "_") {
+        spherical.radius = Math.min(18, spherical.radius + 0.45);
+      } else {
+        return;
+      }
+
+      updateCamera();
+    });
+
+    // -------------------------------------------------------------------------
+    // Resize and render loop
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      if (cameraTween) {
+        const elapsed = time - cameraTween.startTime;
+        const t = THREE.MathUtils.clamp(
+          elapsed / cameraTween.duration,
+          0,
+          1
+        );
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        spherical.radius = THREE.MathUtils.lerp(
+          cameraTween.from.radius,
+          cameraTween.to.radius,
+          eased
+        );
+
+        spherical.phi = THREE.MathUtils.lerp(
+          cameraTween.from.phi,
+          cameraTween.to.phi,
+          eased
+        );
+
+        const thetaDifference = shortestAngleDifference(
+          cameraTween.from.theta,
+          cameraTween.to.theta
+        );
+
+        spherical.theta =
+          cameraTween.from.theta + thetaDifference * eased;
+
+        cameraTarget.lerpVectors(
+          cameraTween.from.target,
+          cameraTween.to.target,
+          eased
+        );
+
+        if (t >= 1) cameraTween = null;
+      }
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

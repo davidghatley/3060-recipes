@@ -1,0 +1,27 @@
+{
+ "name": "greedy-probe",
+ "bench": [
+  "greedy"
+ ],
+ "n_greedy": 512,
+ "prompts": 3,
+ "n_probs": 2,
+ "order": [
+  "none"
+ ],
+ "configs": {
+  "none": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1"
+   ]
+  }
+ }
+}

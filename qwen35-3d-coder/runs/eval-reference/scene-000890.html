@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurora Galleria — Animated Shopping Mall Atrium</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(15, 24, 34, 0.76);
+      --border: rgba(255, 255, 255, 0.15);
+      --text: #f7fbff;
+      --muted: #b7c6d4;
+      --accent: #71e6cf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #dce8ee;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: var(--text);
+    }
+
+    .title-card {
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      max-width: 360px;
+      padding: 17px 19px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 14px 50px rgba(10, 20, 30, 0.22);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 31px);
+      font-weight: 750;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: min(540px, calc(100vw - 40px));
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 8px 28px rgba(10, 20, 30, 0.18);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(34, 49, 62, 0.9);
+      transform: translateY(-1px);
+    }
+
+    button.accent {
+      color: #09231e;
+      border-color: transparent;
+      background: var(--accent);
+    }
+
+    .hint {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(15, 24, 34, 0.58);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-size: 10px;
+      letter-spacing: 0.035em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .status::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      content: "";
+    }
+
+    @media (max-width: 700px) {
+      .title-card {
+        top: 12px;
+        left: 12px;
+        max-width: calc(100vw - 24px);
+        padding: 13px 15px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        justify-content: center;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      button {
+        padding: 9px 11px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-label="Interactive animated shopping mall atrium"></canvas>
+
+  <div class="hud">
+    <section class="title-card">
+      <p class="eyebrow">Two-level retail atrium</p>
+      <h1>Aurora Galleria</h1>
+      <p class="subtitle">
+        A glass-roofed mall atrium with crossed escalators, illuminated storefronts,
+        balcony walkways, kiosks, planters, and moving visitors.
+      </p>
+    </section>
+
+    <div class="hint">Drag to orbit · Scroll to zoom · Right-drag to pan · Double-click to reset</div>
+
+    <div class="controls">
+      <button id="pause" class="accent">Pause motion</button>
+      <button id="cinematic">Cinematic: On</button>
+      <button id="top">Overhead view</button>
+      <button id="reset">Reset camera</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const canvas = document.querySelector("#scene");
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xdbe8ee);
+    scene.fog = new THREE.Fog(0xdbe8ee, 34, 68);
+
+    const camera = new THREE.PerspectiveCamera(
+      46,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const UPPER_LEVEL = 4.5;
+    const ATRIUM_HALF = 8;
+    const OUTER_HALF = 14;
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      floor: new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: makeTerrazzoTexture(),
+        roughness: 0.3,
+        metalness: 0.08
+      }),
+      floorEdge: new THREE.MeshStandardMaterial({
+        color: 0x9da4a5,
+        roughness: 0.52,
+        metalness: 0.12
+      }),
+      warmWhite: new THREE.MeshStandardMaterial({
+        color: 0xf0eee8,
+        roughness: 0.72
+      }),
+      paleStone: new THREE.MeshStandardMaterial({
+        color: 0xd9d6cf,
+        roughness: 0.62
+      }),
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x26323a,
+        roughness: 0.28,
+        metalness: 0.72
+      }),
+      brushedMetal: new THREE.MeshStandardMaterial({
+        color: 0xaeb8bd,
+        roughness: 0.25,
+        metalness: 0.82
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x12191e,
+        roughness: 0.58
+      }),
+      tread: new THREE.MeshStandardMaterial({
+        color: 0x4c565c,
+        roughness: 0.44,
+        metalness: 0.48
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xf5c84c,
+        emissive: 0x5c3d00,
+        emissiveIntensity: 0.15,
+        roughness: 0.45
+      }),
+      glass: new THREE.MeshPhysicalMaterial({
+        color: 0xb8e1e7,
+        transparent: true,
+        opacity: 0.23,
+        roughness: 0.08,
+        metalness: 0.05,
+        transmission: 0.12,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }),
+      storefrontGlass: new THREE.MeshStandardMaterial({
+        color: 0xa6c7d1,
+        emissive: 0x25424b,
+        emissiveIntensity: 0.24,
+        transparent: true,
+        opacity: 0.48,
+        roughness: 0.15,
+        metalness: 0.12,
+        side: THREE.DoubleSide
+      }),
+      interior: new THREE.MeshStandardMaterial({
+        color: 0xf3d8ad,
+        emissive: 0xffb85c,
+        emissiveIntensity: 0.42,
+        roughness: 0.6
+      }),
+      foliage: new THREE.MeshStandardMaterial({
+        color: 0x2f7d57,
+        roughness: 0.78
+      }),
+      foliageLight: new THREE.MeshStandardMaterial({
+        color: 0x61a86b,
+        roughness: 0.8
+      }),
+      planter: new THREE.MeshStandardMaterial({
+        color: 0xbbb6aa,
+        roughness: 0.64
+      }),
+      soil: new THREE.MeshStandardMaterial({
+        color: 0x43382d,
+        roughness: 1
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x8a5d3b,
+        roughness: 0.68
+      }),
+      lightPanel: new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xd8f5ff,
+        emissiveIntensity: 1.5,
+        roughness: 0.4
+      }),
+      skylight: new THREE.MeshPhysicalMaterial({
+        color: 0xb9e4ed,
+        transparent: true,
+        opacity: 0.28,
+        roughness: 0.08,
+        metalness: 0.06,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Procedural textures
+    // -------------------------------------------------------------------------
+
+    function makeTerrazzoTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 1024;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = "#dedbd4";
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      const colors = ["#b9b4aa", "#f5f2eb", "#858d8d", "#c5a98b", "#9eaeb2"];
+
+      for (let i = 0; i < 7200; i++) {
+        const x = Math.random() * c.width;
+        const y = Math.random() * c.height;
+        const r = 0.5 + Math.random() * 2.2;
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.beginPath();
+        ctx.ellipse(x, y, r, r * (0.45 + Math.random() * 0.8), Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = "rgba(100,105,105,0.17)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= 8; i++) {
+        const p = (i / 8) * c.width;
+        ctx.beginPath();
+        ctx.moveTo(p, 0);
+        ctx.lineTo(p, c.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, p);
+        ctx.lineTo(c.width, p);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(5, 5);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeSignTexture(text, background = "#17222b", foreground = "#ffffff") {
+      const c = document.createElement("canvas");
+      c.width = 768;
+      c.height = 160;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      const gradient = ctx.createLinearGradient(0, 0, c.width, 0);
+      gradient.addColorStop(0, "rgba(255,255,255,0.08)");
+      gradient.addColorStop(0.5, "rgba(255,255,255,0)");
+      gradient.addColorStop(1, "rgba(255,255,255,0.08)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.fillStyle = foreground;
+      ctx.font = "600 54px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text.toUpperCase(), c.width / 2, c.height / 2 + 2, c.width - 50);
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeDirectoryTexture() {
+      const c = document.createElement("canvas");
+      c.width = 512;
+      c.height = 1024;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = "#14232b";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = "#73ead2";
+      ctx.font = "700 55px system-ui";
+      ctx.fillText("DIRECTORY", 42, 90);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "600 35px system-ui";
+      const lines = [
+        "01  LUMIÈRE",
+        "02  ATELIER",
+        "03  NORTH & CO.",
+        "04  CAFÉ ORBIT",
+        "05  BOOK HOUSE",
+        "06  GALLERY",
+        "07  TECH LAB",
+        "08  HOME",
+        "09  CINEMA",
+        "10  FOOD HALL"
+      ];
+      lines.forEach((line, i) => ctx.fillText(line, 45, 175 + i * 72));
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addBox(parent, width, height, depth, material, x = 0, y = 0, z = 0, cast = true) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(parent, radiusTop, radiusBottom, height, material, x = 0, y = 0, z = 0, segments = 16) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addSphere(parent, radius, material, x = 0, y = 0, z = 0, widthSegments = 12) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, widthSegments, Math.max(8, widthSegments >> 1)),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xe8f7ff, 0x887963, 2.15));
+
+    const sun = new THREE.DirectionalLight(0xfff1d2, 3.2);
+    sun.position.set(10, 18, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -22;
+    sun.shadow.camera.right = 22;
+    sun.shadow.camera.top = 22;
+    sun.shadow.camera.bottom = -22;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const coolFill = new THREE.DirectionalLight(0xaedfff, 1.1);
+    coolFill.position.set(-12, 9, -10);
+    scene.add(coolFill);
+
+    [
+      [-10, 7, -10],
+      [10, 7, -10],
+      [-10, 7, 10],
+      [10, 7, 10]
+    ].forEach(([x, y, z]) => {
+      const light = new THREE.PointLight(0xffd4a0, 32, 13, 2);
+      light.position.set(x, y, z);
+      scene.add(light);
+    });
+
+    const centerLight = new THREE.PointLight(0xd8f7ff, 35, 18, 2);
+    centerLight.position.set(0, 8, 0);
+    scene.add(centerLight);
+
+    // -------------------------------------------------------------------------
+    // Ground and upper-level architecture
+    // -------------------------------------------------------------------------
+
+    addBox(scene, 29, 0.38, 29, materials.floorEdge, 0, -0.22, 0);
+    addBox(scene, 28.7, 0.1, 28.7, materials.floor, 0, -0.015, 0);
+
+    const centerMedallion = new THREE.Mesh(
+      new THREE.CircleGeometry(7.5, 80),
+      new THREE.MeshStandardMaterial({
+        color: 0xc8c9c3,
+        roughness: 0.26,
+        metalness: 0.16
+      })
+    );
+    centerMedallion.rotation.x = -Math.PI / 2;
+    centerMedallion.position.y = 0.045;
+    centerMedallion.receiveShadow = true;
+    scene.add(centerMedallion);
+
+    const medallionRing = new THREE.Mesh(
+      new THREE.RingGeometry(5.7, 5.78, 80),
+      new THREE.MeshStandardMaterial({
+        color: 0x72948d,
+        roughness: 0.3,
+        metalness: 0.48
+      })
+    );
+    medallionRing.rotation.x = -Math.PI / 2;
+    medallionRing.position.y = 0.055;
+    scene.add(medallionRing);
+
+    // Upper walkway slabs, leaving a 16 × 16 central atrium opening.
+    addBox(scene, 6, 0.36, 28, materials.paleStone, 11, UPPER_LEVEL - 0.18, 0);
+    addBox(scene, 6, 0.36, 28, materials.paleStone, -11, UPPER_LEVEL - 0.18, 0);
+    addBox(scene, 16, 0.36, 6, materials.paleStone, 0, UPPER_LEVEL - 0.18, 11);
+    addBox(scene, 16, 0.36, 6, materials.paleStone, 0, UPPER_LEVEL - 0.18, -11);
+
+    // Dark fascia around the balcony edge.
+    addBox(scene, 0.16, 0.55, 28, materials.darkMetal, 8.02, 4.13, 0);
+    addBox(scene, 0.16, 0.55, 28, materials.darkMetal, -8.02, 4.13, 0);
+    addBox(scene, 16, 0.55, 0.16, materials.darkMetal, 0, 4.13, 8.02);
+    addBox(scene, 16, 0.55, 0.16, materials.darkMetal, 0, 4.13, -8.02);
+
+    // Upper cornice around the outer perimeter.
+    addBox(scene, 28, 0.28, 0.38, materials.warmWhite, 0, 8.12, -13.78);
+    addBox(scene, 28, 0.28, 0.38, materials.warmWhite, 0, 8.12, 13.78);
+    addBox(scene, 0.38, 0.28, 28, materials.warmWhite, -13.78, 8.12, 0);
+    addBox(scene, 0.38, 0.28, 28, materials.warmWhite, 13.78, 8.12, 0);
+
+    // -------------------------------------------------------------------------
+    // Storefront ring
+    // -------------------------------------------------------------------------
+
+    const storefrontNames = {
+      north: ["LUMIÈRE", "ATELIER", "NORTH & CO.", "BOOK HOUSE", "GALLERY"],
+      east: ["CAFÉ ORBIT", "TECH LAB", "MODE", "STUDIO", "HOME"],
+      south: ["AURORA", "FLOWER", "ESSENTIALS", "JEWELS", "BAKERY"],
+      west: ["CINEMA", "GAMES", "OUTDOOR", "DESIGN", "FOOD HALL"]
+    };
+
+    function makeStorefront(side, u, level, name) {
+      const group = new THREE.Group();
+      const moduleWidth = 4.55;
+
+      addBox(group, moduleWidth, 3.15, 0.16, materials.warmWhite, 0, 1.58, -0.2, false);
+      addBox(group, moduleWidth - 0.15, 2.62, 0.06, materials.storefrontGlass, 0, 1.48, 0.04, false);
+      addBox(group, moduleWidth - 0.3, 0.22, 0.09, materials.interior, 0, 0.56, 0.1, false);
+
+      addBox(group, 0.12, 3.15, 0.22, materials.darkMetal, -moduleWidth / 2, 1.58, 0.12);
+      addBox(group, 0.12, 3.15, 0.22, materials.darkMetal, moduleWidth / 2, 1.58, 0.12);
+      addBox(group, 0.08, 2.62, 0.16, materials.darkMetal, -0.75, 1.48, 0.14);
+      addBox(group, 0.08, 2.62, 0.16, materials.darkMetal, 0.75, 1.48, 0.14);
+      addBox(group, moduleWidth, 0.12, 0.25, materials.darkMetal, 0, 2.88, 0.14);
+
+      const signMaterial = new THREE.MeshBasicMaterial({
+        map: makeSignTexture(name),
+        side: THREE.DoubleSide,
+        toneMapped: false
+      });
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(moduleWidth - 0.35, 0.58), signMaterial);
+      sign.position.set(0, 3.12, 0.2);
+      group.add(sign);
+
+      // Awning and warm downlight for visual depth.
+      addBox(group, moduleWidth - 0.25, 0.09, 0.72, materials.darkMetal, 0, 2.78, 0.38);
+      const downlight = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffe4b0, toneMapped: false })
+      );
+      downlight.rotation.x = Math.PI / 2;
+      downlight.position.set(0, 2.72, 0.42);
+      group.add(downlight);
+
+      scene.add(group);
+      return group;
+    }
+
+    const sides = [
+      { key: "north", position: new THREE.Vector3(0, 0, -OUTER_HALF), rotation: 0 },
+      { key: "east", position: new THREE.Vector3(OUTER_HALF, 0, 0), rotation: -Math.PI / 2 },
+      { key: "south", position: new THREE.Vector3(0, 0, OUTER_HALF), rotation: Math.PI },
+      { key: "west", position: new THREE.Vector3(-OUTER_HALF, 0, 0), rotation: Math.PI / 2 }
+    ];
+
+    sides.forEach((side) => {
+      const names = storefrontNames[side.key];
+      names.forEach((name, i) => {
+        const u = (i - (names.length - 1) / 2) * 5.1;
+        const storefront = makeStorefront(side.key, u, 0, name);
+        const offset = new THREE.Vector3(u, 0, 0).applyAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          side.rotation
+        );
+        storefront.position.copy(side.position).add(offset);
+        storefront.rotation.y = side.rotation;
+
+        const upper = makeStorefront(side.key, u, 1, name);
+        upper.position.copy(side.position).add(offset);
+        upper.position.y = UPPER_LEVEL;
+        upper.rotation.y = side.rotation;
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // Balcony glass railings
+    // -------------------------------------------------------------------------
+
+    function addRailing(a, b) {
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const length = Math.hypot(dx, dz);
+      const angle = -Math.atan2(dz, dx);
+      const midpoint = a.clone().add(b).multiplyScalar(0.5);
+
+      const glass = addBox(scene, length, 0.86, 0.045, materials.glass, midpoint.x, UPPER_LEVEL + 0.48, midpoint.z, false);
+      glass.rotation.y = angle;
+
+      const top = addBox(scene, length, 0.08, 0.09, materials.brushedMetal, midpoint.x, UPPER_LEVEL + 1.02, midpoint.z);
+      top.rotation.y = angle;
+
+      const bottom = addBox(scene, length, 0.06, 0.08, materials.darkMetal, midpoint.x, UPPER_LEVEL + 0.07, midpoint.z);
+      bottom.rotation.y = angle;
+
+      const postCount = Math.max(2, Math.ceil(length / 1.65));
+      for (let i = 0; i <= postCount; i++) {
+        const t = i / postCount;
+        const x = THREE.MathUtils.lerp(a.x, b.x, t);
+        const z = THREE.MathUtils.lerp(a.z, b.z, t);
+        addBox(scene, 0.065, 1.06, 0.065, materials.brushedMetal, x, UPPER_LEVEL + 0.53, z);
+      }
+    }
+
+    function railingSegments(axis, fixed) {
+      const segments = axis === "x" ? [-8, -2, 2, 8] : [-8, -2, 2, 8];
+      for (let i = 0; i < 3; i += 2) {
+        const a = segments[i];
+        const b = segments[i + 1];
+        if (axis === "x") {
+          addRailing(
+            new THREE.Vector3(fixed, UPPER_LEVEL, a),
+            new THREE.Vector3(fixed, UPPER_LEVEL, b)
+          );
+        } else {
+          addRailing(
+            new THREE.Vector3(a, UPPER_LEVEL, fixed),
+            new THREE.Vector3(b, UPPER_LEVEL, fixed)
+          );
+        }
+      }
+    }
+
+    railingSegments("x", 8);
+    railingSegments("x", -8);
+    railingSegments("z", 8);
+    railingSegments("z", -8);
+
+    // -------------------------------------------------------------------------
+    // Escalators
+    // -------------------------------------------------------------------------
+
+    const escalators = [];
+
+    function makeEscalator({ low, high, yaw, direction = 1, color = 0x39464e }) {
+      const group = new THREE.Group();
+      group.position.copy(low);
+      group.rotation.y = yaw;
+      scene.add(group);
+
+      const run = Math.abs(high.x - low.x) || Math.abs(high.z - low.z);
+      const rise = high.y - low.y;
+      const slope = Math.atan2(rise, run);
+      const railLength = Math.hypot(run, rise);
+      const treadCount = 30;
+      const spacing = run / treadCount;
+
+      const laneMaterial = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.32,
+        metalness: 0.64
+      });
+
+      // Inclined structural skirts.
+      [-0.53, 0.53].forEach((z) => {
+        const skirt = addBox(
+          group,
+          railLength,
+          0.38,
+          0.11,
+          laneMaterial,
+          run / 2,
+          rise / 2 - 0.04,
+          z
+        );
+        skirt.rotation.z = slope;
+
+        const glass = addBox(
+          group,
+          railLength,
+          0.68,
+          0.045,
+          materials.glass,
+          run / 2,
+          rise / 2 + 0.39,
+          z,
+          false
+        );
+        glass.rotation.z = slope;
+
+        const handrailCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-0.45, 0.92, z),
+          new THREE.Vector3(0.1, 0.92, z),
+          new THREE.Vector3(run * 0.5, rise * 0.5 + 0.92, z),
+          new THREE.Vector3(run - 0.1, rise + 0.92, z),
+          new THREE.Vector3(run + 0.45, rise + 0.92, z)
+        ]);
+
+        const handrail = new THREE.Mesh(
+          new THREE.TubeGeometry(handrailCurve, 44, 0.075, 10, false),
+          materials.rubber
+        );
+        handrail.castShadow = true;
+        group.add(handrail);
+
+        const led = addBox(
+          group,
+          railLength - 0.25,
+          0.035,
+          0.035,
+          new THREE.MeshBasicMaterial({ color: 0x78d9c9, toneMapped: false }),
+          run / 2,
+          rise / 2 + 0.04,
+          z + Math.sign(z) * 0.06,
+          false
+        );
+        led.rotation.z = slope;
+      });
+
+      // End platforms and supports.
+      addBox(group, 1.15, 0.12, 1.04, materials.brushedMetal, -0.35, 0.02, 0);
+      addBox(group, 1.15, 0.12, 1.04, materials.brushedMetal, run + 0.35, rise + 0.02, 0);
+      addBox(group, 0.32, 1.2, 1.1, laneMaterial, 0.3, 0.6, 0);
+      addBox(group, 0.32, 1.2, 1.1, laneMaterial, run - 0.3, rise - 0.6, 0);
+
+      // Yellow comb edges.
+      addBox(group, 0.08, 0.035, 1, materials.yellow, -0.02, 0.095, 0, false);
+      addBox(group, 0.08, 0.035, 1, materials.yellow, run + 0.02, rise + 0.095, 0, false);
+
+      const treads = [];
+      for (let i = 0; i < treadCount; i++) {
+        const tread = addBox(group, 0.52, 0.11, 0.95, materials.tread, 0, 0, 0);
+        const stripe = addBox(tread, 0.035, 0.018, 0.9, materials.yellow, -0.23, 0.064, 0, false);
+        stripe.castShadow = false;
+        treads.push(tread);
+      }
+
+      const escalator = {
+        group,
+        treads,
+        treadCount,
+        spacing,
+        run,
+        rise,
+        slope,
+        direction,
+        riders: []
+      };
+
+      escalators.push(escalator);
+      return escalator;
+    }
+
+    const laneOffset = 1.1;
+
+    makeEscalator({
+      low: new THREE.Vector3(-8, 0, -laneOffset),
+      high: new THREE.Vector3(8, UPPER_LEVEL, -laneOffset),
+      yaw: 0,
+      direction: 1
+    });
+
+    makeEscalator({
+      low: new THREE.Vector3(8, 0, laneOffset),
+      high: new THREE.Vector3(-8, UPPER_LEVEL, laneOffset),
+      yaw: Math.PI,
+      direction: -1,
+      color: 0x344048
+    });
+
+    makeEscalator({
+      low: new THREE.Vector3(-laneOffset, 0, -8),
+      high: new THREE.Vector3(-laneOffset, UPPER_LEVEL, 8),
+      yaw: -Math.PI / 2,
+      direction: 1,
+      color: 0x3d4850
+    });
+
+    makeEscalator({
+      low: new THREE.Vector3(laneOffset, 0, 8),
+      high: new THREE.Vector3(laneOffset, UPPER_LEVEL, -8),
+      yaw: Math.PI / 2,
+      direction: -1,
+      color: 0x303b43
+    });
+
+    // -------------------------------------------------------------------------
+    // Shoppers
+    // -------------------------------------------------------------------------
+
+    const shopperColors = [
+      0xe46f55,
+      0x4b91d1,
+      0xf0bc4e,
+      0x7f6bc4,
+      0x46b59a,
+      0xd98ab5,
+      0x4e6577
+    ];
+
+    function makeShopper(color = shopperColors[0], scale = 1) {
+      const group = new THREE.Group();
+      const shirt = new THREE.MeshStandardMaterial({ color, roughness: 0.8 });
+      const trousers = new THREE.MeshStandardMaterial({ color: 0x29343c, roughness: 0.9 });
+      const skin = new THREE.MeshStandardMaterial({ color: 0xd4a27b, roughness: 0.86 });
+
+      addCylinder(group, 0.18, 0.23, 0.62, shirt, 0, 1.02, 0, 10);
+      addSphere(group, 0.17, skin, 0, 1.5, 0, 12);
+
+      const legLeft = new THREE.Group();
+      const legRight = new THREE.Group();
+      legLeft.position.set(-0.105, 0.72, 0);
+      legRight.position.set(0.105, 0.72, 0);
+      group.add(legLeft, legRight);
+
+      addCylinder(legLeft, 0.07, 0.065, 0.62, trousers, 0, -0.3, 0, 8);
+      addCylinder(legRight, 0.07, 0.065, 0.62, trousers, 0, -0.3, 0, 8);
+
+      const armLeft = new THREE.Group();
+      const armRight = new THREE.Group();
+      armLeft.position.set(-0.25, 1.25, 0);
+      armRight.position.set(0.25, 1.25, 0);
+      group.add(armLeft, armRight);
+
+      addCylinder(armLeft, 0.055, 0.055, 0.55, shirt, 0, -0.26, 0, 8);
+      addCylinder(armRight, 0.055, 0.055, 0.55, shirt, 0, -0.26, 0, 8);
+
+      group.scale.setScalar(scale);
+      group.userData = { legLeft, legRight, armLeft, armRight };
+      return group;
+    }
+
+    function animateShopper(shopper, phase, walking = true) {
+      const data = shopper.userData;
+      if (!walking) {
+        data.legLeft.rotation.x = 0;
+        data.legRight.rotation.x = 0;
+        data.armLeft.rotation.x = 0;
+        data.armRight.rotation.x = 0;
+        return;
+      }
+      const swing = Math.sin(phase) * 0.48;
+      data.legLeft.rotation.x = swing;
+      data.legRight.rotation.x = -swing;
+      data.armLeft.rotation.x = -swing * 0.65;
+      data.armRight.rotation.x = swing * 0.65;
+      shopper.position.y += Math.abs(Math.sin(phase * 2)) * 0.025;
+    }
+
+    // Add riders to each escalator.
+    escalators.forEach((escalator, index) => {
+      const riderCount = index % 2 === 0 ? 2 : 1;
+      for (let i = 0; i < riderCount; i++) {
+        const rider = makeShopper(shopperColors[(index * 2 + i) % shopperColors.length], 0.88);
+        rider.rotation.y = escalator.direction > 0 ? Math.PI / 2 : -Math.PI / 2;
+        escalator.group.add(rider);
+        escalator.riders.push({
+          mesh: rider,
+          offset: 2.3 + i * 4.1 + index * 0.37,
+          phase: i * 1.7
+        });
+      }
+    });
+
+    const walkers = [];
+
+    function addWalker(path, speed, color, scale = 1) {
+      const shopper = makeShopper(color, scale);
+      scene.add(shopper);
+      walkers.push({
+        mesh: shopper,
+        path: path.map((p) => new THREE.Vector3(...p)),
+        speed,
+        phase: Math.random() * 10
+      });
+    }
+
+    addWalker(
+      [
+        [-5.7, 0, -3.4],
+        [-2.3, 0, -5.3],
+        [4.9, 0, -5.1],
+        [5.8, 0, -2.7],
+        [3.1, 0, -3.2],
+        [-2.1, 0, -3.5]
+      ],
+      0.018,
+      0xe46f55
+    );
+
+    addWalker(
+      [
+        [-5.7, 0, 3.2],
+        [-2.1, 0, 3.5],
+        [3.2, 0, 3.1],
+        [5.7, 0, 2.7],
+        [5, 0, 5.1],
+        [-2.3, 0, 5.3]
+      ],
+      0.015,
+      0x4b91d1
+    );
+
+    addWalker(
+      [
+        [-3.2, 0, -4.8],
+        [-5.4, 0, -2.4],
+        [-4.8, 0, 2.1],
+        [-3.4, 0, 4.9]
+      ],
+      0.02,
+      0xf0bc4e,
+      0.94
+    );
+
+    addWalker(
+      [
+        [11, UPPER_LEVEL + 0.04, -7],
+        [11, UPPER_LEVEL + 0.04, 7],
+        [13.2, UPPER_LEVEL + 0.04, 7],
+        [13.2, UPPER_LEVEL + 0.04, -7]
+      ],
+      0.021,
+      0x7f6bc4
+    );
+
+    addWalker(
+      [
+        [-7, UPPER_LEVEL + 0.04, 11],
+        [7, UPPER_LEVEL + 0.04, 11],
+        [7, UPPER_LEVEL + 0.04, 13.1],
+        [-7, UPPER_LEVEL + 0.04, 13.1]
+      ],
+      0.016,
+      0x46b59a,
+      0.96
+    );
+
+    addWalker(
+      [
+        [12.8, UPPER_LEVEL + 0.04, -5.8],
+        [9.2, UPPER_LEVEL + 0.04, -5.8],
+        [9.2, UPPER_LEVEL + 0.04, 5.8],
+        [12.8, UPPER_LEVEL + 0.04, 5.8]
+      ],
+      0.019,
+      0xd98ab5,
+      0.9
+    );
+
+    // -------------------------------------------------------------------------
+    // Kiosks, directory tower, planters, and benches
+    // -------------------------------------------------------------------------
+
+    function makeKiosk(x, z, accentColor, label) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      scene.add(group);
+
+      const accent = new THREE.MeshStandardMaterial({
+        color: accentColor,
+        roughness: 0.58,
+        metalness: 0.08
+      });
+
+      addBox(group, 2.15, 1.0, 1.35, accent, 0, 0.5, 0);
+      addBox(group, 2.32, 0.12, 1.5, materials.warmWhite, 0, 1.05, 0);
+      addBox(group, 1.85, 0.68, 0.08, materials.rubber, 0, 1.42, -0.48);
+      addBox(group, 2.3, 0.12, 1.52, materials.darkMetal, 0, 2.02, 0);
+
+      const sign = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.65, 0.42),
+        new THREE.MeshBasicMaterial({
+          map: makeSignTexture(label, "#24333b", "#ffffff"),
+          side: THREE.DoubleSide,
+          toneMapped: false
+        })
+      );
+      sign.position.set(0, 2.03, 0.06);
+      group.add(sign);
+
+      for (let i = 0; i < 7; i++) {
+        const productMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL((i / 7 + 0.05) % 1, 0.55, 0.55)
+        });
+        addBox(
+          group,
+          0.12 + (i % 2) * 0.05,
+          0.18 + (i % 3) * 0.05,
+          0.12,
+          productMaterial,
+          -0.72 + i * 0.24,
+          1.2,
+          -0.3
+        );
+      }
+
+      return group;
+    }
+
+    makeKiosk(-4.8, -4.45, 0x376b67, "MALL PICKS");
+    makeKiosk(4.8, 4.45, 0x8d4f61, "SEASONAL");
+
+    const directory = new THREE.Group();
+    directory.position.set(0, 0, 3.85);
+    scene.add(directory);
+
+    addBox(directory, 0.9, 3.35, 0.62, materials.darkMetal, 0, 1.68, 0);
+    addBox(directory, 1.08, 0.14, 0.78, materials.brushedMetal, 0, 3.38, 0);
+    addBox(directory, 0.78, 2.82, 0.04, materials.rubber, 0, 1.72, 0.33);
+
+    const directoryFace = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 2.7),
+      new THREE.MeshBasicMaterial({
+        map: makeDirectoryTexture(),
+        toneMapped: false
+      })
+    );
+    directoryFace.position.set(0, 1.72, 0.36);
+    directory.add(directoryFace);
+
+    const directoryTop = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.8, 0.28),
+      new THREE.MeshBasicMaterial({
+        map: makeSignTexture("A", "#73ead2", "#10242a"),
+        side: THREE.DoubleSide,
+        toneMapped: false
+      })
+    );
+    directoryTop.position.set(0, 3.02, 0.38);
+    directory.add(directoryTop);
+
+    function makePlanter(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      addCylinder(group, 0.63, 0.52, 0.78, materials.planter, 0, 0.39, 0, 18);
+      addCylinder(group, 0.55, 0.55, 0.05, materials.soil, 0, 0.79, 0, 18);
+
+      addCylinder(group, 0.07, 0.1, 1.55, materials.wood, 0, 1.52, 0, 9);
+
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const leaf = addSphere(
+          group,
+          0.42,
+          i % 2 ? materials.foliage : materials.foliageLight,
+          Math.cos(angle) * 0.38,
+          1.72 + (i % 3) * 0.17,
+          Math.sin(angle) * 0.38,
+          10
+        );
+        leaf.scale.set(0.62, 0.22, 1.45);
+        leaf.rotation.set(Math.sin(angle) * 0.5, -angle, Math.cos(angle) * 0.55);
+      }
+
+      return group;
+    }
+
+    [
+      [-6.6, -5.6, 1],
+      [6.5, -5.6, 0.92],
+      [-6.6, 5.6, 0.94],
+      [6.5, 5.6, 1.04],
+      [-3.8, 6.25, 0.78],
+      [3.8, -6.25, 0.84],
+      [-7.2, 0, 0.72],
+      [7.2, 0, 0.76]
+    ].forEach(([x, z, scale]) => makePlanter(x, z, scale));
+
+    function makeBench(x, z, yaw = 0) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.rotation.y = yaw;
+      scene.add(group);
+
+      addBox(group, 2.4, 0.12, 0.58, materials.wood, 0, 0.5, 0);
+      addBox(group, 2.4, 0.55, 0.1, materials.wood, 0, 0.83, -0.24);
+      addBox(group, 0.1, 0.48, 0.44, materials.darkMetal, -0.9, 0.25, 0);
+      addBox(group, 0.1, 0.48, 0.44, materials.darkMetal, 0.9, 0.25, 0);
+    }
+
+    makeBench(-4.2, 4.4, Math.PI / 2);
+    makeBench(4.2, -4.4, Math.PI / 2);
+
+    // -------------------------------------------------------------------------
+    // Skylight and structural columns
+    // -------------------------------------------------------------------------
+
+    const skylightY = 11.25;
+    addBox(scene, 16, 0.12, 16, materials.skylight, 0, skylightY, 0, false);
+
+    for (let i = -2; i <= 2; i++) {
+      addBox(scene, 16, 0.16, 0.16, materials.brushedMetal, 0, skylightY + 0.12, i * 3.25);
+      addBox(scene, 0.16, 0.16, 16, materials.brushedMetal, i * 3.25, skylightY + 0.12, 0);
+    }
+
+    addBox(scene, 16.3, 0.3, 0.3, materials.darkMetal, 0, skylightY + 0.08, -8.05);
+    addBox(scene, 16.3, 0.3, 0.3, materials.darkMetal, 0, skylightY + 0.08, 8.05);
+    addBox(scene, 0.3, 0.3, 16.3, materials.darkMetal, -8.05, skylightY + 0.08, 0);
+    addBox(scene, 0.3, 0.3, 16.3, materials.darkMetal, 8.05, skylightY + 0.08, 0);
+
+    [
+      [-8.15, -8.15],
+      [8.15, -8.15],
+      [-8.15, 8.15],
+      [8.15, 8.15]
+    ].forEach(([x, z]) => {
+      addCylinder(scene, 0.15, 0.19, 11.1, materials.brushedMetal, x, 5.55, z, 16);
+      addBox(scene, 0.62, 0.16, 0.62, materials.darkMetal, x, 0.08, z);
+    });
+
+    // Soft faux volumetric light from the skylight.
+    const beamMaterial = new THREE.MeshBasicMaterial({
+      color: 0xdff7ff,
+      transparent: true,
+      opacity: 0.028,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const beamA = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.3, 5.7, 10.9, 24, 1, true),
+      beamMaterial
+    );
+    beamA.position.set(-1.2, 5.75, 0.8);
+    scene.add(beamA);
+
+    const beamB = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.7, 4.3, 10.9, 24, 1, true),
+      beamMaterial.clone()
+    );
+    beamB.material.opacity = 0.021;
+    beamB.position.set(3.1, 5.75, -1.7);
+    scene.add(beamB);
+
+    // -------------------------------------------------------------------------
+    // Custom orbit camera controls
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      theta: 0.76,
+      phi: 1.0,
+      radius: 19.5,
+      targetTheta: 0.76,
+      targetPhi: 1.0,
+      targetRadius: 19.5,
+      target: new THREE.Vector3(0, 2.25, 0),
+      panTarget: new THREE.Vector3(0, 2.25, 0)
+    };
+
+    let dragging = false;
+    let panning = false;
+    let lastX = 0;
+    let lastY = 0;
+    let autoRotate = true;
+    let motionPaused = false;
+
+    function updateCamera() {
+      cameraState.theta += (cameraState.targetTheta - cameraState.theta) * 0.09;
+      cameraState.phi += (cameraState.targetPhi - cameraState.phi) * 0.09;
+      cameraState.radius += (cameraState.targetRadius - cameraState.radius) * 0.09;
+      cameraState.target.lerp(cameraState.panTarget, 0.09);
+
+      const sinPhi = Math.sin(cameraState.phi);
+      const x =
+        cameraState.target.x +
+        cameraState.radius * sinPhi * Math.sin(cameraState.theta);
+      const y =
+        cameraState.target.y +
+        cameraState.radius * Math.cos(cameraState.phi);
+      const z =
+        cameraState.target.z +
+        cameraState.radius * sinPhi * Math.cos(cameraState.theta);
+
+      camera.position.set(x, y, z);
+      camera.lookAt(cameraState.target);
+    }
+
+    function disableAutoRotate() {
+      autoRotate = false;
+      document.querySelector("#cinematic").textContent = "Cinematic: Off";
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      panning = event.button === 2;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      disableAutoRotate();
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      if (panning) {
+        const scale = cameraState.radius * 0.0015;
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+        cameraState.panTarget.addScaledVector(right, -dx * scale);
+        cameraState.panTarget.addScaledVector(up, dy * scale);
+        cameraState.panTarget.x = THREE.MathUtils.clamp(cameraState.panTarget.x, -7, 7);
+        cameraState.panTarget.y = THREE.MathUtils.clamp(cameraState.panTarget.y, 0.5, 6);
+        cameraState.panTarget.z = THREE.MathUtils.clamp(cameraState.panTarget.z, -7, 7);
+      } else {
+        cameraState.targetTheta -= dx * 0.005;
+        cameraState.targetPhi = THREE.MathUtils.clamp(
+          cameraState.targetPhi - dy * 0.005,
+          0.16,
+          1.38
+        );
+      }
+    });
+
+    function endPointer(event) {
+      dragging = false;
+      panning = false;
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.targetRadius = THREE.MathUtils.clamp(
+          cameraState.targetRadius + event.deltaY * 0.018,
+          9,
+          38
+        );
+        disableAutoRotate();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    function resetCamera() {
+      cameraState.targetTheta = 0.76;
+      cameraState.targetPhi = 1.0;
+      cameraState.targetRadius = 19.5;
+      cameraState.panTarget.set(0, 2.25, 0);
+      disableAutoRotate();
+    }
+
+    document.querySelector("#reset").addEventListener("click", resetCamera);
+
+    document.querySelector("#top").addEventListener("click", () => {
+      cameraState.targetTheta = 0.55;
+      cameraState.targetPhi = 0.18;
+      cameraState.targetRadius = 29;
+      cameraState.panTarget.set(0, 2.25, 0);
+      disableAutoRotate();
+    });
+
+    document.querySelector("#cinematic").addEventListener("click", (event) => {
+      autoRotate = !autoRotate;
+      event.currentTarget.textContent = `Cinematic: ${autoRotate ? "On" : "Off"}`;
+    });
+
+    const pauseButton = document.querySelector("#pause");
+    pauseButton.addEventListener("click", () => {
+      motionPaused = !motionPaused;
+      pauseButton.textContent = motionPaused ? "Resume motion" : "Pause motion";
+      pauseButton.classList.toggle("accent", !motionPaused);
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        pauseButton.click();
+      }
+      if (event.key === "+" || event.key === "=") {
+        cameraState.targetRadius = Math.max(9, cameraState.targetRadius - 2);
+      }
+      if (event.key === "-") {
+        cameraState.targetRadius = Math.min(38, cameraState.targetRadius + 2);
+      }
+      if (event.key === "ArrowLeft") {
+        cameraState.targetTheta += 0.12;
+        disableAutoRotate();
+      }
+      if (event.key === "ArrowRight") {
+        cameraState.targetTheta -= 0.12;
+        disableAutoRotate();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let elapsed = 0;
+
+    function updateEscalators(time) {
+      escalators.forEach((escalator) => {
+        const travel = time * 0.83 * escalator.direction;
+
+        escalator.treads.forEach((tread, i) => {
+          let x = (i * escalator.spacing + travel) % escalator.run;
+          if (x < 0) x += escalator.run;
+          tread.position.set(x, (x / escalator.run) * escalator.rise + 0.065, 0);
+        });
+
+        escalator.riders.forEach((rider) => {
+          let x = (rider.offset + travel) % escalator.run;
+          if (x < 0) x += escalator.run;
+          rider.mesh.position.set(x, (x / escalator.run) * escalator.rise + 0.12, 0);
+          animateShopper(rider.mesh, time * 4.2 + rider.phase, true);
+        });
+      });
+    }
+
+    function updateWalkers(time) {
+      walkers.forEach((walker) => {
+        const points = walker.path;
+        const progress = (time * walker.speed + walker.phase) % 1;
+        const scaled = progress * points.length;
+        const index = Math.floor(scaled);
+        const nextIndex = (index + 1) % points.length;
+        const alpha = scaled - index;
+
+        const p = points[index].clone().lerp(points[nextIndex], alpha);
+        const next = points[nextIndex];
+        const dx = next.x - p.x;
+        const dz = next.z - p.z;
+
+        walker.mesh.position.copy(p);
+        walker.mesh.rotation.y = Math.atan2(dx, dz);
+        animateShopper(walker.mesh, time * 5.1 + walker.phase, true);
+      });
+    }
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      if (!motionPaused) {
+        elapsed += delta;
+        updateEscalators(elapsed);
+        updateWalkers(elapsed);
+      }
+
+      if (autoRotate && !dragging) {
+        cameraState.targetTheta += delta * 0.035;
+      }
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

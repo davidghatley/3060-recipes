@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated Regolith Sintering Plant</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(12, 18, 22, 0.82);
+      --line: rgba(255, 255, 255, 0.14);
+      --text: #edf2f1;
+      --muted: #9eaaa9;
+      --accent: #f2a23a;
+      --cyan: #73d4d0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #89999f;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: min(430px, calc(100vw - 40px));
+      padding: 17px 19px 16px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 7px 0 5px;
+      font-size: clamp(20px, 2.2vw, 31px);
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .telemetry {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 270px;
+      padding: 15px 16px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 8px 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .telemetry-row strong {
+      color: var(--text);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #phaseText {
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .progress-track {
+      height: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #progressFill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ffd079);
+      box-shadow: 0 0 12px rgba(242, 162, 58, 0.6);
+    }
+
+    .process {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 15px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .process span {
+      color: var(--text);
+    }
+
+    .process .arrow {
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .controls {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.055);
+      color: var(--text);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      cursor: pointer;
+      transition:
+        background 150ms ease,
+        border-color 150ms ease,
+        transform 150ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      color: #17130a;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    button.primary:hover {
+      background: #ffc068;
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      background: #11181c;
+      color: var(--text);
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader {
+      width: 220px;
+      text-align: center;
+    }
+
+    .loader-bar {
+      height: 3px;
+      margin-top: 14px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .loader-bar::after {
+      content: "";
+      display: block;
+      width: 45%;
+      height: 100%;
+      background: var(--accent);
+      animation: load 1.1s ease-in-out infinite;
+    }
+
+    @keyframes load {
+      from {
+        transform: translateX(-10%);
+      }
+      to {
+        transform: translateX(135%);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .brand {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+      }
+
+      .telemetry {
+        top: 122px;
+        right: 12px;
+        width: 210px;
+      }
+
+      .process {
+        left: 12px;
+        bottom: 76px;
+      }
+
+      .controls {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        justify-content: center;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <div id="hud">
+    <section class="brand panel">
+      <div class="eyebrow">Lunar Infrastructure / Station 07</div>
+      <h1>Automated Regolith Sintering Plant</h1>
+      <p class="subtitle">
+        Rail-mounted kiln cars, hydraulic pressing gantry, elevated bucket
+        elevator, and continuous tunnel sintering.
+      </p>
+    </section>
+
+    <section class="telemetry panel">
+      <div class="telemetry-row">
+        <span>Plant status</span>
+        <strong id="plantStatus">AUTOMATED</strong>
+      </div>
+      <div class="telemetry-row">
+        <span>Active car</span>
+        <strong id="carNumber">01 / 03</strong>
+      </div>
+      <div class="telemetry-row">
+        <span>Press cycles</span>
+        <strong id="pressCount">000</strong>
+      </div>
+      <div class="telemetry-row">
+        <span>Cycle</span>
+        <strong id="cycleNumber">01</strong>
+      </div>
+      <div id="phaseText">Loading car 01</div>
+      <div class="progress-track">
+        <div id="progressFill"></div>
+      </div>
+    </section>
+
+    <section class="process panel">
+      <span>Elevator</span><i class="arrow">→</i>
+      <span>Hopper</span><i class="arrow">→</i>
+      <span>Press</span><i class="arrow">→</i>
+      <span>Sinter</span>
+    </section>
+
+    <nav class="controls panel" aria-label="Scene controls">
+      <button id="pauseButton" class="primary">Pause</button>
+      <button data-preset="overview">Overview</button>
+      <button data-preset="gantry">Gantry</button>
+      <button data-preset="kiln">Kiln</button>
+      <button id="resetButton">Restart Cycle</button>
+    </nav>
+
+    <div class="hint panel">
+      Drag to orbit · Shift/right-drag to pan · Scroll to zoom · Double-click for overview
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="loader">
+      <div class="eyebrow">Initializing plant systems</div>
+      <div class="loader-bar"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const sceneHost = document.getElementById("scene");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0x89999f, 0);
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x92a1a5, 48, 115);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    const hemi = new THREE.HemisphereLight(0xc5d8df, 0x4b3829, 2.0);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff1d2, 3.4);
+    sun.position.set(18, 30, 22);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -42;
+    sun.shadow.camera.right = 42;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 90;
+    sun.shadow.bias = -0.00025;
+    scene.add(sun);
+
+    const rimLight = new THREE.DirectionalLight(0x8bc9db, 1.2);
+    rimLight.position.set(-25, 15, -24);
+    scene.add(rimLight);
+
+    // -------------------------------------------------------------------------
+    // Utilities and materials
+    // -------------------------------------------------------------------------
+
+    let seed = 7319;
+
+    function random() {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    }
+
+    function range(min, max) {
+      return min + (max - min) * random();
+    }
+
+    function addMesh(
+      geometry,
+      material,
+      position = [0, 0, 0],
+      parent = scene
+    ) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function box(
+      width,
+      height,
+      depth,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene
+    ) {
+      return addMesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material,
+        [x, y, z],
+        parent
+      );
+    }
+
+    function cylinder(
+      radiusTop,
+      radiusBottom,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      segments = 16
+    ) {
+      return addMesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        material,
+        [x, y, z],
+        parent
+      );
+    }
+
+    function beamBetween(a, b, radius, material, parent = scene) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(radius, radius, length, 8),
+        material,
+        start.clone().add(end).multiplyScalar(0.5).toArray(),
+        parent
+      );
+
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function makeTexture(canvas) {
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const regolithCanvas = document.createElement("canvas");
+    regolithCanvas.width = 256;
+    regolithCanvas.height = 256;
+    const regolithContext = regolithCanvas.getContext("2d");
+
+    regolithContext.fillStyle = "#715b45";
+    regolithContext.fillRect(0, 0, 256, 256);
+
+    for (let i = 0; i < 2400; i++) {
+      const shade = Math.floor(range(65, 145));
+      regolithContext.fillStyle = `rgba(${shade}, ${Math.floor(shade * 0.75)}, ${Math.floor(shade * 0.55)}, ${range(0.08, 0.35)})`;
+      const size = range(1, 5);
+      regolithContext.fillRect(
+        random() * 256,
+        random() * 256,
+        size,
+        size
+      );
+    }
+
+    const regolithTexture = makeTexture(regolithCanvas);
+    regolithTexture.repeat.set(10, 6);
+
+    const materials = {
+      ground: new THREE.MeshStandardMaterial({
+        color: 0x76624c,
+        map: regolithTexture,
+        roughness: 1
+      }),
+      regolith: new THREE.MeshStandardMaterial({
+        color: 0x82694f,
+        map: regolithTexture,
+        bumpMap: regolithTexture,
+        bumpScale: 0.22,
+        roughness: 0.98
+      }),
+      ballast: new THREE.MeshStandardMaterial({
+        color: 0x4b4035,
+        roughness: 1
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x596266,
+        metalness: 0.72,
+        roughness: 0.43
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x252d30,
+        metalness: 0.68,
+        roughness: 0.5
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x101416,
+        metalness: 0.45,
+        roughness: 0.62
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xd59a2c,
+        metalness: 0.48,
+        roughness: 0.42
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xd96824,
+        metalness: 0.4,
+        roughness: 0.48
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0x9d2d25,
+        metalness: 0.35,
+        roughness: 0.5
+      }),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x18313a,
+        metalness: 0.55,
+        roughness: 0.18
+      }),
+      glow: new THREE.MeshBasicMaterial({
+        color: 0xff641d,
+        toneMapped: false
+      }),
+      kilnGlow: new THREE.MeshBasicMaterial({
+        color: 0x3d1006,
+        side: THREE.DoubleSide,
+        toneMapped: false
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xd8ddd8,
+        metalness: 0.25,
+        roughness: 0.5
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Terrain, track, and distant landscape
+    // -------------------------------------------------------------------------
+
+    const ground = addMesh(
+      new THREE.PlaneGeometry(72, 36),
+      materials.ground,
+      [0, -0.08, 0]
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.castShadow = false;
+
+    box(62, 0.25, 4.8, materials.ballast, 0, 0.02, 0);
+
+    for (let x = -30; x <= 30; x += 1.15) {
+      box(0.28, 0.18, 3.65, materials.ballast, x, 0.18, 0);
+    }
+
+    for (const z of [-1.16, 1.16]) {
+      box(62, 0.18, 0.13, materials.steel, 0, 0.34, z);
+    }
+
+    for (const z of [-3.46, 3.46]) {
+      box(54, 0.16, 0.16, materials.steel, 0, 0.32, z);
+    }
+
+    for (let i = 0; i < 28; i++) {
+      const rock = addMesh(
+        new THREE.IcosahedronGeometry(range(0.35, 1.5), 0),
+        materials.regolith,
+        [
+          range(-34, 34),
+          range(0.1, 0.7),
+          range(-10, 10)
+        ]
+      );
+      rock.scale.y = range(0.45, 1.2);
+      rock.rotation.set(range(), range(), range());
+    }
+
+    for (let i = 0; i < 9; i++) {
+      const mesa = addMesh(
+        new THREE.CylinderGeometry(
+          range(5, 9),
+          range(9, 15),
+          range(5, 10),
+          6
+        ),
+        materials.regolith,
+        [
+          range(-42, 42),
+          range(2.5, 5),
+          range(-20, 18)
+        ]
+      );
+      mesa.rotation.y = range(0, Math.PI);
+      mesa.scale.z = range(0.65, 1.2);
+    }
+
+    // -------------------------------------------------------------------------
+    // Long tunnel kiln
+    // -------------------------------------------------------------------------
+
+    const kiln = new THREE.Group();
+    scene.add(kiln);
+
+    function createArchShell(x0, x1, radius, baseY, material) {
+      const arcSegments = 30;
+      const positions = [];
+      const indices = [];
+
+      for (let i = 0; i <= 4; i++) {
+        const t = i / 4;
+        const x = THREE.MathUtils.lerp(x0, x1, t);
+
+        for (let j = 0; j <= arcSegments; j++) {
+          const angle = (j / arcSegments) * Math.PI;
+          positions.push(
+            x,
+            baseY + radius * Math.sin(angle),
+            radius * Math.cos(angle)
+          );
+        }
+      }
+
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < arcSegments; j++) {
+          const a = i * (arcSegments + 1) + j;
+          const b = (i + 1) * (arcSegments + 1) + j;
+          const c = b + 1;
+          const d = a + 1;
+          indices.push(a, b, d, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      return new THREE.Mesh(geometry, material);
+    }
+
+    const kilnShell = createArchShell(
+      11.5,
+      33.5,
+      4.15,
+      4.15,
+      materials.darkSteel
+    );
+    kilnShell.material.side = THREE.DoubleSide;
+    kiln.add(kilnShell);
+
+    const kilnInterior = createArchShell(
+      11.65,
+      33.35,
+      3.72,
+      4.15,
+      materials.black
+    );
+    kilnInterior.material.side = THREE.BackSide;
+    kiln.add(kilnInterior);
+
+    box(22, 0.22, 7.2, materials.darkSteel, 22.5, 0.35, 0, kiln);
+
+    for (const z of [-2.55, 2.55]) {
+      const strip = box(
+        22,
+        0.08,
+        0.09,
+        materials.glow,
+        22.5,
+        0.52,
+        z,
+        kiln
+      );
+      strip.castShadow = false;
+    }
+
+    for (const x of [11.5, 33.5]) {
+      const points = [];
+
+      for (let i = 0; i <= 18; i++) {
+        const angle = (i / 18) * Math.PI;
+        points.push(
+          new THREE.Vector3(
+            x,
+            4.15 + 4.15 * Math.sin(angle),
+            4.15 * Math.cos(angle)
+          )
+        );
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      addMesh(
+        new THREE.TubeGeometry(curve, 36, 0.17, 7, false),
+        materials.steel,
+        [0, 0, 0],
+        kiln
+      );
+    }
+
+    for (let x = 13; x <= 31; x += 6.5) {
+      for (const z of [-3.15, 3.15]) {
+        box(0.38, 3.8, 0.38, materials.steel, x, 2.05, z, kiln);
+      }
+      beamBetween(
+        [x, 0.5, -3.1],
+        [x, 3.8, 3.1],
+        0.09,
+        materials.darkSteel,
+        kiln
+      );
+    }
+
+    for (const x of [15, 22, 29]) {
+      const light = new THREE.PointLight(0xff641f, 42, 15, 2);
+      light.position.set(x, 4.3, 0);
+      kiln.add(light);
+
+      box(
+        0.22,
+        0.12,
+        5.4,
+        materials.glow,
+        x + 0.08,
+        0.67,
+        0,
+        kiln
+      ).castShadow = false;
+    }
+
+    const opening = addMesh(
+      new THREE.CircleGeometry(3.75, 36, 0, Math.PI),
+      materials.kilnGlow,
+      [33.52, 4.15, 0],
+      kiln
+    );
+    opening.rotation.y = Math.PI / 2;
+    opening.castShadow = false;
+
+    // -------------------------------------------------------------------------
+    // Rail-mounted kiln car train
+    // -------------------------------------------------------------------------
+
+    const train = new THREE.Group();
+    scene.add(train);
+
+    function createKilnCar(x, carIndex) {
+      const car = new THREE.Group();
+      car.position.x = x;
+      train.add(car);
+
+      box(7.1, 2.25, 3.15, materials.steel, 0, 1.65, 0, car);
+      box(7.35, 0.24, 3.45, materials.darkSteel, 0, 2.9, 0, car);
+      box(6.9, 0.25, 3.25, materials.orange, 0, 0.75, 0, car);
+
+      for (const z of [-1.61, 1.61]) {
+        for (let rib = -2.7; rib <= 2.7; rib += 1.35) {
+          box(0.12, 1.75, 0.1, materials.darkSteel, rib, 1.65, z, car);
+        }
+
+        for (let windowIndex = -2; windowIndex <= 2; windowIndex++) {
+          box(
+            0.72,
+            0.48,
+            0.06,
+            materials.glass,
+            windowIndex * 1.05,
+            2.35,
+            z,
+            car
+          );
+        }
+      }
+
+      for (const wheelX of [-2.25, 2.25]) {
+        for (const wheelZ of [-1.27, 1.27]) {
+          const wheel = cylinder(
+            0.43,
+            0.43,
+            0.3,
+            materials.black,
+            wheelX,
+            0.48,
+            wheelZ,
+            car,
+            18
+          );
+          wheel.rotation.x = Math.PI / 2;
+
+          const hub = cylinder(
+            0.19,
+            0.19,
+            0.33,
+            materials.steel,
+            wheelX,
+            0.48,
+            wheelZ,
+            car,
+            14
+          );
+          hub.rotation.x = Math.PI / 2;
+        }
+
+        box(1.25, 0.3, 2.7, materials.darkSteel, wheelX, 0.7, 0, car);
+      }
+
+      for (const z of [-1.05, 1.05]) {
+        box(0.16, 2.1, 0.16, materials.steel, 0, 1.6, z, car);
+      }
+
+      const numberCanvas = document.createElement("canvas");
+      numberCanvas.width = 128;
+      numberCanvas.height = 96;
+      const numberContext = numberCanvas.getContext("2d");
+      numberContext.fillStyle = "#172024";
+      numberContext.fillRect(0, 0, 128, 96);
+      numberContext.strokeStyle = "#d59a2c";
+      numberContext.lineWidth = 8;
+      numberContext.strokeRect(7, 7, 114, 82);
+      numberContext.fillStyle = "#f1eee3";
+      numberContext.font = "bold 54px sans-serif";
+      numberContext.textAlign = "center";
+      numberContext.textBaseline = "middle";
+      numberContext.fillText(`KC-${String(carIndex + 1).padStart(2, "0")}`, 64, 50);
+
+      const numberTexture = new THREE.CanvasTexture(numberCanvas);
+      numberTexture.colorSpace = THREE.SRGBColorSpace;
+
+      const numberSprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: numberTexture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+      numberSprite.scale.set(2.25, 1.7, 1);
+      numberSprite.position.set(0, 3.35, 1.78);
+      car.add(numberSprite);
+
+      const statusLight = addMesh(
+        new THREE.SphereGeometry(0.12, 12, 8),
+        materials.glow,
+        [2.75, 3.12, 1.6],
+        car
+      );
+      statusLight.castShadow = false;
+
+      return car;
+    }
+
+    const carPositions = [-12, -2, 8];
+    carPositions.forEach(createKilnCar);
+
+    // -------------------------------------------------------------------------
+    // Traveling loading gantry
+    // -------------------------------------------------------------------------
+
+    const gantry = new THREE.Group();
+    scene.add(gantry);
+
+    for (const x of [-1.05, 1.05]) {
+      for (const z of [-3.45, 3.45]) {
+        box(0.38, 8.8, 0.38, materials.yellow, x, 4.75, z, gantry);
+        box(0.7, 0.25, 0.7, materials.darkSteel, x, 0.48, z, gantry);
+      }
+    }
+
+    for (const z of [-3.45, 3.45]) {
+      box(5.15, 0.42, 0.42, materials.yellow, 0, 9.15, z, gantry);
+      beamBetween(
+        [-1.05, 1.2, z],
+        [1.05, 8.85, z],
+        0.075,
+        materials.yellow,
+        gantry
+      );
+      beamBetween(
+        [1.05, 1.2, z],
+        [-1.05, 8.85, z],
+        0.075,
+        materials.yellow,
+        gantry
+      );
+    }
+
+    for (const x of [-1.05, 1.05]) {
+      box(0.42, 0.42, 7.2, materials.yellow, x, 9.15, 0, gantry);
+      beamBetween(
+        [x, 1.2, -3.45],
+        [x, 8.85, 3.45],
+        0.075,
+        materials.yellow,
+        gantry
+      );
+      beamBetween(
+        [x, 1.2, 3.45],
+        [x, 8.85, -3.45],
+        0.075,
+        materials.yellow,
+        gantry
+      );
+    }
+
+    const trolley = new THREE.Group();
+    gantry.add(trolley);
+
+    box(2.25, 0.52, 2.25, materials.darkSteel, 0, 9.0, 0, trolley);
+    box(1.55, 0.28, 1.55, materials.yellow, 0, 8.68, 0, trolley);
+
+    const ramOuter = cylinder(
+      0.36,
+      0.36,
+      2.35,
+      materials.steel,
+      0,
+      6.55,
+      0,
+      trolley,
+      20
+    );
+
+    const ramPiston = cylinder(
+      0.16,
+      0.16,
+      1,
+      materials.white,
+      0,
+      4.8,
+      0,
+      trolley,
+      16
+    );
+
+    const pressHead = new THREE.Group();
+    trolley.add(pressHead);
+
+    box(1.12, 0.46, 1.12, materials.orange, 0, 0, 0, pressHead);
+    box(0.78, 0.12, 0.78, materials.glow, 0, -0.26, 0, pressHead);
+
+    const beacon = addMesh(
+      new THREE.SphereGeometry(0.14, 12, 8),
+      materials.red,
+      [0.75, 9.48, 0],
+      gantry
+    );
+    beacon.castShadow = false;
+
+    const contactLight = new THREE.PointLight(0xff681e, 0, 4, 2);
+    pressHead.add(contactLight);
+
+    // -------------------------------------------------------------------------
+    // Fixed hopper, conveyor, and bucket elevator
+    // -------------------------------------------------------------------------
+
+    const hopper = new THREE.Group();
+    hopper.position.set(-4, 12.35, 0);
+    scene.add(hopper);
+
+    const hopperBody = addMesh(
+      new THREE.CylinderGeometry(2.15, 0.55, 2.0, 4, 1, true),
+      materials.steel,
+      [0, 0, 0],
+      hopper
+    );
+    hopperBody.rotation.y = Math.PI / 4;
+
+    box(4.1, 0.22, 1.6, materials.darkSteel, 0, 1.03, 0, hopper);
+    box(4.4, 0.18, 1.8, materials.yellow, 0, -1.03, 0, hopper);
+
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      beamBetween(
+        [0, -0.85, 0],
+        [
+          Math.cos(angle) * 2.05,
+          0.85,
+          Math.sin(angle) * 2.05
+        ],
+        0.11,
+        materials.yellow,
+        hopper
+      );
+    }
+
+    const conveyor = new THREE.Group();
+    scene.add(conveyor);
+
+    box(16, 0.3, 1.55, materials.darkSteel, -12, 11.45, 0, conveyor);
+    box(16, 0.18, 1.2, materials.black, -12, 11.68, 0, conveyor);
+
+    for (const x of [-19, -12, -5]) {
+      for (const z of [-0.85, 0.85]) {
+        box(0.25, 10.8, 0.25, materials.steel, x, 5.4, z, conveyor);
+      }
+      box(0.35, 0.35, 2.0, materials.yellow, x, 10.8, 0, conveyor);
+    }
+
+    const beltSlats = [];
+    for (let i = 0; i < 18; i++) {
+      const slat = box(
+        0.16,
+        0.08,
+        1.15,
+        materials.steel,
+        -19 + i * 0.85,
+        11.82,
+        0,
+        conveyor
+      );
+      beltSlats.push(slat);
+    }
+
+    for (let x = -19; x <= -5; x += 1.1) {
+      const roller = cylinder(
+        0.18,
+        0.18,
+        1.3,
+        materials.steel,
+        x,
+        11.7,
+        0,
+        conveyor,
+        12
+      );
+      roller.rotation.x = Math.PI / 2;
+    }
+
+    const elevator = new THREE.Group();
+    elevator.position.set(-20, 0, 0);
+    scene.add(elevator);
+
+    for (const z of [-1.25, 1.25]) {
+      box(2.3, 0.45, 0.45, materials.darkSteel, 0, 0.25, z, elevator);
+      box(0.28, 11.2, 0.28, materials.steel, 0, 5.9, z, elevator);
+    }
+
+    for (const y of [1.1, 5.9, 11.2]) {
+      box(2.5, 0.25, 2.7, materials.darkSteel, 0, y, 0, elevator);
+      beamBetween(
+        [-1.05, y, -1.2],
+        [1.05, y + 1.1, 1.2],
+        0.08,
+        materials.steel,
+        elevator
+      );
+      beamBetween(
+        [1.05, y, -1.2],
+        [-1.05, y + 1.1, 1.2],
+        0.08,
+        materials.steel,
+        elevator
+      );
+    }
+
+    const elevatorRing = cylinder(
+      1.35,
+      1.35,
+      0.3,
+      materials.yellow,
+      0,
+      11.45,
+      0,
+      elevator,
+      24
+    );
+    elevatorRing.rotation.z = Math.PI / 2;
+
+    const buckets = [];
+    for (let i = 0; i < 10; i++) {
+      const bucket = new THREE.Group();
+      elevator.add(bucket);
+
+      box(0.8, 0.48, 0.8, materials.orange, 0, 0, 0, bucket);
+      box(0.55, 0.12, 0.55, materials.steel, 0, -0.29, 0, bucket);
+
+      for (const x of [-0.3, 0.3]) {
+        for (const z of [-0.3, 0.3]) {
+          const tooth = box(
+            0.13,
+            0.38,
+            0.13,
+            materials.yellow,
+            x,
+            -0.5,
+            z,
+            bucket
+          );
+          tooth.rotation.z = x > 0 ? -0.35 : 0.35;
+        }
+      }
+
+      buckets.push(bucket);
+    }
+
+    // -------------------------------------------------------------------------
+    // Plant accessories
+    // -------------------------------------------------------------------------
+
+    const controlCabin = new THREE.Group();
+    controlCabin.position.set(15, 0, 7);
+    scene.add(controlCabin);
+
+    box(3.4, 3.1, 3.2, materials.darkSteel, 0, 1.55, 0, controlCabin);
+    box(3.8, 0.22, 3.6, materials.steel, 0, 3.18, 0, controlCabin);
+    box(2.8, 0.85, 0.08, materials.glass, 0, 2.15, 1.62, controlCabin);
+    box(0.08, 0.85, 2.2, materials.glass, 1.72, 2.15, 0, controlCabin);
+    box(0.08, 0.85, 2.2, materials.glass, -1.72, 2.15, 0, controlCabin);
+    cylinder(0.13, 0.13, 2.4, materials.steel, 1.1, 4.05, 0, controlCabin);
+    addMesh(
+      new THREE.SphereGeometry(0.18, 12, 8),
+      materials.red,
+      [1.1, 5.3, 0],
+      controlCabin
+    );
+
+    for (let i = 0; i < 3; i++) {
+      const tank = cylinder(
+        0.9,
+        0.9,
+        2.4,
+        materials.steel,
+        21 + i * 2.2,
+        1.25,
+        6,
+        scene,
+        20
+      );
+      tank.rotation.z = 0.03 * i;
+
+      cylinder(0.18, 0.18, 0.2, materials.yellow, 21 + i * 2.2, 2.55, 6);
+    }
+
+    const solar = new THREE.Group();
+    solar.position.set(-29, 0, 7);
+    scene.add(solar);
+
+    box(7, 0.18, 4, materials.darkSteel, 0, 0.15, 0, solar);
+
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 3; col++) {
+        const panel = box(
+          2.1,
+          0.12,
+          1.35,
+          materials.glass,
+          -2.8 + col * 2.3,
+          1.45 + row * 1.35,
+          0,
+          solar
+        );
+        panel.rotation.x = -0.28;
+      }
+    }
+
+    beamBetween(
+      [-29, 0, 3],
+      [-29, 6, 3],
+      0.12,
+      materials.steel,
+      solar
+    );
+
+    beamBetween(
+      [-29, 6, 3],
+      [-22, 6, 3],
+      0.12,
+      materials.steel,
+      solar
+    );
+
+    // Regolith piles around the hopper and elevator.
+    for (let i = 0; i < 20; i++) {
+      const pile = addMesh(
+        new THREE.IcosahedronGeometry(range(0.35, 1.1), 0),
+        materials.regolith,
+        [
+          range(-25, -12),
+          range(0.2, 0.8),
+          range(3.5, 6.5)
+        ]
+      );
+      pile.scale.y = range(0.4, 0.8);
+    }
+
+    // -------------------------------------------------------------------------
+    // Labels
+    // -------------------------------------------------------------------------
+
+    function createLabel(text, subtitle, position, width = 9) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 160;
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = "rgba(10, 17, 21, 0.88)";
+      context.fillRect(0, 0, 640, 160);
+      context.fillStyle = "#f2a23a";
+      context.fillRect(0, 0, 13, 160);
+      context.strokeStyle = "rgba(255,255,255,0.16)";
+      context.lineWidth = 3;
+      context.strokeRect(2, 2, 636, 156);
+
+      context.fillStyle = "#f2f6f3";
+      context.font = "700 43px system-ui, sans-serif";
+      context.textAlign = "left";
+      context.textBaseline = "middle";
+      context.fillText(text, 38, 66);
+
+      context.fillStyle = "#9eaaa9";
+      context.font = "600 22px system-ui, sans-serif";
+      context.fillText(subtitle, 39, 116);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.set(...position);
+      sprite.scale.set(width, width * 0.25, 1);
+      scene.add(sprite);
+
+      return sprite;
+    }
+
+    createLabel(
+      "01 / BUCKET ELEVATOR",
+      "ENDLESS BUCKET CHAIN",
+      [-20, 15.2, 0],
+      9.5
+    );
+
+    createLabel(
+      "02 / FEED HOPPER",
+      "GRAVITY TRANSFER",
+      [-4, 15.2, 0],
+      7.5
+    );
+
+    createLabel(
+      "03 / PRESSING GANTRY",
+      "SYNCHRONIZED HYDRAULICS",
+      [-1, 11.8, 4.7],
+      9
+    );
+
+    createLabel(
+      "04 / KILN CAR TRAIN",
+      "RAIL-MOUNTED SINTERING",
+      [0, 5.2, 4.7],
+      10
+    );
+
+    createLabel(
+      "05 / SINTERING TUNNEL",
+      "CONTINUOUS HEAT TREATMENT",
+      [23, 8.8, 0],
+      10
+    );
+
+    // -------------------------------------------------------------------------
+    // Dust and falling regolith
+    // -------------------------------------------------------------------------
+
+    const dustCount = 220;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustSpeeds = new Float32Array(dustCount);
+
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = range(-30, 32);
+      dustPositions[i * 3 + 1] = range(0.2, 10);
+      dustPositions[i * 3 + 2] = range(-7, 7);
+      dustSpeeds[i] = range(0.08, 0.45);
+    }
+
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(dustPositions, 3)
+    );
+
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xd2b181,
+        size: 0.16,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+    scene.add(dust);
+
+    const fallingChunks = [];
+    const chunkGeometry = new THREE.DodecahedronGeometry(0.16, 0);
+
+    for (let i = 0; i < 12; i++) {
+      const chunk = addMesh(
+        chunkGeometry,
+        materials.orange,
+        [-4, 11.3, range(-0.6, 0.6)],
+        scene
+      );
+      chunk.castShadow = false;
+      fallingChunks.push({
+        mesh: chunk,
+        z: range(-0.6, 0.6),
+        offset: random()
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, pan, zoom, and camera presets
+    // -------------------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(3, 3.2, 0);
+    const cameraTargetGoal = new THREE.Vector3(3, 3.2, 0);
+    let cameraYaw = 0.67;
+    let cameraPitch = 0.52;
+    let cameraDistance = 55;
+    let cameraGoal = null;
+
+    const presets = {
+      overview: {
+        target: [3, 3.2, 0],
+        yaw: 0.67,
+        pitch: 0.52,
+        distance: 55
+      },
+      gantry: {
+        target: [-2, 4.4, 0],
+        yaw: 0.28,
+        pitch: 0.34,
+        distance: 27
+      },
+      kiln: {
+        target: [20, 4.2, 0],
+        yaw: 0.48,
+        pitch: 0.4,
+        distance: 27
+      }
+    };
+
+    function setCameraPreset(name) {
+      const preset = presets[name];
+      cameraTargetGoal.set(...preset.target);
+      cameraTargetGoal.y = THREE.MathUtils.clamp(
+        cameraTargetGoal.y,
+        0.5,
+        13
+      );
+
+      let angleDifference =
+        Math.atan2(
+          Math.sin(preset.yaw - cameraYaw),
+          Math.cos(preset.yaw - cameraYaw)
+        );
+
+      cameraYawGoal = cameraYaw + angleDifference;
+      cameraPitchGoal = preset.pitch;
+      cameraDistanceGoal = preset.distance;
+      cameraGoal = true;
+    }
+
+    function updateCamera(dt) {
+      if (cameraGoal) {
+        const blend = 1 - Math.exp(-dt * 2.2);
+
+        cameraTarget.lerp(cameraTargetGoal, blend);
+        cameraYaw +=
+          (cameraYawGoal - cameraYaw) * (1 - Math.exp(-dt * 4));
+        cameraPitch +=
+          (cameraPitchGoal - cameraPitch) * (1 - Math.exp(-dt * 4));
+        cameraDistance +=
+          (cameraDistanceGoal - cameraDistance) * (1 - Math.exp(-dt * 4));
+
+        if (
+          cameraTarget.distanceTo(cameraTargetGoal) < 0.02 &&
+          Math.abs(cameraYaw - cameraYawGoal) < 0.001 &&
+          Math.abs(cameraPitch - cameraPitchGoal) < 0.001 &&
+          Math.abs(cameraDistance - cameraDistanceGoal) < 0.02
+        ) {
+          cameraGoal = false;
+        }
+      }
+
+      const horizontal = Math.cos(cameraPitch) * cameraDistance;
+
+      camera.position.set(
+        cameraTarget.x + Math.sin(cameraYaw) * horizontal,
+        cameraTarget.y + Math.sin(cameraPitch) * cameraDistance,
+        cameraTarget.z + Math.cos(cameraYaw) * horizontal
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    const canvas = renderer.domElement;
+    let drag = null;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      drag = {
+        x: event.clientX,
+        y: event.clientY,
+        pan: event.button === 2 || event.shiftKey
+      };
+
+      canvas.setPointerCapture(event.pointerId);
+      cameraGoal = false;
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!drag) return;
+
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+
+      if (drag.pan) {
+        const right = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          0
+        );
+        const up = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          1
+        );
+        const panScale = cameraDistance * 0.0013;
+
+        cameraTarget.addScaledVector(right, -dx * panScale);
+        cameraTarget.addScaledVector(up, dy * panScale);
+
+        cameraTarget.x = THREE.MathUtils.clamp(
+          cameraTarget.x,
+          -35,
+          38
+        );
+        cameraTarget.y = THREE.MathUtils.clamp(
+          cameraTarget.y,
+          0.5,
+          13
+        );
+        cameraTarget.z = THREE.MathUtils.clamp(
+          cameraTarget.z,
+          -14,
+          14
+        );
+      } else {
+        cameraYaw -= dx * 0.0055;
+        cameraPitch = THREE.MathUtils.clamp(
+          cameraPitch + dy * 0.0045,
+          0.12,
+          1.35
+        );
+      }
+    });
+
+    function endDrag(event) {
+      if (drag && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+      drag = null;
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraGoal = false;
+        cameraDistance = THREE.MathUtils.clamp(
+          cameraDistance * Math.exp(event.deltaY * 0.001),
+          12,
+          95
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => {
+      setCameraPreset("overview");
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") {
+        resetCycle();
+      }
+
+      if (event.key === "ArrowLeft") {
+        cameraYaw += 0.12;
+        cameraGoal = false;
+      }
+
+      if (event.key === "ArrowRight") {
+        cameraYaw -= 0.12;
+        cameraGoal = false;
+      }
+
+      if (event.key === "ArrowUp") {
+        cameraPitch = THREE.MathUtils.clamp(
+          cameraPitch + 0.08,
+          0.12,
+          1.35
+        );
+        cameraGoal = false;
+      }
+
+      if (event.key === "ArrowDown") {
+        cameraPitch = THREE.MathUtils.clamp(
+          cameraPitch - 0.08,
+          0.12,
+          1.35
+        );
+        cameraGoal = false;
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Pressing cycle
+    // -------------------------------------------------------------------------
+
+    const carXs = [-12, -2, 8];
+    const carNames = ["01", "02", "03"];
+
+    let cycleIndex = 0;
+    let phase = 1;
+    let phaseTime = 0;
+    let pressCount = 0;
+    let simulationTime = 0;
+    let paused = false;
+
+    const phaseDurations = [1.5, 1.2, 1.4, 1.2, 3.2];
+    const phaseNames = [
+      "Locating car",
+      "Lowering press",
+      "Sintering press",
+      "Raising press",
+      "Traversing gantry"
+    ];
+
+    const phaseDetails = [
+      "Gantry aligning with rail car",
+      "Hydraulic head descending",
+      "Contact pressure applied",
+      "Hydraulic head retracting",
+      "Preparing next positioning cycle"
+    ];
+
+    const plantStatus = document.getElementById("plantStatus");
+    const carNumber = document.getElementById("carNumber");
+    const pressCountElement = document.getElementById("pressCount");
+    const cycleNumber = document.getElementById("cycleNumber");
+    const phaseText = document.getElementById("phaseText");
+    const progressFill = document.getElementById("progressFill");
+    const pauseButton = document.getElementById("pauseButton");
+    const resetButton = document.getElementById("resetButton");
+
+    function easeInOutCubic(value) {
+      return value < 0.5
+        ? 4 * value * value * value
+        : 1 - Math.pow(-2 * value + 2, 3) / 2;
+    }
+
+    function smoothstep(value) {
+      return value * value * (3 - 2 * value);
+    }
+
+    function resetCycle() {
+      cycleIndex = 0;
+      phase = 1;
+      phaseTime = 0;
+      pressCount = 0;
+      simulationTime = 0;
+
+      gantry.position.x = carXs[0];
+      trolley.position.z = 0;
+      pressHead.position.y = 3.95;
+      pressHead.position.x = 0;
+
+      const pistonBottom = 3.95 + 0.25;
+      const pistonTop = 5.45;
+      ramPiston.scale.y = 1;
+      ramPiston.position.y = (pistonBottom + pistonTop) * 0.5;
+
+      didPressThisCycle = false;
+      updateUi();
+    }
+
+    let didPressThisCycle = false;
+
+    function updateCycle(dt) {
+      if (phase === 3 && !didPressThisCycle) {
+        pressCount++;
+        didPressThisCycle = true;
+      }
+
+      let targetX = carXs[cycleIndex];
+      let targetZ = 0;
+      let headTarget = 3.95;
+
+      if (phase === 5) {
+        targetX = carXs[(cycleIndex + 1) % carXs.length];
+      }
+
+      let eased;
+
+      if (phase < 5) {
+        eased = smoothstep(phaseTime / phaseDurations[phase]);
+      } else {
+        eased = smoothstep((phaseTime - phaseDurations[0] - phaseDurations[1] - phaseDurations[2] - phaseDurations[3]) / phaseDurations[4]);
+      }
+
+      gantry.position.x = THREE.MathUtils.lerp(
+        gantry.position.x,
+        targetX,
+        eased
+      );
+
+      trolley.position.z = THREE.MathUtils.lerp(
+        trolley.position.z,
+        targetZ,
+        eased
+      );
+
+      if (phase >= 2) {
+        headTarget = 2.95;
+      }
+
+      pressHead.position.y = THREE.MathUtils.lerp(
+        pressHead.position.y,
+        headTarget,
+        eased
+      );
+
+      if (phase === 3) {
+        pressHead.position.x = Math.sin(simulationTime * 32) * 0.025;
+        pressHeadMat.emissiveIntensity =
+          1.2 + Math.sin(simulationTime * 24) * 0.35;
+        contactLight.intensity = 8 + Math.sin(simulationTime * 31) * 3;
+      } else {
+        pressHeadMat.emissiveIntensity = 0.18;
+        contactLight.intensity = 0;
+      }
+
+      const pistonBottom = pressHead.position.y + 0.25;
+      const pistonTop = 5.45;
+      const pistonLength = Math.max(0.35, pistonTop - pistonBottom);
+
+      ramPiston.scale.y = pistonLength;
+      ramPiston.position.y =
+        (pistonTop + pistonBottom) * 0.5;
+
+      if (phase === 4 && phaseTime >= phaseDurations[3]) {
+        phase = 5;
+        phaseTime = 0;
+      }
+
+      if (phase === 5 && phaseTime >= phaseDurations[4]) {
+        cycleIndex = (cycleIndex + 1) % carXs.length;
+        phase = 1;
+        phaseTime = 0;
+      }
+
+      updateUi();
+    }
+
+    // -------------------------------------------------------------------------
+    // UI and animation loop
+    // -------------------------------------------------------------------------
+
+    function updateUi() {
+      const carIndex = carPositions.indexOf(carXs[cycleIndex]);
+      carNumber.textContent =
+        `${String(carIndex + 1).padStart(2, "0")} / 03`;
+
+      pressCountElement.textContent = String(pressCount).padStart(4, "0");
+      cycleNumber.textContent = String(cycleIndex + 1).padStart(2, "0");
+
+      phaseText.textContent = phaseNames[phase];
+      phaseText.style.color = phase === 3 ? "#ffbd66" : "#f2a23a";
+
+      let progress;
+
+      if (phase < 5) {
+        progress =
+          (cycleIndex + (phase - 1) / 5) / (carPositions.length - 1);
+      } else {
+        progress =
+          (cycleIndex + 1) / carPositions.length;
+      }
+
+      progressFill.style.width = `${THREE.MathUtils.clamp(
+        progress,
+        0,
+        1
+      ) * 100}%`;
+    }
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume" : "Pause";
+      pauseButton.classList.toggle("primary", !paused);
+      plantStatus.textContent = paused ? "PAUSED" : "AUTOMATED";
+    });
+
+    resetButton.addEventListener("click", resetCycle);
+
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setCameraPreset(button.dataset.preset);
+      });
+    });
+
+    const pressHeadMaterial = materials.orange.clone();
+
+    resetCycle();
+    updateCamera(1);
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (!paused) {
+        simulationTime += dt;
+      }
+
+      updateCycle(dt);
+
+      // Conveyor slats move along the feed line.
+      beltSlats.forEach((slat, i) => {
+        const travel = (simulationTime * 1.15 + i * 0.85) % 16;
+        slat.position.x = -19 + travel;
+      });
+
+      // Elevator buckets ascend the tower and loop at the top.
+      buckets.forEach((bucket, i) => {
+        const travel = (simulationTime * 1.1 + i * 1.12) % 10.2;
+        bucket.position.y = 1.25 + travel;
+        bucket.rotation.y = simulationTime * 0.35 + i * 0.7;
+      });
+
+      // Regolith falls from the fixed hopper into the traveling gantry.
+      fallingChunks.forEach((chunk, i) => {
+        const t = (simulationTime * 0.38 + chunk.offset) % 1;
+        chunk.mesh.position.x = THREE.MathUtils.lerp(-4, gantry.position.x, t);
+        chunk.mesh.position.y = THREE.MathUtils.lerp(11.25, 9.35, t);
+        chunk.mesh.position.z =
+          chunk.z + Math.sin(simulationTime * 2 + i) * 0.16;
+        chunk.mesh.rotation.x += dt * 1.4;
+        chunk.mesh.rotation.z += dt * 1.1;
+      });
+
+      // Suspended dust drifts down through the plant.
+      const positionAttribute = dustGeometry.getAttribute("position");
+
+      for (let i = 0; i < dustCount; i++) {
+        let y = positionAttribute.getY(i) - dustSpeeds[i] * dt;
+        let x = positionAttribute.getX(i) +
+          Math.sin(simulationTime * 0.6 + i) * dt * 0.08;
+
+        if (y < 0.1) {
+          y = range(10, 12);
+          x = range(-30, 32);
+        }
+
+        positionAttribute.setY(i, y);
+        positionAttribute.setX(i, x);
+      }
+
+      positionAttribute.needsUpdate = true;
+
+      // Subtle kiln heat pulsation.
+      for (const light of [
+        scene.children.find((object) => object.isPointLight),
+        ...[1, 2, 3].map(() => scene.children.find(
+          (object) => object.isPointLight && object.position.x > 15
+        ))
+      ]) {
+        if (light) {
+          light.intensity = 40 + Math.sin(simulationTime * 1.8) * 4;
+        }
+      }
+
+      updateCamera(dt);
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      document.getElementById("loading").classList.add("hide");
+    });
+  </script>
+</body>
+</html>

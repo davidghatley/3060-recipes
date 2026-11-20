@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robotic Welding Workcell</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(11, 18, 25, 0.82);
+      --border: rgba(142, 184, 207, 0.22);
+      --text: #dceaf2;
+      --muted: #8ea6b5;
+      --accent: #58d7ff;
+      --orange: #ff8a36;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #091016;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .brand {
+      position: absolute;
+      top: 24px;
+      left: 26px;
+      padding: 17px 19px 16px;
+      min-width: 285px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--orange);
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, rgba(26, 40, 51, 0.91), rgba(8, 14, 20, 0.78));
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 730;
+      letter-spacing: 0.015em;
+    }
+
+    .subtitle {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.055em;
+      text-transform: uppercase;
+    }
+
+    .status-card {
+      position: absolute;
+      top: 24px;
+      right: 26px;
+      width: 252px;
+      padding: 15px 17px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .status-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      color: var(--orange);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+
+    .status-value.ready {
+      color: #72e3b1;
+    }
+
+    .status-value.transfer {
+      color: var(--accent);
+    }
+
+    .progress-track {
+      height: 3px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--orange));
+      box-shadow: 0 0 12px rgba(88, 215, 255, 0.7);
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 24px;
+      left: 26px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: calc(100vw - 390px);
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: rgba(10, 17, 23, 0.72);
+      color: #aebfca;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 9px currentColor;
+    }
+
+    .dot.orange {
+      background: var(--orange);
+    }
+
+    .dot.green {
+      background: #64e4a8;
+    }
+
+    .help {
+      position: absolute;
+      left: 27px;
+      bottom: 72px;
+      color: rgba(198, 218, 230, 0.64);
+      font-size: 10px;
+      letter-spacing: 0.045em;
+    }
+
+    .controls {
+      position: absolute;
+      right: 26px;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      min-width: 38px;
+      height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: rgba(12, 20, 27, 0.86);
+      color: #b8cad5;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.075em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 150ms ease;
+      backdrop-filter: blur(12px);
+    }
+
+    button:hover {
+      border-color: rgba(88, 215, 255, 0.5);
+      color: white;
+      background: rgba(22, 37, 47, 0.94);
+    }
+
+    button.active {
+      border-color: rgba(88, 215, 255, 0.55);
+      color: var(--accent);
+      box-shadow: inset 0 0 18px rgba(88, 215, 255, 0.08);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      background: #091016;
+      color: #9db4c3;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 350ms ease, visibility 350ms ease;
+    }
+
+    #loading.hide {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    .loader {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 16px;
+      border: 2px solid rgba(88, 215, 255, 0.16);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 850ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .brand {
+        top: 14px;
+        left: 14px;
+        min-width: 0;
+      }
+
+      .status-card {
+        top: 14px;
+        right: 14px;
+        width: 190px;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+
+      .subtitle,
+      .legend,
+      .help {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="scene"></canvas>
+
+  <div id="loading">
+    <div style="text-align: center">
+      <div class="loader"></div>
+      Initializing welding cell
+    </div>
+  </div>
+
+  <div class="hud">
+    <section class="brand">
+      <div class="eyebrow">Industrial Robotics / Live Cell</div>
+      <h1>Automated Welding Workcell</h1>
+      <div class="subtitle">6-axis robot · dual positioners · fume extraction</div>
+    </section>
+
+    <section class="status-card">
+      <div class="status-row">
+        <span class="status-label">Process state</span>
+        <span id="statusValue" class="status-value ready">SYSTEM READY</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </section>
+
+    <div class="legend">
+      <div class="chip"><span class="dot orange"></span>Positioner A</div>
+      <div class="chip"><span class="dot green"></span>Positioner B</div>
+      <div class="chip"><span class="dot"></span>Fume extraction active</div>
+    </div>
+
+    <div class="help">Drag to orbit · Wheel to zoom · Double-click to reset view</div>
+
+    <div class="controls">
+      <button id="orbitButton" class="active" title="Toggle automatic camera orbit">Orbit</button>
+      <button id="pauseButton" title="Pause or resume the workcell">Pause</button>
+      <button id="resetButton" title="Reset camera view">Reset</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const canvas = document.querySelector("#scene");
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x091016);
+    scene.fog = new THREE.Fog(0x091016, 15, 31);
+
+    const camera = new THREE.PerspectiveCamera(
+      44,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      70
+    );
+
+    const clock = new THREE.Clock();
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+    const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+    // ---------------------------------------------------------------------
+    // Materials and geometry helpers
+    // ---------------------------------------------------------------------
+
+    const material = (color, roughness = 0.6, metalness = 0.15, extra = {}) =>
+      new THREE.MeshStandardMaterial({
+        color,
+        roughness,
+        metalness,
+        ...extra
+      });
+
+    const M = {
+      floor: material(0x172029, 0.88, 0.18),
+      platform: material(0x202b34, 0.75, 0.32),
+      wall: material(0x17212a, 0.86, 0.12),
+      wallInset: material(0x101820, 0.8, 0.22),
+      steel: material(0x9aabb6, 0.3, 0.82),
+      brushed: material(0x60717c, 0.42, 0.72),
+      darkSteel: material(0x27333c, 0.42, 0.75),
+      black: material(0x10161b, 0.56, 0.5),
+      rubber: material(0x080b0d, 0.9, 0.05),
+      orange: material(0xf16b24, 0.34, 0.42),
+      orangeLight: material(0xff8b38, 0.28, 0.4),
+      yellow: material(0xf1b92e, 0.48, 0.3),
+      white: material(0xd5dde0, 0.42, 0.35),
+      copper: material(0xc77736, 0.28, 0.78),
+      cyan: material(0x4bc9ef, 0.24, 0.5, {
+        emissive: 0x167b99,
+        emissiveIntensity: 1.4
+      }),
+      amber: material(0xff9a31, 0.2, 0.15, {
+        emissive: 0xff6b12,
+        emissiveIntensity: 2.4
+      }),
+      green: material(0x44dc9a, 0.25, 0.2, {
+        emissive: 0x16885b,
+        emissiveIntensity: 1.8
+      }),
+      glass: material(0x628a8c, 0.25, 0.12, {
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      })
+    };
+
+    function addMesh(geometry, mat, parent = scene) {
+      const mesh = new THREE.Mesh(geometry, mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function box(w, h, d, mat, x = 0, y = 0, z = 0, parent = scene) {
+      const mesh = addMesh(new THREE.BoxGeometry(w, h, d), mat, parent);
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function cylinder(rt, rb, h, mat, x = 0, y = 0, z = 0, parent = scene, segments = 32) {
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(rt, rb, h, segments),
+        mat,
+        parent
+      );
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function torus(radius, tube, mat, x = 0, y = 0, z = 0, parent = scene) {
+      const mesh = addMesh(
+        new THREE.TorusGeometry(radius, tube, 10, 48),
+        mat,
+        parent
+      );
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function cylinderBetween(a, b, radius, mat, parent = scene, segments = 20) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(radius, radius, length, segments),
+        mat,
+        parent
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      return mesh;
+    }
+
+    function beamBetween(a, b, width, depth, mat, parent = scene) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = addMesh(
+        new THREE.BoxGeometry(width, length, depth),
+        mat,
+        parent
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      return mesh;
+    }
+
+    function makeLabelTexture(title, subtitle = "", accent = "#58d7ff") {
+      const c = document.createElement("canvas");
+      c.width = 1024;
+      c.height = 192;
+
+      const ctx = c.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, c.width, c.height);
+      gradient.addColorStop(0, "#101b24");
+      gradient.addColorStop(1, "#071017");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, 0, 12, c.height);
+      ctx.fillRect(48, 35, 6, 122);
+
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#dceaf2";
+      ctx.font = "700 54px system-ui, sans-serif";
+      ctx.fillText(title, 84, 72);
+
+      if (subtitle) {
+        ctx.fillStyle = "#7893a4";
+        ctx.font = "600 26px system-ui, sans-serif";
+        ctx.fillText(subtitle, 85, 132);
+      }
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xb8dcf4, 0x171b1e, 1.45));
+
+    const keyLight = new THREE.DirectionalLight(0xfff0dc, 3.2);
+    keyLight.position.set(5, 10, 7);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -11;
+    keyLight.shadow.camera.right = 11;
+    keyLight.shadow.camera.top = 10;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 28;
+    keyLight.shadow.bias = -0.00025;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x56c8ff, 1.3);
+    rimLight.position.set(-8, 5, -6);
+    scene.add(rimLight);
+
+    const hoodLight = new THREE.SpotLight(0xd8edff, 95, 14, Math.PI / 3.4, 0.48, 1.5);
+    hoodLight.position.set(0, 4.05, 0.6);
+    hoodLight.target.position.set(0, 0, 0);
+    hoodLight.castShadow = true;
+    hoodLight.shadow.mapSize.set(1024, 1024);
+    scene.add(hoodLight, hoodLight.target);
+
+    const cyanFill = new THREE.PointLight(0x38c6ff, 24, 9, 2);
+    cyanFill.position.set(-3.8, 2.2, 2.2);
+    scene.add(cyanFill);
+
+    // ---------------------------------------------------------------------
+    // Building shell, floor markings, wall and safety fencing
+    // ---------------------------------------------------------------------
+
+    box(28, 0.18, 20, M.floor, 0, -0.2, 0);
+
+    const platform = box(12.2, 0.18, 7.1, M.platform, 0, -0.08, 0);
+    platform.receiveShadow = true;
+
+    const grid = new THREE.GridHelper(24, 48, 0x456475, 0x2a3b47);
+    grid.position.y = -0.095;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.18;
+    scene.add(grid);
+
+    // Cell boundary.
+    box(12.0, 0.025, 0.12, M.yellow, 0, 0.025, 3.45);
+    box(0.12, 0.025, 6.8, M.yellow, -6.0, 0.025, 0);
+    box(0.12, 0.025, 6.8, M.yellow, 6.0, 0.025, 0);
+
+    for (let i = 0; i < 24; i++) {
+      box(
+        0.19,
+        0.031,
+        0.13,
+        M.black,
+        -5.6 + i * 0.48,
+        0.042,
+        3.45
+      );
+    }
+
+    // Rear wall panels.
+    box(15.5, 6.2, 0.22, M.wall, 0, 3.0, -4.95);
+
+    for (let i = -3; i <= 3; i++) {
+      box(0.035, 5.7, 0.05, M.wallInset, i * 2.05, 3.05, -4.81);
+    }
+
+    for (let y = 0.8; y < 5.8; y += 1.25) {
+      box(14.7, 0.035, 0.05, M.wallInset, 0, y, -4.8);
+    }
+
+    // Rear safety fence.
+    const fence = new THREE.Group();
+    scene.add(fence);
+
+    for (let x = -5.5; x <= 5.5; x += 1.1) {
+      cylinder(0.045, 0.045, 2.7, M.yellow, x, 1.35, -2.7, fence, 12);
+    }
+
+    beamBetween([-5.5, 2.7, -2.7], [5.5, 2.7, -2.7], 0.07, 0.07, M.yellow, fence);
+    beamBetween([-5.5, 0.25, -2.7], [5.5, 0.25, -2.7], 0.06, 0.06, M.yellow, fence);
+
+    const fencePoints = [];
+    for (let x = -5.5; x <= 5.5; x += 0.32) {
+      fencePoints.push(x, 0.3, -2.7, x, 2.65, -2.7);
+    }
+    for (let y = 0.3; y <= 2.65; y += 0.3) {
+      fencePoints.push(-5.5, y, -2.7, 5.5, y, -2.7);
+    }
+
+    const fenceGeometry = new THREE.BufferGeometry();
+    fenceGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(fencePoints, 3)
+    );
+    fence.add(
+      new THREE.LineSegments(
+        fenceGeometry,
+        new THREE.LineBasicMaterial({
+          color: 0x536570,
+          transparent: true,
+          opacity: 0.5
+        })
+      )
+    );
+
+    // Wall sign.
+    const wallSign = addMesh(
+      new THREE.PlaneGeometry(4.4, 0.83),
+      new THREE.MeshBasicMaterial({
+        map: makeLabelTexture(
+          "AUTOMATED WELDING CELL",
+          "CELL 04  /  ROBOTIC TRANSFER + FUME CAPTURE",
+          "#ff8a36"
+        )
+      })
+    );
+    wallSign.position.set(1.1, 5.15, -4.81);
+    wallSign.castShadow = false;
+
+    // ---------------------------------------------------------------------
+    // Overhead fume hood and extraction ducting
+    // ---------------------------------------------------------------------
+
+    const hood = new THREE.Group();
+    scene.add(hood);
+
+    box(6.75, 0.2, 3.25, M.darkSteel, 0, 4.48, 0.05, hood);
+    box(6.35, 0.12, 2.95, M.black, 0, 4.33, 0.05, hood);
+
+    // Rear and side transparent panels.
+    box(6.35, 1.38, 0.06, M.glass, 0, 3.58, -1.47, hood);
+    box(0.06, 1.38, 2.9, M.glass, -3.2, 3.58, 0.05, hood);
+    box(0.06, 1.38, 2.9, M.glass, 3.2, 3.58, 0.05, hood);
+
+    // Hood frame.
+    for (const x of [-3.25, 3.25]) {
+      for (const z of [-1.5, 1.58]) {
+        box(0.11, 1.6, 0.11, M.brushed, x, 3.62, z, hood);
+      }
+      box(0.12, 0.13, 3.2, M.brushed, x, 3.62, 0.03, hood);
+    }
+
+    box(6.6, 0.17, 0.14, M.brushed, 0, 4.23, 1.59, hood);
+    box(6.6, 0.13, 0.13, M.brushed, 0, 3.0, -1.5, hood);
+
+    // Underside extraction baffles.
+    for (let z = -1.15; z <= 1.3; z += 0.32) {
+      box(5.95, 0.06, 0.09, M.black, 0, 4.24, z, hood);
+    }
+
+    // Hood task lights.
+    for (const x of [-1.8, 0, 1.8]) {
+      box(1.25, 0.055, 0.22, M.cyan, x, 4.18, 0.78, hood);
+    }
+
+    const hoodSign = addMesh(
+      new THREE.PlaneGeometry(2.8, 0.52),
+      new THREE.MeshBasicMaterial({
+        map: makeLabelTexture(
+          "FUME EXTRACTION",
+          "CAPTURE PLENUM  /  CELL 04",
+          "#58d7ff"
+        )
+      }),
+      hood
+    );
+    hoodSign.position.set(0, 4.42, 1.685);
+    hoodSign.castShadow = false;
+
+    // Main extraction duct.
+    cylinderBetween([-2.45, 4.56, -0.65], [-2.45, 6.4, -0.65], 0.4, M.brushed);
+    cylinderBetween([-2.45, 6.38, -0.65], [-5.5, 6.38, -0.65], 0.4, M.brushed);
+    cylinderBetween([-5.48, 6.38, -0.65], [-5.48, 6.38, -4.7], 0.4, M.brushed);
+
+    for (const y of [4.8, 5.25, 5.7, 6.15]) {
+      torus(0.415, 0.035, M.darkSteel, -2.45, y, -0.65).rotation.x = Math.PI / 2;
+    }
+
+    // Wall-mounted extraction fan housing.
+    box(1.35, 1.5, 0.9, M.darkSteel, -5.48, 5.4, -4.25);
+    const fan = cylinder(0.49, 0.49, 0.12, M.black, -5.48, 5.4, -3.77);
+    fan.rotation.x = Math.PI / 2;
+
+    for (let i = 0; i < 5; i++) {
+      const blade = box(0.68, 0.12, 0.035, M.steel, -5.48, 5.4, -3.69);
+      blade.rotation.z = (i / 5) * Math.PI * 2;
+    }
+
+    // Corrugated flexible extraction arms.
+    function makeExtractionHose(points) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((p) => new THREE.Vector3(...p))
+      );
+
+      const hose = addMesh(
+        new THREE.TubeGeometry(curve, 54, 0.14, 10, false),
+        M.rubber
+      );
+      hose.castShadow = true;
+
+      for (let i = 0; i <= 22; i++) {
+        const t = i / 22;
+        const point = curve.getPointAt(t);
+        const tangent = curve.getTangentAt(t);
+        const rib = addMesh(
+          new THREE.TorusGeometry(0.158, 0.021, 6, 20),
+          M.darkSteel
+        );
+        rib.position.copy(point);
+        rib.quaternion.setFromUnitVectors(Z_AXIS, tangent.normalize());
+      }
+
+      const end = curve.getPointAt(1);
+      const previous = curve.getPointAt(0.9);
+      const direction = previous.clone().sub(end).normalize();
+
+      const nozzle = addMesh(
+        new THREE.CylinderGeometry(0.11, 0.23, 0.34, 20),
+        M.yellow
+      );
+      nozzle.position.copy(end).addScaledVector(direction, 0.12);
+      nozzle.quaternion.setFromUnitVectors(Y_AXIS, direction);
+    }
+
+    makeExtractionHose([
+      [-3.08, 4.05, -0.25],
+      [-3.65, 3.45, -0.02],
+      [-3.72, 2.72, 0.28],
+      [-3.25, 2.18, 0.48],
+      [-2.72, 1.94, 0.56]
+    ]);
+
+    makeExtractionHose([
+      [3.08, 4.05, -0.25],
+      [3.65, 3.45, -0.02],
+      [3.72, 2.72, 0.28],
+      [3.25, 2.18, 0.48],
+      [2.72, 1.94, 0.56]
+    ]);
+
+    // ---------------------------------------------------------------------
+    // Rotary positioners
+    // ---------------------------------------------------------------------
+
+    function buildPositioner(x, z, variant) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      scene.add(group);
+
+      cylinder(1.03, 1.08, 0.22, M.black, 0, 0.11, 0, group);
+      cylinder(0.73, 0.84, 0.48, M.yellow, 0, 0.43, 0, group);
+      cylinder(0.5, 0.6, 0.28, M.darkSteel, 0, 0.79, 0, group);
+
+      // Hazard blocks around the base.
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const stripe = box(
+          0.22,
+          0.12,
+          0.11,
+          i % 2 ? M.black : M.yellow,
+          Math.cos(a) * 0.82,
+          0.27,
+          Math.sin(a) * 0.82,
+          group
+        );
+        stripe.rotation.y = -a;
+      }
+
+      const rotor = new THREE.Group();
+      rotor.position.y = 0.98;
+      group.add(rotor);
+
+      cylinder(0.9, 0.9, 0.17, M.steel, 0, 0, 0, rotor);
+      cylinder(0.79, 0.79, 0.09, M.darkSteel, 0, 0.12, 0, rotor);
+
+      // Radial fixture slots.
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const slot = box(
+          0.11,
+          0.055,
+          0.48,
+          M.black,
+          Math.cos(a) * 0.52,
+          0.19,
+          Math.sin(a) * 0.52,
+          rotor
+        );
+        slot.rotation.y = -a;
+      }
+
+      // Workpiece bolts.
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        cylinder(
+          0.045,
+          0.045,
+          0.06,
+          M.brushed,
+          Math.cos(a) * 0.68,
+          0.21,
+          Math.sin(a) * 0.68,
+          rotor,
+          8
+        );
+      }
+
+      if (variant === 0) {
+        // Vertical pressure-vessel section.
+        cylinder(0.54, 0.54, 0.74, M.steel, 0, 0.57, 0, rotor, 48);
+        cylinder(0.66, 0.66, 0.12, M.brushed, 0, 0.28, 0, rotor, 48);
+        cylinder(0.66, 0.66, 0.12, M.brushed, 0, 0.88, 0, rotor, 48);
+        torus(0.547, 0.022, M.copper, 0, 0.57, 0, rotor).rotation.x = Math.PI / 2;
+      } else {
+        // Horizontal pipe spool with a vertical circular weld seam.
+        const spool = cylinder(
+          0.53,
+          0.53,
+          0.96,
+          M.steel,
+          0,
+          0.53,
+          0,
+          rotor,
+          48
+        );
+        spool.rotation.x = Math.PI / 2;
+
+        torus(0.535, 0.025, M.copper, 0, 0.53, 0.485, rotor);
+        torus(0.535, 0.025, M.brushed, 0, 0.53, -0.485, rotor);
+      }
+
+      return {
+        group,
+        rotor,
+        variant,
+        getTarget(time) {
+          if (variant === 0) {
+            const a = time * 0.58 + 0.5;
+            return this.rotor.localToWorld(
+              new THREE.Vector3(Math.cos(a) * 0.555, 0.57, Math.sin(a) * 0.555)
+            );
+          }
+
+          const a = time * 0.52 + 0.8;
+          return this.rotor.localToWorld(
+            new THREE.Vector3(
+              Math.cos(a) * 0.54,
+              0.53 + Math.sin(a) * 0.54,
+              0.49
+            )
+          );
+        }
+      };
+    }
+
+    const positionerA = buildPositioner(-2.42, 0.05, 0);
+    const positionerB = buildPositioner(2.42, 0.05, 1);
+
+    // ---------------------------------------------------------------------
+    // Six-axis welding robot
+    // ---------------------------------------------------------------------
+
+    const robotRoot = new THREE.Group();
+    robotRoot.position.set(0, 0, 1.02);
+    scene.add(robotRoot);
+
+    cylinder(0.88, 0.95, 0.2, M.darkSteel, 0, 0.1, 0, robotRoot);
+    cylinder(0.62, 0.73, 0.43, M.orange, 0, 0.4, 0, robotRoot);
+    cylinder(0.57, 0.57, 0.12, M.black, 0, 0.65, 0, robotRoot);
+
+    const yawGroup = new THREE.Group();
+    yawGroup.position.y = 0.7;
+    robotRoot.add(yawGroup);
+
+    const L1 = 2.2;
+    const L2 = 1.8;
+    const SHOULDER_Y = 1.22;
+    const TORCH_LENGTH = 0.72;
+
+    const shoulderPivot = new THREE.Group();
+    shoulderPivot.position.y = 0.52;
+    yawGroup.add(shoulderPivot);
+
+    function jointDisc(parent, radius, width) {
+      const disc = cylinder(
+        radius,
+        radius,
+        width,
+        M.darkSteel,
+        0,
+        0,
+        0,
+        parent,
+        40
+      );
+      disc.rotation.x = Math.PI / 2;
+
+      const cap = cylinder(
+        radius * 0.67,
+        radius * 0.67,
+        width + 0.025,
+        M.brushed,
+        0,
+        0,
+        0,
+        parent,
+        36
+      );
+      cap.rotation.x = Math.PI / 2;
+      return disc;
+    }
+
+    jointDisc(shoulderPivot, 0.43, 0.72);
+
+    box(0.52, L1 - 0.3, 0.58, M.orange, 0, L1 / 2, 0, shoulderPivot);
+    box(0.34, L1 - 0.55, 0.61, M.orangeLight, 0.06, L1 / 2, 0, shoulderPivot);
+    box(0.14, L1 - 0.7, 0.64, M.black, 0.17, L1 / 2, 0, shoulderPivot);
+
+    const elbowPivot = new THREE.Group();
+    elbowPivot.position.y = L1;
+    shoulderPivot.add(elbowPivot);
+
+    jointDisc(elbowPivot, 0.38, 0.64);
+
+    box(0.42, L2 - 0.27, 0.46, M.orange, 0, L2 / 2, 0, elbowPivot);
+    box(0.25, L2 - 0.52, 0.49, M.orangeLight, 0.08, L2 / 2, 0, elbowPivot);
+    box(0.11, L2 - 0.62, 0.51, M.black, 0.15, L2 / 2, 0, elbowPivot);
+
+    const wristPivot = new THREE.Group();
+    wristPivot.position.y = L2;
+    elbowPivot.add(wristPivot);
+
+    jointDisc(wristPivot, 0.25, 0.48);
+    cylinder(0.16, 0.16, 0.26, M.brushed, 0, -0.15, 0, wristPivot);
+
+    const nozzle = addMesh(
+      new THREE.CylinderGeometry(0.07, 0.13, 0.28, 20),
+      M.darkSteel,
+      wristPivot
+    );
+    nozzle.position.y = -0.43;
+
+    const copperTip = cylinder(
+      0.034,
+      0.034,
+      0.18,
+      M.copper,
+      0,
+      -0.62,
+      0,
+      wristPivot,
+      12
+    );
+    copperTip.castShadow = false;
+
+    const torchTip = new THREE.Object3D();
+    torchTip.position.y = -TORCH_LENGTH;
+    wristPivot.add(torchTip);
+
+    // Flexible dress packs following the arm.
+    const upperCable = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.27, 0.2, -0.1),
+      new THREE.Vector3(0.37, 0.8, -0.12),
+      new THREE.Vector3(0.31, L1 - 0.3, -0.08),
+      new THREE.Vector3(0.12, L1 - 0.05, 0)
+    ]);
+
+    shoulderPivot.add(
+      new THREE.Mesh(
+        new THREE.TubeGeometry(upperCable, 38, 0.072, 8, false),
+        M.rubber
+      )
+    );
+
+    const lowerCable = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.25, 0.08, -0.06),
+      new THREE.Vector3(0.29, 0.66, -0.08),
+      new THREE.Vector3(0.19, L2 - 0.17, 0)
+    ]);
+
+    elbowPivot.add(
+      new THREE.Mesh(
+        new THREE.TubeGeometry(lowerCable, 32, 0.06, 8, false),
+        M.rubber
+      )
+    );
+
+    // Inverse kinematics for the shoulder, elbow and base yaw.
+    function solveRobotIK(target) {
+      const dx = target.x - robotRoot.position.x;
+      const dz = target.z - robotRoot.position.z;
+      const radial = Math.max(0.001, Math.hypot(dx, dz));
+
+      const wristY = target.y + TORCH_LENGTH;
+      const vertical = wristY - SHOULDER_Y;
+      const distance = Math.hypot(radial, vertical);
+
+      const elbowCos = THREE.MathUtils.clamp(
+        (distance * distance - L1 * L1 - L2 * L2) / (2 * L1 * L2),
+        -1,
+        1
+      );
+
+      const elbowAngle = Math.acos(elbowCos);
+      const targetPhi = Math.atan2(vertical, radial);
+      const angleOffset = Math.atan2(
+        L2 * Math.sin(elbowAngle),
+        L1 + L2 * Math.cos(elbowAngle)
+      );
+      const shoulderAngle = Math.PI / 2 - targetPhi - angleOffset;
+
+      yawGroup.rotation.y = -Math.atan2(dz, dx);
+      shoulderPivot.rotation.z = -shoulderAngle;
+      elbowPivot.rotation.z = -elbowAngle;
+
+      // Counter-rotate the wrist so the torch remains vertical.
+      wristPivot.rotation.z = shoulderAngle + elbowAngle;
+    }
+
+    // ---------------------------------------------------------------------
+    // Control cabinet, wire feeder and floor cable
+    // ---------------------------------------------------------------------
+
+    const cabinet = new THREE.Group();
+    cabinet.position.set(4.5, 0, -1.45);
+    cabinet.rotation.y = -0.12;
+    scene.add(cabinet);
+
+    box(1.15, 1.8, 0.72, M.darkSteel, 0, 0.9, 0, cabinet);
+    box(1.02, 0.72, 0.06, M.black, 0, 1.23, 0.39, cabinet);
+
+    const screen = addMesh(
+      new THREE.PlaneGeometry(0.82, 0.45),
+      new THREE.MeshBasicMaterial({
+        map: makeLabelTexture(
+          "WELD PROGRAM",
+          "CELL 04  /  AUTO MODE",
+          "#42d6ff"
+        )
+      }),
+      cabinet
+    );
+    screen.position.set(0, 1.26, 0.43);
+
+    for (let i = 0; i < 3; i++) {
+      cylinder(
+        0.055,
+        0.055,
+        0.04,
+        i === 0 ? M.green : i === 1 ? M.amber : M.red,
+        -0.25 + i * 0.25,
+        0.78,
+        0.4,
+        cabinet,
+        18
+      );
+    }
+
+    box(0.7, 0.08, 0.16, M.black, 0, 0.46, 0.4, cabinet);
+
+    cylinder(0.06, 0.06, 0.2, M.darkSteel, 0.45, 2.02, 0, cabinet, 16);
+    cylinder(0.12, 0.12, 0.23, M.amber, 0.45, 2.18, 0, cabinet, 24);
+
+    const feeder = new THREE.Group();
+    feeder.position.set(3.7, 0, 1.1);
+    feeder.rotation.y = -0.45;
+    scene.add(feeder);
+
+    box(0.9, 0.72, 0.78, M.darkSteel, 0, 0.36, 0, feeder);
+    box(0.72, 0.32, 0.58, M.orange, 0, 0.82, 0, feeder);
+
+    const spool = cylinder(0.43, 0.43, 0.35, M.copper, 0, 1.27, 0, feeder, 40);
+    spool.rotation.x = Math.PI / 2;
+
+    for (const z of [-0.2, 0.2]) {
+      const flange = cylinder(0.49, 0.49, 0.045, M.brushed, 0, 1.27, z, feeder, 40);
+      flange.rotation.x = Math.PI / 2;
+    }
+
+    const floorCable = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(3.45, 0.46, 1.05),
+      new THREE.Vector3(2.7, 0.15, 1.65),
+      new THREE.Vector3(1.1, 0.09, 1.7),
+      new THREE.Vector3(0.18, 0.12, 1.2)
+    ]);
+
+    scene.add(
+      new THREE.Mesh(
+        new THREE.TubeGeometry(floorCable, 40, 0.055, 8, false),
+        M.rubber
+      )
+    );
+
+    // ---------------------------------------------------------------------
+    // Welding arc, sparks and fume particles
+    // ---------------------------------------------------------------------
+
+    function radialTexture(inner, middle, outer) {
+      const c = document.createElement("canvas");
+      c.width = 128;
+      c.height = 128;
+
+      const ctx = c.getContext("2d");
+      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, inner);
+      gradient.addColorStop(0.28, middle);
+      gradient.addColorStop(1, outer);
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const arcTexture = radialTexture(
+      "rgba(255,255,255,1)",
+      "rgba(103,220,255,0.95)",
+      "rgba(255,80,10,0)"
+    );
+
+    const arcSprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: arcTexture,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    arcSprite.position.set(0, 0, 0);
+    arcSprite.scale.setScalar(0.52);
+    arcSprite.visible = false;
+    torchTip.add(arcSprite);
+
+    const arcLight = new THREE.PointLight(0x8adfff, 0, 4.2, 2);
+    torchTip.add(arcLight);
+
+    const SPARK_COUNT = 190;
+    const sparkPositions = new Float32Array(SPARK_COUNT * 3);
+    const sparkColors = new Float32Array(SPARK_COUNT * 3);
+    const sparkVelocities = Array.from({ length: SPARK_COUNT }, () => new THREE.Vector3());
+    const sparkLife = new Float32Array(SPARK_COUNT);
+
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      sparkPositions[i * 3] = 999;
+      sparkPositions[i * 3 + 1] = 999;
+      sparkPositions[i * 3 + 2] = 999;
+    }
+
+    const sparkGeometry = new THREE.BufferGeometry();
+    sparkGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(sparkPositions, 3)
+    );
+    sparkGeometry.setAttribute(
+      "color",
+      new THREE.BufferAttribute(sparkColors, 3)
+    );
+
+    const sparkPoints = new THREE.Points(
+      sparkGeometry,
+      new THREE.PointsMaterial({
+        size: 0.055,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+    sparkPoints.frustumCulled = false;
+    scene.add(sparkPoints);
+
+    const smokeTexture = radialTexture(
+      "rgba(180,205,195,0.65)",
+      "rgba(115,145,135,0.28)",
+      "rgba(80,105,100,0)"
+    );
+
+    const smokeParticles = [];
+
+    for (let i = 0; i < 16; i++) {
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: smokeTexture,
+          color: 0xa5beb3,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        })
+      );
+
+      sprite.scale.setScalar(0.25);
+      scene.add(sprite);
+
+      smokeParticles.push({
+        sprite,
+        life: 0,
+        maxLife: 1,
+        velocity: new THREE.Vector3()
+      });
+    }
+
+    const currentTip = new THREE.Vector3();
+
+    function spawnSpark(origin) {
+      for (let i = 0; i < SPARK_COUNT; i++) {
+        if (sparkLife[i] > 0) continue;
+
+        sparkLife[i] = 0.3 + Math.random() * 0.75;
+        const index = i * 3;
+
+        sparkPositions[index] = origin.x;
+        sparkPositions[index + 1] = origin.y;
+        sparkPositions[index + 2] = origin.z;
+
+        sparkVelocities[i].set(
+          (Math.random() - 0.5) * 3.2,
+          0.8 + Math.random() * 2.9,
+          (Math.random() - 0.5) * 3.2
+        );
+
+        return;
+      }
+    }
+
+    function updateSparks(dt, welding) {
+      let spawnBudget = welding ? dt * 135 : 0;
+
+      while (spawnBudget >= 1) {
+        spawnSpark(currentTip);
+        spawnBudget--;
+      }
+
+      for (let i = 0; i < SPARK_COUNT; i++) {
+        const index = i * 3;
+
+        if (sparkLife[i] <= 0) {
+          sparkPositions[index] = 999;
+          sparkPositions[index + 1] = 999;
+          sparkPositions[index + 2] = 999;
+          continue;
+        }
+
+        sparkLife[i] -= dt;
+
+        const velocity = sparkVelocities[i];
+        velocity.y -= 6.4 * dt;
+        velocity.multiplyScalar(1 - dt * 0.7);
+
+        sparkPositions[index] += velocity.x * dt;
+        sparkPositions[index + 1] += velocity.y * dt;
+        sparkPositions[index + 2] += velocity.z * dt;
+
+        if (sparkPositions[index + 1] < 0.035) {
+          sparkPositions[index + 1] = 0.035;
+          velocity.y = Math.abs(velocity.y) * 0.28;
+          velocity.x *= 0.65;
+          velocity.z *= 0.65;
+        }
+
+        const intensity = Math.max(0, sparkLife[i]);
+        sparkColors[index] = 1;
+        sparkColors[index + 1] = 0.25 + intensity * 0.65;
+        sparkColors[index + 2] = Math.max(0, intensity - 0.55) * 0.45;
+      }
+
+      sparkGeometry.attributes.position.needsUpdate = true;
+      sparkGeometry.attributes.color.needsUpdate = true;
+    }
+
+    function updateSmoke(dt, welding, origin) {
+      for (const particle of smokeParticles) {
+        particle.life -= dt;
+
+        if (particle.life <= 0) {
+          if (welding && Math.random() < 0.16) {
+            particle.life = particle.maxLife = 1.4 + Math.random() * 1.4;
+            particle.sprite.position.copy(origin);
+            particle.sprite.position.x += (Math.random() - 0.5) * 0.16;
+            particle.sprite.position.z += (Math.random() - 0.5) * 0.16;
+
+            particle.velocity.set(
+              (Math.random() - 0.5) * 0.16,
+              0.5 + Math.random() * 0.3,
+              (Math.random() - 0.5) * 0.13
+            );
+          } else {
+            particle.sprite.material.opacity = 0;
+            continue;
+          }
+        }
+
+        const age = 1 - particle.life / particle.maxLife;
+        particle.sprite.position.addScaledVector(particle.velocity, dt);
+        particle.velocity.y += dt * 0.035;
+
+        const scale = 0.2 + age * 0.95;
+        particle.sprite.scale.set(scale, scale, scale);
+        particle.sprite.material.opacity = Math.sin(age * Math.PI) * 0.105;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // Process cycle
+    // ---------------------------------------------------------------------
+
+    const statusValue = document.querySelector("#statusValue");
+    const progressFill = document.querySelector("#progressFill");
+
+    const CYCLE_LENGTH = 14;
+
+    function getCycle(time) {
+      const cycle = time % CYCLE_LENGTH;
+
+      if (cycle < 4.5) {
+        return {
+          mode: "weldA",
+          progress: cycle / CYCLE_LENGTH,
+          label: "WELDING / POSITIONER A"
+        };
+      }
+
+      if (cycle < 6.2) {
+        const t = (cycle - 4.5) / 1.7;
+        return {
+          mode: "toB",
+          progress: cycle / CYCLE_LENGTH,
+          transfer: t,
+          label: "TRANSFER / APPROACH B"
+        };
+      }
+
+      if (cycle < 10.7) {
+        return {
+          mode: "weldB",
+          progress: cycle / CYCLE_LENGTH,
+          label: "WELDING / POSITIONER B"
+        };
+      }
+
+      if (cycle < 12.4) {
+        const t = (cycle - 10.7) / 1.7;
+        return {
+          mode: "toA",
+          progress: cycle / CYCLE_LENGTH,
+          transfer: t,
+          label: "TRANSFER / APPROACH A"
+        };
+      }
+
+      return {
+        mode: "weldA",
+        progress: cycle / CYCLE_LENGTH,
+        label: "WELDING / POSITIONER A"
+      };
+    }
+
+    const smoothstep = (t) => t * t * (3 - 2 * t);
+    const robotTarget = new THREE.Vector3();
+
+    function updateWorkcell(time) {
+      positionerA.rotor.rotation.y = time * 0.58;
+      positionerB.rotor.rotation.y = -time * 0.52;
+
+      positionerA.rotor.updateWorldMatrix(true, false);
+      positionerB.rotor.updateWorldMatrix(true, false);
+
+      const targetA = positionerA.getTarget(time);
+      const targetB = positionerB.getTarget(time);
+      const cycle = getCycle(time);
+
+      let welding = false;
+
+      if (cycle.mode === "weldA") {
+        robotTarget.copy(targetA);
+        welding = true;
+      } else if (cycle.mode === "weldB") {
+        robotTarget.copy(targetB);
+        welding = true;
+      } else {
+        const t = smoothstep(cycle.transfer);
+        robotTarget.lerpVectors(targetA, targetB, t);
+        robotTarget.y += Math.sin(t * Math.PI) * 0.45;
+        robotTarget.z += Math.sin(t * Math.PI) * 0.2;
+      }
+
+      solveRobotIK(robotTarget);
+
+      scene.updateMatrixWorld(true);
+      torchTip.getWorldPosition(currentTip);
+
+      arcSprite.visible = welding;
+      arcLight.intensity = welding ? 22 + Math.random() * 12 : 0;
+
+      if (welding) {
+        const pulse = 0.38 + Math.random() * 0.27;
+        arcSprite.scale.setScalar(pulse);
+        arcSprite.material.opacity = 0.65 + Math.random() * 0.35;
+      }
+
+      updateSparks(1 / 60, welding);
+      updateSmoke(1 / 60, welding, currentTip);
+
+      statusValue.textContent = cycle.label;
+      statusValue.className = "status-value";
+
+      if (cycle.mode.startsWith("weld")) {
+        statusValue.classList.add("ready");
+      } else {
+        statusValue.classList.add("transfer");
+      }
+
+      progressFill.style.width = `${cycle.progress * 100}%`;
+    }
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: orbit, zoom, reset and optional auto orbit
+    // ---------------------------------------------------------------------
+
+    const cameraState = {
+      theta: 0.69,
+      phi: 0.96,
+      radius: 11.4,
+      target: new THREE.Vector3(0, 1.65, 0.05)
+    };
+
+    let autoOrbit = true;
+    let paused = false;
+    let dragging = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+
+    const orbitButton = document.querySelector("#orbitButton");
+    const pauseButton = document.querySelector("#pauseButton");
+
+    function updateCamera(dt) {
+      if (autoOrbit && !dragging) {
+        cameraState.theta += dt * 0.045;
+      }
+
+      const sinPhi = Math.sin(cameraState.phi);
+
+      camera.position.set(
+        cameraState.target.x + cameraState.radius * sinPhi * Math.sin(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z + cameraState.radius * sinPhi * Math.cos(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+    }
+
+    function resetCamera() {
+      cameraState.theta = 0.69;
+      cameraState.phi = 0.96;
+      cameraState.radius = 11.4;
+      cameraState.target.set(0, 1.65, 0.05);
+    }
+
+    function setAutoOrbit(value) {
+      autoOrbit = value;
+      orbitButton.classList.toggle("active", value);
+    }
+
+    function setPaused(value) {
+      paused = value;
+      pauseButton.textContent = value ? "Resume" : "Pause";
+      pauseButton.classList.toggle("active", value);
+    }
+
+    orbitButton.addEventListener("click", () => {
+      setAutoOrbit(!autoOrbit);
+    });
+
+    pauseButton.addEventListener("click", () => {
+      setPaused(!paused);
+    });
+
+    document.querySelector("#resetButton").addEventListener("click", resetCamera);
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      setAutoOrbit(false);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastPointerX;
+      const dy = event.clientY - lastPointerY;
+
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+
+      cameraState.theta -= dx * 0.006;
+      cameraState.phi = THREE.MathUtils.clamp(
+        cameraState.phi - dy * 0.005,
+        0.34,
+        1.38
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          7.1,
+          18
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        setPaused(!paused);
+      }
+
+      if (event.key.toLowerCase() === "r") {
+        resetCamera();
+      }
+
+      if (event.key.toLowerCase() === "o") {
+        setAutoOrbit(!autoOrbit);
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation loop
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    let simulationTime = 0;
+    let firstFrame = true;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const realDelta = Math.min(clock.getDelta(), 0.05);
+      const simulationDelta = paused ? 0 : realDelta;
+      simulationTime += simulationDelta;
+
+      updateWorkcell(simulationTime);
+      updateCamera(realDelta);
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        document.querySelector("#loading").classList.add("hide");
+      }
+    }
+
+    updateCamera(0);
+    animate();
+  </script>
+</body>
+</html>

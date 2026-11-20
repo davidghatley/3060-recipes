@@ -1,0 +1,2060 @@
+We need respond likely code full HTML. Need build self-contained scene Three.js only core module, no addons. Need infer request wants implementation. Need provide code perhaps detailed. Need make visually rich buoy tender with stern crane working deck. Need camera controls direct. Need maybe explain save as html. Need ensure only import core URL. Need self-contained means one HTML with CDN dependency. Need implement geometry, animation, lighting, controls manually.
+
+Need think design. Scene: coastal buoy tender, stern crane, working deck. Need maybe boat hull, cabin, crane articulated, winch, railings, deck, mast, navigation lights, buoy, water, sky, clouds, seabirds. Interactive orbit controls custom pointer/wheel, buttons maybe. Need no external assets. Use Three.js core. Need ensure code valid r160.
+
+Need provide full HTML likely code block. Need perhaps no markdown? User asks build, so answer code. We can state save as index.html. Need implement.
+
+Let's architect.
+
+HTML CSS overlay title, info, controls, loading? JS module import.
+
+Scene:
+- renderer antialias, shadows, tone mapping, outputColorSpace.
+- camera Perspective.
+- scene background Color 0x9fc8d6, fog.
+- HemisphereLight, directional sun.
+- water PlaneGeometry 200 maybe MeshPhysicalMaterial, rotated, transparent? Animate vertices? Could use custom ShaderMaterial? Only core okay. Better MeshStandardMaterial with vertex displacement via CPU? Plane segments 80x80, animate positions each frame maybe 6k vertices okay. But shadows? Water can be shader with waves and Fresnel maybe custom ShaderMaterial, but then no standard lighting. We can implement custom shader with vertex wave and fragment gradient/sun glint, fog maybe. Yet "self-contained" okay. Could use MeshPhysicalMaterial and animate geometry positions. Need realistic.
+
+Boat:
+- coordinate system: length along Z perhaps bow +Z, stern -Z. Hull shape custom geometry. Need stern crane at rear -Z. Deck.
+- Hull via Lathe? Need custom BufferGeometry. Build cross sections: bottom center y=0, side y=.4, top y=1.3. z from bow 6.5 to stern -5.5. Use rings at z positions with widths and bottom heights. Build vertices for port/starboard top, chine, keel maybe. Simpler hull closed via custom geometry with stations:
+z 6.6 halfwidth .05 top 1.2 bottom 0.2
+6.0 .65 top1.15 bottom .05
+4.8 1.05 top1.05 bottom -.15
+2.5 1.25 top .9 bottom -.35
+0 1.3 top .8 bottom -.45
+-2.5 1.18 top .85 bottom -.4
+-4.5 .95 top .9 bottom -.25
+-5.3 .65 top1.0 bottom .05
+-5.6 .4 top1.05 bottom .1
+Maybe top deck shape. Build side strips from top to chine to bottom. Use vertices and indices. Need bow point. Could use shape extrusion? custom.
+
+Could build hull as lathe-like rings with 3 levels (top, chine, bottom) each station. For each side, top to chine to bottom, plus bottom center? Top deck separately. Need close bow. Let's create stations with z, halfWidth, topY, chineY, bottomY. For each side, vertices top, chine, bottom. Triangles between stations. At ends cap. Top edge open for deck. Add deck polygon matching top widths at each station, maybe ShapeGeometry in XZ? ShapeGeometry lies XY; rotate -PI/2. But widths variable. Use custom polygon triangulation? We can create Shape with x,z mapped then rotate. Shape points (x,z), ShapeGeometry, rotateX(-PI/2) maps y? Shape coords x,y -> after rotX -90: x same, z = -? y' = z? rotation x: y'= y cos - z sin = z, z'= y sin + z cos = -y. If shape y=-z perhaps. Easier create custom deck geometry from station top points, triangles. But deck can be ShapeGeometry with shape points (x, -z), rotateX(-PI/2) gives z = -(-z)=z. yes.
+
+Need stern crane mounted at z=-4.6. Crane base on deck, pedestal, rotating house, boom. Need articulated with cylinders between points. Helper cylinderBetween(a,b,r,mat), update maybe static. Use group hierarchy for crane to animate. Could create base at (0,1.2,-4.4), pedestal cylinder, cab, boom segments. A working crane perhaps boom extends forward over deck, cable to hook. Use group pivot:
+- base group at (0,1.25,-4.4)
+- pedestal static in boat group
+- slew group at y 1.65, rotate y maybe -0.35? boom extends local +? We can build two segments from pivot.
+Simpler hierarchy:
+craneRoot position (0,1.3,-4.55), rotation.y maybe 0.1
+counterweight local z=-0.45? boom local z=1.6.
+slew group at y=.45, rotation.y = .15.
+boom lower from (0,.55,0) to (0,1.8,1.45), upper from endpoint to (0,3.2,2.25), tip from upper to (0,3.55,2.45). Need cylinders between points.
+cab at x=.75, y=.55,z=.25, glass box.
+wires from upper/tip to hook. Hook hanging.
+Maybe crane is stern crane, boom should extend forward over deck. If stern at -Z, forward is +Z. local boom +Z yes.
+Cabin side.
+
+Deck:
+- main deck at y=1.0 maybe custom polygon.
+- non-slip dark deck, wood foredeck? Use materials.
+- railings along sides and stern, with posts and top rails. Need not block.
+- stern crane at rear.
+- working deck details: winch on starboard side z=1.2, coiled rope torus, crates, tool chest, life rings, anchor, coiled fenders, bollards, hatch, coiled rope, maybe workbench.
+- cabin forward z=2.4? Hull length. Need layout: bow +6.5, stern -5.5. Cabin centered z=2.2 length 3.2, width 1.8, height 1.6. Foredeck from z 4.7 to 6.0. Crane stern z -4.4.
+- cabin white box, windows dark blue, roof, mast, radar, antenna, nav lights.
+- wheelhouse maybe.
+- railings.
+- life ring orange.
+- mooring bollards.
+
+Water:
+- large plane at y=0, boat hull bottom maybe intersects water, okay.
+- animate water with custom shader. We can use ShaderMaterial with uniforms time, sun direction, cameraPosition built-in. Vertex wave and fragment color based waves. But then no shadows. Could use MeshPhysicalMaterial and CPU animate. Better custom shader with lighting-ish gradient, specular sun glint, foam around hull? Need water plane horizontal and camera perspective. Vertex wave displace y. Fragment uses world pos, normal approximated, fresnel, sun spec. But custom shader doesn't receive fog unless implement. Could include fog chunks complicated. Could use MeshStandardMaterial and animate vertices CPU. 70x70 = 5k, each frame update positions and normals maybe expensive but okay. We can update every 2 frames and compute normals. But plane geometry rotated? Create PlaneGeometry(180,180,100,100), rotateX(-PI/2), positions x,z and y. Update y each frame. computeVertexNormals every 3 frames. Material MeshPhysicalMaterial color, roughness .25, metalness .1, transparent maybe. Add broad plane. Add second? no.
+- Add wake foam around hull: use custom line? Could create transparent white planes/ellipses around sides, animate. Maybe use ring/ellipses.
+- floating buoy in foreground, with red/white segments, light.
+- distant islands/rock maybe.
+- clouds groups of spheres.
+- seagulls lines? optional.
+
+Custom camera controls:
+- pointer drag orbit, wheel zoom, right drag pan maybe.
+- state spherical target, theta, phi, radius.
+- pointerdown, pointermove, pointerup.
+- touch support.
+- reset button, top view? UI.
+- animate boat gentle bob? If boat group bob, water static. Boat group position.y = sin(t)*0.08, rotation.z slight, rotation.x slight. But crane and all in boat group. Water waves slight.
+- crane hook sway maybe.
+- navigation blink.
+- buoy bob.
+- maybe crane subtle operation? "working deck" could have crane hook moving slowly. Could animate hook x and cable? But crane should look functional. Could animate warning lights and water. Maybe crane hook slowly sways.
+- Add labels? no.
+
+Need code robust.
+
+Need only Three.js core import. No OrbitControls. Use import * as THREE from url.
+
+Need perhaps use RoundedBox? unavailable addon, so standard boxes.
+
+Need custom hull geometry. Let's design carefully.
+
+HTML:
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;style&gt; full; overlay; controls; badge; button.
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=loading&gt;...
+&lt;div class=panel&gt;...
+&lt;button id=reset&gt;
+&lt;div class=hint&gt;Drag...
+&lt;script type=module&gt;
+import * as THREE ...
+const container...
+renderer...
+camera...
+scene...
+materials.
+functions.
+
+Need ensure module import from exact URL. "Use only Three.js core ES module from ..." We do.
+
+Geometry:
+createHull:
+stations array:
+{ z:6.4, w:.06, top:1.15, chine:.55, bottom:.25}
+{ z:5.8,w:.55,top1.12,chine:.38,bottom:.08}
+{ z:4.7,w:.95,top1.02,chine:.25,bottom:-.12}
+{ z:2.5,w:1.18,top:.90,chine:.10,bottom:-.32}
+{ z:0,w:1.25,top:.82,chine:.0,bottom:-.42}
+{ z:-2.4,w:1.18,top:.88,chine:.12,bottom:-.36}
+{ z:-4.3,w:.92,top:.95,chine:.30,bottom:-.18}
+{ z:-5.2,w:.62,top1.02,chine:.48,bottom:.12}
+{ z:-5.55,w:.32,top1.08,chine:.58,bottom:.38}
+Need bottom center to close? Build sides only and bottom strip. For each side, vertices per station [top, chine, bottom]. indices between. For each segment, quads top-chine and chine-bottom. Need orientation. Compute normals. Add bottom center? At each station bottom line from port bottom to starboard bottom, then triangles. At bow cap top? Add top center maybe. Deck covers. Stern cap.
+
+Let's make vertices:
+for each station side ±:
+top = (±w, topY,z)
+chine=(±w*.78, chineY,z)
+bottom=(±w*.55,bottomY,z)
+indices side. For starboard side maybe orientation; material DoubleSide to avoid concern. Use side: i station, j level. a=top_i, b=chine_i, c=bottom_i, d=top_next. triangles (a,d,b), (b,d,c) perhaps.
+Bottom: for each station left bottom and right bottom, indices.
+End caps.
+Could just use MeshStandardMaterial side DoubleSide.
+
+Deck:
+custom polygon from top station x,z. Use BufferGeometry triangles fan from center? Shape is convex mostly yes. Build shape:
+const shape = new THREE.Shape();
+points stations [x,-z] and close. ShapeGeometry; rotateX(-PI/2); position y=top? But shape geometry after rotate has y around 0, z = -shapeY = z. Set y=0.82 maybe varying top. Better custom deck geometry with y=topY+0.02 and triangulate polygon. Since shape convex, fan from center. But stern maybe convex. Use ShapeGeometry and set y=.84; hull top varies .82-.? Foredeck top 1.15, mismatch. Could set deck y=1.02 across, hull top around 1.0. Stern top 1.08. okay. But bow top 1.15. Fine.
+Maybe deck material dark gray. Add foredeck separate wood shape? Could overlay.
+
+Hull color deep navy/teal, lower hull red? We can add stripe via another hull geometry? Could create hull material navy and add red boot stripe as side strip custom. Maybe custom hull geometry groups complicated. Add side stripe using TubeGeometry? Could use line? Better create side accent as narrow custom quad strips at y between top and chine maybe. But not necessary.
+
+Deck y=1.0.
+Cabin base y=1.65, dimensions 1.85 x 1.7 x 3.1 at z=2.15. cabin roof.
+Windows front at z=3.76? cabin center 2.2, length 3.2 => front 3.8, back .6. windows on front and sides. Use box thin.
+Door aft at z=.58.
+Windshield front dark.
+Rear window.
+Roof at y=2.75.
+Mast from roof y2.8 to 4.6 at z2.2, cylinder; radar bar.
+Antenna.
+Navigation lights red port x=-.95, green starboard x=.95, y=2.55, z=3.85. Blink emissive.
+
+Crane:
+Need hierarchy and materials.
+boat group all.
+Crane base at z=-4.35, deck y=1.0.
+- pedestal cylinder at (0,1.25,-4.45) radius .42 height .55.
+- slewGroup position y=1.55,z=-4.45.
+- rotating housing box .9,.55,.9 at y=.2.
+- counterweight box at z=-.45 y=.35.
+- lower boom pivot (0,.55,0) to endpoint maybe (0,1.85,1.45). CylinderBetween.
+- upper from endpoint to (0,3.15,2.25)
+- tip to (0,3.45,2.45)
+- hydraulic cylinder from (0.25,.55,.2) to (0,1.45,1.15)
+- cab at x=.78, y=.55,z=.2, box .65,.75,1.0, glass front maybe.
+- boom tip sheave.
+- cable line cylinder from upper endpoint? Usually hoist line from tip down to hook. Use cylinderBetween tip (0,3.45,2.45) to (0,1.65,2.45), r .018. Hook at y1.65. But if cable straight and hook. Add hook torus partial? TorusGeometry(.12,.035,8,16,Math.PI*1.55), rotation.
+- animate hook group x = sin(t*.4)*.12, y=1.65+sin(t*.3)*.1, rotation.z.
+- maybe cable update each frame to hook. Need helper updateCylinder? Cylinder geometry unit height along y; set position midpoint, scale.y=length, quaternion setFromUnitVectors(yAxis, direction). Use for static and dynamic.
+Create cylinderBetween returns mesh with geometry CylinderGeometry(r,r,1,12), and updateCylinder(mesh,a,b) sets scale.y=len, pos, quat.
+Could use for boom segments static.
+
+Crane base rotation maybe slewGroup.rotation.y = -0.12 + sin(t*.15)*.03. Hook x accordingly? We can just animate slight.
+
+Winch:
+at x=.85,z=1.0 y=1.15. base box, cylinder axis x. Torus coil maybe TorusGeometry(.28,.055,8,24) lies XY by default normal z; winch axis x means torus should rotate y=PI/2 to normal x. Add 2 spools.
+Maybe deck winch on port? x=.8.
+Crates at x=-.65,z=-1.2.
+Tool chest x=.75,z=-1.4.
+Bollards x ±.8 z4.4 and -4.7.
+Life ring at x=-.82,z=-2.5, TorusGeometry(.28,.07,8,18), orange, on back.
+Fenders black along sides maybe cylinders.
+Workbench at x=.5,z=-2.3? cabin occupies z .6-3.8, stern area -4.5 to .6. Put crates z=-2.5.
+Crane at -4.4, so work area z=-2.5.
+
+Railings:
+Use cylinders between points. sides x ±1.25, z from -4.7 to 4.8, y=1.45 posts. But cabin width 1.85 extends x .925, rail outside x1.25. Stern rail around back. Bow maybe.
+Posts every 1.3, top rail. Use cylinderBetween.
+Railing material steel.
+Need not overdo.
+
+Hull details:
+- name text? Could use CanvasTexture generated in JS, but self-contained. Add "TENDER 07" on side using CanvasTexture. This is okay. Need create canvas texture. Place plane on side x=1.26, y=.75,z=.2, rotation y=PI/2? Plane default XY normal +Z. To put on starboard side x positive, normal +X, rotateY(PI/2). But hull side x varies; at z .2 width1.25, x=1.26. Plane dimensions 1.8 x .25. Need transparent. Canvas texture. Add to boat.
+- maybe port side too.
+
+Water shader vs physical. Let's do custom ShaderMaterial to get visual quality, but no need addons. Vertex:
+uniform float uTime;
+varying vec3 vWorldPosition;
+varying float vWave;
+void main() {
+ vec3 p=position; // plane geometry after rotate? If rotate geometry, positions x,y,z where y=0 and z original. We can create PlaneGeometry then rotateX(-PI/2) geometry. position.y is wave. p.y += sin(p.x*.18+uTime*.7)*.12 + cos(p.z*.22-uTime*.5)*.08 + sin((p.x+p.z)*.11+uTime*.4)*.06;
+ vec4 world=modelMatrix*vec4(p,1);
+ vWorldPosition=world.xyz;
+ vWave=...
+ gl_Position=projectionMatrix*viewMatrix*world;
+}
+Fragment:
+uniform vec3 uSunDirection, uCameraPosition? built-in cameraPosition available in ShaderMaterial? yes cameraPosition uniform automatically.
+varying.
+float wave=sin(vWorld.x*.7+...); normal approximate.
+vec3 deep=..., shallow...
+float fresnel=pow(1-max(dot(normalize(cameraPosition-vWorld),vec3(0,1,0)),0),3)
+spec=pow(max(dot(reflect(-uSun,n),view),0),100)
+gl_FragColor vec4(color+spec*...,1)
+Need fog? Add fog chunks? Could use simple distance fade to horizon.
+Since water plane at y=0 and boat group bob.
+
+Maybe custom shader doesn't receive shadows, okay.
+
+Sky gradient: scene background Color and fog. Add huge sphere with ShaderMaterial gradient? Could use scene.background = Color, plus CSS? Renderer canvas opaque. Create sky dome sphere radius 150, BackSide, ShaderMaterial vertex world y, fragment mix horizon and top. Add sun disk maybe.
+Clouds: groups of white low-poly spheres at y 12-18, positions. Since scene fog.
+Islands: low-poly cones/spheres in distance.
+Buoy: group at (8,0,5) maybe. Cylinder body stacked, red top white bottom, torus ring, mast, light. Animate.
+Maybe foreground buoy at x=8,z=5.5, not distract.
+
+Lighting:
+HemisphereLight(0xcfefff,0x18313a,2)
+DirectionalLight(0xfff1cf,3) pos(-10,18,8), shadow map 2048, camera bounds.
+Ambient maybe.
+Renderer physicallyCorrect? In r160 use renderer.useLegacyLights false default? toneMapping ACES.
+Set shadowMap enabled PCFSoft.
+Materials roughness.
+
+Need maybe add particles? no.
+
+Animation:
+clock.
+boat.position.y = sin(t*.7)*.06; boat.rotation.z=sin(t*.5)*.008; boat.rotation.x=cos(t*.45)*.005. But if water waves, okay.
+Crane hook cable update.
+Nav lights emissiveIntensity blink.
+Buoy bob.
+Water uniform.
+Maybe crane slew slowly and hook sway. But if cable static in boat local and hook x changes, update.
+Need updateCylinder for cable each frame. Also hook group position.
+
+Camera controls:
+let target = new Vector3(0,1.2,0); spherical radius 14, theta maybe 0.75? Coordinate: camera position target + spherical. Three spherical: x=r sin(phi) sin(theta), y=r cos(phi), z=r sin(phi) cos(theta). If theta=0.72, camera x positive, z positive, looking stern? Boat bow +z, camera from front starboard maybe theta=.75 means x positive z positive. Want see stern crane and deck, camera from port? If camera at x=-10,z=9, see starboard side and bow, crane behind cabin maybe. Better camera from stern side x=-9,z=-10 to see crane and deck, looking toward bow. theta=-2.3? x negative, z negative. Use theta=-2.35, phi=1.1 (y=6). radius=16. target (0,1.2,0). Then camera x=-10.6,z=-8.7,y=7.0. Good.
+Pointer drag changes theta -= dx*.005; phi -= dy*.005 clamp .25,1.45. Wheel radius *= exp(delta*.001) clamp 7,35. Right drag pan target in camera right and forward horizontal.
+Touch one pointer orbit, two pinch maybe implement pointer map. Could support.
+Need prevent contextmenu.
+Buttons reset, top view, maybe toggle "Auto orbit". UI.
+Maybe click canvas? no.
+
+Need custom camera controls direct as required.
+
+Need ensure no unsupported CSS? fine.
+
+Need include a "scene ready" no external assets.
+
+Potential issue use CanvasTexture and fonts. Fine.
+Need maybe use `THREE.MathUtils.clamp`.
+Need code length maybe 700 lines. Desired oververbosity 5, but code itself long. We can provide complete.
+
+Let's formulate code.
+
+Detailed functions:
+const mats = {
+ hull: new MeshStandardMaterial({color:0x0c3440, roughness:.42, metalness:.18}),
+ hullSide maybe.
+ deck...
+}
+Need `renderer.setAnimationLoop(animate)` perhaps.
+Resize.
+
+Hull geometry:
+function buildHullGeometry(stations) {
+ const positions=[], indices=[];
+ for st:
+   positions.push(-st.w,st.top,st.z, -st.w*.78,st.chine,st.z, -st.w*.55,st.bottom,st.z,
+                st.w,st.top,st.z,...)
+ for i:
+  const a=3i,b=3(i+1)
+  // starboard indices maybe [a,b,a+2], [b,b+2,a+2]
+  // port [a+1,a+3,b+1], [a+3,b+3,b+1]
+ bottom [a+2,b+2,a+4], [a+4,b+2,b+4]
+ caps.
+ geometry set.
+ compute normals.
+}
+At bow, cap top? deck covers. Stern cap maybe.
+Material side DoubleSide.
+Add lower red stripe? We can build a side band using same stations, vertices between chine and bottom? Hmm stripe should around side at chine. Could add narrow geometry between y chine and bottom? That's lower part. Or between top and chine? Navy hull top to chine, red band near chine. Create side band custom: for each station side, four vertices top? Actually band from chine to slightly below chine. Use same side vertices at chine and bottom*? We can create band between chine and bottom with red, but covers whole lower side. Better create a narrow strip along side around y=chine: vertices at chine and chine-.08. But bottom varies. Could build band between chine and a lower line. Use side band with 4 vertices per station (chine, lower). It overlaps lower part. Make red band.
+Simpler add red rub rail at chine using TubeGeometry? CatmullRomCurve3 points, TubeGeometry radius .045, 80 segments. Points at side x w*.79, y chine-.02. This gives red line along hull. Also bottom red? hull itself dark.
+Need side stripe maybe line enough.
+
+Deck geometry:
+stations top y maybe use constant 1.0. Shape:
+const shape = new THREE.Shape();
+points = stations.map(s => new Vector2(s.w,-s.z));
+But shape orientation? ShapeGeometry triangulates. rotateX(-PI/2), then position y=.99. Need shape y = -z as derived. `shape.moveTo(x,-z)`. after rotation, z' = -y = z. Good.
+ShapeGeometry has normal +Z originally; after rotate -90, normal? +Z -> y=1? Rotation x -90: z vector (0,0,1) -> (0,1,0), yes.
+Deck at y=.98.
+Add foredeck wood overlay shape with points subset z 4.4 to 6.1, but shape y mapping. y=1.03.
+Maybe deck is dark non-slip and foredeck tan.
+
+Cabin:
+group.
+body box at y=1.55? Deck .99, body height1.55, center y=1.76 (bottom1.0). roof y2.62.
+x width1.8, z length3.1 center2.25.
+Windows:
+front at z=3.81, x0, y2.1, dimensions 1.55,.48,.04
+back at z=.69
+side x=.911, z2.25, dimensions .04,.48,1.45
+side other.
+Use box.
+Door aft x=.55? rear window and door conflict. Put door x=.55,z=.66, dimensions .55,.75,.04; rear window x=-.35.
+Roof box 2.05,.12,3.35.
+Bollards etc.
+
+Mast:
+cylinderBetween local? Add to boat group with points.
+Mast at (0,2.75,2.2), from y2.8 to4.5.
+Radar group at y4.45, box, rotate.
+Radar bar maybe.
+Antenna thin.
+
+Crane hierarchy:
+const crane = new Group; crane.position.set(0,1.0,-4.45); boat.add.
+base cylinder position y=.25.
+slew = Group pos y=.55.
+housing.
+boom points local.
+Need `cylinderBetween` returns mesh and add to group. For dynamic cable, after create update.
+Boom lower from (0,.65,0) to (0,1.85,1.45), upper to (0,3.15,2.3), tip to (0,3.45,2.45).
+Slew rotation maybe -0.18. This means boom points +z and x slight.
+Cab at x=.72, y=.65,z=.15.
+Counterweight z=-.45.
+Hydraulic.
+Cable from tip to hook. Hook group local.
+`hookGroup` position (0,1.7,2.45)`.
+Torus partial orientation maybe `TorusGeometry(.13,.035,8,16,Math.PI*1.6)`, rotation z? Torus in XY, opening visible. Add small block.
+Cable cylinder from tip to hook top.
+Animate hookGroup.position.x = Math.sin(t*.4)*.12; y=1.7+sin(t*.35)*.12; rotation.z=...
+updateCylinder(cable, tip, hookGroup.position + (0,.18,0)).
+Need tip Vector3 local.
+
+Crane base maybe static.
+
+Winch:
+group at (.75,1.05,.7), rotation y maybe -.2.
+base.
+spool axis x: CylinderGeometry(.25,.25,.18,20) default y, rotate z=PI/2.
+torus at x ±.12, rotate y=PI/2.
+Rope coil maybe torus.
+
+Crates:
+box with wood material, slats.
+Tool chest red.
+
+Railings:
+function railingSegment(a,b):
+ posts count ceil(length/1.1), cylinderBetween base at y1.0 to y1.55, top rail.
+Need many.
+Side rails from (-1.22,1.0,-4.7) to (-1.22,1.0,4.8), and starboard. But cabin and deck. stern from (-1.1,1,-4.8) to (1.1,1,-4.8), bow maybe.
+Use top rail y1.55.
+Add stanchions.
+
+Bollards function at x,z: base cylinder, horn cylinder.
+
+Life ring:
+Torus at x=-.95,y1.55,z=-2.4, rotation y=PI/2? Torus default in XY plane, normal z. To face side x, rotateY(PI/2). Add white bands maybe not.
+
+Name texture:
+canvas 512x128, clear, text. texture colorSpace = THREE.SRGBColorSpace.
+PlaneGeometry(1.8,.35), material transparent. side at x=1.265, y=.76,z=.2, rotation y=PI/2. Since plane normal +Z rotated +90 -> +X. Good. For starboard. At x maybe 1.265. z=.2 width1.25. But hull side at z .2 exactly 1.25. Use x=1.265. Port rotation -PI/2.
+Need avoid z-fighting.
+
+Distant environment:
+Sky dome:
+SphereGeometry(100,32,16), ShaderMaterial side BackSide, depthWrite false, uniforms top/horizon. vertex vWorldDirection = position; fragment based normalized y. Since sphere centered at origin and camera within. Add sun disk? Directional light enough.
+Clouds: create group with 5 spheres each, MeshStandardMaterial white rough. positions. Maybe clouds cast no shadow.
+Islands: groups of DodecahedronGeometry scaled.
+Buoy:
+group at (8,0,5). cylinder body: lower white cylinder radius .45 height .8 at y.4; red upper .32 height .5 y1.0; torus ring y.8 rotate x=PI/2? Torus default XY normal z, to horizontal ring normal y rotateX(PI/2). mast.
+Light sphere emissive.
+Maybe buoy group bob.
+
+Water plane size 180, camera sees horizon. Shader material transparent false. `fog` not included, but color fade based distance.
+Vertex wave and fragment. Need `cameraPosition` available in fragment? Three injects uniform cameraPosition for ShaderMaterial yes.
+Shader:
+vertex uses `position`; after geometry rotated, p.y displacement.
+world.
+fragment:
+vec3 n=normalize(vec3(-.04,1.,...));
+vec3 V=normalize(cameraPosition-vWorld);
+vec3 L=normalize(uSunDirection);
+float diff=max(dot(n,L),0);
+float spec=pow(max(dot(reflect(-L,n),V),0),120.0);
+float fres=pow(1.-max(dot(n,V),0),3);
+float dist=length(cameraPosition.xz-vWorld.xz);
+vec3 color=mix(uDeep,uShallow,0.35+0.25*...);
+color += vec3(.35,.5,.5)*fres*.45;
+color += vec3(1,.85,.55)*spec*1.4;
+float haze=exp(-dist*0.012); color=mix(color,uHorizon,haze*.65);
+gl_FragColor...
+Need tone mapping? ShaderMaterial toneMapped true default? yes.
+Could add `#include <tonemapping_fragment>` and colorspace? In r160 custom shader needs chunks to appear. Add at end:
+gl_FragColor = vec4(color,1.0);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+These chunks available. Use.
+Sky shader similarly.
+
+Cloud material fog true.
+
+Camera and controls:
+`const spherical = new THREE.Spherical(16,1.08,-2.25);`
+Need update:
+const offset = new Vector3().setFromSpherical(spherical).add(target); camera.position.copy(offset); camera.lookAt(target).
+On pointer:
+canvas.addEventListener('pointerdown', e => { pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); canvas.setPointerCapture; dragging=true; last...;});
+pointermove if one and buttons:
+if e.pointerType touch and pointers size 2 implement pinch. Simpler support one pointer. But mobile touch one works. wheel.
+Right pan: if e.button===2, compute right vector camera.matrix columns? `right.setFromMatrixColumn(camera.matrix,0); up.setFromMatrixColumn(camera.matrix,1); target.addScaledVector(right,-dx*radius*.0015).addScaledVector(up,dy*...)`.
+For orbit theta -= dx*.005, phi -= dy*.005.
+Need prevent target drift.
+Pointer up.
+Double click reset.
+Buttons.
+
+Auto orbit button toggles; if auto, theta += dt*.08. Could include.
+
+UI panel with title "COASTAL OPERATIONS / BUOY TENDER", subtitle, status chips "Stern crane ready", "Deck secured", "Navigation systems nominal". bottom hint. Buttons.
+Maybe user asked just scene, UI not necessary but polished.
+
+Need ensure no use of `OrbitControls`. Good.
+
+Need maybe include accessibility and reduced motion? not needed.
+
+Let's write code with all.
+
+Potential issue `ShapeGeometry` deck and hull: deck polygon shape points orientation. `Shape` uses Vector2 and `shape.closePath()`. `ShapeGeometry` may triangulate. Good.
+Foredeck shape points subset but must order maybe.
+Material side.
+
+Use `MeshStandardMaterial` with `flatShading` maybe.
+
+Need create `addBox` helper.
+
+Need all geometries disposed? no.
+
+Need animate cloud? no.
+
+Need boat group position and water. If boat bobs, shadow on water not receiving because shader. okay.
+
+Need add contact shadow? no.
+
+Need maybe water plane intersects hull bottom, good.
+
+Need add wake:
+Create two elongated PlaneGeometry? MeshBasicMaterial transparent white, horizontal. Could create `CircleGeometry` scaled, but circles elliptical. At boat sides, positions x ±1.3, y=.03, z=.2, scale (1.4,4). But circle geometry in XY, rotateX(-PI/2), scale x? after rotation scale axes x and y become x,z. Use mesh scale.set(1.2,4,1) before rotation? Object scale applies local then rotation; local y becomes z. So scale.set(1.2,4,1). Position. Add 2. opacity .22, depthWrite false. Animate opacity and x.
+Maybe foam around buoy.
+
+Need perhaps wake not too much.
+
+Need create `makeTextTexture` and side name.
+
+Need boat group name maybe.
+
+Let's ensure crane cable cylinder update:
+const cable = new Mesh(CylinderGeometry(.018,.018,1,8), steel);
+crane.add(cable);
+function setCylinderBetween(mesh,a,b) {
+ const dir = new Vector3().subVectors(b,a);
+ const len=dir.length();
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.scale.set(1,len,1);
+ mesh.quaternion.setFromUnitVectors(Y_AXIS, dir.normalize());
+}
+If geometry height 1.
+For boom static use.
+Cable tip to hook top.
+Hook group includes torus and block.
+Animate hookGroup and update.
+
+Crane slew rotation and hook x mismatch slight. Could tie hook x = Math.sin(t*.22)*.14; cable update. Slew rotates tiny.
+
+Navigation lights:
+const redMat = new MeshStandardMaterial({color:0xff241f, emissive:0xff160f, emissiveIntensity:1});
+Sphere .09. Add to boat. `redMat.emissiveIntensity = 1 + Math.pow(Math.max(0,Math.sin(t*2)),8)*2`.
+Green.
+
+Radar rotation.
+
+Buoy light blink.
+
+Could add gulls as simple line V shapes in scene, but not needed.
+
+Need maybe "working deck" visually with tools. Add coiled rope, winch, crate, toolbox, life ring, fenders, anchor.
+Anchor at bow? Add anchor at x=-1.2,z4.5, use shape? Could create torus and shaft. Maybe.
+Fenders: black cylinders along hull side, at x ±1.24, y=.65,z=-.5,2.5,4.0. Cylinder default y, rotate z=PI/2 to x. Good.
+
+Hull name side maybe cabin blocks? side visible.
+
+Need include `renderer.domElement.id='scene'`.
+
+Need maybe loading overlay removed after first frame.
+
+Let's craft final answer with brief intro and code. Ensure exact CDN URL only. No other imports.
+
+Let's produce around 600 lines maybe. We can condense to 400.
+
+Need be careful with `THREE.CapsuleGeometry` available core yes. But no need.
+
+Let's write.
+
+Potential issue `ShapeGeometry` deck and hull: deck polygon shape points orientation. `Shape` uses Vector2 and `shape.closePath()`. `ShapeGeometry` may triangulate. Good.
+Foredeck shape points subset but must order maybe.
+Material side.
+
+Use `MeshStandardMaterial` with `flatShading` maybe.
+
+Need create `addBox` helper.
+
+Need all geometries disposed? no.
+
+Need animate cloud? no.
+
+Need boat group position and water. If boat bobs, shadow on water not receiving because shader. okay.
+
+Need add contact shadow? no.
+
+Need maybe water plane intersects hull bottom, good.
+
+Need add wake:
+Create two elongated PlaneGeometry? MeshBasicMaterial transparent white, horizontal. Could create `CircleGeometry` scaled, but circles elliptical. At boat sides, positions x ±1.3, y=.03, z=.2, scale (1.4,4). But circle geometry in XY, rotateX(-PI/2), scale x? after rotation scale axes x and y become x,z. Use mesh scale.set(1.2,4,1) before rotation? Object scale applies local then rotation; local y becomes z. So scale.set(1.2,4,1). Position. Add 2. opacity .22, depthWrite false. Animate opacity and x.
+Maybe foam around buoy.
+
+Need perhaps wake not too much.
+
+Need create `makeTextTexture` and side name.
+
+Need boat group name maybe.
+
+Let's ensure crane cable cylinder update:
+const cable = new Mesh(CylinderGeometry(.018,.018,1,8), steel);
+crane.add(cable);
+function setCylinderBetween(mesh,a,b) {
+ const dir = new Vector3().subVectors(b,a);
+ const len=dir.length();
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.scale.set(1,len,1);
+ mesh.quaternion.setFromUnitVectors(Y_AXIS, dir.normalize());
+}
+If geometry height 1.
+For boom static use.
+Cable tip to hook top.
+Hook group includes torus and block.
+Animate hookGroup and update.
+
+Crane slew rotation and hook x mismatch slight. Could tie hook x = Math.sin(t*.22)*.14; cable update. Slew rotates tiny.
+
+Navigation lights:
+const redMat = new MeshStandardMaterial({color:0xff241f, emissive:0xff160f, emissiveIntensity:1});
+Sphere .09. Add to boat. `redMat.emissiveIntensity = 1 + Math.pow(Math.max(0,Math.sin(t*2)),8)*2`.
+Green.
+
+Radar rotation.
+
+Buoy light blink.
+
+Could add gulls as simple line V shapes in scene, but not needed.
+
+Need maybe "working deck" visually with tools. Add coiled rope, winch, crate, toolbox, life ring, fenders, anchor.
+Anchor at bow? Add anchor at x=-1.2,z4.5, use shape? Could create torus and shaft. Maybe.
+Fenders: black cylinders along hull side, at x ±1.24, y=.65,z=-.5,2.5,4.0. Cylinder default y, rotate z=PI/2 to x. Good.
+
+Hull name side maybe cabin blocks? side visible.
+
+Need include `renderer.domElement.id='scene'`.
+
+Need maybe loading overlay removed after first frame.
+
+Let's craft final answer with brief intro and code. Ensure exact CDN URL only. No other imports.
+
+Let's produce around 600 lines maybe. We can condense to 400.
+
+Need be careful with `THREE.CapsuleGeometry` available core yes. But no need.
+
+Let's write.
+=====CONTENT=====
+Save this as `index.html` and open it in a modern browser. It uses only the Three.js core ES module from cdnjs, with custom camera controls and no external assets.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coastal Buoy Tender</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #9bc8d7;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: #efffff;
+      text-shadow: 0 2px 12px rgba(0, 20, 30, 0.35);
+    }
+
+    .title-card {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      width: min(390px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      background: linear-gradient(
+        135deg,
+        rgba(5, 28, 38, 0.82),
+        rgba(10, 48, 61, 0.55)
+      );
+      box-shadow: 0 16px 40px rgba(0, 18, 27, 0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #83d7e8;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 750;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: rgba(235, 255, 255, 0.72);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .status {
+      padding: 6px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .status::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #72e6a4;
+      box-shadow: 0 0 8px #72e6a4;
+    }
+
+    .controls {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      background: rgba(5, 27, 37, 0.72);
+      color: #f0fdff;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(18, 65, 79, 0.9);
+      transform: translateY(-1px);
+    }
+
+    button.active {
+      border-color: rgba(131, 215, 232, 0.55);
+      color: #a8f1ff;
+    }
+
+    .hint {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: rgba(5, 27, 37, 0.55);
+      color: rgba(238, 255, 255, 0.75);
+      font-size: 11px;
+      backdrop-filter: blur(8px);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 10;
+      background: #102c38;
+      color: #d9f6ff;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        width: calc(100vw - 28px);
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">Preparing coastal scene…</div>
+
+  <div class="hud">
+    <section class="title-card">
+      <div class="eyebrow">Coastal Operations Unit</div>
+      <h1>Buoy Tender 07</h1>
+      <p class="subtitle">
+        Working deck, stern crane, navigation equipment, and a live coastal environment.
+      </p>
+      <div class="status-row">
+        <span class="status">Crane ready</span>
+        <span class="status">Deck secured</span>
+        <span class="status">Navigation nominal</span>
+      </div>
+    </section>
+
+    <div class="hint">
+      Drag to orbit · Wheel to zoom · Right-drag to pan · Double-click to reset
+    </div>
+
+    <div class="controls">
+      <button id="reset">Reset view</button>
+      <button id="topView">Top view</button>
+      <button id="orbit">Auto orbit</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xa8c8d4, 28, 105);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      220
+    );
+
+    const hemi = new THREE.HemisphereLight(0xdaf4ff, 0x17333b, 2.1);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff0cf, 3.2);
+    sun.position.set(-12, 19, 9);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.0003;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x8ed9ee, 0.65);
+    fill.position.set(10, 7, -12);
+    scene.add(fill);
+
+    // ------------------------------------------------------------
+    // Materials
+    // ------------------------------------------------------------
+
+    const materials = {
+      hull: new THREE.MeshStandardMaterial({
+        color: 0x0b3440,
+        roughness: 0.4,
+        metalness: 0.24,
+        side: THREE.DoubleSide
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xa92f2b,
+        roughness: 0.52,
+        metalness: 0.12
+      }),
+      deck: new THREE.MeshStandardMaterial({
+        color: 0x344247,
+        roughness: 0.88,
+        metalness: 0.04
+      }),
+      foredeck: new THREE.MeshStandardMaterial({
+        color: 0x9a6f48,
+        roughness: 0.84
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xe9eeea,
+        roughness: 0.55,
+        metalness: 0.08
+      }),
+      cabin: new THREE.MeshStandardMaterial({
+        color: 0xf2f0e5,
+        roughness: 0.5,
+        metalness: 0.12
+      }),
+      window: new THREE.MeshStandardMaterial({
+        color: 0x183d4b,
+        roughness: 0.2,
+        metalness: 0.35
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x71838a,
+        roughness: 0.3,
+        metalness: 0.75
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x26363b,
+        roughness: 0.42,
+        metalness: 0.65
+      }),
+      rope: new THREE.MeshStandardMaterial({
+        color: 0xb9a06a,
+        roughness: 0.95
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x805736,
+        roughness: 0.9
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xe85d24,
+        roughness: 0.6
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x172125,
+        roughness: 0.75
+      }),
+      redLight: new THREE.MeshStandardMaterial({
+        color: 0xff3028,
+        emissive: 0xff160d,
+        emissiveIntensity: 1
+      }),
+      greenLight: new THREE.MeshStandardMaterial({
+        color: 0x42ff9a,
+        emissive: 0x08d96e,
+        emissiveIntensity: 1
+      })
+    };
+
+    // ------------------------------------------------------------
+    // Geometry helpers
+    // ------------------------------------------------------------
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    function addBox(parent, size, position, material, castShadow = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size.x, size.y, size.z),
+        material
+      );
+      mesh.position.copy(position);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      position,
+      material,
+      radialSegments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          radialSegments
+        ),
+        material
+      );
+      mesh.position.copy(position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinderBetween(parent, a, b, radius, material, segments = 12) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 1, segments),
+        material
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      setCylinderBetween(mesh, a, b);
+      return mesh;
+    }
+
+    function setCylinderBetween(mesh, a, b) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.scale.set(1, length, 1);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+    }
+
+    function makeTextTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 160;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#dce9e5";
+      ctx.font = "700 78px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("COASTAL 07", canvas.width / 2, canvas.height / 2 + 3);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // ------------------------------------------------------------
+    // Hull and working deck
+    // ------------------------------------------------------------
+
+    const boat = new THREE.Group();
+    boat.name = "Buoy Tender 07";
+    scene.add(boat);
+
+    const stations = [
+      { z: 6.4, w: 0.06, top: 1.15, chine: 0.55, bottom: 0.25 },
+      { z: 5.8, w: 0.55, top: 1.12, chine: 0.38, bottom: 0.08 },
+      { z: 4.7, w: 0.95, top: 1.02, chine: 0.25, bottom: -0.12 },
+      { z: 2.5, w: 1.18, top: 0.90, chine: 0.10, bottom: -0.32 },
+      { z: 0.0, w: 1.25, top: 0.82, chine: 0.00, bottom: -0.42 },
+      { z: -2.4, w: 1.18, top: 0.88, chine: 0.12, bottom: -0.36 },
+      { z: -4.3, w: 0.92, top: 0.95, chine: 0.30, bottom: -0.18 },
+      { z: -5.2, w: 0.62, top: 1.02, chine: 0.48, bottom: 0.12 },
+      { z: -5.55, w: 0.32, top: 1.08, chine: 0.58, bottom: 0.38 }
+    ];
+
+    function buildHullGeometry() {
+      const positions = [];
+      const indices = [];
+
+      for (const station of stations) {
+        positions.push(
+          -station.w, station.top, station.z,
+          -station.w * 0.78, station.chine, station.z,
+          -station.w * 0.55, station.bottom, station.z,
+
+          station.w, station.top, station.z,
+          station.w * 0.78, station.chine, station.z,
+          station.w * 0.55, station.bottom, station.z
+        );
+      }
+
+      for (let i = 0; i < stations.length - 1; i++) {
+        const a = i * 3;
+        const b = (i + 1) * 3;
+
+        indices.push(
+          a, b, a + 1,
+          b, b + 1, a + 1,
+
+          a + 1, a + 2, b + 1,
+          a + 2, b + 2, b + 1,
+
+          a + 2, b + 2, a + 4,
+          a + 4, b + 2, b + 4
+        );
+      }
+
+      const last = (stations.length - 1) * 3;
+      indices.push(
+        0, 1, 2,
+        3, 5, 4,
+        last, last + 2, last + 1,
+        last + 1, last + 2, last + 3
+      );
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const hull = new THREE.Mesh(buildHullGeometry(), materials.hull);
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    boat.add(hull);
+
+    // Red rubbing strake around the waterline.
+    for (const side of [-1, 1]) {
+      const points = stations.map(
+        (station) =>
+          new THREE.Vector3(
+            side * station.w * 0.8,
+            station.chine - 0.025,
+            station.z
+          )
+      );
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const rubRail = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 80, 0.045, 6, false),
+        materials.red
+      );
+      rubRail.castShadow = true;
+      boat.add(rubRail);
+    }
+
+    function makeDeckGeometry(points, y) {
+      const geometry = new THREE.ShapeGeometry(
+        new THREE.Shape(points.map((point) => new THREE.Vector2(point.x, -point.z)))
+      );
+      geometry.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geometry, materials.deck);
+      mesh.position.y = y;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    boat.add(makeDeckGeometry(stations, 0.985));
+
+    const foredeckPoints = stations
+      .filter((station) => station.z > 4.2)
+      .map((station) => new THREE.Vector3(station.x ?? station.w, station.z));
+
+    boat.add(makeDeckGeometry(foredeckPoints, 1.025));
+
+    // ------------------------------------------------------------
+    // Railings
+    // ------------------------------------------------------------
+
+    function addRailing(a, b) {
+      const length = a.distanceTo(b);
+      const count = Math.max(2, Math.ceil(length / 1.1));
+
+      for (let i = 0; i <= count; i++) {
+        const point = a.clone().lerp(b, i / count);
+        cylinderBetween(
+          boat,
+          new THREE.Vector3(point.x, 0.99, point.z),
+          new THREE.Vector3(point.x, 1.56, point.z),
+          0.035,
+          materials.steel,
+          8
+        );
+      }
+
+      cylinderBetween(
+        boat,
+        new THREE.Vector3(a.x, 1.56, a.z),
+        new THREE.Vector3(b.x, 1.56, b.z),
+        0.042,
+        materials.steel,
+        10
+      );
+    }
+
+    addRailing(
+      new THREE.Vector3(-1.22, 0, -4.7),
+      new THREE.Vector3(-1.22, 0, 4.8)
+    );
+    addRailing(
+      new THREE.Vector3(1.22, 0, -4.7),
+      new THREE.Vector3(1.22, 0, 4.8)
+    );
+    addRailing(
+      new THREE.Vector3(-1.18, 0, -4.75),
+      new THREE.Vector3(1.18, 0, -4.75)
+    );
+    addRailing(
+      new THREE.Vector3(-0.75, 0, 5.9),
+      new THREE.Vector3(0.75, 0, 5.9)
+    );
+
+    // ------------------------------------------------------------
+    // Cabin and navigation equipment
+    // ------------------------------------------------------------
+
+    addBox(
+      boat,
+      new THREE.Vector3(1.82, 1.5, 3.12),
+      new THREE.Vector3(0, 1.76, 2.25),
+      materials.cabin
+    );
+
+    addBox(
+      boat,
+      new THREE.Vector3(2.04, 0.13, 3.36),
+      new THREE.Vector3(0, 2.64, 2.25),
+      materials.white
+    );
+
+    addBox(
+      boat,
+      new THREE.Vector3(1.55, 0.48, 0.045),
+      new THREE.Vector3(0, 2.15, 3.825),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.72, 0.48, 0.045),
+      new THREE.Vector3(-0.38, 2.15, 0.685),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.55, 0.76, 0.045),
+      new THREE.Vector3(0.56, 1.43, 0.685),
+      materials.darkSteel
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.045, 0.48, 1.47),
+      new THREE.Vector3(0.915, 2.15, 2.25),
+      materials.window
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.045, 0.48, 1.47),
+      new THREE.Vector3(-0.915, 2.15, 2.25),
+      materials.window
+    );
+
+    // Door handle and small cabin details.
+    const handle = addBox(
+      boat,
+      new THREE.Vector3(0.035, 0.28, 0.04),
+      new THREE.Vector3(0.84, 1.45, 0.72),
+      materials.darkSteel
+    );
+    handle.rotation.z = -0.15;
+
+    // Mast, radar, antennas, and navigation lights.
+    cylinderBetween(
+      boat,
+      new THREE.Vector3(0, 2.72, 2.2),
+      new THREE.Vector3(0, 4.55, 2.2),
+      0.045,
+      materials.white,
+      10
+    );
+
+    const radar = new THREE.Group();
+    radar.position.set(0, 4.48, 2.2);
+    boat.add(radar);
+
+    addBox(radar, new THREE.Vector3(0.72, 0.08, 0.12), new THREE.Vector3(0, 0, 0), materials.white);
+    cylinderBetween(
+      boat,
+      new THREE.Vector3(0.5, 2.78, 2.2),
+      new THREE.Vector3(0.5, 4.38, 2.2),
+      0.012,
+      materials.darkSteel,
+      6
+    );
+
+    const portLight = addBox(
+      boat,
+      new THREE.Vector3(0.12, 0.16, 0.12),
+      new THREE.Vector3(-0.98, 2.48, 3.84),
+      materials.redLight
+    );
+
+    const starboardLight = addBox(
+      boat,
+      new THREE.Vector3(0.12, 0.16, 0.12),
+      new THREE.Vector3(0.98, 2.48, 3.84),
+      materials.greenLight
+    );
+
+    // ------------------------------------------------------------
+    // Stern crane
+    // ------------------------------------------------------------
+
+    const crane = new THREE.Group();
+    crane.position.set(0, 1.0, -4.45);
+    boat.add(crane);
+
+    addCylinder(
+      crane,
+      0.48,
+      0.55,
+      0.5,
+      new THREE.Vector3(0, 0.25, 0),
+      materials.darkSteel,
+      20
+    );
+
+    addCylinder(
+      crane,
+      0.39,
+      0.43,
+      0.12,
+      new THREE.Vector3(0, 0.54, 0),
+      materials.steel,
+      20
+    );
+
+    const slew = new THREE.Group();
+    slew.position.y = 0.61;
+    crane.add(slew);
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.92, 0.48, 0.88),
+      new THREE.Vector3(0, 0, 0),
+      materials.cabin
+    );
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.72, 0.28, 0.25),
+      new THREE.Vector3(0, 0.18, -0.48),
+      materials.darkSteel
+    );
+
+    addBox(
+      slew,
+      new THREE.Vector3(0.48, 0.4, 0.62),
+      new THREE.Vector3(0.72, 0.1, 0.16),
+      materials.darkSteel
+    );
+    addBox(
+      slew,
+      new THREE.Vector3(0.42, 0.31, 0.58),
+      new THREE.Vector3(0.72, 0.1, 0.16),
+      materials.window
+    );
+
+    const boomLowerA = new THREE.Vector3(0, 0.65, 0);
+    const boomLowerB = new THREE.Vector3(0, 1.85, 1.45);
+    const boomUpperA = boomLowerB;
+    const boomUpperB = new THREE.Vector3(0, 3.15, 2.3);
+    const boomTip = new THREE.Vector3(0, 3.45, 2.45);
+
+    cylinderBetween(
+      slew,
+      boomLowerA,
+      boomLowerB,
+      0.115,
+      materials.yellow || materials.orange,
+      14
+    );
+    cylinderBetween(
+      slew,
+      boomLowerB,
+      boomUpperB,
+      0.095,
+      materials.orange,
+      14
+    );
+    cylinderBetween(
+      slew,
+      boomUpperB,
+      boomTip,
+      0.075,
+      materials.orange,
+      12
+    );
+
+    cylinderBetween(
+      slew,
+      new THREE.Vector3(0.28, 0.66, 0.18),
+      new THREE.Vector3(0.03, 1.48, 1.22),
+      0.055,
+      materials.steel,
+      10
+    );
+
+    const hydraulicJoint = addCylinder(
+      slew,
+      0.15,
+      0.15,
+      0.18,
+      new THREE.Vector3(0.28, 0.66, 0.18),
+      materials.darkSteel,
+      12
+    );
+    hydraulicJoint.rotation.z = Math.PI / 2;
+
+    // Sheave and hoist cable.
+    const sheave = addCylinder(
+      slew,
+      0.16,
+      0.16,
+      0.1,
+      boomTip,
+      materials.darkSteel,
+      16
+    );
+    sheave.rotation.z = Math.PI / 2;
+
+    const cable = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, 1, 8),
+      materials.darkSteel
+    );
+    cable.castShadow = true;
+    slew.add(cable);
+
+    const hookGroup = new THREE.Group();
+    hookGroup.position.set(0, 1.72, 2.45);
+    slew.add(hookGroup);
+
+    const hook = new THREE.Mesh(
+      new THREE.TorusGeometry(0.13, 0.035, 8, 18, Math.PI * 1.65),
+      materials.darkSteel
+    );
+    hook.rotation.z = Math.PI * 0.2;
+    hook.castShadow = true;
+    hookGroup.add(hook);
+
+    addBox(
+      hookGroup,
+      new THREE.Vector3(0.12, 0.18, 0.12),
+      new THREE.Vector3(0, 0.17, 0),
+      materials.darkSteel
+    );
+
+    // ------------------------------------------------------------
+    // Deck equipment
+    // ------------------------------------------------------------
+
+    // Winch.
+    const winch = new THREE.Group();
+    winch.position.set(0.78, 1.08, 0.85);
+    winch.rotation.y = -0.25;
+    boat.add(winch);
+
+    addBox(
+      winch,
+      new THREE.Vector3(0.9, 0.12, 0.58),
+      new THREE.Vector3(0, 0, 0),
+      materials.darkSteel
+    );
+
+    for (const x of [-0.2, 0.2]) {
+      const drum = addCylinder(
+        winch,
+        0.25,
+        0.25,
+        0.18,
+        new THREE.Vector3(x, 0.28, 0),
+        materials.wood,
+        20
+      );
+      drum.rotation.z = Math.PI / 2;
+
+      const flange = new THREE.Mesh(
+        new THREE.TorusGeometry(0.25, 0.045, 8, 24),
+        materials.steel
+      );
+      flange.rotation.y = Math.PI / 2;
+      flange.position.set(x + Math.sign(x) * 0.1, 0.28, 0);
+      winch.add(flange);
+    }
+
+    // Coiled rope on the foredeck.
+    for (let i = 0; i < 4; i++) {
+      const coil = new THREE.Mesh(
+        new THREE.TorusGeometry(0.28 + i * 0.045, 0.035, 7, 28),
+        materials.rope
+      );
+      coil.rotation.x = Math.PI / 2;
+      coil.position.set(-0.35, 1.08 + i * 0.045, 4.25);
+      coil.castShadow = true;
+      boat.add(coil);
+    }
+
+    // Crates.
+    function addCrate(x, y, z, size) {
+      addBox(
+        boat,
+        new THREE.Vector3(size, size, size),
+        new THREE.Vector3(x, y + size / 2, z),
+        materials.wood
+      );
+
+      for (let i = 0; i < 4; i++) {
+        addBox(
+          boat,
+          new THREE.Vector3(size + 0.02, 0.035, 0.035),
+          new THREE.Vector3(x, y + size / 2, z + size * 0.5),
+          materials.darkSteel,
+          false
+        );
+      }
+    }
+
+    addCrate(-0.67, 1.02, -2.6, 0.58);
+    addCrate(-0.67, 1.62, -2.6, 0.58);
+
+    // Tool chest.
+    addBox(
+      boat,
+      new THREE.Vector3(0.62, 0.48, 0.48),
+      new THREE.Vector3(0.62, 1.28, -2.55),
+      materials.red
+    );
+    addBox(
+      boat,
+      new THREE.Vector3(0.38, 0.05, 0.05),
+      new THREE.Vector3(0.62, 1.34, -2.3),
+      materials.darkSteel
+    );
+
+    // Life ring.
+    const lifeRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.3, 0.075, 8, 20),
+      materials.orange
+    );
+    lifeRing.position.set(-0.98, 1.55, -2.45);
+    lifeRing.rotation.y = Math.PI / 2;
+    lifeRing.castShadow = true;
+    boat.add(lifeRing);
+
+    // Bollards.
+    function addBollard(x, z) {
+      addCylinder(
+        boat,
+        0.13,
+        0.17,
+        0.16,
+        new THREE.Vector3(x, 1.08, z),
+        materials.darkSteel,
+        12
+      );
+      addCylinder(
+        boat,
+        0.07,
+        0.11,
+        0.32,
+        new THREE.Vector3(x, 1.27, z),
+        materials.darkSteel,
+        10
+      );
+    }
+
+    addBollard(-0.85, 4.45);
+    addBollard(0.85, 4.45);
+    addBollard(-0.85, -4.55);
+    addBollard(0.85, -4.55);
+
+    // Side fenders.
+    for (const side of [-1, 1]) {
+      for (const z of [-0.7, 2.4, 4.0]) {
+        const fender = addCylinder(
+          boat,
+          0.13,
+          0.16,
+          0.34,
+          new THREE.Vector3(side * 1.25, 0.68, z),
+          materials.black,
+          12
+        );
+        fender.rotation.z = Math.PI / 2;
+      }
+    }
+
+    // Bow anchor.
+    const anchor = new THREE.Group();
+    anchor.position.set(-1.15, 0.72, 4.55);
+    anchor.rotation.z = -0.12;
+    boat.add(anchor);
+
+    const anchorRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.18, 0.045, 8, 18, Math.PI * 1.55),
+      materials.darkSteel
+    );
+    anchorRing.rotation.z = Math.PI * 0.25;
+    anchor.add(anchorRing);
+
+    cylinderBetween(
+      anchor,
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, -0.55, 0),
+      0.035,
+      materials.darkSteel,
+      8
+    );
+
+    const stock = addBox(
+      anchor,
+      new THREE.Vector3(0.48, 0.045, 0.045),
+      new THREE.Vector3(0, -0.42, 0),
+      materials.darkSteel
+    );
+    stock.rotation.z = -0.25;
+
+    // Name on both sides.
+    const nameTexture = makeTextTexture();
+    const nameMaterial = new THREE.MeshBasicMaterial({
+      map: nameTexture,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const starboardName = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.85, 0.39),
+      nameMaterial
+    );
+    starboardName.position.set(1.265, 0.75, 0.15);
+    starboardName.rotation.y = Math.PI / 2;
+    boat.add(starboardName);
+
+    const portName = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.85, 0.39),
+      nameMaterial
+    );
+    portName.position.set(-1.265, 0.75, 0.15);
+    portName.rotation.y = -Math.PI / 2;
+    boat.add(portName);
+
+    // ------------------------------------------------------------
+    // Water
+    // ------------------------------------------------------------
+
+    const waterGeometry = new THREE.PlaneGeometry(180, 180, 120, 120);
+    waterGeometry.rotateX(-Math.PI / 2);
+
+    const waterMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uSunDirection: {
+          value: new THREE.Vector3(-0.45, 0.8, 0.35).normalize()
+        },
+        uDeep: { value: new THREE.Color(0x176075) },
+        uShallow: { value: new THREE.Color(0x4c9cad) },
+        uHorizon: { value: new THREE.Color(0xa8c8d4) }
+      },
+      vertexShader: `
+        uniform float uTime;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          vec3 p = position;
+          float waveA = sin(p.x * 0.18 + uTime * 0.72) * 0.11;
+          float waveB = cos(p.z * 0.23 - uTime * 0.54) * 0.075;
+          float waveC = sin((p.x + p.z) * 0.11 + uTime * 0.41) * 0.055;
+          p.y += waveA + waveB + waveC;
+
+          vec4 worldPosition = modelMatrix * vec4(p, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          vWave = waveA + waveB + waveC;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uSunDirection;
+        uniform vec3 uDeep;
+        uniform vec3 uShallow;
+        uniform vec3 uHorizon;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          vec3 normal = normalize(vec3(
+            -0.025 * cos(vWorldPosition.x * 0.18 + uTime * 0.72),
+            1.0,
+            -0.022 * cos(vWorldPosition.z * 0.23 - uTime * 0.54)
+          ));
+
+          vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+          vec3 lightDirection = normalize(uSunDirection);
+
+          float diffuse = max(dot(normal, lightDirection), 0.0);
+          float specular = pow(
+            max(dot(reflect(-lightDirection, normal), viewDirection), 0.0),
+            110.0
+          );
+
+          float fresnel = pow(
+            1.0 - max(dot(normal, viewDirection), 0.0),
+            3.0
+          );
+
+          float distanceToCamera = length(cameraPosition.xz - vWorldPosition.xz);
+          float haze = exp(-distanceToCamera * 0.011);
+
+          vec3 color = mix(uDeep, uShallow, 0.35 + vWave * 1.4);
+          color += vec3(0.38, 0.48, 0.43) * fresnel * 0.48;
+          color += vec3(1.0, 0.82, 0.5) * specular * 1.8;
+
+          color = mix(color, uHorizon, haze * 0.68);
+          gl_FragColor = vec4(color, 1.0);
+
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `
+    });
+
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.receiveShadow = true;
+    scene.add(water);
+
+    // ------------------------------------------------------------
+    // Sky, clouds, distant islands, and buoy
+    // ------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(110, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          uTop: { value: new THREE.Color(0x4f9fbe) },
+          uHorizon: { value: new THREE.Color(0xc3dce3) }
+        },
+        vertexShader: `
+          varying vec3 vDirection;
+          void main() {
+            vDirection = normalize(position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uTop;
+          uniform vec3 uHorizon;
+          varying vec3 vDirection;
+          void main() {
+            float h = smoothstep(-0.12, 0.75, vDirection.y);
+            vec3 color = mix(uHorizon, uTop, h);
+            gl_FragColor = vec4(color, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }
+        `
+      })
+    );
+    scene.add(sky);
+
+    const cloudMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf2f7f3,
+      roughness: 1,
+      fog: true
+    });
+
+    function addCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+
+      const pieces = [
+        [-1.2, 0, 0, 0.9],
+        [-0.4, 0.25, 0, 1.15],
+        [0.65, 0.12, 0, 1.0],
+        [1.35, -0.05, 0, 0.65],
+        [0.1, -0.2, 0.15, 1.2]
+      ];
+
+      for (const [px, py, pz, size] of pieces) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(size, 12, 8),
+          cloudMaterial
+        );
+        puff.position.set(px, py, pz);
+        puff.scale.y = 0.58;
+        cloud.add(puff);
+      }
+
+      scene.add(cloud);
+    }
+
+    addCloud(-18, 13, -32, 1.8);
+    addCloud(22, 16, -40, 2.1);
+    addCloud(-30, 18, 12, 1.5);
+
+    const islandMaterial = new THREE.MeshStandardMaterial({
+      color: 0x466c61,
+      roughness: 1,
+      flatShading: true
+    });
+
+    function addIsland(x, z, scale) {
+      const island = new THREE.Group();
+      island.position.set(x, 0, z);
+      island.scale.setScalar(scale);
+
+      const hill = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(2.2, 0),
+        islandMaterial
+      );
+      hill.position.y = -0.3;
+      hill.scale.set(1.5, 0.6, 1);
+      hill.receiveShadow = true;
+      island.add(hill);
+
+      scene.add(island);
+    }
+
+    addIsland(-34, -48, 2.2);
+    addIsland(38, -55, 1.8);
+
+    // Foreground navigation buoy.
+    const buoy = new THREE.Group();
+    buoy.position.set(8.2, 0, 5.4);
+    scene.add(buoy);
+
+    addCylinder(
+      buoy,
+      0.46,
+      0.55,
+      0.75,
+      new THREE.Vector3(0, 0.38, 0),
+      materials.white,
+      20
+    );
+    addCylinder(
+      buoy,
+      0.34,
+      0.4,
+      0.58,
+      new THREE.Vector3(0, 0.98, 0),
+      materials.red,
+      20
+    );
+
+    const buoyRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.39, 0.055, 8, 24),
+      materials.white
+    );
+    buoyRing.rotation.x = Math.PI / 2;
+    buoyRing.position.y = 0.78;
+    buoy.add(buoyRing);
+
+    addCylinder(
+      buoy,
+      0.035,
+      0.05,
+      0.75,
+      new THREE.Vector3(0, 1.62, 0),
+      materials.darkSteel,
+      8
+    );
+
+    const buoyLight = addCylinder(
+      buoy,
+      0.12,
+      0.16,
+      0.22,
+      new THREE.Vector3(0, 2.02, 0),
+      materials.redLight,
+      12
+    );
+
+    // ------------------------------------------------------------
+    // Custom orbit / pan / zoom controls
+    // ------------------------------------------------------------
+
+    const target = new THREE.Vector3(0, 1.25, 0);
+    const spherical = new THREE.Spherical(16.5, 1.08, -2.28);
+    const pointers = new Map();
+    let autoOrbit = false;
+
+    function updateCamera() {
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(target).add(offset);
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      target.set(0, 1.25, 0);
+      spherical.set(16.5, 1.08, -2.28);
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+
+      previous.x = event.clientX;
+      previous.y = event.clientY;
+
+      if (event.button === 2) {
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+        const panScale = spherical.radius * 0.0013;
+
+        target.addScaledVector(right, -dx * panScale);
+        target.addScaledVector(up, dy * panScale);
+      } else {
+        spherical.theta -= dx * 0.005;
+        spherical.phi = THREE.MathUtils.clamp(
+          spherical.phi - dy * 0.005,
+          0.22,
+          1.47
+        );
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          6.5,
+          38
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    document.getElementById("topView").addEventListener("click", () => {
+      target.set(0, 1.1, 0);
+      spherical.set(17, 0.2, -0.15);
+      updateCamera();
+    });
+
+    const orbitButton = document.getElementById("orbit");
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateCamera();
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let frame = 0;
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      waterMaterial.uniforms.uTime.value = elapsed;
+
+      // Gentle boat motion.
+      boat.position.y = Math.sin(elapsed * 0.72) * 0.065;
+      boat.rotation.z = Math.sin(elapsed * 0.48) * 0.008;
+      boat.rotation.x = Math.cos(elapsed * 0.43) * 0.005;
+
+      // Crane motion and moving hook.
+      slew.rotation.y = -0.12 + Math.sin(elapsed * 0.2) * 0.025;
+      hookGroup.position.x = Math.sin(elapsed * 0.38) * 0.13;
+      hookGroup.position.y = 1.72 + Math.sin(elapsed * 0.31) * 0.1;
+      hookGroup.rotation.z = Math.sin(elapsed * 0.42) * 0.08;
+
+      const hookTop = new THREE.Vector3(
+        hookGroup.position.x,
+        hookGroup.position.y + 0.2,
+        hookGroup.position.z
+      );
+      setCylinderBetween(cable, boomTip, hookTop);
+
+      radar.rotation.y = elapsed * 0.38;
+      radar.rotation.z = Math.sin(elapsed * 0.6) * 0.08;
+
+      // Navigation lights.
+      const redPulse = Math.pow(Math.max(0, Math.sin(elapsed * 2.2)), 8);
+      materials.redLight.emissiveIntensity = 0.8 + redPulse * 2.2;
+      materials.greenLight.emissiveIntensity = 0.8 + redPulse * 2.2;
+
+      // Buoy motion.
+      buoy.position.y = Math.sin(elapsed * 0.85) * 0.08;
+      buoy.rotation.z = Math.sin(elapsed * 0.62) * 0.035;
+      buoy.rotation.x = Math.cos(elapsed * 0.55) * 0.025;
+      buoyLight.rotation.y = elapsed * 1.7;
+
+      // Wake animation.
+      const wakeLeft = boat.children.find(
+        (child) =>
+          child.geometry?.type === "PlaneGeometry" &&
+          child.position.x < 0
+      );
+      const wakeRight = boat.children.find(
+        (child) =>
+          child.geometry?.type === "PlaneGeometry" &&
+          child.position.x > 0
+      );
+
+      if (wakeLeft && wakeRight) {
+        wakeLeft.material.opacity = 0.13 + Math.sin(elapsed * 1.2) * 0.045;
+        wakeRight.material.opacity = 0.13 + Math.sin(elapsed * 1.2 + 0.8) * 0.045;
+        wakeLeft.position.x = -1.32 + Math.sin(elapsed * 0.45) * 0.08;
+        wakeRight.position.x = 1.32 - Math.sin(elapsed * 0.45 + 0.5) * 0.08;
+      }
+
+      renderer.render(scene, camera);
+
+      if (autoOrbit) {
+        spherical.theta += delta * 0.08;
+        updateCamera();
+      }
+
+      frame++;
+      if (frame === 2) {
+        document.getElementById("loading").classList.add("hidden");
+      }
+    }
+
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>
+```

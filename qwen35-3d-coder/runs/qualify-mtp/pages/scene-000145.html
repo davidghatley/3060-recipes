@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Boss Within — Kite Shield Encounter</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --gold: #e7b75b;
+      --cream: #f0dfbd;
+      --red: #ff4b4b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 35%, #171b2d 0%, #080912 42%, #030409 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.58) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 25%, transparent 75%, rgba(0, 0, 0, 0.32));
+    }
+
+    .title-panel {
+      position: fixed;
+      top: clamp(22px, 4vw, 54px);
+      left: clamp(22px, 4vw, 58px);
+      width: min(390px, calc(100vw - 44px));
+      pointer-events: none;
+      text-shadow: 0 2px 18px #000;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: var(--gold);
+      box-shadow: 0 0 10px rgba(231, 183, 91, 0.7);
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      color: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 6vw, 76px);
+      font-weight: 400;
+      line-height: 0.94;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      max-width: 340px;
+      margin: 16px 0 0;
+      color: rgba(240, 223, 189, 0.62);
+      font-size: 12px;
+      line-height: 1.65;
+      letter-spacing: 0.06em;
+    }
+
+    .boss-tag {
+      position: fixed;
+      top: clamp(24px, 4vw, 56px);
+      right: clamp(22px, 4vw, 58px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(240, 223, 189, 0.82);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      pointer-events: none;
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .boss-tag.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .boss-tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 16px var(--red);
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 12px 16px;
+      border: 1px solid rgba(231, 183, 91, 0.18);
+      border-radius: 999px;
+      color: rgba(240, 223, 189, 0.55);
+      background: rgba(8, 9, 17, 0.64);
+      backdrop-filter: blur(12px);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .controls span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .controls i {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    button {
+      border: 1px solid rgba(231, 183, 91, 0.35);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--cream);
+      background: rgba(231, 183, 91, 0.08);
+      font: inherit;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    button:hover {
+      border-color: rgba(231, 183, 91, 0.75);
+      background: rgba(231, 183, 91, 0.16);
+    }
+
+    .progress {
+      position: fixed;
+      right: clamp(22px, 4vw, 58px);
+      bottom: 28px;
+      width: 110px;
+      color: rgba(240, 223, 189, 0.45);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .progress-bar {
+      height: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .progress-fill {
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, #8a2830, #ff6a45);
+      box-shadow: 0 0 12px rgba(255, 80, 55, 0.6);
+      animation: progress 7s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+      0%, 100% { transform: scaleX(0.45); opacity: 0.5; }
+      50% { transform: scaleX(1); opacity: 1; }
+    }
+
+    @media (max-width: 700px) {
+      .boss-tag {
+        top: auto;
+        right: 20px;
+        bottom: 88px;
+      }
+
+      .progress {
+        display: none;
+      }
+
+      .subtitle {
+        max-width: 270px;
+        font-size: 11px;
+      }
+
+      .controls {
+        gap: 10px;
+        padding: 10px 12px;
+        font-size: 8px;
+      }
+
+      .controls .desktop-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="vignette"></div>
+
+  <header class="title-panel">
+    <div class="eyebrow">Encounter 07</div>
+    <h1>The Boss<br />Within</h1>
+    <p class="subtitle">
+      A ancient sigil awakens in the steel. Defend yourself with the
+      adventurer's kite shield and face the entity at the center of the chamber.
+    </p>
+  </header>
+
+  <div class="boss-tag" id="bossTag">Valtar the Hollow</div>
+
+  <div class="progress">
+    <div>Awakening sigil</div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span><i></i> Drag to orbit</span>
+    <span><i></i> Scroll to zoom</span>
+    <span class="desktop-hint"><i></i> Right-drag to pan</span>
+    <button id="resetView" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x030409, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x05060d, 0.032);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const clock = new THREE.Clock();
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x69351f,
+        roughness: 0.82,
+        metalness: 0.05
+      }),
+      darkWood: new THREE.MeshStandardMaterial({
+        color: 0x351b12,
+        roughness: 0.9
+      }),
+      gold: new THREE.MeshStandardMaterial({
+        color: 0xc89536,
+        roughness: 0.28,
+        metalness: 0.78
+      }),
+      brightGold: new THREE.MeshStandardMaterial({
+        color: 0xf0bd57,
+        roughness: 0.2,
+        metalness: 0.72
+      }),
+      iron: new THREE.MeshStandardMaterial({
+        color: 0x202635,
+        roughness: 0.48,
+        metalness: 0.78
+      }),
+      plate: new THREE.MeshStandardMaterial({
+        color: 0x4a5265,
+        roughness: 0.38,
+        metalness: 0.82
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0x8f1720,
+        roughness: 0.86,
+        side: THREE.DoubleSide
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x050507,
+        roughness: 0.95
+      }),
+      skin: new THREE.MeshStandardMaterial({
+        color: 0xb97855,
+        roughness: 0.88
+      }),
+      cloth: new THREE.MeshStandardMaterial({
+        color: 0x7c1825,
+        roughness: 0.92,
+        side: THREE.DoubleSide
+      }),
+      eye: new THREE.MeshStandardMaterial({
+        color: 0xff2638,
+        emissive: 0xff1020,
+        emissiveIntensity: 3.5,
+        roughness: 0.25
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    function cylinderBetween(a, b, radius, material, radialSegments = 8) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        radialSegments
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function addGlow(parent, color, size, position, opacity = 0.8) {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 128;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(
+        64, 64, 0,
+        64, 64, 64
+      );
+
+      gradient.addColorStop(0, `rgba(${color},1)`);
+      gradient.addColorStop(0.12, `rgba(${color},${opacity}`);
+      gradient.addColorStop(0.45, `rgba(${color},${opacity * 0.35}`);
+      gradient.addColorStop(1, `rgba(${color},0)`);
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.copy(position);
+      sprite.scale.set(size, size, 1);
+      parent.add(sprite);
+      return sprite;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x8794c8, 0x160b08, 1.15));
+
+    const keyLight = new THREE.DirectionalLight(0xffe3b0, 3.2);
+    keyLight.position.set(4.5, 8, 6);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -8;
+    keyLight.shadow.camera.right = 8;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 25;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x476dff, 2.2);
+    rimLight.position.set(-5, 4, -4);
+    scene.add(rimLight);
+
+    const redLight = new THREE.PointLight(0xff264f, 18, 9, 2);
+    redLight.position.set(-1.1, 2.4, -1.8);
+    scene.add(redLight);
+
+    const shieldLight = new THREE.PointLight(0xff9b45, 8, 6, 2);
+    shieldLight.position.set(2, 2.3, 3.8);
+    scene.add(shieldLight);
+
+    // -------------------------------------------------------------------------
+    // Chamber floor and architecture
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(18, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x090b12,
+        roughness: 0.96,
+        metalness: 0.05
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.4;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const dais = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.8, 6.4, 0.38, 72),
+      new THREE.MeshStandardMaterial({
+        color: 0x20232d,
+        roughness: 0.82,
+        metalness: 0.25
+      })
+    );
+    dais.position.y = -0.2;
+    dais.receiveShadow = true;
+    dais.castShadow = true;
+    scene.add(dais);
+
+    const daisTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.45, 5.55, 0.16, 72),
+      new THREE.MeshStandardMaterial({
+        color: 0x343642,
+        roughness: 0.68,
+        metalness: 0.35
+      })
+    );
+    daisTop.position.y = 0.04;
+    daisTop.receiveShadow = true;
+    scene.add(daisTop);
+
+    for (const radius of [3.1, 4.65]) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, 0.025, 6, 128),
+        materials.gold
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.135;
+      scene.add(ring);
+    }
+
+    const pillarMaterial = new THREE.MeshStandardMaterial({
+      color: 0x202433,
+      roughness: 0.75,
+      metalness: 0.35
+    });
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      const x = Math.sin(angle) * 8.2;
+      const z = Math.cos(angle) * 8.2;
+
+      const pillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.58, 4.6, 10),
+        pillarMaterial
+      );
+      pillar.position.set(x, 2.1, z);
+      pillar.castShadow = true;
+      pillar.receiveShadow = true;
+      scene.add(pillar);
+
+      const cap = new THREE.Mesh(
+        new THREE.ConeGeometry(0.68, 0.75, 8),
+        materials.iron
+      );
+      cap.position.set(x, 4.75, z);
+      cap.castShadow = true;
+      scene.add(cap);
+    }
+
+    // -------------------------------------------------------------------------
+    // Central boss
+    // -------------------------------------------------------------------------
+
+    const boss = new THREE.Group();
+    boss.position.set(-1.15, 0, -2.75);
+    boss.scale.setScalar(1.12);
+    scene.add(boss);
+
+    const bossBody = new THREE.Group();
+    boss.add(bossBody);
+
+    // Feet and legs.
+    for (const side of [-1, 1]) {
+      const boot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.58, 0.32, 0.72),
+        materials.iron
+      );
+      boot.position.set(side * 0.22, 0.18, 0.05);
+      boot.castShadow = true;
+      bossBody.add(boot);
+
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.28, 0.82, 10),
+        materials.plate
+      );
+      leg.position.set(side * 0.22, 0.63, 0);
+      leg.castShadow = true;
+      bossBody.add(leg);
+    }
+
+    // Torso and chest armor.
+    const torso = new THREE.Mesh(
+      new THREE.SphereGeometry(0.58, 20, 14),
+      materials.plate
+    );
+    torso.scale.set(1, 1.18, 0.82);
+    torso.position.y = 1.28;
+    torso.castShadow = true;
+    bossBody.add(torso);
+
+    const chestPlate = new THREE.Mesh(
+      new THREE.SphereGeometry(0.43, 18, 12),
+      materials.iron
+    );
+    chestPlate.scale.set(1, 0.9, 0.28);
+    chestPlate.position.set(0, 1.3, 0.43);
+    chestPlate.castShadow = true;
+    bossBody.add(chestPlate);
+
+    for (const x of [-0.25, 0.25]) {
+      for (const y of [1.05, 1.55]) {
+        const rivet = new THREE.Mesh(
+          new THREE.SphereGeometry(0.035, 8, 6),
+          materials.gold
+        );
+        rivet.position.set(x, y, 0.66);
+        bossBody.add(rivet);
+      }
+    }
+
+    // Shoulders and arms.
+    for (const side of [-1, 1]) {
+      const shoulder = new THREE.Mesh(
+        new THREE.SphereGeometry(0.34, 12, 10),
+        materials.plate
+      );
+      shoulder.position.set(side * 0.55, 1.4, 0);
+      shoulder.scale.set(1, 0.85, 0.8);
+      shoulder.castShadow = true;
+      bossBody.add(shoulder);
+
+      const arm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.2, 0.78, 10),
+        materials.plate
+      );
+      arm.position.set(side * 0.78, 1.03, 0);
+      arm.rotation.z = side * 0.12;
+      arm.castShadow = true;
+      bossBody.add(arm);
+
+      const gauntlet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.22, 10, 8),
+        materials.iron
+      );
+      gauntlet.position.set(side * 0.84, 0.73, 0);
+      gauntlet.scale.set(1, 1.15, 0.9);
+      bossBody.add(gauntlet);
+    }
+
+    // Neck and helmet.
+    const neck = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.27, 0.42, 12),
+      materials.iron
+    );
+    neck.position.y = 1.95;
+    neck.castShadow = true;
+    bossBody.add(neck);
+
+    const helmet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.46, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      materials.plate
+    );
+    helmet.position.y = 2.28;
+    helmet.scale.set(1, 0.88, 0.92);
+    helmet.castShadow = true;
+    bossBody.add(helmet);
+
+    const visor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.38, 0.16, 0.08),
+      materials.black
+    );
+    visor.position.set(0, 2.3, 0.43);
+    bossBody.add(visor);
+
+    // Horns.
+    for (const side of [-1, 1]) {
+      const horn = new THREE.Mesh(
+        new THREE.ConeGeometry(0.12, 0.8, 8),
+        materials.iron
+      );
+      horn.position.set(side * 0.34, 2.75, 0.05);
+      horn.rotation.z = side * -0.55;
+      horn.rotation.x = -0.25;
+      horn.castShadow = true;
+      bossBody.add(horn);
+    }
+
+    // Eyes.
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(
+        new THREE.SphereGeometry(0.065, 10, 8),
+        materials.eye
+      );
+      eye.position.set(side * 0.12, 2.31, 0.49);
+      bossBody.add(eye);
+
+      addGlow(
+        bossBody,
+        0xff2645,
+        1.15,
+        new THREE.Vector3(side * 0.12, 2.31, 0.51),
+        0.7
+      );
+    }
+
+    // Sword.
+    const swordHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.46, 10),
+      materials.gold
+    );
+    swordHandle.position.set(0, 2.02, 0.12);
+    swordHandle.rotation.z = 0.08;
+    bossBody.add(swordHandle);
+
+    const swordGuard = new THREE.Mesh(
+      new THREE.TorusGeometry(0.13, 0.025, 6, 18, Math.PI),
+      materials.gold
+    );
+    swordGuard.position.set(0, 2.22, 0.12);
+    swordGuard.rotation.z = Math.PI / 2;
+    bossBody.add(swordGuard);
+
+    const swordBlade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.035, 1.25, 0.05),
+      new THREE.MeshStandardMaterial({
+        color: 0xb8c7d8,
+        metalness: 0.9,
+        roughness: 0.22
+      })
+    );
+    swordBlade.position.set(0, 2.88, 0.12);
+    swordBlade.rotation.z = 0.08;
+    swordBlade.castShadow = true;
+    bossBody.add(swordBlade);
+
+    // Cape.
+    const capeShape = new THREE.Shape();
+    capeShape.moveTo(-0.75, 0);
+    capeShape.lineTo(0.75, 0);
+    capeShape.lineTo(0.2, 1.25);
+    capeShape.lineTo(-0.2, 1.25);
+    capeShape.closePath();
+
+    const cape = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(capeShape, {
+        depth: 0.12,
+        bevelEnabled: true,
+        bevelSize: 0.04,
+        bevelThickness: 0.04
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x3b0711,
+        roughness: 0.95,
+        side: THREE.DoubleSide
+      })
+    );
+    cape.position.set(0, 1.55, -0.1);
+    cape.castShadow = true;
+    bossBody.add(cape);
+
+    // Boss aura.
+    const bossAura = new THREE.Mesh(
+      new THREE.TorusGeometry(1.55, 0.025, 6, 100),
+      new THREE.MeshBasicMaterial({
+        color: 0xff3149,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    bossAura.position.z = 0.15;
+    boss.add(bossAura);
+
+    addGlow(
+      boss,
+      0xff2645,
+      4.2,
+      new THREE.Vector3(0, 2.4, 0),
+      0.32
+    );
+
+    // -------------------------------------------------------------------------
+    // Adventurer and kite shield
+    // -------------------------------------------------------------------------
+
+    const adventurer = new THREE.Group();
+    adventurer.position.set(3.75, 0, 2.35);
+    adventurer.rotation.y = -0.22;
+    scene.add(adventurer);
+
+    const adventurerTorso = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 16, 12),
+      materials.cloth
+    );
+    adventurerTorso.scale.set(0.88, 1.15, 0.82);
+    adventurerTorso.position.y = 1.3;
+    adventurerTorso.castShadow = true;
+    adventurer.add(adventurerTorso);
+
+    const adventurerHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.27, 16, 12),
+      materials.skin
+    );
+    adventurerHead.position.set(0, 2.16, 0.05);
+    adventurerHead.castShadow = true;
+    adventurer.add(adventurerHead);
+
+    const adventurerHelmet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.285, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      materials.iron
+    );
+    adventurerHelmet.position.set(0, 2.18, 0.04);
+    adventurerHelmet.scale.set(1, 0.82, 1);
+    adventurer.add(adventurerHelmet);
+
+    const adventurerVisor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.055, 0.04),
+      materials.eye
+    );
+    adventurerVisor.position.set(0, 2.19, 0.285);
+    adventurer.add(adventurerVisor);
+
+    // Cloak.
+    const cloakShape = new THREE.Shape();
+    cloakShape.moveTo(-0.52, 0);
+    cloakShape.lineTo(0.52, 0);
+    cloakShape.lineTo(0.2, 1.05);
+    cloakShape.lineTo(-0.2, 1.05);
+    cloakShape.closePath();
+
+    const cloak = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(cloakShape, {
+        depth: 0.1,
+        bevelEnabled: true,
+        bevelSize: 0.035,
+        bevelThickness: 0.035
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x263a55,
+        roughness: 0.94,
+        side: THREE.DoubleSide
+      })
+    );
+    cloak.position.set(0, 0.72, -0.08);
+    cloak.rotation.y = 0.08;
+    cloak.castShadow = true;
+    adventurer.add(cloak);
+
+    // Arms.
+    for (const side of [-1, 1]) {
+      const arm = cylinderBetween(
+        new THREE.Vector3(side * 0.31, 1.55, 0),
+        new THREE.Vector3(side * 0.62, 1.04, 0.04),
+        0.15,
+        materials.cloth,
+        10
+      );
+      adventurer.add(arm);
+
+      const glove = new THREE.Mesh(
+        new THREE.SphereGeometry(0.17, 10, 8),
+        materials.iron
+      );
+      glove.position.set(side * 0.64, 0.96, 0.04);
+      glove.scale.set(1, 1.15, 0.9);
+      adventurer.add(glove);
+    }
+
+    // Shield assembly.
+    const shield = new THREE.Group();
+    shield.position.set(2.15, 2.05, 3.15);
+    shield.rotation.y = 0.08;
+    scene.add(shield);
+
+    const shieldWidth = 2.25;
+    const shieldHeight = 3.05;
+
+    const top = new THREE.Vector3(0, shieldHeight / 2, 0);
+    const right = new THREE.Vector3(shieldWidth / 2, 0, 0);
+    const bottom = new THREE.Vector3(0, -shieldHeight / 2, 0);
+    const left = new THREE.Vector3(-shieldWidth / 2, 0, 0);
+
+    const innerTop = new THREE.Vector3(0, shieldHeight * 0.34, 0);
+    const innerRight = new THREE.Vector3(shieldWidth * 0.36, 0, 0);
+    const innerBottom = new THREE.Vector3(0, -shieldHeight * 0.34, 0);
+    const innerLeft = new THREE.Vector3(-shieldWidth * 0.36, 0, 0);
+
+    shield.add(
+      cylinderBetween(top, right, 0.065, materials.wood, 10),
+      cylinderBetween(right, bottom, 0.065, materials.wood, 10),
+      cylinderBetween(bottom, left, 0.065, materials.wood, 10),
+      cylinderBetween(left, top, 0.065, materials.wood, 10)
+    );
+
+    shield.add(
+      cylinderBetween(innerTop, innerRight, 0.025, materials.gold, 6),
+      cylinderBetween(innerRight, innerBottom, 0.025, materials.gold, 6),
+      cylinderBetween(innerBottom, innerLeft, 0.025, materials.gold, 6),
+      cylinderBetween(innerLeft, innerTop, 0.025, materials.gold, 6)
+    );
+
+    // Cross bracing.
+    shield.add(
+      cylinderBetween(
+        new THREE.Vector3(0, -shieldHeight * 0.46, 0),
+        new THREE.Vector3(0, shieldHeight * 0.46, 0),
+        0.032,
+        materials.gold,
+        6
+      ),
+      cylinderBetween(
+        new THREE.Vector3(-shieldWidth * 0.46, 0, 0),
+        new THREE.Vector3(shieldWidth * 0.46, 0, 0),
+        0.032,
+        materials.gold,
+        6
+      )
+    );
+
+    // Gold corner studs.
+    for (const point of [top, right, bottom, left]) {
+      const stud = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 10, 8),
+        materials.brightGold
+      );
+      stud.position.copy(point);
+      stud.castShadow = true;
+      shield.add(stud);
+    }
+
+    // Center boss sigil on the shield.
+    const shieldDisc = new THREE.Mesh(
+      new THREE.TorusGeometry(0.34, 0.055, 8, 32),
+      materials.gold
+    );
+    shieldDisc.position.z = 0.09;
+    shield.add(shieldDisc);
+
+    const shieldDiscFace = new THREE.Mesh(
+      new THREE.CircleGeometry(0.27, 32),
+      materials.iron
+    );
+    shieldDiscFace.position.z = 0.095;
+    shield.add(shieldDiscFace);
+
+    const shieldSkull = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 14, 10),
+      materials.plate
+    );
+    shieldSkull.position.z = 0.13;
+    shieldSkull.scale.z = 0.45;
+    shield.add(shieldSkull);
+
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035, 8, 6),
+        materials.black
+      );
+      eye.position.set(side * 0.06, 0.045, 0.16);
+      shield.add(eye);
+
+      const horn = new THREE.Mesh(
+        new THREE.ConeGeometry(0.055, 0.18, 7),
+        materials.gold
+      );
+      horn.position.set(side * 0.13, 0.16, 0.13);
+      horn.rotation.z = side * 0.6;
+      shield.add(horn);
+    }
+
+    const shieldCross = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 10, 8),
+      materials.brightGold
+    );
+    shieldCross.position.z = 0.17;
+    shield.add(shieldCross);
+
+    // Rope and grip.
+    shield.add(
+      cylinderBetween(
+        top,
+        new THREE.Vector3(0, shieldHeight / 2 + 0.28, 0),
+        0.025,
+        materials.darkWood,
+        6
+      )
+    );
+
+    const grip = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.055, 0.065, 0.35, 8),
+      materials.wood
+    );
+    grip.position.set(0, shieldHeight / 2 + 0.42, 0);
+    grip.rotation.z = Math.PI / 2;
+    grip.castShadow = true;
+    shield.add(grip);
+
+    // Adventurer's arm connecting to the shield.
+    adventurer.add(
+      cylinderBetween(
+        new THREE.Vector3(2.42, 1.55, 2.48),
+        new THREE.Vector3(2.28, 1.78, 2.93),
+        0.15,
+        materials.cloth,
+        10
+      ),
+      cylinderBetween(
+        new THREE.Vector3(2.28, 1.78, 2.93),
+        new THREE.Vector3(2.15, 2.05, 3.15),
+        0.12,
+        materials.cloth,
+        10
+      )
+    );
+
+    const adventurerHand = new THREE.Mesh(
+      new THREE.SphereGeometry(0.14, 10, 8),
+      materials.skin
+    );
+    adventurerHand.position.set(2.15, 2.05, 3.15);
+    shield.add(adventurerHand);
+
+    addGlow(
+      adventurer,
+      0xff8a3d,
+      1.4,
+      new THREE.Vector3(2.15, 2.05, 3.25),
+      0.35
+    );
+
+    // Sword at the adventurer's side.
+    const adventurerSword = new THREE.Group();
+    adventurerSword.position.set(0.62, 1.15, 0.18);
+    adventurerSword.rotation.z = -0.13;
+    adventurer.add(adventurerSword);
+
+    const adventurerHilt = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.42, 0.08),
+      materials.gold
+    );
+    adventurerSword.add(adventurerHilt);
+
+    const adventurerBlade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.025, 1.1, 0.04),
+      new THREE.MeshStandardMaterial({
+        color: 0x9eabb8,
+        metalness: 0.9,
+        roughness: 0.25
+      })
+    );
+    adventurerSword.add(adventurerBlade);
+
+    // -------------------------------------------------------------------------
+    // Floating particles
+    // -------------------------------------------------------------------------
+
+    const particleCount = 260;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleBase = new Float32Array(particleCount * 3);
+    const particlePhase = new Float32Array(particleCount);
+    const particleSpeed = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 2 + Math.random() * 8;
+      const x = Math.sin(angle) * radius;
+      const y = 0.3 + Math.random() * 7;
+      const z = Math.cos(angle) * radius - 0.5;
+
+      particleBase[i * 3] = x;
+      particleBase[i * 3 + 1] = y;
+      particleBase[i * 3 + 2] = z;
+      particlePhase[i] = Math.random();
+      particleSpeed[i] = 0.12 + Math.random() * 0.22;
+    }
+
+    particlePositions.set(particleBase);
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xe8c984,
+        size: 0.045,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    scene.add(particles);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls
+    // -------------------------------------------------------------------------
+
+    const orbit = {
+      theta: 0.66,
+      phi: 1.16,
+      radius: 11.8
+    };
+
+    const currentOrbit = {
+      theta: orbit.theta,
+      phi: orbit.phi,
+      radius: orbit.radius
+    };
+
+    const cameraTarget = new THREE.Vector3(0.25, 1.65, 0);
+    const desiredTarget = cameraTarget.clone();
+
+    let dragging = false;
+    let panning = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    const resetButton = document.getElementById("resetView");
+    const bossTag = document.getElementById("bossTag");
+
+    function resetView() {
+      orbit.theta = 0.66;
+      orbit.phi = 1.16;
+      orbit.radius = 11.8;
+      desiredTarget.set(0.25, 1.65, 0);
+    }
+
+    resetButton.addEventListener("click", resetView);
+
+    renderer.domElement.addEventListener("contextmenu", event => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", event => {
+      dragging = true;
+      panning = event.button === 2 || event.shiftKey;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", event => {
+      if (!dragging) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      if (panning) {
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+
+        camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+        const panScale = currentOrbit.radius * 0.0012;
+        desiredTarget.addScaledVector(right, -dx * panScale);
+        desiredTarget.addScaledVector(up, dy * panScale);
+      } else {
+        orbit.theta -= dx * 0.0055;
+        orbit.phi = THREE.MathUtils.clamp(
+          orbit.phi - dy * 0.0045,
+          0.55,
+          1.48
+        );
+      }
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      panning = false;
+
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          6.2,
+          18
+        );
+      },
+      { passive: false }
+    );
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const shieldPositions = shield.geometry.attributes.position.array;
+    const shieldBase = new Float32Array(shieldPositions);
+    const shieldVertexRing = new Float32Array(shieldPositions);
+
+    let frame = 0;
+
+    function updateShieldFlutter(time) {
+      for (let i = 0; i < shieldPositions.length; i += 3) {
+        const x = shieldBase[i];
+        const y = shieldBase[i + 1];
+
+        const normalizedRadius = Math.max(
+          0,
+          Math.min(1, Math.hypot(x, y) / ((shieldWidth / 2) * 1.01))
+        );
+
+        const flutter =
+          Math.sin(time * 3.1 + x * 3.2) * 0.13 * normalizedRadius +
+          Math.sin(time * 5.2 - y * 2.4) * 0.055 * normalizedRadius;
+
+        shieldPositions[i + 2] = flutter;
+        shieldVertexRing[i] = x;
+        shieldVertexRing[i + 1] = y;
+      }
+
+      shield.geometry.attributes.position.needsUpdate = true;
+
+      if (frame % 3 === 0) {
+        shield.geometry.computeVertexNormals();
+      }
+    }
+
+    function updateBossLabel() {
+      const labelPoint = new THREE.Vector3(-1.15, 3.25, -2.75);
+      labelPoint.project(camera);
+
+      const visible =
+        labelPoint.z > -1 &&
+        labelPoint.z < 1 &&
+        Math.abs(labelPoint.x) < 1.15 &&
+        Math.abs(labelPoint.y) < 1.15;
+
+      bossTag.classList.toggle("visible", visible);
+
+      if (visible) {
+        const x = (labelPoint.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-labelPoint.y * 0.5 + 0.5) * window.innerHeight;
+
+        bossTag.style.left = `${x}px`;
+        bossTag.style.top = `${y - 20}px`;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
+      frame++;
+
+      // Smooth camera movement.
+      const cameraEase = 1 - Math.exp(-delta * 8);
+
+      currentOrbit.theta = THREE.MathUtils.lerp(
+        currentOrbit.theta,
+        orbit.theta,
+        cameraEase
+      );
+
+      currentOrbit.phi = THREE.MathUtils.lerp(
+        currentOrbit.phi,
+        orbit.phi,
+        cameraEase
+      );
+
+      currentOrbit.radius = THREE.MathUtils.lerp(
+        currentOrbit.radius,
+        orbit.radius,
+        cameraEase
+      );
+
+      camera.position.set(
+        cameraTarget.x +
+          currentOrbit.radius *
+          Math.sin(currentOrbit.phi) *
+          Math.sin(currentOrbit.theta),
+        cameraTarget.y + currentOrbit.radius * Math.cos(currentOrbit.phi),
+        cameraTarget.z +
+          currentOrbit.radius *
+          Math.sin(currentOrbit.phi) *
+          Math.cos(currentOrbit.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+
+      // Boss breathing and subtle movement.
+      boss.position.y = Math.sin(time * 1.45) * 0.065;
+      boss.rotation.y = Math.sin(time * 0.35) * 0.035;
+      bossAura.rotation.z = time * 0.18;
+      bossAura.scale.setScalar(1 + Math.sin(time * 1.8) * 0.08);
+      bossAura.material.opacity = 0.35 + Math.sin(time * 2.2) * 0.12;
+
+      redLight.intensity = 17 + Math.sin(time * 2.1) * 3;
+
+      // Shield flutter.
+      updateShieldFlutter(time);
+
+      // Gentle adventurer idle movement.
+      adventurer.position.y = Math.sin(time * 1.1) * 0.018;
+      adventurer.rotation.z = Math.sin(time * 0.75) * 0.012;
+
+      // Particle drift.
+      const positions = particleGeometry.attributes.position.array;
+
+      for (let i = 0; i < particleCount; i++) {
+        const index = i * 3;
+        const phase = particlePhase[i];
+
+        positions[index] =
+          particleBase[index] + Math.sin(time * particleSpeed[i] + phase * 6) * 0.18;
+
+        positions[index + 1] =
+          particleBase[index + 1] +
+          ((time * particleSpeed[i] + phase) % 1) * 0.75;
+
+        positions[index + 2] =
+          particleBase[index + 2] +
+          Math.cos(time * particleSpeed[i] * 0.8 + phase * 4) * 0.14;
+      }
+
+      particleGeometry.attributes.position.needsUpdate = true;
+
+      updateBossLabel();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
+```

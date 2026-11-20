@@ -1,0 +1,1551 @@
+We need answer likely code. Need create self-contained HTML scene with Three.js CDN, eight emitters, drip irrigation manifold. Need maybe no explanation, provide HTML. Need satisfy only core ES module, camera controls direct. Need build polished scene. We can produce code. Need ensure import only three.module.min.js. Need perhaps include UI, labels, controls, animation. Self-contained means one HTML file. Need maybe use CSS/JS inline. Need implement scene with manifold horizontal pipe, eight emitters along it, risers, valves, supports, labels perhaps HTML/CSS overlays. Need camera orbit custom.
+
+Need be careful Three.js API 0.160. Use import * as THREE from URL. No addons.
+
+Let's design:
+- dark industrial background gradient via CSS, canvas.
+- scene fog.
+- perspective camera.
+- renderer antialias, shadows, tone mapping.
+- ground plane.
+- manifold: horizontal dark/gray PVC pipe along X, perhaps cylinder rotated z 90. 8 emitters along.
+- pipe supported by posts.
+- emitters: each consists body cylinder, filter screen, threaded connector, blue cap, little water stream maybe transparent cylinder. Need eight clearly.
+- manifold perhaps at y=2.6, x from -5.6 to 5.6. emitters at x positions.
+- risers down from each emitter to ground, with valves, connectors.
+- irrigation lines perhaps branching to ground.
+- labels 1-8 overlay? Could use CSS2DRenderer but addon forbidden. Implement HTML labels positioned via projection manually.
+- side control panel with title, status, flow indicator, toggle water, reset, orbit hint.
+- custom camera controls pointer drag, wheel zoom, right drag pan maybe. Need direct.
+- animation water streams and bubbles/particles? Use small transparent cylinders and droplets.
+- maybe pipe has flanges at ends and valve wheels.
+- use InstancedMesh? But easier individual. 8 emitters.
+- scene is self-contained.
+- responsive.
+- accessibility.
+
+Need use only Three.js core. We can use CSS. Need avoid external fonts maybe system.
+
+Let's construct complete HTML. Need perhaps include no OrbitControls.
+
+Need ensure cylinder orientation:
+function cylinderBetween(a,b,r,mat, radial=12) creates CylinderGeometry(r,r,length,radial); position midpoint; quaternion setFromUnitVectors(new Vector3(0,1,0), dir).
+Pipe along X: cylinderBetween(-6,2.7,0), (6,2.7,0), radius .18.
+Emitters at x positions maybe -5.25 + i*1.3, z=0.
+Emitter body vertical? Typically emitter protrudes downward from pipe. Make body at y=2.45, z=0, cylinder vertical, filter at y=2.1, cap y=1.9. Water stream from y 1.8 to 0.8 perhaps. But risers? Drip irrigation manifold with emitters at ground? Maybe manifold elevated and emitters have short downspouts to ground. User asked featuring eight emitters. We can show each emitter with water.
+
+Maybe manifold in horizontal pipe with vertical emitter assemblies. Each emitter:
+- threaded nipple vertical from y=2.55 to 2.05, small dark body
+- filter housing at y=2.0
+- blue cap y=1.83
+- water jet transparent cylinder from y=1.7 to 0.75.
+- ground inlet pipe to side? Hmm.
+
+Could make manifold at y=2.4, each emitter has vertical drop pipe to ground, with valve at y=1.4, and a small hose to ground. But that makes 8 valves and lines. The emitters themselves are at ground? Actual irrigation manifold: mainline at ground, emitters directly on mainline, vertical filter and cap. Better: manifold horizontal at y=0.16, emitters vertical downward, visible. But camera and ground. Use pipe at y=0.22, emitters body down to y=-0.2; ground plane y=-0.35. Then visible. Add riser? Not needed. Add irrigation branches from each emitter to plants? Could be a display.
+
+Maybe elevated manifold is more visually clear. Add vertical drop pipe from emitter to ground and a small ground-level lateral hose. But user asked manifold with eight emitters, and visual emphasis should be on emitters.
+
+Let's make:
+- Main manifold at y=2.5, supported by two stands.
+- Each emitter has vertical connector downward to y=1.75, filter, blue cap, water droplet.
+- Below each emitter, a flexible black irrigation hose descends to ground and curves to side? This can be TubeGeometry along CatmullRomCurve3. But 8 hoses might clutter. Instead each emitter has a short riser pipe to ground, with a valve and a small outlet. But "drip irrigation manifold" likely manifold with emitters.
+- Add eight plant beds? Maybe no.
+
+Could create each emitter with vertical filter and blue cap, and a thin translucent water column. Add little green plant sprouts at ground connected via black hose. But 8 plants can be nice, but focus emitters.
+
+Maybe ground-level mainline better: horizontal pipe at y=0.18, emitters directly below at positions. Each has a small vertical filter body, blue cap, and a black gooseneck hose leading to a small plant. This is authentic. But "manifold" can be elevated.
+
+Let's do elevated pipe with vertical emitter stands and ground hoses. We'll include 8 emitters in bright blue, numbered labels.
+
+Scene:
+- floor grid.
+- background.
+- pipe body metallic.
+- flanges at ends.
+- valve wheel on one end.
+- supports.
+- 8 emitter groups:
+  - vertical threaded cylinder from y=2.5 to 2.15
+  - body at 2.1
+  - screen mesh maybe transparent cylinder
+  - blue cap at 1.9
+  - water column transparent from 1.8 to 0.9
+  - at ground, a black hose from x emitter, y=.08 to z=.8 etc. But pipe at y=2.5, vertical drop.
+  - small valve at y=1.4 on vertical drop.
+  - hose from valve down to ground and sideways to a small planter? Could be too much.
+Maybe each emitter has a vertical flexible black hose down to ground, with a valve, then a short branch to a small plant. 8 plants around. But scene becomes busy.
+
+Could have a central planter strip? Eight small plants spaced. Add low planter boxes maybe. But user only asked irrigation manifold, likely no need.
+
+Focus clean product visualization. Add labels and UI.
+
+Need custom camera:
+state target (0,1.2,0), spherical radius 11, theta maybe 0.7, phi 1.1. pointerdown, pointermove changes theta/phi, shift/right pan target in camera basis, wheel radius. Touch one orbit, two pinch maybe can implement pointer map. Simpler pointer events and wheel. Need prevent context menu.
+Camera update each frame.
+Raycasting? not needed.
+Buttons:
+- water toggle
+- labels toggle
+- reset view
+- maybe flow slider? Add "Flow rate" range and update UI. But no need.
+- status pill.
+
+Use HTML labels projected:
+div class=world-label with number and "EMITTER". Each frame project position (x,1.65,0) to screen. Need hide if behind camera. Use vector.project(camera). Position.
+Could use CSS label with pointer-events none.
+
+Need ensure label positions don't overlap maybe.
+
+Need use CSS2? no.
+
+Need create scene:
+renderer setPixelRatio min(devicePixelRatio,2)
+outputColorSpace = THREE.SRGBColorSpace
+toneMapping = ACESFilmicToneMapping
+shadowMap enabled PCFSoft.
+scene.background Color(0x071019), fog Exp2 maybe.
+camera.
+
+Materials:
+pipe MeshStandardMaterial color 0x69747c metalness .75 roughness .3
+pipe highlight maybe.
+emitter blue 0x087f9f, metalness .35 roughness .25.
+black rubber.
+water MeshPhysicalMaterial transparent opacity .45, transmission maybe .2, depthWrite false.
+ground plane.
+grid maybe GridHelper.
+
+Lights: hemisphere, directional key with shadows, point cyan.
+Backdrop maybe large plane vertical? scene fog enough.
+Ground circular? plane 40.
+
+Pipe:
+cylinderBetween endpoints x ±6.2, y 2.65, z=0.
+Cylinder geometry with 24 segments.
+Add flange rings at ends using TorusGeometry? Torus lies in XY plane around Z axis. For pipe along X, flange should ring around X, torus rotate y=PI/2. Place x ±6.2.
+Clamp supports at x ±4.5 maybe vertical posts and yoke.
+Valve on right end: body maybe cylinder along X, wheel vertical in YZ plane. Use torus geometry default in XY, for wheel plane YZ rotate y=PI/2, position x=6.6 y=2.65. spokes cylinders.
+Maybe valve on manifold near x=4.5.
+End cap.
+
+Emitters:
+positions = [-5.1,-3.75,-2.4,-1.05,0.3,1.65,3,4.35]? 8.
+At each:
+- vertical threaded rod from y=2.48 to 2.13: cylinder radius .09, and torus rings? Torus default around Z; for horizontal ring around Y axis, rotate x=PI/2. Place 3.
+- filter body cylinder y=2.03 height .28 radius .13
+- screen top maybe cylinder.
+- blue cap cone? CylinderGeometry top .13 bottom .16 height .18 at y=1.84.
+- water stream: CylinderGeometry .025, height 1.0, y=1.35, transparent; maybe animate scale y and position. Better create droplets spheres falling from cap, reset.
+- each emitter group with waterDrops array.
+- a small water puddle? no.
+
+Hoses:
+From each emitter bottom y=1.75 down to ground and curve to z=0.7? If all converge, clutter. Instead each has a short black tube down to ground at same x and then a lateral branch along x? Drip irrigation manifold usually emitters on mainline and hoses branch. We can add a flexible black hose from emitter down to ground, then a curve to z=1.2 and back? Each hose ends in a small dark nozzle near ground. But 8 parallel hoses. Could show 4 pairs? The request only eight emitters. Maybe no hoses, just emitter streams enough.
+
+Add a lower secondary "distribution line" at y=.12, z=.65, from x -5.5 to 5.5, with 8 branches up to emitters? But then emitters are on distribution line, manifold is secondary? Could be more authentic:
+- Main manifold elevated at y=2.65.
+- At each emitter, vertical black drop hose to ground, valve, and branch to a small planter.
+But visual clutter and code.
+
+Maybe make a small garden bed under each emitter: low dark planter and plant. Yet eight plants. This would showcase irrigation. But user didn't ask plants. Could add simple sprouts.
+
+I think clean industrial scene with 8 labeled emitters and water streams, plus short vertical drop tubes and valves is enough.
+
+Add labels number 01..08.
+
+Water animation:
+For each emitter, 5 droplets as small spheres. Each drop has phase; in animate, y = 1.78 - ((time*speed+phase)%1)*1.0; x same, z maybe. But the water stream can be a translucent cylinder with top bob. More convincing: water column from cap to ground, and droplets falling. Since emitter is at elevated manifold, water would fall to ground. Add small target ring on ground maybe.
+Could instead show water exiting emitter horizontally? Drip emitter cap has water droplet falling. Good.
+
+Maybe the pipe should be at ground level to avoid huge drops. But elevated allows visibility.
+
+Add a small sign panel on left with title.
+
+Need code in answer. Ensure no syntax errors.
+
+Let's formulate HTML.
+
+Potential issue CSS world label transform: style.left = x+'px'; top = y+'px'; transform translate(-50%,-50%). The projected point is emitter x, y=1.55, z=0. Use vector.project. if z between -1,1.
+Need hide labels if toggle.
+
+Custom camera:
+const canvas = renderer.domElement;
+let dragging=false, lastX,lastY;
+pointerdown: setPointerCapture, dragging true; if button===2 or shiftKey panMode true.
+pointermove:
+if pan: compute right = camera local x; up = camera local y; target.addScaledVector(right,-dx*radius*0.0015).addScaledVector(up,dy*radius*0.0015)
+else theta -= dx*0.006; phi -= dy*0.006 clamp .25,1.45.
+pointerup.
+wheel preventDefault radius *= exp(deltaY*0.001), clamp 6,20.
+Double click reset maybe.
+touch pointer works single.
+Need camera position from spherical:
+const offset = new Vector3().setFromSpherical(new Spherical(radius, phi, theta)); camera.position.copy(target).add(offset); camera.lookAt(target)
+Spherical phi is polar from y. Initial theta=0.65, phi=1.1, radius=11.5.
+Need if target changes.
+
+UI:
+header top left.
+right top stats.
+bottom left legend.
+bottom right controls.
+Maybe labels toggle in controls.
+Use button icons via unicode.
+
+No external dependencies.
+
+Need perhaps include a loading overlay that fades after render. Since module loads CDN, HTML can show "Loading 3D scene…". Add script type module. If import fails, overlay remains. Fine.
+
+Need "self-contained" maybe CDN external allowed because asked Three.js from cdnjs. One file.
+
+Could include ARIA.
+
+Let's create geometry:
+function addCylinderBetween(a,b,r,mat,segments=16) {
+ const dir = b-a; len=dir.length();
+ const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,segments),mat);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.quaternion.setFromUnitVectors(Y, dir.normalize());
+ ...
+}
+For pipe along X.
+
+Supports:
+x=-4.6,4.6, vertical post from y=.1 to 2.4 at z=0, base. yoke horizontal? pipe at 2.65. Add crossbar from z=-.35 to .35 at y=2.5.
+Maybe pipe z=0.
+Emitters at z=0.
+
+Flange:
+TorusGeometry(.23,.045,10,24), rotate y=PI/2.
+End cap sphere? cylinder.
+Valve:
+At x=4.6? But support there. Put valve on right flange x=6.45. Add wheel.
+Valve body maybe sphere scaled.
+Wheel torus radius .32 tube .035, rotate y=PI/2, position x=6.55,y=2.65. Spokes in YZ plane: addCylinderBetween (x, y±.3,z) etc. Since addCylinderBetween handles.
+Need wheel at end maybe.
+
+Emitters:
+group.position.x.
+thread: cylinder y 2.4 to 2.12.
+rings at y 2.4,2.28,2.16, torus rotate x=PI/2 (Torus default normal Z, rotate x=PI/2 turns normal? default ring in XY, normal Z. To ring around Y axis (plane XZ), rotate x=PI/2 yes).
+filter housing y=2.02.
+cap y=1.84.
+Maybe water starts y=1.72.
+Add tiny red indicator on cap? no.
+Drops: sphere radius .025, material water, positions x + jitter, y 1.65 etc.
+Need drops fall to y=-.05, ground at -0.15. Use 6 drops, phase.
+Also a translucent cone stream? Cylinder from 1.7 to .1, but if water is falling, can show narrow transparent cylinder. Use CylinderGeometry(.018,.045,1.55,10) at y=.9. It might look like solid. Use opacity .16.
+At ground, small wet patch: CircleGeometry .18 rotated x=-PI/2, material transparent.
+
+Hoses:
+Maybe add a short black vertical tube from y=1.72 to .45, then curve to z=.55 and y=.18. But this would be a drop hose and show irrigation line. Use CatmullRomCurve3 and TubeGeometry. For each emitter, points:
+(x,1.72,0), (x,1.25,0), (x,.45,.05), (x,.18,.45), (x+.35,.12,.75)
+This is 8 tubes parallel and visible. Add small nozzle at end. But emitter already has water falling. Hoses could be black and clutter. Maybe use only a small black connector below each emitter, no full hose.
+
+Could add a ground lateral pipe at y=.08 z=.8 from x=-5.5 to 5.5, with branches? But then each emitter's drop hose connects to it. This makes system coherent:
+- elevated manifold.
+- each emitter has a flexible black hose dropping to ground and connecting to a common underground lateral? The common lateral visible at ground could be too much.
+Maybe a black pipe along x at y=.1,z=.65, 8 branches from emitter x to z=.65. But 8 black tubes.
+I think product visualization can have each emitter with a short black hose ending in a valve. It still looks good.
+
+Add valve for each drop: small blue body at y=1.3, wheel maybe too many. Use small red/blue lever.
+Maybe no.
+
+Eight emitters are clear due labels.
+
+Add plants? no.
+
+Background:
+large plane ground with grid. GridHelper(30,30, 0x17313a,0x0d2028) y=-.13.
+A circular platform under manifold? Cylinder radius 6.8 height .15 at y=-.2, material dark.
+Ground plane y=-.3.
+
+Lighting: key at (4,8,5), fill (-5,4,2) cyan, rim.
+Add point lights maybe.
+
+Need maybe use canvas texture for labels? HTML labels easier.
+
+Need update water:
+const drops per emitter. each drop has phase, speed, baseX.
+animate:
+const fall = (t*speed+phase)%1;
+drop.position.y = 1.68 - fall*1.72;
+drop.position.x = baseX + sin(t*3+phase*20)*.015;
+drop.scale.setScalar(0.7+fall*1.2)
+if fall > .9 maybe.
+waterColumn material opacity vary.
+Need not update geometry.
+
+Maybe water stream should be downward from cap. yes.
+
+Add flow readout in UI updated from flow slider. Range 0-100 default 62. Update "FLOW 62 L/H" and droplet speed. Button water toggles. labels toggle. reset.
+Need button active state.
+
+Could also add "Exploded view" no.
+
+Need no use of addons.
+
+Let's ensure HTML script module can import from URL. yes.
+
+Potential browser CORS okay.
+
+Need maybe if reduced motion, water still? respect.
+
+Let's write final with code fence. The answer desired 5, perhaps short intro and code. User asked build, so code.
+
+Need include complete.
+
+Let's ensure no accidental use of OrbitControls.
+
+Let's detail code.
+
+HTML CSS:
+body overflow hidden, background.
+#app.
+canvas display block.
+.vignette pointer-events none.
+.panel.
+topbar flex.
+brand.
+telemetry.
+controls.
+world-label.
+label has small line.
+responsive.
+
+JS:
+import.
+const ui refs.
+renderer appended.
+scene.
+camera.
+materials.
+
+Ground:
+const platform = Mesh CylinderGeometry(6.6,6.8,.18,64) y=-.2
+ground plane 40 y=-.31.
+Grid at -.29? platform top -0.11, ground -0.31. Grid y=-.30.
+Maybe manifold support bases y=0.
+
+Pipe y=2.65.
+supports at x ±4.6. post y=1.2 height 2.4 from -.05 to 2.35. yoke at 2.55.
+Base foot.
+
+Pipe ends ±6.2.
+Flange x ±6.2.
+End cap at x 6.35 maybe.
+Valve at x 6.55.
+But flange and valve wheel.
+Maybe support x ±4.7.
+
+Create pipe with cylinderBetween.
+Pipe material.
+Add a second thin highlight? not.
+
+Valve:
+body sphere at (6.42,2.65,0) scale (.35,.28,.35) but sphere.
+wheel at x=6.58, y=2.65. Torus in YZ plane. Spokes.
+Need wheel torus rotate y=PI/2. Torus default ring in XY, rotating y 90 maps XY to ZY. yes.
+Spokes:
+addCylinderBetween(new V3(6.58,2.65-.3,0), new V3(6.58,2.65+.3,0), .025, wheelMat)
+and z.
+Hub cylinder along X: Cylinder default Y; rotate z=PI/2 to align X.
+
+Emitters:
+positions maybe [-5.1,-3.75,-2.4,-1.05,0.3,1.65,3,4.35].
+Each group.
+Thread cylinderBetween y 2.48 to 2.13.
+rings.
+filter body cylinder y=2.04 height .28.
+screen: cylinder y=2.17? The thread ends at 2.13, filter from 1.92 to 2.16. cap center 1.83.
+Cap cone CylinderGeometry(.13,.16,.18) y=1.84. top at 1.93. water starts 1.91? Actually drops fall from top of cap, but drip emitter water exits bottom. Better cap at 1.9, water stream from y=1.78 down. Fine.
+Maybe blue cap is top.
+Add black collar at y=1.93.
+Water column from 1.72 to .1.
+Drops start at 1.7.
+Label anchor y=1.45.
+
+Add a small "flow arrow" on pipe? Could use triangle geometry. Not needed.
+Add blue bands on pipe at emitter positions? small cylinders around X? Could use torus rings at x positions, radius .19, tube .025, rotate y=PI/2. This emphasizes. Add for each emitter a clamp ring around pipe at y=2.65, color blue.
+Maybe each emitter attaches via vertical threaded rod to pipe bottom. yes.
+
+Valve wheel on each? no.
+
+Add a central pipe support.
+
+Water material shared, but opacity global. If toggle, set visible. Drops visible.
+
+Need label position anchor maybe group position x, y=1.45, z=0.
+World labels:
+const labelEls = [];
+for each create div class world-label, innerHTML `<span class=dot></span><span class=label-num>0${i+1}</span><span class=label-text>EMITTER</span>`;
+append #labels.
+update:
+v.set(labelX,1.45,0).project(camera)
+if v.z >1 or < -1 hide. x=(v.x*.5+.5)*width, y=(-v.y*.5+.5)*height.
+Need labels might be covered by UI but okay.
+On mobile hide label text perhaps.
+
+Add label leader line? CSS ::before.
+
+Need maybe use `renderer.setAnimationLoop(animate)`.
+
+Resize.
+
+Custom controls:
+pointerdown only primary? allow.
+state pointer = {active, mode, x,y}
+on pointermove if active.
+For touch, pointer button 0.
+Pan with shift.
+Wheel.
+Doubleclick reset.
+Prevent contextmenu.
+No inertia.
+
+Camera reset: target set, radius etc.
+Maybe camera target is vector.
+
+UI flow slider input update flowValue.
+water button text.
+labels button.
+reset.
+`waterOn` true.
+`labelsOn` true.
+`flow=64`.
+`flowReadout`.
+`drops speed = flow/100 * .7 + .25`.
+When flow changes, update.
+
+Need maybe status "LIVE FLOW" and off "FLOW STOPPED".
+button water toggles and class.
+
+Need use `document.getElementById`.
+
+Need `loading` remove class after 300ms.
+
+Need no external assets.
+
+Potential issue `THREE.MathUtils.clamp` available.
+Potential issue `new THREE.Color` etc.
+
+Let's craft final.
+=====CONTENT=====
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eight-Emitters Drip Irrigation Manifold</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --cyan: #58e6ff;
+      --cyan-soft: rgba(88, 230, 255, 0.16);
+      --panel: rgba(8, 18, 25, 0.76);
+      --border: rgba(151, 214, 232, 0.18);
+      --text: #e8f7fb;
+      --muted: #8ca6b0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #071119;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app canvas {
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #app canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 45%, rgba(1, 7, 11, 0.55) 100%),
+        linear-gradient(180deg, rgba(4, 12, 17, 0.2), transparent 25%, transparent 75%, rgba(4, 12, 17, 0.35));
+    }
+
+    .topbar {
+      position: fixed;
+      top: 22px;
+      left: 24px;
+      right: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 560px;
+      font-size: clamp(22px, 3vw, 38px);
+      font-weight: 680;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+      text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .telemetry {
+      min-width: 210px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(14px);
+      pointer-events: auto;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    .status-dot.off {
+      background: #687278;
+      box-shadow: none;
+    }
+
+    .flow-value {
+      color: var(--cyan);
+      font-size: 18px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .flow-unit {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .controls {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 245px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--panel);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(16px);
+      pointer-events: auto;
+    }
+
+    .control-title {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .control-row label {
+      color: #b8cbd2;
+      font-size: 12px;
+    }
+
+    .control-row output {
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      margin: 7px 0 15px;
+      appearance: none;
+      border-radius: 999px;
+      outline: none;
+      background: linear-gradient(
+        90deg,
+        var(--cyan) 0%,
+        var(--cyan) var(--fill, 64%),
+        rgba(138, 174, 184, 0.17) var(--fill, 64%),
+        rgba(138, 174, 184, 0.17) 100%
+      );
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 14px;
+      height: 14px;
+      appearance: none;
+      border: 2px solid #071119;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(88, 230, 255, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #071119;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(88, 230, 255, 0.5);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 1px solid rgba(145, 206, 222, 0.18);
+      border-radius: 8px;
+      background: rgba(129, 181, 196, 0.08);
+      color: #bcd1d8;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        color 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      color: white;
+      border-color: rgba(88, 230, 255, 0.45);
+      background: rgba(88, 230, 255, 0.12);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      border-color: rgba(88, 230, 255, 0.45);
+      background: rgba(88, 230, 255, 0.16);
+      color: var(--cyan);
+    }
+
+    button.active {
+      border-color: rgba(88, 230, 255, 0.45);
+      background: rgba(88, 230, 255, 0.14);
+      color: var(--cyan);
+    }
+
+    .hint {
+      margin-top: 13px;
+      color: #6f8992;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    #labels {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .world-label {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 8px 5px 5px;
+      border: 1px solid rgba(120, 211, 235, 0.2);
+      border-radius: 999px;
+      background: rgba(5, 15, 21, 0.72);
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+      color: #c9eaf4;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(6px);
+    }
+
+    .world-label::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    .world-label .label-num {
+      color: var(--cyan);
+      font-size: 10px;
+    }
+
+    .world-label .label-text {
+      color: inherit;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      background: #071119;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        top: 16px;
+        left: 16px;
+        right: 16px;
+      }
+
+      .subtitle,
+      .telemetry {
+        display: none;
+      }
+
+      .controls {
+        right: 16px;
+        bottom: 16px;
+        width: 220px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .world-label {
+        font-size: 8px;
+      }
+
+      .world-label .label-text {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div class="vignette"></div>
+  <div id="labels"></div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Precision irrigation system</p>
+      <h1>Eight-Emitters Drip Manifold</h1>
+      <p class="subtitle">
+        Threaded inline emitters with individual flow regulation and monitored discharge.
+      </p>
+    </div>
+
+    <div class="telemetry">
+      <div class="status-row">
+        <div class="status">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">SYSTEM ACTIVE</span>
+        </div>
+        <div>
+          <div class="flow-value" id="flowValue">64</div>
+          <div class="flow-unit">L / H</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls" aria-label="Scene controls">
+    <h2 class="control-title">Scene controls</h2>
+
+    <div class="control-row">
+      <label for="flow">Emitter flow</label>
+      <output id="flowOutput">64 L/H</output>
+    </div>
+    <input
+      id="flow"
+      type="range"
+      min="0"
+      max="100"
+      value="64"
+      aria-label="Emitter flow rate"
+    />
+
+    <div class="button-row">
+      <button class="primary" id="waterButton" type="button">Stop water</button>
+      <button class="active" id="labelsButton" type="button">Show labels</button>
+      <button id="resetButton" type="button">Reset view</button>
+      <button id="homeButton" type="button">Front view</button>
+    </div>
+
+    <div class="hint">
+      Drag to orbit · Shift-drag or right-drag to pan · Scroll to zoom<br />
+      Double-click to reset the camera
+    </div>
+  </section>
+
+  <div id="loading">Loading irrigation manifold…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+    const loading = document.getElementById("loading");
+    const labelsRoot = document.getElementById("labels");
+
+    const flowInput = document.getElementById("flow");
+    const flowOutput = document.getElementById("flowOutput");
+    const waterButton = document.getElementById("waterButton");
+    const labelsButton = document.getElementById("labelsButton");
+    const resetButton = document.getElementById("resetButton");
+    const homeButton = document.getElementById("homeButton");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
+    const flowValue = document.getElementById("flowValue");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071119);
+    scene.fog = new THREE.FogExp2(0x071119, 0.035);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      innerWidth / innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const materials = {
+      pipe: new THREE.MeshStandardMaterial({
+        color: 0x687983,
+        metalness: 0.78,
+        roughness: 0.28
+      }),
+      pipeDark: new THREE.MeshStandardMaterial({
+        color: 0x26363e,
+        metalness: 0.55,
+        roughness: 0.38
+      }),
+      blue: new THREE.MeshStandardMaterial({
+        color: 0x087f9f,
+        metalness: 0.48,
+        roughness: 0.24
+      }),
+      blueDark: new THREE.MeshStandardMaterial({
+        color: 0x064b61,
+        metalness: 0.55,
+        roughness: 0.3
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x101719,
+        metalness: 0.08,
+        roughness: 0.82
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0xb9c6ca,
+        metalness: 0.9,
+        roughness: 0.2
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xd64b4b,
+        metalness: 0.35,
+        roughness: 0.35
+      }),
+      wet: new THREE.MeshStandardMaterial({
+        color: 0x183b42,
+        metalness: 0.1,
+        roughness: 0.18,
+        transparent: true,
+        opacity: 0.78
+      })
+    };
+
+    const waterMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8eeaff,
+      metalness: 0,
+      roughness: 0.08,
+      transparent: true,
+      opacity: 0.48,
+      transmission: 0.12,
+      thickness: 0.1,
+      depthWrite: false
+    });
+
+    const waterColumnMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x70dfff,
+      metalness: 0,
+      roughness: 0.06,
+      transparent: true,
+      opacity: 0.2,
+      transmission: 0.2,
+      thickness: 0.2,
+      depthWrite: false
+    });
+
+    const hemisphere = new THREE.HemisphereLight(0xbdefff, 0x172027, 1.7);
+    scene.add(hemisphere);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(4.5, 8, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -9;
+    keyLight.shadow.camera.right = 9;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -6;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 25;
+    keyLight.shadow.bias = -0.0003;
+    scene.add(keyLight);
+
+    const cyanLight = new THREE.PointLight(0x36cfff, 24, 12, 2);
+    cyanLight.position.set(-4, 2.8, 3.5);
+    scene.add(cyanLight);
+
+    const rimLight = new THREE.DirectionalLight(0x55d9ff, 1.4);
+    rimLight.position.set(-5, 4, -5);
+    scene.add(rimLight);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b151b,
+        metalness: 0.2,
+        roughness: 0.88
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.31;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const platform = new THREE.Mesh(
+      new THREE.CylinderGeometry(6.65, 6.85, 0.18, 72),
+      new THREE.MeshStandardMaterial({
+        color: 0x101c23,
+        metalness: 0.35,
+        roughness: 0.62
+      })
+    );
+    platform.position.y = -0.2;
+    platform.receiveShadow = true;
+    platform.castShadow = true;
+    scene.add(platform);
+
+    const grid = new THREE.GridHelper(30, 30, 0x24434d, 0x12272f);
+    grid.position.y = -0.295;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.34;
+    scene.add(grid);
+
+    function cylinderBetween(start, end, radius, material, radialSegments = 16) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        radialSegments
+      );
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Elevated manifold.
+    const pipeY = 2.65;
+    const pipeStart = new THREE.Vector3(-6.2, pipeY, 0);
+    const pipeEnd = new THREE.Vector3(6.2, pipeY, 0);
+
+    scene.add(
+      cylinderBetween(pipeStart, pipeEnd, 0.18, materials.pipe, 32)
+    );
+
+    // End flanges.
+    for (const x of [-6.2, 6.2]) {
+      const flange = new THREE.Mesh(
+        new THREE.TorusGeometry(0.225, 0.045, 12, 32),
+        materials.pipeDark
+      );
+      flange.rotation.y = Math.PI / 2;
+      flange.position.set(x, pipeY, 0);
+      flange.castShadow = true;
+      scene.add(flange);
+
+      const cap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.205, 24, 16),
+        materials.pipeDark
+      );
+      cap.scale.set(1.35, 1, 1);
+      cap.position.set(x + Math.sign(x) * 0.06, pipeY, 0);
+      cap.castShadow = true;
+      scene.add(cap);
+    }
+
+    // Pipe support stands.
+    for (const x of [-4.65, 4.65]) {
+      const post = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.075, 0.09, 2.45, 16),
+        materials.pipeDark
+      );
+      post.position.set(x, 1.18, 0);
+      post.castShadow = true;
+      post.receiveShadow = true;
+      scene.add(post);
+
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.65, 0.08, 0.42),
+        materials.rubber
+      );
+      base.position.set(x, -0.12, 0);
+      base.castShadow = true;
+      scene.add(base);
+
+      const yoke = new THREE.Mesh(
+        new THREE.BoxGeometry(0.13, 0.13, 0.72),
+        materials.pipeDark
+      );
+      yoke.position.set(x, 2.49, 0);
+      yoke.castShadow = true;
+      scene.add(yoke);
+
+      const clamp = new THREE.Mesh(
+        new THREE.TorusGeometry(0.205, 0.028, 10, 24),
+        materials.blueDark
+      );
+      clamp.rotation.y = Math.PI / 2;
+      clamp.position.set(x, pipeY, 0);
+      scene.add(clamp);
+    }
+
+    // Main isolation valve and hand wheel.
+    const valveBody = new THREE.Mesh(
+      new THREE.SphereGeometry(0.31, 24, 18),
+      materials.pipeDark
+    );
+    valveBody.position.set(6.48, pipeY, 0);
+    valveBody.scale.set(1.25, 0.88, 0.88);
+    valveBody.castShadow = true;
+    scene.add(valveBody);
+
+    const wheel = new THREE.Mesh(
+      new THREE.TorusGeometry(0.31, 0.035, 10, 32),
+      materials.red
+    );
+    wheel.rotation.y = Math.PI / 2;
+    wheel.position.set(6.66, pipeY, 0);
+    wheel.castShadow = true;
+    scene.add(wheel);
+
+    for (const y of [-0.31, 0.31]) {
+      scene.add(
+        cylinderBetween(
+          new THREE.Vector3(6.66, pipeY + y, 0),
+          new THREE.Vector3(6.66, pipeY - y, 0),
+          0.024,
+          materials.red,
+          10
+        )
+      );
+    }
+
+    for (const z of [-0.31, 0.31]) {
+      scene.add(
+        cylinderBetween(
+          new THREE.Vector3(6.66, pipeY - z, 0),
+          new THREE.Vector3(6.66, pipeY + z, 0),
+          0.024,
+          materials.red,
+          10
+        )
+      );
+    }
+
+    const wheelHub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, 0.12, 16),
+      materials.steel
+    );
+    wheelHub.rotation.z = Math.PI / 2;
+    wheelHub.position.set(6.67, pipeY, 0);
+    scene.add(wheelHub);
+
+    const emitterPositions = [-5.1, -3.75, -2.4, -1.05, 0.3, 1.65, 3, 4.35];
+    const emitterDrops = [];
+
+    function addEmitter(x, index) {
+      const group = new THREE.Group();
+      group.position.x = x;
+      scene.add(group);
+
+      // Threaded connection to the manifold.
+      scene.add(
+        cylinderBetween(
+          new THREE.Vector3(x, 2.48, 0),
+          new THREE.Vector3(x, 2.12, 0),
+          0.075,
+          materials.steel,
+          18
+        )
+      );
+
+      for (const y of [2.4, 2.29, 2.18]) {
+        const thread = new THREE.Mesh(
+          new THREE.TorusGeometry(0.082, 0.014, 8, 20),
+          materials.pipeDark
+        );
+        thread.rotation.x = Math.PI / 2;
+        thread.position.set(x, y, 0);
+        group.add(thread);
+      }
+
+      // Inline filter housing.
+      const filter = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.13, 0.13, 0.28, 20),
+        materials.blueDark
+      );
+      filter.position.set(x, 2.02, 0);
+      filter.castShadow = true;
+      group.add(filter);
+
+      const filterCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.145, 0.145, 0.045, 20),
+        materials.steel
+      );
+      filterCap.position.set(x, 2.17, 0);
+      filterCap.castShadow = true;
+      group.add(filterCap);
+
+      // Blue emitter body and cap.
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.105, 0.125, 0.2, 20),
+        materials.blue
+      );
+      body.position.set(x, 1.88, 0);
+      body.castShadow = true;
+      group.add(body);
+
+      const cap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.145, 0.11, 0.16, 20),
+        materials.blue
+      );
+      cap.position.set(x, 1.72, 0);
+      cap.castShadow = true;
+      group.add(cap);
+
+      const collar = new THREE.Mesh(
+        new THREE.TorusGeometry(0.108, 0.018, 8, 20),
+        materials.blueDark
+      );
+      collar.rotation.x = Math.PI / 2;
+      collar.position.set(x, 1.61, 0);
+      group.add(collar);
+
+      // Translucent falling water column.
+      const column = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.038, 1.5, 10),
+        waterColumnMaterial
+      );
+      column.position.set(x, 0.87, 0);
+      group.add(column);
+
+      // Individual droplets.
+      const drops = [];
+      for (let i = 0; i < 7; i++) {
+        const drop = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025, 10, 8),
+          waterMaterial
+        );
+        drop.position.set(x, 1.58, 0);
+        group.add(drop);
+        drops.push({
+          mesh: drop,
+          phase: i / 7,
+          speed: 0.35 + (i % 3) * 0.09,
+          offset: (i - 3) * 0.018
+        });
+      }
+
+      emitterDrops.push({ group, column, drops });
+
+      // Pipe clamp around the manifold.
+      const clamp = new THREE.Mesh(
+        new THREE.TorusGeometry(0.195, 0.027, 10, 24),
+        materials.blue
+      );
+      clamp.rotation.y = Math.PI / 2;
+      clamp.position.set(x, pipeY, 0);
+      scene.add(clamp);
+
+      // Small indicator below each emitter.
+      const indicator = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.055, 0.055, 0.035, 16),
+        materials.red
+      );
+      indicator.position.set(x, 1.59, 0);
+      group.add(indicator);
+
+      // Numbered HTML label.
+      const label = document.createElement("div");
+      label.className = "world-label";
+      label.innerHTML = `
+        <span class="label-num">0${index + 1}</span>
+        <span class="label-text">EMITTER</span>
+      `;
+      labelsRoot.appendChild(label);
+
+      return {
+        x,
+        label,
+        column,
+        drops,
+        baseY: 1.58,
+        fallDistance: 1.58
+      };
+    }
+
+    emitterPositions.forEach(addEmitter);
+
+    // Small wet patches beneath the active emitters.
+    for (const emitter of emitterDrops) {
+      const puddle = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 24),
+        materials.wet
+      );
+      puddle.rotation.x = -Math.PI / 2;
+      puddle.position.set(emitter.x, -0.275, 0);
+      puddle.scale.y = 0.55;
+      scene.add(puddle);
+    }
+
+    // Custom orbit / pan / zoom controls, implemented without addons.
+    const cameraState = {
+      target: new THREE.Vector3(0, 1.2, 0),
+      radius: 11.7,
+      theta: 0.62,
+      phi: 1.12
+    };
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        cameraState.radius,
+        cameraState.phi,
+        cameraState.theta
+      );
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(cameraState.target).add(offset);
+      camera.lookAt(cameraState.target);
+    }
+
+    function resetCamera() {
+      cameraState.target.set(0, 1.2, 0);
+      cameraState.radius = 11.7;
+      cameraState.theta = 0.62;
+      cameraState.phi = 1.12;
+      updateCamera();
+    }
+
+    updateCamera();
+
+    const pointer = {
+      active: false,
+      mode: "orbit",
+      x: 0,
+      y: 0
+    };
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      pointer.active = true;
+      pointer.mode =
+        event.button === 2 || event.shiftKey ? "pan" : "orbit";
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointer.active) return;
+
+      const dx = event.clientX - pointer.x;
+      const dy = event.clientY - pointer.y;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (pointer.mode === "orbit") {
+        cameraState.theta -= dx * 0.006;
+        cameraState.phi = THREE.MathUtils.clamp(
+          cameraState.phi - dy * 0.006,
+          0.22,
+          1.48
+        );
+      } else {
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+        camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+        const panScale = cameraState.radius * 0.00135;
+        cameraState.target
+          .addScaledVector(right, -dx * panScale)
+          .addScaledVector(up, dy * panScale);
+      }
+
+      updateCamera();
+    });
+
+    function endPointer(event) {
+      pointer.active = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endPointer);
+    renderer.domElement.addEventListener("pointercancel", endPointer);
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          5.5,
+          20
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    // UI state.
+    let waterOn = true;
+    let labelsOn = true;
+    let flow = Number(flowInput.value);
+
+    function updateFlowUI() {
+      flow = Number(flowInput.value);
+      flowOutput.textContent = `${flow} L/H`;
+      flowValue.textContent = flow;
+      flowInput.style.setProperty("--fill", `${flow}%`);
+    }
+
+    flowInput.addEventListener("input", updateFlowUI);
+    updateFlowUI();
+
+    waterButton.addEventListener("click", () => {
+      waterOn = !waterOn;
+      statusDot.classList.toggle("off", !waterOn);
+      statusText.textContent = waterOn ? "SYSTEM ACTIVE" : "FLOW STOPPED";
+      waterButton.textContent = waterOn ? "Stop water" : "Start water";
+      waterButton.classList.toggle("active", !waterOn);
+    });
+
+    labelsButton.addEventListener("click", () => {
+      labelsOn = !labelsOn;
+      labelsButton.classList.toggle("active", labelsOn);
+      labelsRoot.style.display = labelsOn ? "block" : "none";
+    });
+
+    resetButton.addEventListener("click", resetCamera);
+
+    homeButton.addEventListener("click", () => {
+      cameraState.target.set(0, 1.2, 0);
+      cameraState.radius = 11.7;
+      cameraState.theta = 0.62;
+      cameraState.phi = 1.12;
+      updateCamera();
+    });
+
+    // Projected emitter labels.
+    const projected = new THREE.Vector3();
+
+    function updateLabels() {
+      if (!labelsOn) return;
+
+      for (const emitter of emitterDrops) {
+        projected.set(emitter.x, 1.42, 0).project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.15 &&
+          Math.abs(projected.y) < 1.15;
+
+        emitter.label.style.display = visible ? "flex" : "none";
+
+        if (visible) {
+          const x = (projected.x * 0.5 + 0.5) * innerWidth;
+          const y = (-projected.y * 0.5 + 0.5) * innerHeight;
+          emitter.label.style.left = `${x}px`;
+          emitter.label.style.top = `${y}px`;
+        }
+      }
+    }
+
+    // Responsive resize.
+    function onResize() {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(innerWidth, innerHeight);
+    }
+
+    addEventListener("resize", onResize);
+
+    // Animation.
+    const clock = new THREE.Clock();
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      const currentFlow = Number(flowInput.value);
+      const dropSpeed = (currentFlow / 100) * 0.9 + 0.18;
+      const columnOpacity = 0.12 + (currentFlow / 100) * 0.18;
+
+      for (const emitter of emitterDrops) {
+        emitter.column.material.opacity = columnOpacity;
+        emitter.column.scale.y = 0.92 + Math.sin(elapsed * 2.1) * 0.04;
+
+        for (const drop of emitter.drops) {
+          const fall = (elapsed * drop.speed + drop.phase) % 1;
+          drop.mesh.position.y = emitter.baseY - fall * emitter.fallDistance;
+          drop.mesh.position.x =
+            emitter.x + Math.sin(elapsed * 4 + drop.phase * 18) * 0.012;
+          drop.mesh.scale.setScalar(0.75 + fall * 1.35);
+        }
+      }
+
+      if (!reducedMotion) {
+        cyanLight.intensity = 22 + Math.sin(elapsed * 1.7) * 3;
+      }
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 450);
+    });
+  </script>
+</body>
+</html>
+```

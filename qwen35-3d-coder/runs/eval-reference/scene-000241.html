@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countertop Spice Jar Carousel</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #d7cbbb;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .info {
+      position: fixed;
+      z-index: 5;
+      top: 22px;
+      left: 24px;
+      max-width: min(390px, calc(100vw - 48px));
+      padding: 15px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 15px;
+      color: #3f352d;
+      background: rgba(255, 250, 242, 0.72);
+      box-shadow: 0 10px 32px rgba(54, 42, 31, 0.12);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .info h1 {
+      margin: 0 0 5px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .info p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #75685d;
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 6;
+      right: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(91, 72, 55, 0.2);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: #46372c;
+      background: rgba(255, 250, 242, 0.84);
+      box-shadow: 0 7px 20px rgba(54, 42, 31, 0.12);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.96);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .info {
+        top: 14px;
+        left: 14px;
+        padding: 12px 14px;
+      }
+
+      .info h1 {
+        font-size: 15px;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <h1>Countertop Spice Carousel</h1>
+    <p>Drag to orbit · Scroll or pinch to zoom</p>
+  </div>
+
+  <div class="controls">
+    <button id="toggle" type="button">Pause rotation</button>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xd8cec1);
+    scene.fog = new THREE.Fog(0xd8cec1, 11, 24);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      60
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.prepend(renderer.domElement);
+
+    // ---------------------------------------------------------------------
+    // Procedural countertop texture
+    // ---------------------------------------------------------------------
+
+    function makeCounterTexture() {
+      const size = 1024;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, "#d9d2c7");
+      gradient.addColorStop(0.48, "#cfc5b7");
+      gradient.addColorStop(1, "#bdb1a3");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 2200; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const radius = 0.4 + Math.random() * 2.3;
+        const light = Math.random() > 0.48;
+        ctx.fillStyle = light
+          ? `rgba(255,255,255,${0.04 + Math.random() * 0.12})`
+          : `rgba(71,61,51,${0.025 + Math.random() * 0.065})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          x,
+          y,
+          radius,
+          radius * (0.45 + Math.random() * 0.75),
+          Math.random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2.6, 2.6);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const countertop = new THREE.Mesh(
+      new THREE.BoxGeometry(19, 0.32, 13),
+      new THREE.MeshStandardMaterial({
+        map: makeCounterTexture(),
+        roughness: 0.68,
+        metalness: 0.02
+      })
+    );
+    countertop.position.y = -0.18;
+    countertop.receiveShadow = true;
+    scene.add(countertop);
+
+    const wall = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 14),
+      new THREE.MeshStandardMaterial({
+        color: 0xe8e0d5,
+        roughness: 0.96
+      })
+    );
+    wall.position.set(0, 6.6, -6.45);
+    wall.receiveShadow = true;
+    scene.add(wall);
+
+    // A restrained backsplash line adds depth without distracting from the carousel.
+    const backsplash = new THREE.Mesh(
+      new THREE.BoxGeometry(19, 0.12, 0.16),
+      new THREE.MeshStandardMaterial({
+        color: 0xb5a897,
+        roughness: 0.72
+      })
+    );
+    backsplash.position.set(0, 0.035, -6.32);
+    scene.add(backsplash);
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xfff7ea, 0x76685a, 2.05));
+
+    const key = new THREE.DirectionalLight(0xfff0d7, 4.2);
+    key.position.set(-5.5, 8.5, 5.2);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -6;
+    key.shadow.camera.right = 6;
+    key.shadow.camera.top = 6;
+    key.shadow.camera.bottom = -6;
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 22;
+    key.shadow.bias = -0.00025;
+    key.shadow.normalBias = 0.025;
+    scene.add(key);
+
+    const rim = new THREE.DirectionalLight(0xbad9ef, 1.7);
+    rim.position.set(5, 5, -4);
+    scene.add(rim);
+
+    const warmLight = new THREE.PointLight(0xffb967, 15, 11, 2);
+    warmLight.position.set(-3.7, 3.8, 2.8);
+    scene.add(warmLight);
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf5ffff,
+      roughness: 0.09,
+      metalness: 0,
+      transmission: 0.94,
+      transparent: true,
+      opacity: 1,
+      ior: 1.46,
+      thickness: 0.14,
+      attenuationColor: new THREE.Color(0xdceee7),
+      attenuationDistance: 3.5,
+      clearcoat: 1,
+      clearcoatRoughness: 0.08,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const brassMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc4944e,
+      roughness: 0.24,
+      metalness: 0.88
+    });
+
+    const darkBrassMaterial = new THREE.MeshStandardMaterial({
+      color: 0x76532d,
+      roughness: 0.3,
+      metalness: 0.82
+    });
+
+    const holeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x171512,
+      side: THREE.DoubleSide
+    });
+
+    const woodMaterial = new THREE.MeshStandardMaterial({
+      color: 0x71452e,
+      roughness: 0.38,
+      metalness: 0.03
+    });
+
+    const upperWoodMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9b623c,
+      roughness: 0.32,
+      metalness: 0.04
+    });
+
+    const rubberMaterial = new THREE.MeshStandardMaterial({
+      color: 0x25211e,
+      roughness: 0.9
+    });
+
+    // ---------------------------------------------------------------------
+    // Lazy Susan assembly
+    // ---------------------------------------------------------------------
+
+    const rotatingAssembly = new THREE.Group();
+    scene.add(rotatingAssembly);
+
+    // Lower rotating disc.
+    const lowerDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.18, 3.22, 0.25, 96),
+      woodMaterial
+    );
+    lowerDisc.position.y = 0.16;
+    lowerDisc.castShadow = true;
+    lowerDisc.receiveShadow = true;
+    rotatingAssembly.add(lowerDisc);
+
+    // Decorative edge and upper face trim.
+    const lowerRim = new THREE.Mesh(
+      new THREE.TorusGeometry(3.16, 0.055, 12, 128),
+      darkBrassMaterial
+    );
+    lowerRim.rotation.x = Math.PI / 2;
+    lowerRim.position.y = 0.275;
+    lowerRim.castShadow = true;
+    rotatingAssembly.add(lowerRim);
+
+    const lowerInset = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.98, 2.98, 0.035, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x8b5536,
+        roughness: 0.34,
+        metalness: 0.04
+      })
+    );
+    lowerInset.position.y = 0.302;
+    lowerInset.receiveShadow = true;
+    rotatingAssembly.add(lowerInset);
+
+    // Non-slip pad under the glass jars.
+    const jarPad = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.64, 2.64, 0.025, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x4b3930,
+        roughness: 0.86
+      })
+    );
+    jarPad.position.y = 0.33;
+    jarPad.receiveShadow = true;
+    rotatingAssembly.add(jarPad);
+
+    // Upper retaining ring.
+    const upperRing = new THREE.Mesh(
+      new THREE.TorusGeometry(2.52, 0.105, 18, 128),
+      upperWoodMaterial
+    );
+    upperRing.rotation.x = Math.PI / 2;
+    upperRing.position.y = 1.36;
+    upperRing.castShadow = true;
+    rotatingAssembly.add(upperRing);
+
+    const upperRingTrim = new THREE.Mesh(
+      new THREE.TorusGeometry(2.52, 0.026, 10, 128),
+      brassMaterial
+    );
+    upperRingTrim.rotation.x = Math.PI / 2;
+    upperRingTrim.position.y = 1.44;
+    upperRingTrim.castShadow = true;
+    rotatingAssembly.add(upperRingTrim);
+
+    // Rotating hub and three radial supports for the upper ring.
+    const rotatingHub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.25, 0.2, 48),
+      darkBrassMaterial
+    );
+    rotatingHub.position.y = 1.34;
+    rotatingHub.castShadow = true;
+    rotatingAssembly.add(rotatingHub);
+
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 + Math.PI / 6;
+      const length = 2.3;
+      const spoke = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, length, 12),
+        brassMaterial
+      );
+      spoke.rotation.z = Math.PI / 2;
+      spoke.rotation.y = -angle;
+      spoke.position.set(
+        Math.cos(angle) * (0.22 + length / 2),
+        1.35,
+        Math.sin(angle) * (0.22 + length / 2)
+      );
+      spoke.castShadow = true;
+      rotatingAssembly.add(spoke);
+    }
+
+    // Fixed central post, bearing sleeve, and top knob.
+    const fixedPost = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.105, 0.12, 2.73, 48),
+      brassMaterial
+    );
+    fixedPost.position.y = 1.43;
+    fixedPost.castShadow = true;
+    scene.add(fixedPost);
+
+    const lowerBearing = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.27, 0.34, 0.16, 48),
+      darkBrassMaterial
+    );
+    lowerBearing.position.y = 0.36;
+    lowerBearing.castShadow = true;
+    scene.add(lowerBearing);
+
+    const postCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.17, 0.13, 0.17, 48),
+      darkBrassMaterial
+    );
+    postCap.position.y = 2.79;
+    postCap.castShadow = true;
+    scene.add(postCap);
+
+    const knob = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 48, 32),
+      brassMaterial
+    );
+    knob.scale.set(1, 1.15, 1);
+    knob.position.y = 2.98;
+    knob.castShadow = true;
+    scene.add(knob);
+
+    const knobCollar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.105, 0.15, 0.12, 40),
+      darkBrassMaterial
+    );
+    knobCollar.position.y = 2.77;
+    scene.add(knobCollar);
+
+    // ---------------------------------------------------------------------
+    // Jar construction
+    // ---------------------------------------------------------------------
+
+    const spiceColors = [
+      0xb94b22, // paprika
+      0xd7a529, // turmeric
+      0x713621, // cinnamon
+      0x7c3522, // chili
+      0xb98232, // cumin
+      0x5d3224, // cloves
+      0xd58b35, // mustard
+      0x8a4b2b  // curry
+    ];
+
+    const labelNames = [
+      "PAPRIKA",
+      "TURMERIC",
+      "CINNAMON",
+      "CHILI",
+      "CUMIN",
+      "CLOVES",
+      "MUSTARD",
+      "CURRY"
+    ];
+
+    function makeLabelTexture(text, index) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#f4ead7";
+      ctx.strokeStyle = index % 2 ? "#a46a37" : "#795336";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.roundRect(12, 24, 488, 208, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#5d432f";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "600 43px Georgia, serif";
+      ctx.fillText(text, 256, 121);
+
+      ctx.strokeStyle = "rgba(93,67,47,0.4)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(85, 172);
+      ctx.lineTo(427, 172);
+      ctx.stroke();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function addDomeHoles(parent, centerY) {
+      const radius = 0.325;
+      const verticalScale = 0.57;
+
+      // The center hole.
+      const centerHole = new THREE.Mesh(
+        new THREE.CircleGeometry(0.031, 20),
+        holeMaterial
+      );
+      centerHole.position.set(0, centerY + radius * verticalScale + 0.003, 0);
+      centerHole.rotation.x = -Math.PI / 2;
+      parent.add(centerHole);
+
+      const rings = [
+        { polar: 0.48, count: 8 },
+        { polar: 0.92, count: 12 },
+        { polar: 1.28, count: 16 }
+      ];
+
+      const normal = new THREE.Vector3();
+      const zAxis = new THREE.Vector3(0, 0, 1);
+
+      rings.forEach((ring, ringIndex) => {
+        for (let i = 0; i < ring.count; i++) {
+          const theta = (i / ring.count) * Math.PI * 2 + ringIndex * 0.17;
+          const x = radius * Math.sin(ring.polar) * Math.cos(theta);
+          const z = radius * Math.sin(ring.polar) * Math.sin(theta);
+          const y = centerY + radius * verticalScale * Math.cos(ring.polar);
+
+          const hole = new THREE.Mesh(
+            new THREE.CircleGeometry(0.022 + (ringIndex === 0 ? 0.003 : 0), 16),
+            holeMaterial
+          );
+          hole.position.set(x, y, z);
+
+          // Ellipsoid normal for the vertically scaled dome.
+          normal
+            .set(
+              x / (radius * radius),
+              (y - centerY) / (radius * verticalScale * radius * verticalScale),
+              z / (radius * radius)
+            )
+            .normalize();
+
+          hole.quaternion.setFromUnitVectors(zAxis, normal);
+          parent.add(hole);
+        }
+      });
+    }
+
+    function createJar(index, angle) {
+      const jar = new THREE.Group();
+
+      // Turn the label toward the outside of the circle.
+      jar.rotation.y = -angle;
+
+      // Lathed glass body with a thick base, straight walls, and short neck.
+      const profile = [
+        new THREE.Vector2(0.0, 0.0),
+        new THREE.Vector2(0.30, 0.0),
+        new THREE.Vector2(0.365, 0.025),
+        new THREE.Vector2(0.39, 0.075),
+        new THREE.Vector2(0.39, 0.12),
+        new THREE.Vector2(0.375, 0.18),
+        new THREE.Vector2(0.375, 1.02),
+        new THREE.Vector2(0.35, 1.12),
+        new THREE.Vector2(0.285, 1.19),
+        new THREE.Vector2(0.275, 1.28),
+        new THREE.Vector2(0.275, 1.31)
+      ];
+
+      const glass = new THREE.Mesh(
+        new THREE.LatheGeometry(profile, 64),
+        glassMaterial
+      );
+      glass.position.y = 0.035;
+      glass.castShadow = true;
+      glass.renderOrder = 2;
+      jar.add(glass);
+
+      // Thick glass bottom visible through the wall.
+      const glassBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.355, 0.335, 0.075, 64),
+        new THREE.MeshPhysicalMaterial({
+          color: 0xe8fff8,
+          roughness: 0.08,
+          transmission: 0.88,
+          transparent: true,
+          thickness: 0.12,
+          ior: 1.46,
+          depthWrite: false
+        })
+      );
+      glassBase.position.y = 0.065;
+      glassBase.renderOrder = 2;
+      jar.add(glassBase);
+
+      // Spice contents, subtly varied in height while the jars remain identical.
+      const fillHeight = 0.61 + (index % 3) * 0.065;
+      const spiceMaterial = new THREE.MeshStandardMaterial({
+        color: spiceColors[index],
+        roughness: 0.88,
+        metalness: 0
+      });
+
+      const spice = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.323, 0.323, fillHeight, 48),
+        spiceMaterial
+      );
+      spice.position.y = 0.095 + fillHeight / 2;
+      spice.castShadow = true;
+      jar.add(spice);
+
+      // Uneven-looking spice surface.
+      const surface = new THREE.Mesh(
+        new THREE.CircleGeometry(0.322, 48),
+        spiceMaterial
+      );
+      surface.rotation.x = -Math.PI / 2;
+      surface.position.y = 0.095 + fillHeight;
+      surface.receiveShadow = true;
+      jar.add(surface);
+
+      // Small curved label patch.
+      const labelMaterial = new THREE.MeshStandardMaterial({
+        map: makeLabelTexture(labelNames[index], index),
+        transparent: true,
+        roughness: 0.82,
+        metalness: 0,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1
+      });
+
+      const label = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.379,
+          0.379,
+          0.39,
+          32,
+          1,
+          true,
+          -0.53,
+          1.06
+        ),
+        labelMaterial
+      );
+      label.position.y = 0.64;
+      label.castShadow = false;
+      jar.add(label);
+
+      // Glass neck rim.
+      const neckRim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.275, 0.022, 12, 48),
+        new THREE.MeshPhysicalMaterial({
+          color: 0xeafffa,
+          roughness: 0.08,
+          transmission: 0.85,
+          transparent: true,
+          opacity: 0.78,
+          thickness: 0.04,
+          depthWrite: false
+        })
+      );
+      neckRim.rotation.x = Math.PI / 2;
+      neckRim.position.y = 1.315;
+      jar.add(neckRim);
+
+      // Metallic cap base.
+      const capBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.315, 0.33, 0.12, 64),
+        brassMaterial
+      );
+      capBase.position.y = 1.36;
+      capBase.castShadow = true;
+      jar.add(capBase);
+
+      const capBand = new THREE.Mesh(
+        new THREE.TorusGeometry(0.328, 0.024, 10, 64),
+        darkBrassMaterial
+      );
+      capBand.rotation.x = Math.PI / 2;
+      capBand.position.y = 1.305;
+      capBand.castShadow = true;
+      jar.add(capBand);
+
+      // Domed shaker cap.
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.325,
+          48,
+          24,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI / 2
+        ),
+        brassMaterial
+      );
+      dome.scale.y = 0.57;
+      dome.position.y = 1.42;
+      dome.castShadow = true;
+      jar.add(dome);
+
+      addDomeHoles(jar, 1.42);
+
+      // Tiny top fastener.
+      const capFastener = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.055, 0.025, 24),
+        darkBrassMaterial
+      );
+      capFastener.position.y = 1.612;
+      jar.add(capFastener);
+
+      return jar;
+    }
+
+    const jarRadius = 2.12;
+    const jars = [];
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const jar = createJar(i, angle);
+
+      jar.position.set(
+        Math.cos(angle) * jarRadius,
+        0.34,
+        Math.sin(angle) * jarRadius
+      );
+
+      // Keep every jar upright as the complete assembly rotates.
+      rotatingAssembly.add(jar);
+      jars.push(jar);
+    }
+
+    // ---------------------------------------------------------------------
+    // Small decorative details
+    // ---------------------------------------------------------------------
+
+    // Feet beneath the lower disc.
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+      const foot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.21, 0.075, 32),
+        rubberMaterial
+      );
+      foot.position.set(Math.cos(angle) * 2.48, 0.01, Math.sin(angle) * 2.48);
+      foot.castShadow = true;
+      scene.add(foot);
+    }
+
+    // ---------------------------------------------------------------------
+    // Custom orbit controls (no addons)
+    // ---------------------------------------------------------------------
+
+    const controls = {
+      target: new THREE.Vector3(0, 1.25, 0),
+      yaw: 0.72,
+      pitch: 0.48,
+      distance: 8.8,
+      minDistance: 5.2,
+      maxDistance: 14,
+      minPitch: 0.12,
+      maxPitch: 1.22,
+      dragging: false,
+      pointerId: null,
+      lastX: 0,
+      lastY: 0
+    };
+
+    const defaultView = {
+      yaw: controls.yaw,
+      pitch: controls.pitch,
+      distance: controls.distance
+    };
+
+    function updateCamera() {
+      const horizontal = Math.cos(controls.pitch) * controls.distance;
+      camera.position.set(
+        controls.target.x + Math.sin(controls.yaw) * horizontal,
+        controls.target.y + Math.sin(controls.pitch) * controls.distance,
+        controls.target.z + Math.cos(controls.yaw) * horizontal
+      );
+      camera.lookAt(controls.target);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      controls.dragging = true;
+      controls.pointerId = event.pointerId;
+      controls.lastX = event.clientX;
+      controls.lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.style.cursor = "grabbing";
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!controls.dragging || event.pointerId !== controls.pointerId) return;
+
+      const dx = event.clientX - controls.lastX;
+      const dy = event.clientY - controls.lastY;
+      controls.lastX = event.clientX;
+      controls.lastY = event.clientY;
+
+      controls.yaw -= dx * 0.006;
+      controls.pitch = THREE.MathUtils.clamp(
+        controls.pitch + dy * 0.0045,
+        controls.minPitch,
+        controls.maxPitch
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      if (event && controls.pointerId !== event.pointerId) return;
+      controls.dragging = false;
+      controls.pointerId = null;
+      renderer.domElement.style.cursor = "grab";
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+    renderer.domElement.addEventListener("lostpointercapture", endDrag);
+    renderer.domElement.style.cursor = "grab";
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        const factor = Math.exp(event.deltaY * 0.001);
+        controls.distance = THREE.MathUtils.clamp(
+          controls.distance * factor,
+          controls.minDistance,
+          controls.maxDistance
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    // Basic two-finger pinch zoom.
+    const activePointers = new Map();
+    let pinchStartDistance = 0;
+    let pinchStartZoom = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        pinchStartDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+        pinchStartZoom = controls.distance;
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!activePointers.has(event.pointerId)) return;
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 2 && pinchStartDistance > 0) {
+        const points = [...activePointers.values()];
+        const distance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+        controls.distance = THREE.MathUtils.clamp(
+          pinchStartZoom * (pinchStartDistance / distance),
+          controls.minDistance,
+          controls.maxDistance
+        );
+        updateCamera();
+      }
+    });
+
+    const removePointer = (event) => {
+      activePointers.delete(event.pointerId);
+      if (activePointers.size < 2) pinchStartDistance = 0;
+      endDrag(event);
+    };
+
+    renderer.domElement.addEventListener("pointerup", removePointer);
+    renderer.domElement.addEventListener("pointercancel", removePointer);
+
+    document.getElementById("reset").addEventListener("click", () => {
+      controls.yaw = defaultView.yaw;
+      controls.pitch = defaultView.pitch;
+      controls.distance = defaultView.distance;
+      updateCamera();
+    });
+
+    let rotating = true;
+    const toggleButton = document.getElementById("toggle");
+
+    toggleButton.addEventListener("click", () => {
+      rotating = !rotating;
+      toggleButton.textContent = rotating ? "Pause rotation" : "Resume rotation";
+    });
+
+    // ---------------------------------------------------------------------
+    // Animation
+    // ---------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const rotationSpeed = 0.13; // radians per second
+    let resizeTimer;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      if (rotating) rotatingAssembly.rotation.y += delta * rotationSpeed;
+
+      renderer.render(scene, camera);
+    }
+
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 50);
+      resize();
+    });
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

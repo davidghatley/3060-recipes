@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ball-and-Stick Water Molecule</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 34%, #182a3d 0%, #0b1725 48%, #050a12 100%);
+      color: #eef5ff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 10;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .title-card h1 {
+      margin: 0;
+      font-size: clamp(18px, 2.4vw, 28px);
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+
+    .title-card p {
+      margin: 7px 0 0;
+      color: #9fb0c4;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .info-card {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(174, 201, 229, 0.14);
+      border-radius: 12px;
+      background: rgba(8, 16, 27, 0.62);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+      color: #aebdcd;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .info-card strong {
+      color: #f4f8ff;
+      font-weight: 600;
+    }
+
+    .angle {
+      color: #ff6b78;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(184, 207, 231, 0.18);
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: rgba(15, 27, 41, 0.72);
+      color: #dce8f7;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition:
+        background 150ms ease,
+        border-color 150ms ease,
+        transform 150ms ease;
+    }
+
+    button:hover {
+      background: rgba(31, 52, 75, 0.88);
+      border-color: rgba(184, 207, 231, 0.35);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .atom-label {
+      position: fixed;
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 7px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      background: rgba(7, 14, 23, 0.7);
+      color: #eef4ff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(8px);
+    }
+
+    .atom-label::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #91a3bb;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+      content: "";
+    }
+
+    #o-label::before {
+      background: #ff4964;
+    }
+
+    #h-label::before {
+      background: #ffffff;
+    }
+
+    @media (max-width: 650px) {
+      .title-card {
+        top: 18px;
+        left: 18px;
+      }
+
+      .controls {
+        top: 18px;
+        right: 18px;
+      }
+
+      .info-card {
+        right: 14px;
+        bottom: 14px;
+        left: 14px;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage"></div>
+
+  <div class="title-card">
+    <h1>Water molecule</h1>
+    <p>Ball-and-stick model · H₂O</p>
+  </div>
+
+  <div class="controls">
+    <button id="rotate-button" type="button">Pause rotation</button>
+    <button id="reset-button" type="button">Reset view</button>
+  </div>
+
+  <div id="o-label" class="atom-label">O</div>
+  <div id="h1-label" class="atom-label">H</div>
+  <div id="h2-label" class="atom-label">H</div>
+
+  <div class="info-card">
+    <span><strong>H–O–H</strong> bond angle</span>
+    <span class="angle">104°</span>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const stage = document.getElementById("stage");
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional ball-and-stick water molecule"
+    );
+    stage.appendChild(renderer.domElement);
+
+    // Scene and camera
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x08111d, 8, 18);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const molecule = new THREE.Group();
+    molecule.position.y = 0.05;
+    scene.add(molecule);
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xb9d9ff, 0x172033, 1.45));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(4, 6, 5);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x7ea9ff, 1.8);
+    fillLight.position.set(-4, 2, 3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xff7185, 2.1);
+    rimLight.position.set(0, 3, -5);
+    scene.add(rimLight);
+
+    // Materials
+    const oxygenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xff3155,
+      emissive: 0x390008,
+      emissiveIntensity: 0.16,
+      roughness: 0.25,
+      metalness: 0.05,
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.2
+    });
+
+    const hydrogenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf7fbff,
+      emissive: 0x101820,
+      emissiveIntensity: 0.08,
+      roughness: 0.22,
+      metalness: 0.03,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.25
+    });
+
+    const bondMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8493a7,
+      roughness: 0.3,
+      metalness: 0.72
+    });
+
+    const sleeveMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb8c5d4,
+      roughness: 0.26,
+      metalness: 0.78,
+      side: THREE.FrontSide
+    });
+
+    const innerSleeveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x455466,
+      roughness: 0.4,
+      metalness: 0.65,
+      side: THREE.DoubleSide
+    });
+
+    // Geometry helpers
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+    const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+    function cylinderBetween(start, end, radius, material, segments = 18) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        segments,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        Y_AXIS,
+        direction.clone().normalize()
+      );
+
+      return mesh;
+    }
+
+    function orientAlongAxis(mesh, axis) {
+      mesh.quaternion.setFromUnitVectors(
+        Y_AXIS,
+        axis.clone().normalize()
+      );
+    }
+
+    // Create a shallow, hollow sleeve with a flared profile.
+    function makeSleeveGeometry(outerRadius, innerRadius, depth, segments = 48) {
+      const profile = [
+        new THREE.Vector2(innerRadius, -depth / 2),
+        new THREE.Vector2(outerRadius, -depth / 2),
+        new THREE.Vector2(outerRadius, depth / 2),
+        new THREE.Vector2(innerRadius, depth / 2)
+      ];
+
+      const geometry = new THREE.LatheGeometry(profile, segments);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    // Oxygen at the apex.
+    const oxygenPosition = new THREE.Vector3(0, 1.28, 0);
+    const oxygen = new THREE.Mesh(
+      new THREE.SphereGeometry(0.44, 48, 32),
+      oxygenMaterial
+    );
+    oxygen.position.copy(oxygenPosition);
+    molecule.add(oxygen);
+
+    // Hydrogen positions are calculated from a 104-degree H-O-H angle.
+    const bondLength = 1.0;
+    const halfBondAngle = THREE.MathUtils.degToRad(52);
+
+    const firstDirection = new THREE.Vector3(
+      Math.sin(halfBondAngle),
+      -Math.cos(halfBondAngle),
+      0
+    ).normalize();
+
+    const secondDirection = firstDirection.clone().multiplyScalar(-1);
+
+    const hydrogen1Position = oxygenPosition
+      .clone()
+      .addScaledVector(firstDirection, bondLength);
+
+    const hydrogen2Position = oxygenPosition
+      .clone()
+      .addScaledVector(secondDirection, bondLength);
+
+    const hydrogen1 = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 36, 24),
+      hydrogenMaterial
+    );
+    hydrogen1.position.copy(hydrogen1Position);
+    molecule.add(hydrogen1);
+
+    const hydrogen2 = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 36, 24),
+      hydrogenMaterial
+    );
+    hydrogen2.position.copy(hydrogen2Position);
+    molecule.add(hydrogen2);
+
+    // Central shallow sleeve around the oxygen atom.
+    const oxygenSleeve = new THREE.Mesh(
+      makeSleeveGeometry(0.48, 0.31, 0.22),
+      sleeveMaterial
+    );
+    oxygenSleeve.position.copy(oxygenPosition);
+    oxygenSleeve.quaternion.identity();
+    molecule.add(oxygenSleeve);
+
+    // Dark inner wall of the oxygen sleeve.
+    const oxygenInnerWall = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.31, 0.31, 0.22, 48, 1, true),
+      innerSleeveMaterial
+    );
+    oxygenInnerWall.position.copy(oxygenPosition);
+    molecule.add(oxygenInnerWall);
+
+    // Shallow sleeves around each hydrogen atom.
+    function addHydrogenSleeve(position, axis) {
+      const sleeve = new THREE.Mesh(
+        makeSleeveGeometry(0.27, 0.18, 0.18),
+        sleeveMaterial
+      );
+
+      sleeve.position.copy(position);
+      orientAlongAxis(sleeve, axis);
+      molecule.add(sleeve);
+
+      const innerWall = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.18, 0.18, 48, 1, true),
+        innerSleeveMaterial
+      );
+
+      innerWall.position.copy(position);
+      orientAlongAxis(innerWall, axis);
+      molecule.add(innerWall);
+    }
+
+    addHydrogenSleeve(
+      hydrogen1Position,
+      firstDirection
+    );
+
+    addHydrogenSleeve(
+      hydrogen2Position,
+      secondDirection
+    );
+
+    // Gray bonds connect the oxygen sleeve to the hydrogen sleeves.
+    const firstBondStart = oxygenPosition
+      .clone()
+      .add(new THREE.Vector3(0, -0.11, 0));
+
+    const firstBondEnd = hydrogen1Position
+      .clone()
+      .addScaledVector(firstDirection, -0.18);
+
+    const secondBondStart = oxygenPosition
+      .clone()
+      .add(new THREE.Vector3(0, -0.11, 0));
+
+    const secondBondEnd = hydrogen2Position
+      .clone()
+      .addScaledVector(secondDirection, -0.18);
+
+    molecule.add(
+      cylinderBetween(
+        firstBondStart,
+        firstBondEnd,
+        0.047,
+        bondMaterial,
+        16
+      )
+    );
+
+    molecule.add(
+      cylinderBetween(
+        secondBondStart,
+        secondBondEnd,
+        0.047,
+        bondMaterial,
+        16
+      )
+    );
+
+    // Custom camera controls; no external controls module is used.
+    const target = new THREE.Vector3(0, 0.72, 0);
+
+    const initialView = {
+      radius: 6.3,
+      phi: 1.48,
+      theta: 0
+    };
+
+    const desired = { ...initialView };
+    const current = { ...initialView };
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+    let lastInteraction = performance.now();
+    let autoRotate = true;
+
+    const rotateButton = document.getElementById("rotate-button");
+    const resetButton = document.getElementById("reset-button");
+
+    function resetView() {
+      desired.radius = initialView.radius;
+      desired.phi = initialView.phi;
+      desired.theta = initialView.theta;
+      lastInteraction = performance.now();
+    }
+
+    function updateRotationButton() {
+      rotateButton.textContent = autoRotate
+        ? "Pause rotation"
+        : "Resume rotation";
+    }
+
+    rotateButton.addEventListener("click", () => {
+      autoRotate = !autoRotate;
+      updateRotationButton();
+      lastInteraction = performance.now();
+    });
+
+    resetButton.addEventListener("click", resetView);
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      lastInteraction = performance.now();
+
+      renderer.domElement.classList.add("dragging");
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - pointerX;
+      const deltaY = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      desired.theta -= deltaX * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.006,
+        0.25,
+        Math.PI - 0.25
+      );
+
+      lastInteraction = performance.now();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      renderer.domElement.classList.remove("dragging");
+
+      if (
+        event.pointerId !== undefined &&
+        renderer.domElement.hasPointerCapture(event.pointerId)
+      ) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+    renderer.domElement.addEventListener("lostpointercapture", () => {
+      dragging = false;
+      renderer.domElement.classList.remove("dragging");
+    });
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          4.1,
+          11
+        );
+
+        lastInteraction = performance.now();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    // Projected atom labels.
+    const labelDefinitions = [
+      {
+        element: document.getElementById("o-label"),
+        position: oxygenPosition.clone().add(new THREE.Vector3(0, 0, 0.5))
+      },
+      {
+        element: document.getElementById("h1-label"),
+        position: hydrogen1Position.clone().add(new THREE.Vector3(0, 0, 0.3))
+      },
+      {
+        element: document.getElementById("h2-label"),
+        position: hydrogen2Position.clone().add(new THREE.Vector3(0, 0, 0.3))
+      }
+    ];
+
+    function updateLabels() {
+      molecule.updateMatrixWorld(true);
+
+      for (const definition of labelDefinitions) {
+        const worldPosition = definition.position
+          .clone()
+          .applyMatrix4(molecule.matrixWorld);
+
+        const projected = worldPosition.clone().project(camera);
+
+        const visible = projected.z > -1 && projected.z < 1;
+        definition.element.style.display = visible ? "flex" : "none";
+
+        if (visible) {
+          definition.element.style.left =
+            `${(projected.x * 0.5 + 0.5) * window.innerWidth}px`;
+
+          definition.element.style.top =
+            `${(-projected.y * 0.5 + 0.5) * window.innerHeight}px`;
+        }
+      }
+    }
+
+    function onResize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio || 1, 2)
+      );
+    }
+
+    window.addEventListener("resize", onResize);
+
+    // Animation
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const now = performance.now();
+
+      if (
+        autoRotate &&
+        !dragging &&
+        now - lastInteraction > 2500
+      ) {
+        desired.theta += delta * 0.16;
+      }
+
+      const smoothing = 1 - Math.exp(-delta * 8);
+
+      current.radius +=
+        (desired.radius - current.radius) * smoothing;
+      current.phi +=
+        (desired.phi - current.phi) * smoothing;
+      current.theta +=
+        (desired.theta - current.theta) * smoothing;
+
+      camera.position.setFromSphericalCoords(
+        current.radius,
+        current.phi,
+        current.theta
+      ).add(target);
+
+      camera.lookAt(target);
+
+      if (autoRotate) {
+        molecule.rotation.y += delta * 0.18;
+      }
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    updateRotationButton();
+    animate();
+  </script>
+</body>
+</html>

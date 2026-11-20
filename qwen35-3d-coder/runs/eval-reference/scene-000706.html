@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated Regolith Sintering Plant</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #111820;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      z-index: 5;
+      top: 20px;
+      left: 20px;
+      width: min(370px, calc(100vw - 40px));
+      padding: 17px 18px;
+      border: 1px solid rgba(146, 187, 210, 0.22);
+      border-radius: 12px;
+      color: #e9f2f7;
+      background: linear-gradient(145deg, rgba(15, 25, 33, 0.91), rgba(19, 32, 41, 0.74));
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #73d6ea;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(18px, 2.1vw, 25px);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 8px 0 15px;
+      color: #9fb4c0;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(146, 187, 210, 0.16);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #71ed9c;
+      box-shadow: 0 0 14px #71ed9c;
+    }
+
+    #phase {
+      color: #d9e7ed;
+      font-weight: 700;
+    }
+
+    #detail {
+      margin-left: auto;
+      color: #8da4b1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress {
+      height: 4px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #49c4df, #ffb24b);
+      transition: width 80ms linear;
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 5;
+      right: 18px;
+      bottom: 18px;
+      padding: 9px 12px;
+      border: 1px solid rgba(146, 187, 210, 0.18);
+      border-radius: 9px;
+      color: #b4c5cd;
+      background: rgba(12, 20, 26, 0.72);
+      font-size: 11px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .controls strong {
+      color: #e4eef3;
+    }
+
+    #cycle-fade {
+      position: fixed;
+      z-index: 4;
+      inset: 0;
+      background: #0c1218;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .hud {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 13px 14px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        right: 10px;
+        bottom: 10px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hud">
+    <div class="eyebrow">Lunar Materials Facility / Line 04</div>
+    <h1>Automated Regolith<br />Sintering Plant</h1>
+    <div class="subtitle">
+      Bucket elevator → hopper → automated gantry → tunnel kiln train
+    </div>
+
+    <div class="status-row">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="phase">Initializing</span>
+      <span id="detail">CAR 01</span>
+    </div>
+
+    <div class="progress">
+      <div id="progress-fill"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <strong>Drag</strong> orbit · <strong>Wheel</strong> zoom ·
+    <strong>Right-drag</strong> pan · <strong>Double-click</strong> reset
+  </div>
+
+  <div id="cycle-fade"></div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, lighting
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.8));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x17212a);
+    scene.fog = new THREE.Fog(0x17212a, 72, 155);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      innerWidth / innerHeight,
+      0.1,
+      260
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xb8d9ef, 0x5e4434, 2.1);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff0d2, 3.1);
+    sun.position.set(-24, 48, 31);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -60;
+    sun.shadow.camera.right = 60;
+    sun.shadow.camera.top = 45;
+    sun.shadow.camera.bottom = -45;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 130;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const rimLight = new THREE.DirectionalLight(0x6fb9d9, 1.25);
+    rimLight.position.set(35, 22, -35);
+    scene.add(rimLight);
+
+    const ambient = new THREE.AmbientLight(0x8c9da8, 0.28);
+    scene.add(ambient);
+
+    // ---------------------------------------------------------------------
+    // Materials and small construction helpers
+    // ---------------------------------------------------------------------
+
+    const material = {
+      concrete: new THREE.MeshStandardMaterial({
+        color: 0x78838a,
+        roughness: 0.94,
+        metalness: 0.02
+      }),
+      darkConcrete: new THREE.MeshStandardMaterial({
+        color: 0x3d484f,
+        roughness: 0.95
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x66757d,
+        roughness: 0.48,
+        metalness: 0.72
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x263239,
+        roughness: 0.5,
+        metalness: 0.76
+      }),
+      rail: new THREE.MeshStandardMaterial({
+        color: 0x9aa5aa,
+        roughness: 0.26,
+        metalness: 0.9
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xe6a12b,
+        roughness: 0.48,
+        metalness: 0.32
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xd76d2c,
+        roughness: 0.52,
+        metalness: 0.28
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xbb3f30,
+        roughness: 0.52,
+        metalness: 0.42
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x111719,
+        roughness: 0.74,
+        metalness: 0.25
+      }),
+      regolith: new THREE.MeshStandardMaterial({
+        color: 0xb78a62,
+        roughness: 1.0
+      }),
+      refractory: new THREE.MeshStandardMaterial({
+        color: 0x9b6b4e,
+        roughness: 0.9
+      }),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x77bfd1,
+        roughness: 0.16,
+        metalness: 0.2,
+        transparent: true,
+        opacity: 0.48
+      }),
+      hot: new THREE.MeshStandardMaterial({
+        color: 0xff7328,
+        emissive: 0xff3b08,
+        emissiveIntensity: 4.2,
+        roughness: 0.38
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0x66747c,
+        roughness: 0.68,
+        metalness: 0.45,
+        side: THREE.DoubleSide
+      })
+    };
+
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function box(parent, size, pos, mat, cast = true, receive = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        mat
+      );
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = receive;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(parent, radiusTop, radiusBottom, height, pos, mat, segments = 20) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        mat
+      );
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function sphere(parent, radius, pos, mat, segments = 16) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, segments, Math.max(8, segments / 2)),
+        mat
+      );
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function beamBetween(parent, a, b, width, depth, mat) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, length, depth),
+        mat
+      );
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function strutBetween(parent, a, b, radius, mat) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 1, 10),
+        mat
+      );
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.scale.y = length;
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeTextSprite(text, color = "#d9f2fb", background = "#17232c") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 160;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 7;
+      ctx.strokeRect(7, 7, canvas.width - 14, canvas.height - 14);
+
+      ctx.fillStyle = color;
+      ctx.font = "700 54px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 3);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+
+      sprite.scale.set(8.2, 1.7, 1);
+      return sprite;
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground, markings and rail line
+    // ---------------------------------------------------------------------
+
+    const groundTextureCanvas = document.createElement("canvas");
+    groundTextureCanvas.width = 512;
+    groundTextureCanvas.height = 512;
+    const groundCtx = groundTextureCanvas.getContext("2d");
+
+    groundCtx.fillStyle = "#6b7275";
+    groundCtx.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 18000; i++) {
+      const shade = 80 + Math.floor(Math.random() * 65);
+      groundCtx.fillStyle = `rgba(${shade},${shade + 4},${shade + 7},0.22)`;
+      groundCtx.fillRect(
+        Math.random() * 512,
+        Math.random() * 512,
+        1 + Math.random() * 2,
+        1 + Math.random() * 2
+      );
+    }
+
+    const groundTexture = new THREE.CanvasTexture(groundTextureCanvas);
+    groundTexture.colorSpace = THREE.SRGBColorSpace;
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(18, 18);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(180, 120),
+      new THREE.MeshStandardMaterial({
+        map: groundTexture,
+        color: 0xa5aaa7,
+        roughness: 0.96
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, -0.05, 0);
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Concrete road strips
+    box(scene, [125, 0.08, 4.4], [0, 0.01, 8.2], material.darkConcrete, false, true);
+    box(scene, [125, 0.09, 0.14], [0, 0.07, 6.05], material.yellow, false, true);
+    box(scene, [125, 0.09, 0.14], [0, 0.07, 10.35], material.yellow, false, true);
+
+    // Rail bed
+    box(scene, [104, 0.16, 3.9], [3, 0.06, 0], material.darkConcrete, false, true);
+
+    for (let x = -48; x <= 55; x += 1.45) {
+      const tie = box(
+        scene,
+        [0.3, 0.18, 2.9],
+        [x, 0.16, 0],
+        material.black,
+        false,
+        true
+      );
+      tie.rotation.y = (x % 3) * 0.004;
+    }
+
+    for (const z of [-0.92, 0.92]) {
+      box(scene, [105, 0.22, 0.18], [3, 0.33, z], material.rail, false, true);
+      box(scene, [105, 0.08, 0.28], [3, 0.17, z], material.darkSteel, false, true);
+    }
+
+    // ---------------------------------------------------------------------
+    // Long cutaway tunnel kiln
+    // ---------------------------------------------------------------------
+
+    const kiln = new THREE.Group();
+    scene.add(kiln);
+
+    const kilnStart = 0;
+    const kilnLength = 44;
+    const kilnCenter = kilnStart + kilnLength / 2;
+
+    box(
+      kiln,
+      [kilnLength + 1.2, 0.25, 10.8],
+      [kilnCenter, 0.18, 0],
+      material.darkConcrete,
+      false,
+      true
+    );
+
+    // Back refractory wall
+    box(
+      kiln,
+      [kilnLength, 2.8, 0.45],
+      [kilnCenter, 1.5, -5.12],
+      material.refractory,
+      false,
+      true
+    );
+
+    // Low front lip and transparent cutaway skin
+    box(
+      kiln,
+      [kilnLength, 0.55, 0.45],
+      [kilnCenter, 0.45, 5.12],
+      material.refractory,
+      false,
+      true
+    );
+
+    const cutawayMaterial = new THREE.MeshStandardMaterial({
+      color: 0x91b3c0,
+      roughness: 0.22,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.13,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    box(
+      kiln,
+      [kilnLength, 2.45, 0.08],
+      [kilnCenter, 1.7, 5.15],
+      cutawayMaterial,
+      false,
+      false
+    );
+
+    // Half-cylinder arched roof, open toward the camera for a cutaway view.
+    const roofGeometry = new THREE.CylinderGeometry(
+      5.4,
+      5.4,
+      kilnLength,
+      56,
+      1,
+      true,
+      0,
+      Math.PI
+    );
+    const roof = new THREE.Mesh(roofGeometry, material.roof);
+    roof.rotation.z = Math.PI / 2;
+    roof.position.set(kilnCenter, 2.65, 0);
+    roof.castShadow = true;
+    roof.receiveShadow = true;
+    kiln.add(roof);
+
+    // Structural arch ribs
+    for (let x = kilnStart; x <= kilnStart + kilnLength + 0.01; x += 5.5) {
+      const rib = new THREE.Mesh(
+        new THREE.TorusGeometry(5.48, 0.16, 8, 40, Math.PI),
+        material.darkSteel
+      );
+      rib.rotation.y = Math.PI / 2;
+      rib.position.set(x, 2.65, 0);
+      rib.castShadow = true;
+      kiln.add(rib);
+    }
+
+    // Glowing entry arch
+    const entryArch = new THREE.Mesh(
+      new THREE.TorusGeometry(5.2, 0.11, 8, 48, Math.PI),
+      material.hot
+    );
+    entryArch.rotation.y = Math.PI / 2;
+    entryArch.position.set(-0.08, 2.65, 0);
+    kiln.add(entryArch);
+
+    // Hot kiln floor
+    box(
+      kiln,
+      [kilnLength - 0.4, 0.08, 7.2],
+      [kilnCenter, 0.37, 0],
+      new THREE.MeshStandardMaterial({
+        color: 0x7b351e,
+        emissive: 0xd83a0d,
+        emissiveIntensity: 1.45,
+        roughness: 0.8
+      }),
+      false,
+      false
+    );
+
+    // Heating elements on the back wall
+    for (let x = 2; x < 43; x += 4.2) {
+      box(
+        kiln,
+        [2.2, 0.17, 0.18],
+        [x, 2.15, -4.78],
+        material.hot,
+        false,
+        false
+      );
+      box(
+        kiln,
+        [2.2, 0.11, 0.15],
+        [x, 1.15, -4.76],
+        new THREE.MeshStandardMaterial({
+          color: 0xff6b26,
+          emissive: 0xff2b05,
+          emissiveIntensity: 2.6,
+          roughness: 0.45
+        }),
+        false,
+        false
+      );
+    }
+
+    // Warm lights inside the kiln
+    for (const x of [4, 13, 22, 31, 40]) {
+      const light = new THREE.PointLight(0xff6a22, 22, 10, 2);
+      light.position.set(x, 3.2, 0.5);
+      kiln.add(light);
+    }
+
+    // Roof access hatches
+    for (const x of [7, 18, 29, 40]) {
+      box(kiln, [3.2, 0.18, 2.1], [x, 8.13, 0.2], material.darkSteel);
+      box(kiln, [2.7, 0.06, 1.7], [x, 8.25, 0.2], material.steel);
+    }
+
+    // Exhaust stack
+    cylinder(kiln, 0.82, 0.95, 5.1, [34, 10.45, -2.8], material.darkSteel, 20);
+    cylinder(kiln, 1.05, 1.05, 0.28, [34, 13.02, -2.8], material.steel, 20);
+    cylinder(kiln, 0.88, 0.88, 0.5, [34, 13.32, -2.8], material.black, 20);
+
+    const kilnLabel = makeTextSprite("SINTER KILN / 04", "#ffb24c", "#241a13");
+    kilnLabel.position.set(20, 10.6, 4.9);
+    kilnLabel.scale.set(9.4, 1.95, 1);
+    kiln.add(kilnLabel);
+
+    // ---------------------------------------------------------------------
+    // Bucket elevator and feed conveyor
+    // ---------------------------------------------------------------------
+
+    const elevator = new THREE.Group();
+    scene.add(elevator);
+
+    const elevatorX = -28;
+    const elevatorZ = -6.4;
+
+    // Elevator frame
+    for (const dx of [-0.82, 0.82]) {
+      for (const dz of [-0.72, 0.72]) {
+        beamBetween(
+          elevator,
+          [elevatorX + dx, 0.35, elevatorZ + dz],
+          [elevatorX + dx, 16.15, elevatorZ + dz],
+          0.16,
+          0.16,
+          material.steel
+        );
+      }
+    }
+
+    for (const y of [2, 6, 10, 14]) {
+      beamBetween(
+        elevator,
+        [elevatorX - 0.82, y, elevatorZ - 0.72],
+        [elevatorX - 0.82, y, elevatorZ + 0.72],
+        0.13,
+        0.13,
+        material.darkSteel
+      );
+      beamBetween(
+        elevator,
+        [elevatorX + 0.82, y, elevatorZ - 0.72],
+        [elevatorX + 0.82, y, elevatorZ + 0.72],
+        0.13,
+        0.13,
+        material.darkSteel
+      );
+    }
+
+    // Vertical belt runs
+    for (const dx of [-0.46, 0.46]) {
+      box(
+        elevator,
+        [0.11, 14.7, 0.12],
+        [elevatorX + dx, 8, elevatorZ],
+        material.black,
+        false,
+        false
+      );
+    }
+
+    box(
+      elevator,
+      [2.25, 1.45, 2.0],
+      [elevatorX, 16.2, elevatorZ],
+      material.yellow
+    );
+    box(
+      elevator,
+      [2.45, 0.25, 2.2],
+      [elevatorX, 17.02, elevatorZ],
+      material.darkSteel
+    );
+    box(
+      elevator,
+      [2.25, 1.15, 2.0],
+      [elevatorX, 0.8, elevatorZ],
+      material.orange
+    );
+
+    // Raw regolith hopper at elevator boot
+    const rawPile = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(2.5, 1),
+      material.regolith
+    );
+    rawPile.position.set(-28.8, 1.05, -6.4);
+    rawPile.scale.set(1.1, 0.48, 0.9);
+    rawPile.castShadow = true;
+    rawPile.receiveShadow = true;
+    scene.add(rawPile);
+
+    // Buckets circulating on the vertical belt
+    const bucketCount = 12;
+    const elevatorBuckets = [];
+
+    for (let i = 0; i < bucketCount; i++) {
+      const bucket = new THREE.Group();
+      box(bucket, [0.66, 0.5, 0.92], [0, 0, 0], material.orange);
+      box(
+        bucket,
+        [0.72, 0.12, 1.02],
+        [0, 0.29, 0],
+        material.darkSteel
+      );
+      elevator.add(bucket);
+      elevatorBuckets.push(bucket);
+    }
+
+    // Inclined feed conveyor from elevator head to gantry hopper
+    const conveyorStart = new THREE.Vector3(-27.1, 16.45, -6.25);
+    const conveyorEnd = new THREE.Vector3(-15.25, 14.45, 0);
+
+    beamBetween(
+      elevator,
+      conveyorStart.toArray(),
+      conveyorEnd.toArray(),
+      1.55,
+      1.0,
+      material.darkSteel
+    );
+
+    const conveyorDirection = conveyorEnd.clone().sub(conveyorStart);
+    const conveyorLength = conveyorDirection.length();
+
+    // Conveyor cover and rollers
+    const conveyorCover = beamBetween(
+      elevator,
+      conveyorStart.clone().add(new THREE.Vector3(0, 0.5, 0)).toArray(),
+      conveyorEnd.clone().add(new THREE.Vector3(0, 0.5, 0)).toArray(),
+      1.7,
+      0.25,
+      material.yellow
+    );
+
+    for (let t = 0.12; t < 1; t += 0.14) {
+      const p = conveyorStart.clone().lerp(conveyorEnd, t);
+      const roller = cylinder(
+        elevator,
+        0.23,
+        0.23,
+        1.25,
+        [p.x, p.y + 0.32, p.z],
+        material.steel,
+        12
+      );
+      roller.quaternion.setFromUnitVectors(
+        up,
+        new THREE.Vector3(0, 0, 1)
+      );
+    }
+
+    // Conveyor supports
+    for (const t of [0.32, 0.68]) {
+      const p = conveyorStart.clone().lerp(conveyorEnd, t);
+      for (const dz of [-0.65, 0.65]) {
+        beamBetween(
+          elevator,
+          [p.x, 0.1, p.z + dz],
+          [p.x, p.y, p.z + dz],
+          0.15,
+          0.15,
+          material.steel
+        );
+      }
+    }
+
+    const elevatorLabel = makeTextSprite("BUCKET ELEVATOR", "#d9f2fb", "#17232c");
+    elevatorLabel.position.set(-28, 18.2, -6.3);
+    elevatorLabel.scale.set(7.2, 1.5, 1);
+    elevator.add(elevatorLabel);
+
+    // ---------------------------------------------------------------------
+    // Loading gantry and hopper
+    // ---------------------------------------------------------------------
+
+    const gantry = new THREE.Group();
+    scene.add(gantry);
+
+    const gantryX = -14;
+
+    // Four portal legs
+    for (const x of [gantryX - 2.05, gantryX + 2.05]) {
+      for (const z of [-4.25, 4.25]) {
+        box(
+          gantry,
+          [0.44, 10.7, 0.44],
+          [x, 5.35, z],
+          material.yellow
+        );
+        box(
+          gantry,
+          [0.8, 0.25, 0.8],
+          [x, 0.15, z],
+          material.darkSteel
+        );
+
+        // Diagonal knee braces
+        beamBetween(
+          gantry,
+          [x, 8.5, z],
+          [x + (x < gantryX ? 1.0 : -1.0), 10.55, z],
+          0.18,
+          0.18,
+          material.steel
+        );
+      }
+
+      // Cross beam over the track
+      box(
+        gantry,
+        [0.52, 0.72, 9.1],
+        [x, 10.65, 0],
+        material.yellow
+      );
+    }
+
+    // Longitudinal side beams
+    for (const z of [-4.25, 4.25]) {
+      box(
+        gantry,
+        [4.6, 0.52, 0.48],
+        [gantryX, 10.6, z],
+        material.yellow
+      );
+    }
+
+    // Central trolley carriage
+    box(
+      gantry,
+      [2.25, 0.62, 3.0],
+      [gantryX, 10.45, 0],
+      material.darkSteel
+    );
+    box(
+      gantry,
+      [1.4, 0.38, 2.3],
+      [gantryX, 10.08, 0],
+      material.steel
+    );
+
+    // Hopper supported over the gantry
+    for (const z of [-1.2, 1.2]) {
+      beamBetween(
+        gantry,
+        [gantryX - 0.85, 10.9, z],
+        [gantryX - 0.85, 13.2, z],
+        0.16,
+        0.16,
+        material.steel
+      );
+      beamBetween(
+        gantry,
+        [gantryX + 0.85, 10.9, z],
+        [gantryX + 0.85, 13.2, z],
+        0.16,
+        0.16,
+        material.steel
+      );
+    }
+
+    const hopper = cylinder(
+      gantry,
+      2.15,
+      0.58,
+      2.7,
+      [gantryX, 13.2, 0],
+      material.yellow,
+      32
+    );
+
+    const hopperLip = new THREE.Mesh(
+      new THREE.TorusGeometry(2.15, 0.12, 8, 36),
+      material.darkSteel
+    );
+    hopperLip.rotation.x = Math.PI / 2;
+    hopperLip.position.set(gantryX, 14.55, 0);
+    gantry.add(hopperLip);
+
+    // Visible regolith in the hopper
+    const hopperFill = new THREE.Mesh(
+      new THREE.CircleGeometry(1.98, 36),
+      material.regolith
+    );
+    hopperFill.rotation.x = -Math.PI / 2;
+    hopperFill.position.set(gantryX, 14.57, 0);
+    gantry.add(hopperFill);
+
+    // Hopper outlet
+    cylinder(
+      gantry,
+      0.53,
+      0.68,
+      1.05,
+      [gantryX, 11.25, 0],
+      material.darkSteel,
+      20
+    );
+
+    // Gantry label
+    const gantryLabel = makeTextSprite("AUTO PRESS GANTRY", "#7ce3ee", "#17232c");
+    gantryLabel.position.set(gantryX, 17.2, 0);
+    gantryLabel.scale.set(8.2, 1.65, 1);
+    gantry.add(gantryLabel);
+
+    // ---------------------------------------------------------------------
+    // Moving press head
+    // ---------------------------------------------------------------------
+
+    const pressHead = new THREE.Group();
+    pressHead.position.set(gantryX, 6.3, 0);
+    scene.add(pressHead);
+
+    // Press plate
+    const pressPlate = cylinder(
+      pressHead,
+      1.62,
+      1.62,
+      0.34,
+      [0, 0, 0],
+      material.red,
+      36
+    );
+    pressPlate.scale.z = 0.88;
+
+    const pressBody = cylinder(
+      pressHead,
+      1.16,
+      1.34,
+      1.45,
+      [0, 0.85, 0],
+      material.steel,
+      28
+    );
+    pressBody.scale.z = 0.88;
+
+    cylinder(
+      pressHead,
+      0.38,
+      0.55,
+      1.35,
+      [0, 2.1, 0],
+      material.darkSteel,
+      20
+    );
+
+    for (const z of [-0.7, 0.7]) {
+      cylinder(
+        pressHead,
+        0.12,
+        0.12,
+        1.5,
+        [0, 1.8, z],
+        material.rail,
+        12
+      );
+    }
+
+    // Dynamic upper piston and telescopic feed chute
+    const upperPiston = cylinder(
+      scene,
+      0.21,
+      0.21,
+      1,
+      [gantryX, 7, 0],
+      material.rail,
+      14
+    );
+
+    const feedChute = cylinder(
+      scene,
+      0.43,
+      0.43,
+      1,
+      [gantryX, 9, 0],
+      material.darkSteel,
+      18
+    );
+
+    // Warning beacon
+    const beaconMaterial = new THREE.MeshStandardMaterial({
+      color: 0x5eef87,
+      emissive: 0x30ff70,
+      emissiveIntensity: 2.8,
+      roughness: 0.24
+    });
+    const beacon = sphere(
+      gantry,
+      0.22,
+      [gantryX + 1.5, 11.18, 0],
+      beaconMaterial,
+      16
+    );
+
+    // ---------------------------------------------------------------------
+    // Rail-mounted kiln car train
+    // ---------------------------------------------------------------------
+
+    const cars = [];
+    const carSpacing = 5;
+    const carCount = 5;
+
+    for (let i = 0; i < carCount; i++) {
+      const car = new THREE.Group();
+      car.position.x = gantryX - i * carSpacing;
+      scene.add(car);
+
+      // Chassis
+      box(car, [4.15, 0.48, 2.55], [0, 1.03, 0], material.darkSteel);
+      box(car, [3.65, 0.28, 2.2], [0, 1.4, 0], material.steel);
+
+      // Refractory tray
+      box(car, [3.65, 0.25, 2.2], [0, 1.62, 0], material.refractory);
+      box(car, [3.65, 0.7, 0.18], [0, 1.94, 1.02], material.refractory);
+      box(car, [3.65, 0.7, 0.18], [0, 1.94, -1.02], material.refractory);
+      box(car, [0.18, 0.7, 2.2], [1.73, 1.94, 0], material.refractory);
+      box(car, [0.18, 0.7, 2.2], [-1.73, 1.94, 0], material.refractory);
+
+      // Wheels
+      for (const x of [-1.3, 1.3]) {
+        for (const z of [-1.16, 1.16]) {
+          const wheel = cylinder(
+            car,
+            0.42,
+            0.42,
+            0.24,
+            [x, 0.58, z],
+            material.black,
+            18
+          );
+          wheel.rotation.x = Math.PI / 2;
+
+          const hub = cylinder(
+            car,
+            0.16,
+            0.16,
+            0.27,
+            [x, 0.58, z],
+            material.rail,
+            12
+          );
+          hub.rotation.x = Math.PI / 2;
+        }
+      }
+
+      // Couplers
+      box(car, [0.75, 0.16, 0.35], [2.35, 1.02, 0], material.darkSteel);
+      box(car, [0.75, 0.16, 0.35], [-2.35, 1.02, 0], material.darkSteel);
+
+      // Regolith charge
+      const mound = new THREE.Mesh(
+        new THREE.SphereGeometry(1.38, 20, 12),
+        material.regolith
+      );
+      mound.position.set(0, 1.94, 0);
+      mound.scale.set(1.18, 0.36, 0.72);
+      mound.castShadow = true;
+      mound.receiveShadow = true;
+      car.add(mound);
+
+      // Heat-resistant side plates
+      for (const z of [-1.12, 1.12]) {
+        box(
+          car,
+          [3.1, 0.35, 0.08],
+          [0, 1.43, z],
+          material.orange
+        );
+      }
+
+      cars.push({
+        group: car,
+        mound,
+        pressed: false
+      });
+    }
+
+    // ---------------------------------------------------------------------
+    // Regolith particles during pressing
+    // ---------------------------------------------------------------------
+
+    const particleCount = 140;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0xd39a69,
+      size: 0.13,
+      transparent: true,
+      opacity: 0.82,
+      depthWrite: false
+    });
+
+    const regolithParticles = new THREE.Points(
+      particleGeometry,
+      particleMaterial
+    );
+    regolithParticles.frustumCulled = false;
+    scene.add(regolithParticles);
+
+    // ---------------------------------------------------------------------
+    // Control cabin and plant details
+    // ---------------------------------------------------------------------
+
+    const cabin = new THREE.Group();
+    cabin.position.set(5.5, 0, 8.3);
+    scene.add(cabin);
+
+    box(cabin, [5.8, 3.5, 4.2], [0, 1.75, 0], material.darkConcrete);
+    box(cabin, [6.1, 0.28, 4.5], [0, 3.55, 0], material.darkSteel);
+
+    box(cabin, [3.7, 1.25, 0.08], [0.5, 2.25, -2.13], material.glass, false, false);
+    box(cabin, [0.09, 1.4, 0.15], [0.5, 2.2, -2.2], material.steel);
+
+    box(cabin, [1.2, 2.25, 0.08], [-1.85, 1.12, -2.13], material.orange);
+    box(cabin, [0.12, 0.12, 0.12], [-1.2, 1.15, -2.23], material.rail);
+
+    const cabinLabel = makeTextSprite("PLANT CONTROL", "#7ce3ee", "#17232c");
+    cabinLabel.position.set(0, 4.25, -1.8);
+    cabinLabel.scale.set(5.5, 1.15, 1);
+    cabin.add(cabinLabel);
+
+    // Pipe runs from hopper/elevator toward the kiln
+    for (let i = 0; i < 3; i++) {
+      const y = 2.0 + i * 0.38;
+      const pipe = cylinder(
+        scene,
+        0.13,
+        0.13,
+        10,
+        [-7.2, y, -4.8],
+        i === 1 ? material.steel : material.darkSteel,
+        12
+      );
+      pipe.rotation.z = Math.PI / 2;
+    }
+
+    for (const x of [-10, -4]) {
+      beamBetween(
+        scene,
+        [x, 0.15, -4.8],
+        [x, 3.0, -4.8],
+        0.15,
+        0.15,
+        material.steel
+      );
+    }
+
+    // Safety bollards
+    for (const x of [-18, -10, 1, 9]) {
+      cylinder(scene, 0.13, 0.18, 1.25, [x, 0.65, 6.25], material.orange, 12);
+      sphere(scene, 0.15, [x, 1.25, 6.25], material.rail, 12);
+    }
+
+    // ---------------------------------------------------------------------
+    // Smoke / exhaust puffs
+    // ---------------------------------------------------------------------
+
+    const smokeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb8c0c2,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      roughness: 1
+    });
+
+    const smokePuffs = [];
+    for (let i = 0; i < 10; i++) {
+      const puff = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 10, 7),
+        smokeMaterial.clone()
+      );
+      scene.add(puff);
+      smokePuffs.push(puff);
+    }
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: orbit, pan, wheel zoom
+    // ---------------------------------------------------------------------
+
+    const orbit = {
+      target: new THREE.Vector3(0, 4, 0),
+      radius: 90,
+      theta: 0.72,
+      phi: 1.10
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+      camera.position.set(
+        orbit.target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        orbit.target.y + orbit.radius * Math.cos(orbit.phi),
+        orbit.target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+      camera.lookAt(orbit.target);
+    }
+
+    function resetCamera() {
+      orbit.target.set(0, 4, 0);
+      orbit.radius = 90;
+      orbit.theta = 0.72;
+      orbit.phi = 1.10;
+      updateCamera();
+    }
+
+    let dragging = false;
+    let panning = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+
+    renderer.domElement.addEventListener("contextmenu", event => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", event => {
+      dragging = true;
+      panning = event.button === 2 || event.shiftKey;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", event => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastPointerX;
+      const dy = event.clientY - lastPointerY;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+
+      if (panning) {
+        const right = new THREE.Vector3();
+        const upDirection = new THREE.Vector3();
+
+        camera.matrixWorld.extractBasis(right, upDirection, new THREE.Vector3());
+        const panScale = orbit.radius * 0.0014;
+
+        orbit.target.addScaledVector(right, -dx * panScale);
+        orbit.target.addScaledVector(upDirection, dy * panScale);
+      } else {
+        orbit.theta -= dx * 0.005;
+        orbit.phi = THREE.MathUtils.clamp(
+          orbit.phi - dy * 0.005,
+          0.18,
+          Math.PI * 0.49
+        );
+      }
+
+      updateCamera();
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event && renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", stopDragging);
+    renderer.domElement.addEventListener("pointercancel", stopDragging);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          18,
+          145
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    updateCamera();
+
+    // ---------------------------------------------------------------------
+    // Animation and automatic plant cycle
+    // ---------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const cycleLength = 38;
+
+    const phaseElement = document.getElementById("phase");
+    const detailElement = document.getElementById("detail");
+    const progressElement = document.getElementById("progress-fill");
+    const statusDot = document.getElementById("status-dot");
+    const cycleFade = document.getElementById("cycle-fade");
+
+    const smooth = value => {
+      const x = THREE.MathUtils.clamp(value, 0, 1);
+      return x * x * (3 - 2 * x);
+    };
+
+    let previousCycle = -1;
+    let fadeAmount = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      const cycleTime = elapsed % cycleLength;
+      const cycleIndex = Math.floor(elapsed / cycleLength);
+
+      if (cycleIndex !== previousCycle) {
+        previousCycle = cycleIndex;
+        fadeAmount = 0.85;
+
+        for (const car of cars) {
+          car.pressed = false;
+          car.mound.scale.y = 0.36;
+        }
+      }
+
+      fadeAmount = Math.max(0, fadeAmount - 0.025);
+      cycleFade.style.opacity = fadeAmount.toFixed(3);
+
+      let trainOffset = 0;
+      let pressAmount = 0;
+      let activeCar = 0;
+      let phaseText = "";
+      let detailText = "";
+      let dotColor = "#71ed9c";
+
+      // Five press/index stages, followed by movement into the kiln.
+      if (cycleTime < 20) {
+        activeCar = Math.min(4, Math.floor(cycleTime / 4));
+        const localTime = cycleTime - activeCar * 4;
+
+        const indexProgress = smooth((localTime - 3.0) / 1.0);
+        trainOffset = activeCar * carSpacing + carSpacing * indexProgress;
+
+        if (localTime < 0.55) {
+          pressAmount = 0;
+        } else if (localTime < 1.5) {
+          pressAmount = smooth((localTime - 0.55) / 0.95);
+        } else if (localTime < 2.15) {
+          pressAmount = 1;
+        } else if (localTime < 3.0) {
+          pressAmount = 1 - smooth((localTime - 2.15) / 0.85);
+        } else {
+          pressAmount = 0;
+        }
+
+        if (pressAmount > 0.94) {
+          cars[activeCar].pressed = true;
+        }
+
+        phaseText = pressAmount > 0.02
+          ? "Compacting regolith charge"
+          : indexProgress > 0
+            ? "Indexing kiln car train"
+            : "Positioning press head";
+
+        detailText = `CAR ${String(activeCar + 1).padStart(2, "0")}`;
+
+        if (pressAmount > 0.02) {
+          dotColor = "#ffb24b";
+        }
+      } else if (cycleTime < 24) {
+        activeCar = 4;
+        trainOffset = 25;
+        phaseText = "Press cycle complete";
+        detailText = "5 / 5";
+        dotColor = "#73d6ea";
+      } else if (cycleTime < 34) {
+        activeCar = 4;
+        const transferProgress = smooth((cycleTime - 24) / 10);
+        trainOffset = 25 + 30 * transferProgress;
+        phaseText = "Charging tunnel kiln";
+        detailText = `${Math.round(transferProgress * 100)}%`;
+        dotColor = "#ff8848";
+      } else {
+        activeCar = 4;
+        trainOffset = 55;
+        phaseText = "Kiln sintering / soak cycle";
+        detailText = "HOT";
+        dotColor = "#ff5b2e";
+      }
+
+      // Move the rail-mounted cars.
+      for (let i = 0; i < cars.length; i++) {
+        const car = cars[i];
+        car.group.position.x = gantryX - i * carSpacing + trainOffset;
+
+        if (car.pressed) {
+          car.mound.scale.y += (0.22 - car.mound.scale.y) * 0.12;
+        }
+      }
+
+      // Move the pressing assembly.
+      const pressHigh = 6.3;
+      const pressLow = 2.58;
+      pressHead.position.y = THREE.MathUtils.lerp(
+        pressHigh,
+        pressLow,
+        pressAmount
+      );
+
+      // Upper piston from the fixed carriage to the moving head.
+      const pistonBottom = pressHead.position.y + 2.65;
+      const pistonTop = 10.05;
+      const pistonLength = Math.max(0.1, pistonTop - pistonBottom);
+
+      upperPiston.scale.y = pistonLength;
+      upperPiston.position.y = pistonBottom + pistonLength / 2;
+
+      // Telescopic material feed chute from hopper outlet to press body.
+      const feedBottom = pressHead.position.y + 2.35;
+      const feedTop = 11.25;
+      const feedLength = Math.max(0.1, feedTop - feedBottom);
+
+      feedChute.scale.y = feedLength;
+      feedChute.position.y = feedBottom + feedLength / 2;
+
+      // Bucket elevator motion.
+      for (let i = 0; i < elevatorBuckets.length; i++) {
+        const bucket = elevatorBuckets[i];
+        const u = (i / elevatorBuckets.length + elapsed * 0.075) % 1;
+
+        if (u < 0.5) {
+          bucket.position.set(
+            elevatorX - 0.46,
+            1.0 + u * 2 * 14.9,
+            elevatorZ
+          );
+        } else {
+          bucket.position.set(
+            elevatorX + 0.46,
+            15.9 - (u - 0.5) * 2 * 14.9,
+            elevatorZ
+          );
+        }
+      }
+
+      // Regolith spill / compression particles.
+      regolithParticles.visible = pressAmount > 0.02;
+      if (regolithParticles.visible) {
+        for (let i = 0; i < particleCount; i++) {
+          const angle = (i / particleCount) * Math.PI * 2;
+          const radius = 0.65 + ((i * 37) % 100) / 100 * 1.2;
+          const fall = (elapsed * (1.25 + (i % 5) * 0.12) + i * 0.037) % 1;
+
+          particlePositions[i * 3] =
+            gantryX + Math.cos(angle) * radius * (0.45 + fall * 0.55);
+
+          particlePositions[i * 3 + 1] =
+            2.35 + (1 - fall) * (2.2 + pressAmount * 1.5);
+
+          particlePositions[i * 3 + 2] =
+            Math.sin(angle) * radius * 0.7;
+        }
+        particleGeometry.attributes.position.needsUpdate = true;
+        particleMaterial.opacity = 0.25 + pressAmount * 0.62;
+      }
+
+      // Beacon flashes while the press is active.
+      const beaconPulse = 0.5 + 0.5 * Math.sin(elapsed * 11);
+      beaconMaterial.emissive.set(
+        pressAmount > 0.02 ? 0xff6b22 : 0x30ff70
+      );
+      beaconMaterial.emissiveIntensity =
+        pressAmount > 0.02 ? 1.2 + beaconPulse * 4 : 1.1 + beaconPulse * 2;
+      beacon.scale.setScalar(0.92 + beaconPulse * 0.14);
+
+      // Exhaust puffs.
+      for (let i = 0; i < smokePuffs.length; i++) {
+        const life = (elapsed * 0.16 + i / smokePuffs.length) % 1;
+        const puff = smokePuffs[i];
+
+        puff.position.set(
+          34 + Math.sin(i * 2.1 + life * 4) * life * 1.6,
+          13.8 + life * 8.5,
+          -2.8 + Math.cos(i * 1.4 + life * 3) * life * 1.1
+        );
+
+        const puffScale = 0.45 + life * 1.8;
+        puff.scale.setScalar(puffScale);
+        puff.material.opacity = 0.22 * (1 - life) * (1 - life);
+      }
+
+      // Subtle heat shimmer light inside the tunnel.
+      const kilnLight = kiln.children.find(
+        child => child.isPointLight && child.position.x === 4
+      );
+      if (kilnLight) {
+        kilnLight.intensity = 20 + Math.sin(elapsed * 3.2) * 2.2;
+      }
+
+      // HUD
+      phaseElement.textContent = phaseText;
+      detailElement.textContent = detailText;
+      statusDot.style.background = dotColor;
+      statusDot.style.boxShadow = `0 0 14px ${dotColor}`;
+      progressElement.style.width = `${(cycleTime / cycleLength) * 100}%`;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // ---------------------------------------------------------------------
+    // Resize handling
+    // ---------------------------------------------------------------------
+
+    addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.8));
+    });
+  </script>
+</body>
+</html>

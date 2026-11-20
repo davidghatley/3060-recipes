@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mosslight — Dusk on the Island</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #102330;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 42%, rgba(4, 13, 20, 0.2) 76%, rgba(3, 8, 13, 0.62) 100%),
+        linear-gradient(to bottom, rgba(8, 20, 29, 0.18), transparent 25%, transparent 75%, rgba(5, 12, 18, 0.35));
+      z-index: 2;
+    }
+
+    .title {
+      position: fixed;
+      top: clamp(22px, 4vw, 48px);
+      left: clamp(22px, 4vw, 52px);
+      z-index: 3;
+      pointer-events: none;
+      color: #f4eadb;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #e5ad72;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 6vw, 72px);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 340px;
+      color: rgba(244, 234, 219, 0.72);
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+    }
+
+    .controls {
+      position: fixed;
+      right: clamp(18px, 3vw, 38px);
+      bottom: clamp(18px, 3vw, 34px);
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 12px 10px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(8, 20, 28, 0.55);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 11px;
+      letter-spacing: 0.035em;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .controls span {
+      white-space: nowrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      padding: 8px 13px;
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff5e8;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 2px solid #e5ad72;
+      outline-offset: 3px;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: #102330;
+      color: #e5ad72;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      transition: opacity 600ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .subtitle {
+        max-width: 250px;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+        left: 14px;
+        justify-content: space-between;
+      }
+
+      .controls .desktop-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+  <div class="vignette"></div>
+
+  <header class="title">
+    <p class="eyebrow">The northern watch</p>
+    <h1>Mosslight</h1>
+    <p class="subtitle">
+      A small lighthouse standing between the last light of day and the coming night.
+    </p>
+  </header>
+
+  <div class="controls">
+    <span class="desktop-hint">Drag to orbit · Scroll to zoom</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <div id="loading">Lighting the lamp</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const sceneHost = document.getElementById("scene");
+    const resetButton = document.getElementById("reset");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x71878f, 28, 105);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      220
+    );
+
+    // A small deterministic random generator keeps the scene stable between reloads.
+    let seed = 92741;
+    function random() {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    }
+
+    function range(min, max) {
+      return min + (max - min) * random();
+    }
+
+    // Procedural sky dome.
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(130, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x182d43) },
+          horizonColor: { value: new THREE.Color(0xc08b61) },
+          lowerColor: { value: new THREE.Color(0x526d73) }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          uniform vec3 lowerColor;
+          varying vec3 vWorldPosition;
+          void main() {
+            vec3 direction = normalize(vWorldPosition);
+            float upperMix = smoothstep(-0.08, 0.78, direction.y);
+            float lowerMix = smoothstep(-0.48, 0.02, direction.y);
+            vec3 color = mix(lowerColor, horizonColor, lowerMix);
+            color = mix(color, topColor, upperMix);
+
+            float horizonGlow = pow(max(0.0, 1.0 - abs(direction.y)), 4.0);
+            color += vec3(1.0, 0.32, 0.08) * horizonGlow * 0.34;
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+    sky.renderOrder = -10;
+    scene.add(sky);
+
+    // Warm sun and soft glow.
+    const sun = new THREE.Mesh(
+      new THREE.SphereGeometry(3.2, 24, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffa15c, fog: false })
+    );
+    sun.position.set(-34, 16, -68);
+    scene.add(sun);
+
+    function makeGlowTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 128;
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, "rgba(255,255,235,1)");
+      gradient.addColorStop(0.16, "rgba(255,221,157,0.8)");
+      gradient.addColorStop(0.45, "rgba(255,170,80,0.22)");
+      gradient.addColorStop(1, "rgba(255,150,60,0)");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const sunGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: makeGlowTexture(),
+        color: 0xff9c4e,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false
+      })
+    );
+    sunGlow.position.copy(sun.position);
+    sunGlow.scale.set(17, 17, 1);
+    scene.add(sunGlow);
+
+    // Calm, slightly animated sea.
+    const seaGeometry = new THREE.PlaneGeometry(180, 180, 140, 140);
+    seaGeometry.rotateX(-Math.PI / 2);
+
+    const seaMaterial = new THREE.MeshStandardMaterial({
+      color: 0x173d4b,
+      roughness: 0.34,
+      metalness: 0.16,
+      transparent: true,
+      opacity: 0.96
+    });
+
+    const sea = new THREE.Mesh(seaGeometry, seaMaterial);
+    sea.position.y = -0.18;
+    sea.receiveShadow = true;
+    scene.add(sea);
+
+    // Faceted island geometry built from irregular radial rings.
+    function createIslandGeometry() {
+      const segments = 12;
+      const rings = [
+        { radius: 0, y: 1.18 },
+        { radius: 3.15, y: 0.78 },
+        { radius: 4.45, y: 0.28 },
+        { radius: 5.05, y: -0.78 },
+        { radius: 4.65, y: -2.08 }
+      ];
+
+      const positions = [];
+      const colors = [];
+      const indices = [];
+
+      const palette = [
+        new THREE.Color(0x52615a),
+        new THREE.Color(0x657266),
+        new THREE.Color(0x3e4d49),
+        new THREE.Color(0x7b7960),
+        new THREE.Color(0x4b5950)
+      ];
+
+      function addVertex(radius, y, color) {
+        const angle = range(0, Math.PI * 2);
+        const r = radius + range(-0.18, 0.18) * Math.max(radius, 0.01);
+        positions.push(Math.cos(angle) * r, y, Math.sin(angle) * r);
+        colors.push(color.r, color.g, color.b);
+        return positions.length / 3 - 1;
+      }
+
+      const centerTop = addVertex(0, 1.18, palette[1]);
+
+      rings.forEach((ring, ringIndex) => {
+        for (let i = 0; i < segments; i++) {
+          const next = (i + 1) % segments;
+          const inner = ringIndex === 0 ? centerTop : positions.length / 3 - 2;
+
+          if (ringIndex === 0) {
+            indices.push(centerTop, inner, positions.length / 3 - 1);
+          } else {
+            const current = positions.length / 3 - 2;
+            const nextVertex = positions.length / 3 - 1;
+            const outerCurrent = addVertex(ring.radius, ring.y, palette[Math.floor(random() * palette.length)]);
+            const outerNext = addVertex(ring.radius, ring.y, palette[Math.floor(random() * palette.length)]);
+
+            indices.push(inner, outerCurrent, current);
+            indices.push(current, outerNext, outerCurrent);
+          }
+        }
+      });
+
+      const bottomCenter = addVertex(0, -2.12, palette[2]);
+      const lastRing = positions.length / 3 - 2;
+      const lastNext = positions.length / 3 - 1;
+      indices.push(lastRing, lastNext, bottomCenter);
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const island = new THREE.Mesh(
+      createIslandGeometry(),
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 1,
+        metalness: 0,
+        flatShading: true
+      })
+    );
+    island.castShadow = true;
+    island.receiveShadow = true;
+    scene.add(island);
+
+    function createFacetedRockGeometry() {
+      const geometry = new THREE.IcosahedronGeometry(1, 1);
+      const position = geometry.attributes.position;
+
+      for (let i = 0; i < position.count; i++) {
+        const x = position.getX(i);
+        const y = position.getY(i);
+        const z = position.getZ(i);
+        const length = Math.hypot(x, y, z) || 1;
+        const distortion =
+          1 +
+          0.09 * Math.sin(x * 4.1 + y * 2.7 + z * 3.3) +
+          0.05 * Math.cos(z * 5.2 - x * 2.1);
+
+        position.setXYZ(i, x * distortion, y * distortion, z * distortion);
+      }
+
+      geometry = geometry.toNonIndexed();
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const rockGeometry = createFacetedRockGeometry();
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 1,
+      metalness: 0,
+      flatShading: true
+    });
+
+    // Rocks clustered around the lighthouse's rocky base.
+    for (let i = 0; i < 28; i++) {
+      const angle = (i / 28) * Math.PI * 2 + range(-0.13, 0.13);
+      const radius = range(4.45, 7.25);
+      const size = range(0.38, 1.25);
+      const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+
+      rock.position.set(
+        Math.cos(angle) * radius,
+        -0.16 + size * 0.34,
+        Math.sin(angle) * radius
+      );
+      rock.scale.set(size * range(0.8, 1.35), size * range(0.55, 1.05), size);
+      rock.rotation.set(range(-0.4, 0.4), range(0, Math.PI * 2), range(-0.35, 0.35));
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // A larger foreground stone helps frame the scene.
+    const foregroundRock = new THREE.Mesh(rockGeometry, rockMaterial);
+    foregroundRock.position.set(5.7, -0.1, 4.2);
+    foregroundRock.scale.set(1.65, 1.05, 1.3);
+    foregroundRock.rotation.set(0.2, 0.8, -0.15);
+    foregroundRock.castShadow = true;
+    foregroundRock.receiveShadow = true;
+    scene.add(foregroundRock);
+
+    // Sparse moss on the upper island.
+    const mossMaterial = new THREE.MeshStandardMaterial({
+      color: 0x526544,
+      roughness: 1,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 18; i++) {
+      const angle = (i / 18) * Math.PI * 2 + range(-0.2, 0.2);
+      const radius = range(2.6, 4.25);
+      const moss = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1, 0),
+        mossMaterial
+      );
+      moss.position.set(
+        Math.cos(angle) * radius,
+        1.22 + range(-0.08, 0.08),
+        Math.sin(angle) * radius
+      );
+      moss.scale.set(range(0.18, 0.48), range(0.12, 0.3), range(0.18, 0.46));
+      moss.rotation.y = range(0, Math.PI * 2);
+      moss.castShadow = true;
+      scene.add(moss);
+    }
+
+    // Lighthouse foundation.
+    const foundation = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.88, 1.98, 0.58, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0x777b70,
+        roughness: 0.95,
+        flatShading: true
+      })
+    );
+    foundation.position.y = 1.0;
+    foundation.castShadow = true;
+    foundation.receiveShadow = true;
+    scene.add(foundation);
+
+    // Main white tower.
+    const tower = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.42, 1.62, 5.2, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0xf0ede2,
+        roughness: 0.72,
+        metalness: 0,
+        flatShading: true
+      })
+    );
+    tower.position.y = 3.75;
+    tower.castShadow = true;
+    tower.receiveShadow = true;
+    scene.add(tower);
+
+    // Red painted bands, shaped to follow the tower's taper.
+    const redMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9e3029,
+      roughness: 0.66,
+      metalness: 0,
+      flatShading: true
+    });
+
+    function addRedBand(radius, height, y) {
+      const band = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, height, 12, 1, true),
+        redMaterial
+      );
+      band.position.y = y;
+      band.castShadow = true;
+      scene.add(band);
+    }
+
+    addRedBand(1.57, 0.43, 2.18);
+    addRedBand(1.50, 0.43, 4.38);
+
+    // Dark trim around the gallery.
+    const trimMaterial = new THREE.MeshStandardMaterial({
+      color: 0x263038,
+      roughness: 0.78,
+      flatShading: true
+    });
+
+    const galleryFloor = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.61, 1.57, 0.18, 12),
+      trimMaterial
+    );
+    galleryFloor.position.y = 6.43;
+    galleryFloor.castShadow = true;
+    scene.add(galleryFloor);
+
+    // Gallery railing.
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const rail = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, 0.52, 6),
+        trimMaterial
+      );
+      rail.position.set(
+        Math.cos(angle) * 1.56,
+        6.76,
+        Math.sin(angle) * 1.56
+      );
+      rail.castShadow = true;
+      scene.add(rail);
+    }
+
+    for (const y of [6.5, 7.02]) {
+      const railRing = new THREE.Mesh(
+        new THREE.TorusGeometry(1.56, 0.045, 6, 28),
+        trimMaterial
+      );
+      railRing.rotation.x = Math.PI / 2;
+      railRing.position.y = y;
+      scene.add(railRing);
+    }
+
+    // Glowing lantern room.
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xa6dce1,
+      transparent: true,
+      opacity: 0.22,
+      roughness: 0.08,
+      metalness: 0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const lanternGlass = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.16, 1.16, 1.08, 12, 1, true),
+      glassMaterial
+    );
+    lanternGlass.position.y = 7.25;
+    lanternGlass.renderOrder = 2;
+    scene.add(lanternGlass);
+
+    const bulbMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffdda0,
+      emissive: 0xffa33d,
+      emissiveIntensity: 4.2,
+      roughness: 0.25
+    });
+
+    const bulb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 12, 8),
+      bulbMaterial
+    );
+    bulb.position.y = 7.25;
+    scene.add(bulb);
+
+    // Lantern frame.
+    const frameMaterial = new THREE.MeshStandardMaterial({
+      color: 0x303a3d,
+      roughness: 0.62,
+      metalness: 0.45
+    });
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(0.065, 1.1, 0.065),
+        frameMaterial
+      );
+      bar.position.set(
+        Math.cos(angle) * 1.16,
+        7.25,
+        Math.sin(angle) * 1.16
+      );
+      bar.castShadow = true;
+      scene.add(bar);
+    }
+
+    for (const y of [6.7, 7.8]) {
+      const frameRing = new THREE.Mesh(
+        new THREE.TorusGeometry(1.16, 0.055, 6, 24),
+        frameMaterial
+      );
+      frameRing.rotation.x = Math.PI / 2;
+      frameRing.position.y = y;
+      scene.add(frameRing);
+    }
+
+    // Red roof and white cap.
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(1.34, 0.72, 12),
+      redMaterial
+    );
+    roof.position.y = 8.16;
+    roof.castShadow = true;
+    scene.add(roof);
+
+    const roofCap = new THREE.Mesh(
+      new THREE.ConeGeometry(0.27, 0.28, 4),
+      trimMaterial
+    );
+    roofCap.position.y = 8.66;
+    roofCap.rotation.y = Math.PI / 4;
+    roofCap.castShadow = true;
+    scene.add(roofCap);
+
+    // Lamp glow sprite.
+    const lampGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: makeGlowTexture(),
+        color: 0xffb65f,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    lampGlow.position.y = 7.25;
+    lampGlow.scale.set(3.4, 3.4, 1);
+    scene.add(lampGlow);
+
+    const lampLight = new THREE.PointLight(0xffa745, 28, 13, 2);
+    lampLight.position.y = 7.25;
+    scene.add(lampLight);
+
+    // Thin foam line around the island.
+    const foamPositions = [];
+    for (let i = 0; i < 110; i++) {
+      const angle = range(0, Math.PI * 2);
+      const radius = range(4.65, 5.5);
+      foamPositions.push(
+        Math.cos(angle) * radius,
+        -0.105,
+        Math.sin(angle) * radius
+      );
+    }
+
+    const foamGeometry = new THREE.BufferGeometry();
+    foamGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(foamPositions, 3)
+    );
+
+    const foam = new THREE.Line(
+      foamGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0xc0d9d4,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      })
+    );
+    scene.add(foam);
+
+    // Small glints on the water.
+    const glintPositions = [];
+    for (let i = 0; i < 90; i++) {
+      const angle = range(0, Math.PI * 2);
+      const radius = range(7, 38);
+      glintPositions.push(
+        Math.cos(angle) * radius,
+        0.01,
+        Math.sin(angle) * radius
+      );
+    }
+
+    const glintGeometry = new THREE.BufferGeometry();
+    glintGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(glintPositions, 3)
+    );
+
+    const glints = new THREE.Points(
+      glintGeometry,
+      new THREE.PointsMaterial({
+        color: 0xd7e6d7,
+        size: 0.1,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false
+      })
+    );
+    scene.add(glints);
+
+    // Distant, foggy rock silhouettes.
+    const distantRockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x263c43,
+      roughness: 1,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2 + range(-0.2, 0.2);
+      const rock = new THREE.Mesh(rockGeometry, distantRockMaterial);
+      const size = range(2.2, 5.2);
+      rock.position.set(
+        Math.cos(angle) * range(21, 31),
+        size * 0.18,
+        Math.sin(angle) * range(21, 31)
+      );
+      rock.scale.set(size, size * range(0.45, 0.8), size);
+      rock.rotation.y = range(0, Math.PI * 2);
+      scene.add(rock);
+    }
+
+    // Soft low-poly clouds.
+    const cloudMaterial = new THREE.MeshBasicMaterial({
+      color: 0xdce8e6,
+      transparent: true,
+      opacity: 0.14,
+      depthWrite: false,
+      fog: false
+    });
+
+    const clouds = [];
+    for (let i = 0; i < 7; i++) {
+      const cloud = new THREE.Group();
+      const puffCount = 3 + Math.floor(random() * 4);
+
+      for (let j = 0; j < puffCount; j++) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 8, 6),
+          cloudMaterial
+        );
+        puff.position.set(j * range(1.2, 2.1), range(-0.3, 0.5), range(-0.4, 0.4));
+        puff.scale.set(range(1.4, 2.8), range(0.6, 1.2), range(0.8, 1.5));
+        cloud.add(puff);
+      }
+
+      cloud.position.set(
+        range(-45, 45),
+        range(14, 23),
+        range(-65, -28)
+      );
+      cloud.scale.setScalar(range(0.8, 1.6));
+      scene.add(cloud);
+      clouds.push(cloud);
+    }
+
+    // A few dusk stars.
+    const starPositions = [];
+    for (let i = 0; i < 180; i++) {
+      const azimuth = range(0, Math.PI * 2);
+      const elevation = range(0.08, 1.15);
+      const radius = 95;
+      starPositions.push(
+        Math.cos(azimuth) * Math.cos(elevation) * radius,
+        Math.sin(elevation) * radius,
+        Math.sin(azimuth) * Math.cos(elevation) * radius
+      );
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0xc8dce4,
+        size: 0.16,
+        transparent: true,
+        opacity: 0.68,
+        depthWrite: false,
+        fog: false
+      })
+    );
+    scene.add(stars);
+
+    // Custom orbit controls, implemented without external addons.
+    const targetPosition = new THREE.Vector3(0, 3.8, 0);
+    const initialView = {
+      theta: 0.68,
+      phi: 1.12,
+      radius: 18
+    };
+
+    const desired = { ...initialView };
+    const current = { ...initialView };
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function updateCamera() {
+      current.theta += (desired.theta - current.theta) * 0.085;
+      current.phi += (desired.phi - current.phi) * 0.085;
+      current.radius += (desired.radius - current.radius) * 0.085;
+
+      const spherical = new THREE.Spherical(
+        current.radius,
+        THREE.MathUtils.clamp(current.phi, 0.34, 1.46),
+        current.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(targetPosition);
+      camera.lookAt(targetPosition);
+    }
+
+    function resetView() {
+      desired.theta = initialView.theta;
+      desired.phi = initialView.phi;
+      desired.radius = initialView.radius;
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      desired.theta -= deltaX * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.005,
+        0.34,
+        1.46
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (event.pointerId !== undefined && renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          10,
+          34
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    resetButton.addEventListener("click", resetView);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    let frame = 0;
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+
+      // Gentle sea motion.
+      const seaPositions = seaGeometry.attributes.position;
+      for (let i = 0; i < seaPositions.count; i++) {
+        const x = seaPositions.getX(i);
+        const z = seaPositions.getZ(i);
+        const wave =
+          Math.sin(x * 0.14 + elapsed * 0.48) * 0.075 +
+          Math.cos(z * 0.19 - elapsed * 0.36) * 0.055 +
+          Math.sin((x + z) * 0.075 + elapsed * 0.2) * 0.035;
+        seaPositions.setY(i, wave);
+      }
+      seaPositions.needsUpdate = true;
+
+      if (frame % 4 === 0) {
+        seaGeometry.computeVertexNormals();
+      }
+
+      // Lamp flicker and expanding glow.
+      const flicker =
+        1 +
+        Math.sin(elapsed * 7.3) * 0.045 +
+        Math.sin(elapsed * 13.7) * 0.025;
+
+      lampLight.intensity = 28 * flicker;
+      bulbMaterial.emissiveIntensity = 4.0 + flicker * 1.2;
+      lampGlow.material.opacity = 0.72 + flicker * 0.12;
+      lampGlow.scale.setScalar(3.2 + flicker * 0.35);
+
+      // Foam and glint movement.
+      foam.position.y = -0.105 + Math.sin(elapsed * 0.65) * 0.012;
+      glints.position.y = 0.01 + Math.sin(elapsed * 0.8) * 0.008;
+
+      // Slow cloud drift.
+      clouds.forEach((cloud, index) => {
+        cloud.position.x += Math.sin(elapsed * 0.035 + index) * 0.0009;
+      });
+
+      updateCamera();
+      renderer.render(scene, camera);
+      frame++;
+    }
+
+    updateCamera();
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 700);
+    });
+  </script>
+</body>
+</html>

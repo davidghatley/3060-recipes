@@ -1,0 +1,23 @@
+gpu_run: waiting for the GPU lock (1246530 18:41:39 /tmp/claude-1000/-home-davidhatley-Projects-3060-recipes/187dbfc1-ab9b-47be-81f7-7361c3457329/scratchpad/run_container.s)
+baseline server 1335985 up 18:58:39 8007 MiB, 49
+baseline lighthouse finish=stop html=True n=15979 59.7 tok/s total=268s
+baseline windmill finish=stop html=True n=19891 58.7 tok/s total=339s
+baseline done rc=0 19:08:47
+session [baseline lighthouse,windmill] exit 0
+gpu_run: waiting for the GPU lock (1364619 19:08:47 /tmp/claude-1000/-home-davidhatley-Projects-3060-recipes/187dbfc1-ab9b-47be-81f7-7361c3457329/scratchpad/nospec_job.sh )
+tuned server 1504361 up 19:32:55 7060 MiB, 54
+tuned lighthouse finish=stop html=True n=16541 75.8 tok/s total=218s
+tuned windmill finish=stop html=True n=14572 76.6 tok/s total=190s
+tuned done rc=0 19:39:45
+session [tuned lighthouse,windmill] exit 0
+baseline server 1537744 up 19:39:47 8038 MiB, 60
+baseline voxel-bonsai finish=stop html=True n=14097 60.0 tok/s total=235s
+baseline retro-robot finish=stop html=True n=14512 60.0 tok/s total=242s
+baseline done rc=0 19:47:45
+session [baseline voxel-bonsai,retro-robot] exit 0
+tuned server 1574883 up 19:47:46 7080 MiB, 61
+tuned voxel-bonsai finish=stop html=True n=15213 76.3 tok/s total=199s
+tuned retro-robot finish=stop html=True n=12509 77.1 tok/s total=162s
+tuned done rc=0 19:53:49
+session [tuned voxel-bonsai,retro-robot] exit 0
+chain finished 19:53:49

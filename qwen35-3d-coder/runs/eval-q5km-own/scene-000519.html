@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banyan Tree — Aerial Root Pillars</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 30%, #dce7c9 0%, #aebf9e 48%, #789076 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .caption {
+      position: fixed;
+      left: 28px;
+      bottom: 24px;
+      z-index: 2;
+      max-width: min(390px, calc(100vw - 56px));
+      padding: 17px 20px;
+      color: #f5f0df;
+      background: rgba(31, 43, 30, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      box-shadow: 0 12px 38px rgba(20, 31, 20, 0.18);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .caption h1 {
+      margin: 0 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(22px, 4vw, 31px);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .caption p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(245, 240, 223, 0.78);
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 9px;
+      color: #e7e4c9;
+      background: rgba(129, 151, 104, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 600px) {
+      .caption {
+        left: 14px;
+        bottom: 14px;
+        padding: 13px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+
+  <div class="caption">
+    <h1>Banyan Tree</h1>
+    <p>Drag to orbit · Scroll or pinch to zoom · Double-click to reset</p>
+    <span class="badge">8 aerial root pillars</span>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, camera
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x9eae91, 20, 43);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 3.1, 0);
+    const defaultView = {
+      theta: 0.64,
+      phi: 1.12,
+      radius: 17.5
+    };
+
+    const view = { ...defaultView };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(view.phi);
+
+      camera.position.set(
+        cameraTarget.x + view.radius * sinPhi * Math.sin(view.theta),
+        cameraTarget.y + view.radius * Math.cos(view.phi),
+        cameraTarget.z + view.radius * sinPhi * Math.cos(view.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // ---------------------------------------------------------------------
+    // Procedural textures
+    // ---------------------------------------------------------------------
+
+    let seed = 92741;
+
+    function random() {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    }
+
+    function randomBetween(min, max) {
+      return min + (max - min) * random();
+    }
+
+    function makeBarkTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#67452f";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Broad vertical bands.
+      for (let i = 0; i < 115; i++) {
+        const x = random() * canvas.width;
+        const width = randomBetween(2, 13);
+        const shade = Math.floor(randomBetween(45, 91));
+
+        ctx.fillStyle = `rgba(${shade + 24}, ${Math.floor(shade * 0.7)}, ${Math.floor(shade * 0.42)}, ${randomBetween(0.12, 0.42)})`;
+        ctx.fillRect(x, 0, width, canvas.height);
+      }
+
+      // Raised bark ridges.
+      for (let i = 0; i < 230; i++) {
+        const x = random() * canvas.width;
+        const y = random() * canvas.height;
+        const length = randomBetween(18, 115);
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(
+          x + randomBetween(-9, 9),
+          y + length * 0.3,
+          x + randomBetween(-12, 12),
+          y + length * 0.7,
+          x + randomBetween(-6, 6),
+          y + length
+        );
+        ctx.strokeStyle = `rgba(238, 183, 119, ${randomBetween(0.025, 0.12)})`;
+        ctx.lineWidth = randomBetween(0.8, 3.5);
+        ctx.stroke();
+      }
+
+      // Deep splits and weathering.
+      for (let i = 0; i < 42; i++) {
+        const x = random() * canvas.width;
+        const y = random() * canvas.height;
+        const length = randomBetween(25, 130);
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + randomBetween(-5, 5), y + length);
+        ctx.strokeStyle = `rgba(31, 18, 11, ${randomBetween(0.16, 0.48)})`;
+        ctx.lineWidth = randomBetween(1, 4);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 3);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeGroundTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d");
+
+      const center = 512;
+      const gradient = ctx.createRadialGradient(center, center, 30, center, center, 510);
+      gradient.addColorStop(0, "#77805a");
+      gradient.addColorStop(0.55, "#77805a");
+      gradient.addColorStop(1, "#596647");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      for (let i = 0; i < 1800; i++) {
+        const x = random() * 1024;
+        const y = random() * 1024;
+        const radius = randomBetween(1, 22);
+        const light = random() > 0.5;
+
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = light
+          ? `rgba(190, 190, 126, ${randomBetween(0.025, 0.11)})`
+          : `rgba(42, 55, 31, ${randomBetween(0.025, 0.12)})`;
+        ctx.fill();
+      }
+
+      for (let i = 0; i < 24; i++) {
+        const x = random() * 1024;
+        const y = random() * 1024;
+        const radius = randomBetween(35, 130);
+
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(48, 61, 35, 0.13)";
+        ctx.lineWidth = randomBetween(1, 3);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(3.5, 3.5);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const barkTexture = makeBarkTexture();
+    const groundTexture = makeGroundTexture();
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const barkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8a6044,
+      map: barkTexture,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const branchMaterial = barkMaterial.clone();
+    branchMaterial.color.set(0xc08a58);
+
+    const rootMaterial = barkMaterial.clone();
+    rootMaterial.color.set(0xd09a61);
+
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0x617b3c,
+      roughness: 0.9,
+      flatShading: true
+    });
+
+    // ---------------------------------------------------------------------
+    // Geometry helpers
+    // ---------------------------------------------------------------------
+
+    function taperedTube(curve, radiusStart, radiusEnd, radialSegments = 10, tubularSegments = 40) {
+      const frames = curve.computeFrenetFrames(tubularSegments, false);
+      const positions = [];
+      const normals = [];
+      const indices = [];
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        const point = curve.getPointAt(t);
+        const normal = frames.normals[i];
+        const binormal = frames.binormals[i];
+
+        let radius;
+
+        if (curve.userData.rootTaper) {
+          // Roots remain thin through the middle, then swell near ground.
+          const groundTaper = THREE.MathUtils.smoothstep(t, 0.52, 1);
+          radius = THREE.MathUtils.lerp(radiusStart, radiusEnd, groundTaper);
+        } else {
+          radius = THREE.MathUtils.lerp(radiusStart, radiusEnd, t);
+        }
+
+        for (let j = 0; j <= radialSegments; j++) {
+          const angle = (j / radialSegments) * Math.PI * 2;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+
+          const nx = normal.x * cos + binormal.x * sin;
+          const ny = normal.y * cos + binormal.y * sin;
+          const nz = normal.z * cos + binormal.z * sin;
+
+          positions.push(
+            point.x + nx * radius,
+            point.y + ny * radius,
+            point.z + nz * radius
+          );
+
+          normals.push(nx, ny, nz);
+        }
+      }
+
+      for (let i = 0; i < tubularSegments; i++) {
+        for (let j = 0; j < radialSegments; j++) {
+          const a = i * (radialSegments + 1) + j;
+          const b = a + radialSegments + 1;
+          const c = b + 1;
+          const d = a + 1;
+
+          indices.push(a, b, d);
+          indices.push(b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+      geometry.setIndex(indices);
+      geometry.computeBoundingSphere();
+
+      return geometry;
+    }
+
+    function addMesh(geometry, material, castShadow = true, receiveShadow = true) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = receiveShadow;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground
+    // ---------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(18, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x858a60,
+        map: groundTexture,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.025;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ---------------------------------------------------------------------
+    // Central trunk
+    // ---------------------------------------------------------------------
+
+    const trunkCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.0, 0.0, 0.0),
+      new THREE.Vector3(0.04, 2.2, 0.02),
+      new THREE.Vector3(0.18, 4.4, 0.07),
+      new THREE.Vector3(0.32, 6.6, 0.12),
+      new THREE.Vector3(0.43, 8.15, 0.16)
+    ]);
+
+    const trunk = addMesh(
+      taperedTube(trunkCurve, 1.22, 0.58, 14, 64),
+      barkMaterial
+    );
+
+    const trunkBase = new THREE.Mesh(
+      new THREE.SphereGeometry(1.28, 24, 16),
+      barkMaterial
+    );
+    trunkBase.scale.set(1, 0.48, 1);
+    trunkBase.position.y = 0.12;
+    trunkBase.castShadow = true;
+    trunkBase.receiveShadow = true;
+    scene.add(trunkBase);
+
+    // ---------------------------------------------------------------------
+    // Heavy buttress roots
+    // ---------------------------------------------------------------------
+
+    const buttressAngles = [0.05, 0.62, 1.18, 1.78, 2.42, 3.05, 3.68, 4.35, 5.05, 5.65];
+
+    buttressAngles.forEach((angle, index) => {
+      const length = randomBetween(3.2, 4.35);
+      const reach = length * 0.83;
+      const start = new THREE.Vector3(
+        Math.cos(angle) * 0.76,
+        1.08,
+        Math.sin(angle) * 0.76
+      );
+
+      const curve = new THREE.CatmullRomCurve3([
+        start,
+        new THREE.Vector3(
+          Math.cos(angle) * 1.25,
+          0.72,
+          Math.sin(angle) * 1.25
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * reach,
+          0.3,
+          Math.sin(angle) * reach
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * length,
+          0.055,
+          Math.sin(angle) * length
+        )
+      ]);
+
+      addMesh(
+        taperedTube(curve, 0.78 - index * 0.012, 0.145, 10, 38),
+        rootMaterial
+      );
+
+      const foot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 8),
+        rootMaterial
+      );
+      foot.scale.set(1.5, 0.35, 1);
+      foot.position.copy(curve.getPointAt(1));
+      foot.castShadow = true;
+      foot.receiveShadow = true;
+      scene.add(foot);
+    });
+
+    // ---------------------------------------------------------------------
+    // Eight horizontal branches and eight hanging aerial-root pillars
+    // ---------------------------------------------------------------------
+
+    const branchDefinitions = [
+      {
+        angle: 2.25,
+        length: 6.6,
+        y: 4.7,
+        ends: [[-5.55, 1.45], [-4.15, 1.95]]
+      },
+      {
+        angle: -0.55,
+        length: 6.8,
+        y: 5.0,
+        ends: [[4.2, 1.45], [5.4, 1.95]]
+      },
+      {
+        angle: 2.85,
+        length: 6.0,
+        y: 4.4,
+        ends: [[-5.2, -1.35], [-4.0, -2.1]]
+      },
+      {
+        angle: -2.85,
+        length: 6.2,
+        y: 4.6,
+        ends: [[4.1, -1.35], [5.2, -2.1]]
+      },
+      {
+        angle: 1.2,
+        length: 5.1,
+        y: 5.8,
+        ends: [[-0.45, 3.15], [-0.15, 3.65]]
+      },
+      {
+        angle: 4.05,
+        length: 5.0,
+        y: 5.7,
+        ends: [[0.25, 3.15], [0.55, 3.65]]
+      }
+    ];
+
+    const aerialRootCurves = [];
+
+    branchDefinitions.forEach((branch, branchIndex) => {
+      const start = new THREE.Vector3(
+        Math.cos(branch.angle) * 1.03,
+        branch.y,
+        Math.sin(branch.angle) * 1.03
+      );
+
+      const direction = new THREE.Vector3(Math.cos(branch.angle), 0, Math.sin(branch.angle));
+
+      const middle = start.clone().addScaledVector(direction, branch.length * 0.56);
+      middle.y += 0.22;
+
+      const end = start.clone().addScaledVector(direction, branch.length);
+
+      const curve = new THREE.CatmullRomCurve3([
+        start,
+        middle,
+        end,
+        end.clone().add(new THREE.Vector3(0, 0.14, 0))
+      ]);
+
+      const branchMesh = addMesh(
+        taperedTube(curve, 0.29, 0.075, 10, 48),
+        branchMaterial
+      );
+
+      // Two roots descend from each branch, creating four visible pillar pairs.
+      const rootFractions = [0.68, 0.8];
+
+      rootFractions.forEach((fraction, rootIndex) => {
+        const origin = curve.getPointAt(fraction);
+        const endPosition = new THREE.Vector3(...branch.ends[branchIndex * 2 + rootIndex]);
+
+        const rootCurve = new THREE.CatmullRomCurve3([
+          origin,
+          origin.clone().addScaledVector(direction, 0.58),
+          origin.clone().addScaledVector(direction, 0.58).add(new THREE.Vector3(0, -0.95, 0)),
+          endPosition.clone().lerp(origin, 0.55),
+          endPosition.clone().add(new THREE.Vector3(0, 0.28, 0)),
+          endPosition
+        ]);
+
+        rootCurve.userData.rootTaper = true;
+        aerialRootCurves.push(rootCurve);
+
+        const pillar = addMesh(
+          taperedTube(rootCurve, 0.075, 0.245, 12, 58),
+          rootMaterial
+        );
+
+        const collar = new THREE.Mesh(
+          new THREE.SphereGeometry(0.255, 18, 12),
+          rootMaterial
+        );
+        collar.scale.set(1, 0.58, 1);
+        collar.position.copy(endPosition);
+        collar.castShadow = true;
+        collar.receiveShadow = true;
+        scene.add(collar);
+
+        // Small feeder roots branch away from the main pillar near the ground.
+        const branchPoint = rootCurve.getPointAt(0.72);
+        const feederAngle = branch.angle + randomBetween(-0.7, 0.7);
+        const feederLength = randomBetween(0.35, 0.75);
+
+        const feederCurve = new THREE.CatmullRomCurve3([
+          branchPoint,
+          new THREE.Vector3(
+            branchPoint.x + Math.cos(feederAngle) * 0.28,
+            branchPoint.y - 0.28,
+            branchPoint.z + Math.sin(feederAngle) * 0.28
+          ),
+          new THREE.Vector3(
+            branchPoint.x + Math.cos(feederAngle) * feederLength,
+            0.18,
+            branchPoint.z + Math.sin(feederAngle) * feederLength
+          ),
+          new THREE.Vector3(
+            branchPoint.x + Math.cos(feederAngle) * feederLength * 1.25,
+            0.045,
+            branchPoint.z + Math.sin(feederAngle) * feederLength * 1.25
+          )
+        ]);
+
+        addMesh(
+          taperedTube(feederCurve, 0.045, 0.012, 7, 24),
+          rootMaterial
+        );
+      });
+    });
+
+    // ---------------------------------------------------------------------
+    // Sparse canopy made from low-poly leaf clumps
+    // ---------------------------------------------------------------------
+
+    const branchEnds = branchDefinitions.map((branch) => branch.ends.map(([x, z]) => new THREE.Vector3(x, branch.y, z)));
+    const leafGeometry = new THREE.DodecahedronGeometry(0.2, 0);
+    const leafCount = branchEnds.length * 10 + 28;
+    const leaves = new THREE.InstancedMesh(leafGeometry, leafMaterial, leafCount);
+    leaves.castShadow = true;
+    leaves.receiveShadow = true;
+
+    const dummy = new THREE.Object3D();
+    const leafColor = new THREE.Color();
+
+    let leafInstance = 0;
+
+    branchEnds.forEach((ends, branchIndex) => {
+      ends.forEach((end) => {
+        for (let i = 0; i < 10; i++) {
+          dummy.position.set(
+            end.x + randomBetween(-0.42, 0.42),
+            end.y + randomBetween(-0.16, 0.65),
+            end.z + randomBetween(-0.42, 0.42)
+          );
+          dummy.rotation.set(random() * 3, random() * 3, random() * 3);
+          dummy.scale.set(
+            randomBetween(0.65, 1.35),
+            randomBetween(0.55, 1.1),
+            randomBetween(0.65, 1.35)
+          );
+          dummy.updateMatrix();
+          leaves.setMatrixAt(leafInstance, dummy.matrix);
+
+          leafColor.setHSL(randomBetween(0.22, 0.31), randomBetween(0.28, 0.48), randomBetween(0.22, 0.38));
+          leaves.setColorAt(leafInstance, leafColor);
+          leafInstance++;
+        }
+      });
+    });
+
+    for (let i = 0; i < 28; i++) {
+      const angle = random() * Math.PI * 2;
+      const radius = randomBetween(0.2, 1.45);
+
+      dummy.position.set(
+        Math.cos(angle) * radius,
+        randomBetween(7.3, 8.55),
+        Math.sin(angle) * radius
+      );
+      dummy.rotation.set(random() * 3, random() * 3, random() * 3);
+      dummy.scale.set(
+        randomBetween(0.7, 1.4),
+        randomBetween(0.6, 1.15),
+        randomBetween(0.7, 1.4)
+      );
+      dummy.updateMatrix();
+      leaves.setMatrixAt(leafInstance, dummy.matrix);
+
+      leafColor.setHSL(randomBetween(0.22, 0.31), randomBetween(0.28, 0.48), randomBetween(0.22, 0.38));
+      leaves.setColorAt(leafInstance, leafColor);
+      leafInstance++;
+    }
+
+    leaves.instanceMatrix.needsUpdate = true;
+    if (leaves.instanceColor) leaves.instanceColor.needsUpdate = true;
+    scene.add(leaves);
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xe5efcf, 0x493625, 2.15));
+
+    const sun = new THREE.DirectionalLight(0xfff0cf, 3.25);
+    sun.position.set(-8, 14, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -13;
+    sun.shadow.camera.right = 13;
+    sun.shadow.camera.top = 13;
+    sun.shadow.camera.bottom = -13;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 35;
+    sun.shadow.bias = -0.00025;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x91b89a, 0.8);
+    fill.position.set(9, 7, -10);
+    scene.add(fill);
+
+    // ---------------------------------------------------------------------
+    // Direct camera controls — no addons
+    // ---------------------------------------------------------------------
+
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.classList.add("dragging");
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      view.theta -= dx * 0.006;
+      view.phi = THREE.MathUtils.clamp(view.phi - dy * 0.005, 0.28, 1.46);
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      renderer.domElement.classList.remove("dragging");
+
+      if (event.pointerId !== undefined && renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+    renderer.domElement.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        view.radius = THREE.MathUtils.clamp(
+          view.radius * Math.exp(event.deltaY * 0.001),
+          10,
+          27
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", () => {
+      Object.assign(view, defaultView);
+      updateCamera();
+    });
+
+    // Basic two-finger pinch zoom.
+    const activePointers = new Map();
+    let pinchDistance = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        pinchDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!activePointers.has(event.pointerId)) return;
+      activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        const distance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+
+        if (pinchDistance > 0) {
+          view.radius = THREE.MathUtils.clamp(
+            view.radius * (pinchDistance / Math.max(distance, 1)),
+            10,
+            27
+          );
+          updateCamera();
+        }
+
+        pinchDistance = distance;
+      }
+    });
+
+    function removePointer(event) {
+      activePointers.delete(event.pointerId);
+      if (activePointers.size < 2) pinchDistance = 0;
+    }
+
+    renderer.domElement.addEventListener("pointerup", removePointer);
+    renderer.domElement.addEventListener("pointercancel", removePointer);
+
+    // ---------------------------------------------------------------------
+    // Resize and render loop
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>

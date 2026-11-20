@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Boss-Bound Kite Shield</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --gold: #e6c47b;
+      --cream: #f3ead8;
+      --muted: #a9b4bd;
+      --panel: rgba(7, 15, 24, 0.68);
+      --line: rgba(230, 196, 123, 0.3);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #07111f;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active { cursor: grabbing; }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 43%, transparent 35%, rgba(2, 6, 12, 0.3) 75%, rgba(2, 6, 12, 0.78) 100%),
+        linear-gradient(180deg, rgba(2, 7, 13, 0.25), transparent 25%, transparent 75%, rgba(2, 7, 13, 0.45));
+    }
+
+    .title-card {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      width: min(430px, calc(100vw - 40px));
+      pointer-events: none;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 30px;
+      height: 1px;
+      background: var(--gold);
+      box-shadow: 0 0 10px rgba(230, 196, 123, 0.8);
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 62px);
+      font-weight: 500;
+      line-height: 0.96;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      max-width: 360px;
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .badge {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      right: clamp(20px, 4vw, 52px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--cream);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      backdrop-filter: blur(12px);
+    }
+
+    .badge i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold);
+    }
+
+    .controls-card {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      width: max-content;
+      max-width: calc(100vw - 30px);
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(12px);
+    }
+
+    .controls-card strong {
+      color: var(--cream);
+      font-weight: 650;
+    }
+
+    .separator {
+      width: 1px;
+      height: 16px;
+      background: var(--line);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(230, 196, 123, 0.45);
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(230, 196, 123, 0.1);
+      color: var(--gold);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(230, 196, 123, 0.2);
+      transform: translateY(-1px);
+    }
+
+    button:active { transform: translateY(0); }
+
+    #status {
+      position: fixed;
+      right: clamp(20px, 4vw, 52px);
+      bottom: 28px;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 15px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 300ms ease, transform 300ms ease;
+      pointer-events: none;
+    }
+
+    #status.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fallback {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      background: #07111f;
+      color: var(--cream);
+      text-align: center;
+    }
+
+    @media (max-width: 650px) {
+      .badge { display: none; }
+      .subtitle { max-width: 280px; }
+      .controls-card { gap: 10px; padding: 10px 12px; }
+      .controls-card .desktop-hint { display: none; }
+      .separator { display: none; }
+      #status { right: 18px; bottom: 76px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-label="Interactive 3D adventurer's kite shield"></canvas>
+  <div class="vignette"></div>
+
+  <header class="title-card">
+    <div class="eyebrow">Relic of the Windward Quest</div>
+    <h1>The Boss-Bound<br />Kite Shield</h1>
+    <p class="subtitle">
+      A celestial kite-shield forged for the bravest adventurers.
+      Its central guardian stares back with an ancient, unblinking warning.
+    </p>
+  </header>
+
+  <div class="badge"><i></i> Kite No. 07 · Boss Class</div>
+
+  <div class="controls-card">
+    <span><strong>Drag</strong> to orbit</span>
+    <span class="separator"></span>
+    <span class="desktop-hint"><strong>Scroll</strong> to zoom</span>
+    <button id="bossButton" type="button">Awaken the Boss</button>
+  </div>
+
+  <div id="status">The boss awakens…</div>
+
+  <div class="fallback" id="fallback">
+    <div>
+      <h2>Three.js is unavailable</h2>
+      <p>This scene requires a browser with WebGL enabled.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const canvas = document.querySelector("#scene");
+    const status = document.querySelector("#status");
+    const bossButton = document.querySelector("#bossButton");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07111f);
+    scene.fog = new THREE.FogExp2(0x07111f, 0.026);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const controls = {
+      target: new THREE.Vector3(0, 0.15, 0),
+      radius: 11.2,
+      theta: 0.58,
+      phi: 1.28,
+      desiredRadius: 11.2,
+      desiredTheta: 0.58,
+      desiredPhi: 1.28
+    };
+
+    const clock = new THREE.Clock();
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0x8eb8df, 0x18202b, 1.45));
+
+    const keyLight = new THREE.DirectionalLight(0xffe4b8, 3.1);
+    keyLight.position.set(5, 8, 9);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -8;
+    keyLight.shadow.camera.right = 8;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 30;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x528dff, 2.1);
+    rimLight.position.set(-7, 2, -6);
+    scene.add(rimLight);
+
+    const bossLight = new THREE.PointLight(0xff9d43, 5, 8, 2);
+    bossLight.position.set(0, 0.5, 2.2);
+    scene.add(bossLight);
+
+    // Materials
+    const ironMaterial = new THREE.MeshStandardMaterial({
+      color: 0x12383d,
+      metalness: 0.82,
+      roughness: 0.3
+    });
+
+    const innerMaterial = new THREE.MeshStandardMaterial({
+      color: 0x164d5a,
+      metalness: 0.58,
+      roughness: 0.38
+    });
+
+    const goldMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc89b48,
+      metalness: 0.88,
+      roughness: 0.24
+    });
+
+    const brassMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8c6b2e,
+      metalness: 0.75,
+      roughness: 0.36
+    });
+
+    const leatherMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3a211b,
+      metalness: 0.12,
+      roughness: 0.78
+    });
+
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffd98a,
+      emissive: 0xff8c27,
+      emissiveIntensity: 2.2,
+      metalness: 0.2,
+      roughness: 0.25
+    });
+
+    // Shield shape
+    const shieldShape = new THREE.Shape();
+    shieldShape.moveTo(0, 3.35);
+    shieldShape.bezierCurveTo(1.2, 3.25, 1.9, 2.25, 2.05, 0.8);
+    shieldShape.bezierCurveTo(2.2, -0.7, 1.95, -2.05, 1.65, -2.85);
+    shieldShape.lineTo(0, -3.35);
+    shieldShape.bezierCurveTo(-1.65, -2.85, -1.95, -2.05, -2.2, -0.7);
+    shieldShape.bezierCurveTo(-2.05, 0.8, -1.9, 2.25, -1.2, 3.25);
+    shieldShape.closePath();
+
+    function scaledShieldShape(scale) {
+      const shape = new THREE.Shape();
+      const points = shieldShape.getPoints(48);
+
+      points.forEach((point, index) => {
+        if (index === 0) shape.moveTo(point.x * scale, point.y * scale);
+        else shape.lineTo(point.x * scale, point.y * scale);
+      });
+
+      shape.closePath();
+      return shape;
+    }
+
+    const shield = new THREE.Group();
+    shield.rotation.y = -0.05;
+    scene.add(shield);
+
+    const outerGeometry = new THREE.ExtrudeGeometry(shieldShape, {
+      depth: 0.48,
+      bevelEnabled: true,
+      bevelSegments: 4,
+      steps: 1,
+      bevelSize: 0.12,
+      bevelThickness: 0.1,
+      curveSegments: 24
+    });
+
+    const outerShield = new THREE.Mesh(outerGeometry, ironMaterial);
+    outerShield.castShadow = true;
+    outerShield.receiveShadow = true;
+    shield.add(outerShield);
+
+    const outline = new THREE.LineSegments(
+      new THREE.EdgesGeometry(outerGeometry, 25),
+      new THREE.LineBasicMaterial({
+        color: 0x6d4b22,
+        transparent: true,
+        opacity: 0.72
+      })
+    );
+    shield.add(outline);
+
+    const innerShield = new THREE.Mesh(
+      new THREE.ShapeGeometry(scaledShieldShape(0.82), 24),
+      innerMaterial
+    );
+    innerShield.position.z = 0.59;
+    innerShield.castShadow = true;
+    innerShield.receiveShadow = true;
+    shield.add(innerShield);
+
+    // Decorative brass perimeter
+    const perimeterPoints = shieldShape.getPoints(64).map(point =>
+      new THREE.Vector3(point.x * 0.92, point.y * 0.92, 0.64)
+    );
+    const perimeter = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(perimeterPoints),
+      new THREE.LineBasicMaterial({ color: 0xd6ae61 })
+    );
+    shield.add(perimeter);
+
+    // Leather reinforcement straps
+    function makeStrap(points) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map(point => new THREE.Vector3(...point))
+      );
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 36, 0.045, 7, false),
+        leatherMaterial
+      );
+      mesh.castShadow = true;
+      shield.add(mesh);
+    }
+
+    makeStrap([
+      [-0.32, 1.55, 0.67],
+      [-0.34, 0.65, 0.71],
+      [-0.38, -0.45, 0.69],
+      [-0.31, -1.55, 0.65]
+    ]);
+
+    makeStrap([
+      [0.32, 1.55, 0.67],
+      [0.34, 0.65, 0.71],
+      [0.38, -0.45, 0.69],
+      [0.31, -1.55, 0.65]
+    ]);
+
+    makeStrap([
+      [-0.72, -0.55, 0.68],
+      [-0.38, -0.42, 0.73],
+      [0.38, -0.42, 0.73],
+      [0.72, -0.55, 0.68]
+    ]);
+
+    // Rivets
+    const rivetGeometry = new THREE.CylinderGeometry(0.075, 0.075, 0.07, 12);
+    const rivetPositions = [
+      [-1.55, 1.2], [1.55, 1.2], [-1.55, -1.2], [1.55, -1.2],
+      [-0.95, 0.25], [0.95, 0.25], [-0.95, -0.35], [0.95, -0.35]
+    ];
+
+    rivetPositions.forEach(([x, y]) => {
+      const rivet = new THREE.Mesh(rivetGeometry, goldMaterial);
+      rivet.rotation.x = Math.PI / 2;
+      rivet.position.set(x, y, 0.66);
+      rivet.castShadow = true;
+      shield.add(rivet);
+    });
+
+    // Top crest
+    const crest = new THREE.Group();
+    crest.position.set(0, 2.86, 0.66);
+
+    const crestBase = new THREE.Mesh(
+      new THREE.ConeGeometry(0.46, 0.28, 4),
+      goldMaterial
+    );
+    crestBase.rotation.z = Math.PI / 2;
+    crest.add(crestBase);
+
+    for (let i = 0; i < 3; i++) {
+      const spike = new THREE.Mesh(
+        new THREE.ConeGeometry(0.13 - i * 0.015, 0.62, 6),
+        goldMaterial
+      );
+      spike.position.set((i - 1) * 0.22, 0.42, 0);
+      spike.rotation.z = (i - 1) * 0.18;
+      crest.add(spike);
+    }
+
+    shield.add(crest);
+
+    // Bottom tassel
+    const tassel = new THREE.Group();
+    tassel.position.set(0, -3.35, 0.55);
+
+    const tasselTop = new THREE.Mesh(
+      new THREE.ConeGeometry(0.2, 0.38, 8),
+      leatherMaterial
+    );
+    tassel.add(tasselTop);
+
+    const tasselBead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17, 16, 12),
+      goldMaterial
+    );
+    tasselBead.scale.y = 1.35;
+    tassel.add(tasselBead);
+
+    shield.add(tassel);
+
+    // Central boss medallion
+    const boss = new THREE.Group();
+    boss.position.set(0, 0.05, 0.77);
+    shield.add(boss);
+
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(1.2, 0.16, 14, 64),
+      goldMaterial
+    );
+    halo.castShadow = true;
+    boss.add(halo);
+
+    const innerHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(1.02, 0.055, 10, 64),
+      brassMaterial
+    );
+    innerHalo.position.z = 0.04;
+    boss.add(innerHalo);
+
+    const bossDisk = new THREE.Mesh(
+      new THREE.CircleGeometry(0.98, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x263c3c,
+        metalness: 0.72,
+        roughness: 0.4
+      })
+    );
+    bossDisk.position.z = 0.06;
+    boss.add(bossDisk);
+
+    // Stylized guardian head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.58, 28, 20),
+      new THREE.MeshStandardMaterial({
+        color: 0x704b31,
+        metalness: 0.62,
+        roughness: 0.48
+      })
+    );
+    head.scale.set(0.9, 1.15, 0.62);
+    head.position.set(0, 0.12, 0.18);
+    head.castShadow = true;
+    boss.add(head);
+
+    const snout = new THREE.Mesh(
+      new THREE.SphereGeometry(0.34, 20, 14),
+      brassMaterial
+    );
+    snout.scale.set(1.25, 0.65, 0.7);
+    snout.position.set(0, -0.38, 0.2);
+    boss.add(snout);
+
+    const eyeLeft = new THREE.Mesh(
+      new THREE.SphereGeometry(0.105, 16, 12),
+      eyeMaterial
+    );
+    eyeLeft.position.set(-0.29, 0.31, 0.39);
+    boss.add(eyeLeft);
+
+    const eyeRight = eyeLeft.clone();
+    eyeRight.position.x = 0.29;
+    boss.add(eyeRight);
+
+    const leftHorn = new THREE.Mesh(
+      new THREE.ConeGeometry(0.13, 0.68, 8),
+      goldMaterial
+    );
+    leftHorn.position.set(-0.3, 0.68, 0.18);
+    leftHorn.rotation.z = Math.PI / 2;
+    boss.add(leftHorn);
+
+    const rightHorn = leftHorn.clone();
+    rightHorn.position.x = 0.3;
+    rightHorn.rotation.z = -Math.PI / 2;
+    boss.add(rightHorn);
+
+    const mouthCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.22, -0.6, 0.34),
+      new THREE.Vector3(0, -0.69, 0.38),
+      new THREE.Vector3(0.22, -0.6, 0.34)
+    ]);
+    const mouth = new THREE.Mesh(
+      new THREE.TubeGeometry(mouthCurve, 18, 0.025, 6, false),
+      new THREE.MeshStandardMaterial({ color: 0x24150f, roughness: 0.9 })
+    );
+    boss.add(mouth);
+
+    // Radial boss spikes
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const spike = new THREE.Mesh(
+        new THREE.ConeGeometry(0.105, 0.48, 7),
+        brassMaterial
+      );
+      spike.position.set(
+        Math.cos(angle) * 1.31,
+        Math.sin(angle) * 1.31,
+        0
+      );
+      spike.rotation.z = angle - Math.PI / 2;
+      boss.add(spike);
+    }
+
+    // Invisible but raycastable boss target
+    const bossHit = new THREE.Mesh(
+      new THREE.SphereGeometry(1.7, 20, 14),
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        depthWrite: false
+      })
+    );
+    boss.add(bossHit);
+
+    // Kite string and flying knot
+    const knot = new THREE.Group();
+    knot.position.set(0, 6.35, 2.35);
+
+    const knotCore = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.22, 2),
+      new THREE.MeshStandardMaterial({
+        color: 0xffd38a,
+        emissive: 0xff8b32,
+        emissiveIntensity: 1.4,
+        metalness: 0.35,
+        roughness: 0.3
+      })
+    );
+    knot.add(knotCore);
+
+    const knotCap = new THREE.Mesh(
+      new THREE.ConeGeometry(0.17, 0.42, 8),
+      goldMaterial
+    );
+    knotCap.position.y = 0.3;
+    knot.add(knotCap);
+
+    scene.add(knot);
+
+    const stringGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0.1, 0.98),
+      new THREE.Vector3(0, 6.35, 2.35)
+    ]);
+    const string = new THREE.Line(
+      stringGeometry,
+      new THREE.LineBasicMaterial({ color: 0xe2bf72 })
+    );
+    scene.add(string);
+
+    // Ground and distant landscape
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(24, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x101b22,
+        roughness: 0.95,
+        metalness: 0.05
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -4.15;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const mountainMaterial = new THREE.MeshStandardMaterial({
+      color: 0x182c38,
+      roughness: 0.95,
+      metalness: 0.05
+    });
+
+    const mountainPositions = [
+      [-12, -2.7, -15, 4.4, 7],
+      [-8, -3.2, -19, 5.2, 8],
+      [2, -3.6, -22, 6, 9],
+      [13, -2.8, -16, 4.8, 7],
+      [18, -3.5, -9, 5.5, 8],
+      [-19, -3.8, -4, 6, 9]
+    ];
+
+    mountainPositions.forEach(([x, y, z, radius, height]) => {
+      const mountain = new THREE.Mesh(
+        new THREE.ConeGeometry(radius, height, 7),
+        mountainMaterial
+      );
+      mountain.position.set(x, y, z);
+      mountain.rotation.y = Math.random() * Math.PI;
+      scene.add(mountain);
+    });
+
+    // Distant keep
+    const keep = new THREE.Group();
+    keep.position.set(-10, 0, -20);
+
+    const keepBody = new THREE.Mesh(
+      new THREE.BoxGeometry(4.5, 8, 4),
+      new THREE.MeshStandardMaterial({
+        color: 0x263b43,
+        roughness: 0.8,
+        metalness: 0.12
+      })
+    );
+    keepBody.position.y = 3.5;
+    keep.add(keepBody);
+
+    for (let i = 0; i < 3; i++) {
+      const tower = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.2, 1.35, 6, 10),
+        mountainMaterial
+      );
+      tower.position.set((i - 1) * 2.5, 4, 0);
+      keep.add(tower);
+    }
+
+    const keepRoof = new THREE.Mesh(
+      new THREE.ConeGeometry(4.6, 2.4, 4),
+      mountainMaterial
+    );
+    keepRoof.rotation.y = Math.PI / 4;
+    keepRoof.position.y = 9.1;
+    keep.add(keepRoof);
+
+    scene.add(keep);
+
+    // Stars
+    const starPositions = [];
+    for (let i = 0; i < 500; i++) {
+      starPositions.push(
+        (Math.random() - 0.5) * 35,
+        4 + Math.random() * 16,
+        (Math.random() - 0.5) * 35
+      );
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0xb8d4ef,
+        size: 0.07,
+        transparent: true,
+        opacity: 0.8
+      })
+    );
+    scene.add(stars);
+
+    // Fireflies around the shield
+    const fireflyCount = 45;
+    const fireflyPositions = new Float32Array(fireflyCount * 3);
+    const fireflyBase = [];
+
+    for (let i = 0; i < fireflyCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 4 + Math.random() * 7;
+      const x = Math.cos(angle) * radius;
+      const y = -3.5 + Math.random() * 9;
+      const z = Math.sin(angle) * radius;
+
+      fireflyPositions[i * 3] = x;
+      fireflyPositions[i * 3 + 1] = y;
+      fireflyPositions[i * 3 + 2] = z;
+      fireflyBase.push({ x, y, z, phase: Math.random() * Math.PI * 2 });
+    }
+
+    const fireflyGeometry = new THREE.BufferGeometry();
+    fireflyGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(fireflyPositions, 3)
+    );
+
+    const fireflies = new THREE.Points(
+      fireflyGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffd58a,
+        size: 0.085,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    scene.add(fireflies);
+
+    // Manual camera controls — no external controls addon
+    const pointers = new Map();
+    let dragging = false;
+    let pointerDown = false;
+    let lastX = 0;
+    let lastY = 0;
+    let moved = false;
+    let pinchDistance = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("pointerdown", event => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1) {
+        dragging = true;
+        pointerDown = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        moved = false;
+      } else if (pointers.size === 2) {
+        pinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", event => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1 && dragging) {
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+
+        if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+
+        controls.desiredTheta -= dx * 0.006;
+        controls.desiredPhi = THREE.MathUtils.clamp(
+          controls.desiredPhi - dy * 0.006,
+          0.28,
+          Math.PI - 0.28
+        );
+
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        const nextDistance = pointerDistance();
+        if (pinchDistance > 0 && nextDistance > 0) {
+          controls.desiredRadius = THREE.MathUtils.clamp(
+            controls.desiredRadius * (pinchDistance / nextDistance),
+            5.2,
+            18
+          );
+        }
+        pinchDistance = nextDistance;
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 0) {
+        dragging = false;
+      }
+
+      if (pointers.size < 2) {
+        pinchDistance = 0;
+      }
+    }
+
+    canvas.addEventListener("pointerup", event => {
+      releasePointer(event);
+
+      if (!moved && pointers.size === 0) {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObject(bossHit, false);
+
+        if (hits.length) triggerBoss();
+      }
+    });
+
+    canvas.addEventListener("pointercancel", releasePointer);
+    canvas.addEventListener("contextmenu", event => event.preventDefault());
+
+    canvas.addEventListener("wheel", event => {
+      event.preventDefault();
+      controls.desiredRadius = THREE.MathUtils.clamp(
+        controls.desiredRadius * Math.exp(event.deltaY * 0.001),
+        5.2,
+        18
+      );
+    }, { passive: false });
+
+    let bossActive = false;
+
+    function triggerBoss() {
+      bossActive = !bossActive;
+      bossButton.textContent = bossActive ? "Calmer the Boss" : "Awaken the Boss";
+      status.textContent = bossActive ? "The boss awakens…" : "The boss rests…";
+      status.classList.add("show");
+
+      setTimeout(() => {
+        status.classList.remove("show");
+      }, 2400);
+    }
+
+    bossButton.addEventListener("click", triggerBoss);
+
+    // Resize
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+    }
+
+    window.addEventListener("resize", resize);
+
+    // Animation
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      const damping = 0.085;
+
+      controls.radius += (controls.desiredRadius - controls.radius) * damping;
+      controls.theta += (controls.desiredTheta - controls.theta) * damping;
+      controls.phi += (controls.desiredPhi - controls.phi) * damping;
+
+      const spherical = new THREE.Spherical(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(controls.target);
+      camera.lookAt(controls.target);
+
+      const pulse = bossActive ? 0.1 : 0.025;
+      boss.scale.setScalar(1 + Math.sin(elapsed * 2.4) * pulse);
+      bossLight.intensity = 4.5 + Math.sin(elapsed * 2.4) * 1.8;
+
+      knot.position.y = 6.35 + Math.sin(elapsed * 0.72) * 0.24;
+      knot.rotation.y = Math.sin(elapsed * 0.48) * 0.2;
+      knotCore.rotation.y = elapsed * 0.7;
+      knotCore.rotation.x = Math.sin(elapsed * 0.5) * 0.2;
+
+      const positions = fireflyGeometry.attributes.position;
+      for (let i = 0; i < fireflyCount; i++) {
+        const base = fireflyBase[i];
+        positions.setXYZ(
+          i,
+          base.x + Math.sin(elapsed * 0.55 + base.phase) * 0.35,
+          base.y + Math.cos(elapsed * 0.68 + base.phase) * 0.32,
+          base.z + Math.sin(elapsed * 0.43 + base.phase) * 0.3
+        );
+      }
+      positions.needsUpdate = true;
+
+      stars.rotation.y = elapsed * 0.006;
+      fireflies.rotation.y = Math.sin(elapsed * 0.08) * 0.08;
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>

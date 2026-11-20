@@ -1,0 +1,71 @@
+{
+ "name": "dflash-base",
+ "bench": [
+  "decode"
+ ],
+ "n_predict": 512,
+ "prompts": 2,
+ "order": [
+  "base-none",
+  "base-dflash",
+  "ft-dflash",
+  "base-none"
+ ],
+ "configs": {
+  "base-none": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/base-ref/Qwen3.5-4B-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1"
+   ]
+  },
+  "base-dflash": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/base-ref/Qwen3.5-4B-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-dflash",
+    "-md",
+    "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-DFlash-Q8_0.gguf",
+    "-ngld",
+    "99",
+    "--spec-draft-n-max",
+    "15"
+   ]
+  },
+  "ft-dflash": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-dflash",
+    "-md",
+    "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-DFlash-Q8_0.gguf",
+    "-ngld",
+    "99",
+    "--spec-draft-n-max",
+    "15"
+   ]
+  }
+ }
+}

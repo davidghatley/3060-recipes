@@ -1,0 +1,111 @@
+session spec1 order ['none', 'mtp2', 'mtp3', 'none', 'mtp2p5', 'mtp3p5', 'mtp4p5', 'none', 'mtp3p75', 'mtp4p75', 'mtp6p75', 'none', 'ngram', 'none'] at 2026-11-19 11:39:11; gpu 56, 210 MHz, 5001 MHz, 25.68 W, 1395 MiB, P3
+  [none] R scene-000048 ctx=87 n=768 89.04 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=768 81.88 tok/s draft None/None
+  [none] R scene-000705 ctx=93 n=768 88.86 tok/s draft None/None
+  [none] C scene-000705 ctx=11732 n=768 80.76 tok/s draft None/None
+  [none] R scene-000429 ctx=175 n=768 88.77 tok/s draft None/None
+  [none] C scene-000429 ctx=11581 n=768 80.71 tok/s draft None/None
+step 0 none: decode median 85.3 (R 88.9, C 80.8) load 1.0s gpu_end [78, 1807 MHz, 7301 MHz, 169.79 W, 6346 MiB, P2]
+  [mtp2] R scene-000048 ctx=87 n=768 85.47 tok/s draft 290/953
+  [mtp2] C scene-000048 ctx=9964 n=768 131.64 tok/s draft 480/573
+  [mtp2] R scene-000705 ctx=93 n=768 87.74 tok/s draft 301/929
+  [mtp2] C scene-000705 ctx=11732 n=768 131.17 tok/s draft 482/569
+  [mtp2] R scene-000429 ctx=175 n=768 100.9 tok/s draft 363/807
+  [mtp2] C scene-000429 ctx=11581 n=768 132.25 tok/s draft 484/566
+step 1 mtp2: decode median 116.0 (R 87.7, C 131.6) load 1.5s gpu_end [78, 1785 MHz, 7301 MHz, 169.66 W, 6910 MiB, P2]
+  [mtp3] R scene-000048 ctx=87 n=768 71.9 tok/s draft 304/1386
+  [mtp3] C scene-000048 ctx=9964 n=768 132.04 tok/s draft 532/701
+  [mtp3] R scene-000705 ctx=93 n=768 77.09 tok/s draft 335/1294
+  [mtp3] C scene-000705 ctx=11732 n=768 128.67 tok/s draft 529/713
+  [mtp3] R scene-000429 ctx=175 n=768 85.02 tok/s draft 377/1164
+  [mtp3] C scene-000429 ctx=11581 n=768 133.08 tok/s draft 538/686
+step 2 mtp3: decode median 106.8 (R 77.1, C 132.0) load 1.5s gpu_end [78, 1777 MHz, 7301 MHz, 169.47 W, 6960 MiB, P2]
+  [none] R scene-000048 ctx=87 n=768 88.83 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=768 81.72 tok/s draft None/None
+  [none] R scene-000705 ctx=93 n=768 88.73 tok/s draft None/None
+  [none] C scene-000705 ctx=11732 n=768 80.59 tok/s draft None/None
+  [none] R scene-000429 ctx=175 n=768 88.69 tok/s draft None/None
+  [none] C scene-000429 ctx=11581 n=768 80.81 tok/s draft None/None
+step 3 none: decode median 85.2 (R 88.7, C 80.8) load 1.0s gpu_end [78, 1822 MHz, 7301 MHz, 169.74 W, 6346 MiB, P2]
+  [mtp2p5] R scene-000048 ctx=87 n=768 82.85 tok/s draft 234/467
+  [mtp2p5] C scene-000048 ctx=9964 n=768 128.87 tok/s draft 473/524
+  [mtp2p5] R scene-000705 ctx=93 n=768 84.73 tok/s draft 250/487
+  [mtp2p5] C scene-000705 ctx=11732 n=768 126.77 tok/s draft 477/524
+  [mtp2p5] R scene-000429 ctx=175 n=768 92.9 tok/s draft 307/521
+  [mtp2p5] C scene-000429 ctx=11581 n=768 127.93 tok/s draft 475/524
+step 4 mtp2p5: decode median 109.8 (R 84.7, C 127.9) load 1.5s gpu_end [78, 1785 MHz, 7301 MHz, 169.66 W, 6910 MiB, P2]
+  [mtp3p5] R scene-000048 ctx=87 n=768 80.71 tok/s draft 244/521
+  [mtp3p5] C scene-000048 ctx=9964 n=768 128.86 tok/s draft 521/622
+  [mtp3p5] R scene-000705 ctx=93 n=768 82.09 tok/s draft 266/557
+  [mtp3p5] C scene-000705 ctx=11732 n=768 129.32 tok/s draft 524/616
+  [mtp3p5] R scene-000429 ctx=175 n=768 92.39 tok/s draft 340/589
+  [mtp3p5] C scene-000429 ctx=11581 n=768 132.55 tok/s draft 531/594
+step 5 mtp3p5: decode median 110.6 (R 82.1, C 129.3) load 1.5s gpu_end [78, 1807 MHz, 7301 MHz, 169.82 W, 6960 MiB, P2]
+  [mtp4p5] R scene-000048 ctx=87 n=768 78.59 tok/s draft 248/575
+  [mtp4p5] C scene-000048 ctx=9964 n=768 133.44 tok/s draft 552/670
+  [mtp4p5] R scene-000705 ctx=93 n=768 86.68 tok/s draft 321/616
+  [mtp4p5] C scene-000705 ctx=11732 n=768 133.23 tok/s draft 559/675
+  [mtp4p5] R scene-000429 ctx=175 n=768 91.4 tok/s draft 355/644
+  [mtp4p5] C scene-000429 ctx=11581 n=768 135.05 tok/s draft 560/660
+step 6 mtp4p5: decode median 112.3 (R 86.7, C 133.4) load 1.5s gpu_end [78, 1807 MHz, 7301 MHz, 169.82 W, 7010 MiB, P2]
+  [none] R scene-000048 ctx=87 n=768 88.69 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=768 81.9 tok/s draft None/None
+  [none] R scene-000705 ctx=93 n=768 88.72 tok/s draft None/None
+  [none] C scene-000705 ctx=11732 n=768 80.56 tok/s draft None/None
+  [none] R scene-000429 ctx=175 n=768 88.55 tok/s draft None/None
+  [none] C scene-000429 ctx=11581 n=768 80.68 tok/s draft None/None
+step 7 none: decode median 85.2 (R 88.7, C 80.7) load 1.0s gpu_end [78, 1822 MHz, 7301 MHz, 169.78 W, 6346 MiB, P2]
+  [mtp3p75] R scene-000048 ctx=87 n=768 80.97 tok/s draft 175/247
+  [mtp3p75] C scene-000048 ctx=9964 n=768 126.73 tok/s draft 505/544
+  [mtp3p75] R scene-000705 ctx=93 n=768 85.92 tok/s draft 225/313
+  [mtp3p75] C scene-000705 ctx=11732 n=768 125.15 tok/s draft 503/526
+  [mtp3p75] R scene-000429 ctx=175 n=768 93.3 tok/s draft 290/361
+  [mtp3p75] C scene-000429 ctx=11581 n=768 129.14 tok/s draft 514/538
+step 8 mtp3p75: decode median 109.2 (R 85.9, C 126.7) load 1.5s gpu_end [78, 1785 MHz, 7301 MHz, 169.82 W, 6960 MiB, P2]
+  [mtp4p75] R scene-000048 ctx=87 n=768 81.34 tok/s draft 176/248
+  [mtp4p75] C scene-000048 ctx=9964 n=768 130.62 tok/s draft 533/577
+  [mtp4p75] R scene-000705 ctx=93 n=768 84.93 tok/s draft 225/312
+  [mtp4p75] C scene-000705 ctx=11732 n=768 125.94 tok/s draft 525/576
+  [mtp4p75] R scene-000429 ctx=175 n=768 94.84 tok/s draft 308/392
+  [mtp4p75] C scene-000429 ctx=11581 n=768 130.74 tok/s draft 536/567
+step 9 mtp4p75: decode median 110.4 (R 84.9, C 130.6) load 1.5s gpu_end [78, 1785 MHz, 7301 MHz, 169.54 W, 7010 MiB, P2]
+  [mtp6p75] R scene-000048 ctx=87 n=768 81.17 tok/s draft 178/250
+  [mtp6p75] C scene-000048 ctx=9964 n=768 126.91 tok/s draft 545/606
+  [mtp6p75] R scene-000705 ctx=93 n=768 83.18 tok/s draft 218/297
+  [mtp6p75] C scene-000705 ctx=11732 n=768 125.49 tok/s draft 545/610
+  [mtp6p75] R scene-000429 ctx=175 n=768 101.78 tok/s draft 385/494
+  [mtp6p75] C scene-000429 ctx=11581 n=768 128.26 tok/s draft 557/623
+step 10 mtp6p75: decode median 113.6 (R 83.2, C 126.9) load 1.5s gpu_end [78, 1792 MHz, 7301 MHz, 169.75 W, 7110 MiB, P2]
+  [none] R scene-000048 ctx=87 n=768 88.84 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=768 81.93 tok/s draft None/None
+  [none] R scene-000705 ctx=93 n=768 88.92 tok/s draft None/None
+  [none] C scene-000705 ctx=11732 n=768 80.91 tok/s draft None/None
+  [none] R scene-000429 ctx=175 n=768 88.67 tok/s draft None/None
+  [none] C scene-000429 ctx=11581 n=768 80.77 tok/s draft None/None
+step 11 none: decode median 85.3 (R 88.8, C 80.9) load 1.0s gpu_end [78, 1822 MHz, 7301 MHz, 169.67 W, 6346 MiB, P2]
+  [ngram] R scene-000048 ctx=87 n=768 89.41 tok/s draft 10/13
+  [ngram] C scene-000048 ctx=9964 n=768 83.3 tok/s draft 27/144
+  [ngram] R scene-000705 ctx=93 n=768 89.71 tok/s draft 11/48
+  [ngram] C scene-000705 ctx=11732 n=768 80.86 tok/s draft 7/48
+  [ngram] R scene-000429 ctx=175 n=768 90.09 tok/s draft 28/144
+  [ngram] C scene-000429 ctx=11581 n=768 80.85 tok/s draft 8/48
+step 12 ngram: decode median 86.4 (R 89.7, C 80.9) load 1.0s gpu_end [78, 1822 MHz, 7301 MHz, 169.93 W, 6346 MiB, P2]
+  [none] R scene-000048 ctx=87 n=768 88.74 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=768 81.8 tok/s draft None/None
+  [none] R scene-000705 ctx=93 n=768 88.8 tok/s draft None/None
+  [none] C scene-000705 ctx=11732 n=768 80.67 tok/s draft None/None
+  [none] R scene-000429 ctx=175 n=768 88.64 tok/s draft None/None
+  [none] C scene-000429 ctx=11581 n=768 80.82 tok/s draft None/None
+step 13 none: decode median 85.2 (R 88.7, C 80.8) load 1.0s gpu_end [78, 1815 MHz, 7301 MHz, 169.84 W, 6346 MiB, P2]
+SUMMARY (per step: median R, median C):
+  none: R 88.9 C 80.8  R 88.7 C 80.8  R 88.7 C 80.7  R 88.8 C 80.9  R 88.7 C 80.8
+  mtp2: R 87.7 C 131.6
+  mtp3: R 77.1 C 132.0
+  mtp2p5: R 84.7 C 127.9
+  mtp3p5: R 82.1 C 129.3
+  mtp4p5: R 86.7 C 133.4
+  mtp3p75: R 85.9 C 126.7
+  mtp4p75: R 84.9 C 130.6
+  mtp6p75: R 83.2 C 126.9
+  ngram: R 89.7 C 80.9
+spec1 exit 0

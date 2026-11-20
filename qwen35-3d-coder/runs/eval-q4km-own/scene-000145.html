@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Boss Shield — Three.js</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --gold: #f5c86b;
+      --cyan: #70e7ff;
+      --muted: #9da8b8;
+      --panel: rgba(12, 17, 28, 0.72);
+      --border: rgba(245, 200, 107, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #070a12;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    #stage canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #stage canvas:active {
+      cursor: grabbing;
+    }
+
+    .ui {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .title-block {
+      position: absolute;
+      top: clamp(24px, 5vw, 64px);
+      left: clamp(24px, 5vw, 72px);
+      max-width: 430px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 34px;
+      height: 1px;
+      content: "";
+      background: var(--gold);
+      box-shadow: 0 0 12px rgba(245, 200, 107, 0.7);
+    }
+
+    h1 {
+      margin: 0;
+      color: #f7f4ec;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 6vw, 76px);
+      font-weight: 500;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .subtitle {
+      max-width: 340px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .actions {
+      position: absolute;
+      top: clamp(24px, 5vw, 64px);
+      right: clamp(24px, 5vw, 72px);
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: #edf1f6;
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(245, 200, 107, 0.7);
+      color: var(--gold);
+      box-shadow: 0 0 24px rgba(245, 200, 107, 0.12);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    .status {
+      position: absolute;
+      right: clamp(24px, 5vw, 72px);
+      bottom: 92px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #8d9baa;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .hint {
+      position: absolute;
+      bottom: clamp(22px, 4vw, 48px);
+      left: 50%;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      padding: 10px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      color: #8f9baa;
+      background: rgba(8, 12, 20, 0.55);
+      backdrop-filter: blur(12px);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      transform: translateX(-50%);
+    }
+
+    .hint span {
+      white-space: nowrap;
+    }
+
+    .hint b {
+      color: #e8eef4;
+      font-weight: 700;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 105px;
+      padding: 13px 18px;
+      border: 1px solid rgba(112, 231, 255, 0.3);
+      border-radius: 999px;
+      color: #dffcff;
+      background: rgba(5, 18, 27, 0.85);
+      backdrop-filter: blur(14px);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      transition: 300ms ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      background: #070a12;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title-block {
+        top: 24px;
+        left: 24px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .actions {
+        top: auto;
+        right: 18px;
+        bottom: 78px;
+        flex-direction: column;
+      }
+
+      .status {
+        display: none;
+      }
+
+      .hint {
+        bottom: 22px;
+        gap: 10px;
+        padding: 9px 12px;
+        font-size: 9px;
+      }
+
+      .hint .desktop-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage"></div>
+
+  <div class="ui">
+    <header class="title-block">
+      <div class="eyebrow">Artifact of the last guardian</div>
+      <h1>The Boss<br />Shield</h1>
+      <p class="subtitle">
+        A ceremonial kite shield, bound in aged steel and crowned with
+        the visage of the boss that once broke the world.
+      </p>
+    </header>
+
+    <div class="actions">
+      <button id="reset-view" type="button">Reset view</button>
+      <button id="awaken-boss" type="button">Awaken boss</button>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span id="status-text">Boss medallion active</span>
+    </div>
+
+    <div class="hint">
+      <span><b>Drag</b> to orbit</span>
+      <span><b>Scroll</b> to zoom</span>
+      <span class="desktop-hint"><b>Click the boss</b> to interact</span>
+    </div>
+
+    <div id="toast" class="toast">The boss awakens</div>
+  </div>
+
+  <div id="loading">Forging the shield…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const stage = document.querySelector("#stage");
+    const loading = document.querySelector("#loading");
+    const toast = document.querySelector("#toast");
+    const awakenButton = document.querySelector("#awaken-boss");
+    const resetButton = document.querySelector("#reset-view");
+    const statusText = document.querySelector("#status-text");
+    const statusDot = document.querySelector(".status-dot");
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x070a12);
+    scene.fog = new THREE.FogExp2(0x070a12, 0.035);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    stage.appendChild(renderer.domElement);
+
+    const clock = new THREE.Clock();
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x9db9df, 0x17100c, 1.25));
+
+    const keyLight = new THREE.DirectionalLight(0xffe2b0, 3.2);
+    keyLight.position.set(-4, 7, 6);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.camera.left = -6;
+    keyLight.shadow.camera.right = 6;
+    keyLight.shadow.camera.top = 6;
+    keyLight.shadow.camera.bottom = -6;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x4ba9ff, 2.1);
+    rimLight.position.set(5, 3, -5);
+    scene.add(rimLight);
+
+    const warmFill = new THREE.PointLight(0xff9b45, 18, 8, 2);
+    warmFill.position.set(-2.8, 1.4, 2.8);
+    scene.add(warmFill);
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const materials = {
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x5b2d18,
+        roughness: 0.72,
+        metalness: 0.08
+      }),
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x171b22,
+        roughness: 0.38,
+        metalness: 0.82
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x8c949e,
+        roughness: 0.3,
+        metalness: 0.9
+      }),
+      gold: new THREE.MeshStandardMaterial({
+        color: 0xc9983e,
+        roughness: 0.28,
+        metalness: 0.88
+      }),
+      brightGold: new THREE.MeshStandardMaterial({
+        color: 0xf0bd62,
+        roughness: 0.22,
+        metalness: 0.78
+      }),
+      leather: new THREE.MeshStandardMaterial({
+        color: 0x24140e,
+        roughness: 0.88,
+        metalness: 0.02
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x030406,
+        roughness: 0.25,
+        metalness: 0.25
+      }),
+      cyan: new THREE.MeshStandardMaterial({
+        color: 0x8cecff,
+        emissive: 0x42d9ff,
+        emissiveIntensity: 1.8,
+        roughness: 0.25,
+        metalness: 0.25
+      })
+    };
+
+    // ---------------------------------------------------------------------
+    // Floor and pedestal
+    // ---------------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b0e15,
+        roughness: 0.9,
+        metalness: 0.12
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.3;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const pedestal = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.25, 3.75, 0.28, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x202632,
+        roughness: 0.48,
+        metalness: 0.72
+      })
+    );
+    pedestal.position.y = -0.18;
+    pedestal.receiveShadow = true;
+    pedestal.castShadow = true;
+    scene.add(pedestal);
+
+    const pedestalRing = new THREE.Mesh(
+      new THREE.TorusGeometry(3.25, 0.025, 8, 96),
+      materials.gold
+    );
+    pedestalRing.rotation.x = Math.PI / 2;
+    pedestalRing.position.y = -0.025;
+    scene.add(pedestalRing);
+
+    // ---------------------------------------------------------------------
+    // Procedural glow texture
+    // ---------------------------------------------------------------------
+
+    function createGlowTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 128;
+      canvas.height = 128;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gradient.addColorStop(0, "rgba(150,240,255,1)");
+      gradient.addColorStop(0.18, "rgba(80,220,255,0.8)");
+      gradient.addColorStop(0.48, "rgba(40,150,255,0.22)");
+      gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const glowTexture = createGlowTexture();
+
+    // ---------------------------------------------------------------------
+    // Kite shield
+    // ---------------------------------------------------------------------
+
+    const shield = new THREE.Group();
+    shield.position.set(0, 1.48, 0);
+    shield.rotation.y = -0.12;
+    scene.add(shield);
+
+    const shieldShape = new THREE.Shape();
+    shieldShape.moveTo(0, 1.78);
+    shieldShape.bezierCurveTo(0.48, 1.9, 1.08, 1.56, 1.23, 1.08);
+    shieldShape.lineTo(1.18, 0.32);
+    shieldShape.quadraticCurveTo(1.12, -0.2, 0.72, -0.5);
+    shieldShape.quadraticCurveTo(0.38, -0.76, 0, -0.83);
+    shieldShape.quadraticCurveTo(-0.38, -0.76, -0.72, -0.5);
+    shieldShape.lineTo(-1.18, 0.32);
+    shieldShape.bezierCurveTo(-1.08, 1.56, -0.48, 1.9, 0, 1.78);
+    shieldShape.closePath();
+
+    const shieldGeometry = new THREE.ExtrudeGeometry(shieldShape, {
+      depth: 0.34,
+      bevelEnabled: true,
+      bevelSegments: 4,
+      steps: 1,
+      bevelSize: 0.07,
+      bevelThickness: 0.06,
+      curveSegments: 24
+    });
+
+    const shieldBody = new THREE.Mesh(shieldGeometry, materials.wood);
+    shieldBody.castShadow = true;
+    shieldBody.receiveShadow = true;
+    shield.add(shieldBody);
+
+    // Raised metal border.
+    const borderPoints = shieldShape.getPoints(100);
+    const borderCurve = new THREE.CatmullRomCurve3(
+      borderPoints,
+      true,
+      "centripetal"
+    );
+
+    const border = new THREE.Mesh(
+      new THREE.TubeGeometry(borderCurve, 160, 0.047, 8, true),
+      materials.gold
+    );
+    border.castShadow = true;
+    shield.add(border);
+
+    // Inner decorative border.
+    const innerPoints = shieldShape.getPoints(80).map((point) => {
+      const scaled = point.clone().multiplyScalar(0.93);
+      scaled.z = 0.035;
+      return scaled;
+    });
+
+    const innerBorder = new THREE.Mesh(
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(innerPoints, true, "centripetal"),
+        140,
+        0.018,
+        6,
+        true
+      ),
+      materials.brightGold
+    );
+    shield.add(innerBorder);
+
+    // Rivets.
+    const rivetGeometry = new THREE.SphereGeometry(0.055, 10, 8);
+    for (let i = 0; i < 14; i++) {
+      const angle = (i / 14) * Math.PI * 2;
+      const rivet = new THREE.Mesh(rivetGeometry, materials.brightGold);
+      rivet.position.set(
+        Math.cos(angle) * 0.95,
+        0.13 + Math.sin(angle) * 0.76,
+        0.09
+      );
+      rivet.castShadow = true;
+      shield.add(rivet);
+    }
+
+    // Leather straps.
+    function createStrap(points, radius = 0.025) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point))
+      );
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 32, radius, 7, false),
+        materials.leather
+      );
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    shield.add(
+      createStrap([
+        [-0.83, 1.3, 0.1],
+        [-0.79, 0.55, 0.12],
+        [-0.84, -0.25, 0.1],
+        [-0.75, -0.7, 0.05]
+      ])
+    );
+
+    shield.add(
+      createStrap([
+        [0.83, 1.3, 0.1],
+        [0.79, 0.55, 0.12],
+        [0.84, -0.25, 0.1],
+        [0.75, -0.7, 0.05]
+      ])
+    );
+
+    // ---------------------------------------------------------------------
+    // Central boss visage
+    // ---------------------------------------------------------------------
+
+    const boss = new THREE.Group();
+    boss.position.set(0, 0.18, 0.37);
+    shield.add(boss);
+
+    const bossHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.83, 0.075, 14, 72),
+      materials.gold
+    );
+    bossHalo.position.z = 0.015;
+    bossHalo.castShadow = true;
+    boss.add(bossHalo);
+
+    const bossHaloInner = new THREE.Mesh(
+      new THREE.TorusGeometry(0.69, 0.025, 10, 64),
+      materials.brightGold
+    );
+    bossHaloInner.position.z = 0.07;
+    boss.add(bossHaloInner);
+
+    const face = new THREE.Mesh(
+      new THREE.CircleGeometry(0.65, 48),
+      materials.darkMetal
+    );
+    face.position.z = 0.045;
+    boss.add(face);
+
+    const skull = new THREE.Mesh(
+      new THREE.SphereGeometry(0.43, 24, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0x34302e,
+        roughness: 0.42,
+        metalness: 0.72
+      })
+    );
+    skull.scale.set(0.88, 1.2, 0.42);
+    skull.position.z = 0.09;
+    skull.castShadow = true;
+    boss.add(skull);
+
+    // Eye sockets and glowing eyes.
+    const eyeSocketGeometry = new THREE.SphereGeometry(0.11, 16, 12);
+    const eyeGeometry = new THREE.SphereGeometry(0.052, 16, 12);
+
+    for (const side of [-1, 1]) {
+      const socket = new THREE.Mesh(eyeSocketGeometry, materials.black);
+      socket.position.set(side * 0.17, 0.09, 0.18);
+      boss.add(socket);
+
+      const eye = new THREE.Mesh(eyeGeometry, materials.cyan);
+      eye.position.set(side * 0.17, 0.09, 0.235);
+      boss.add(eye);
+    }
+
+    // Nose.
+    const nose = new THREE.Mesh(
+      new THREE.ConeGeometry(0.075, 0.19, 12),
+      materials.darkMetal
+    );
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, -0.1, 0.22);
+    boss.add(nose);
+
+    // Brow ridges.
+    for (const side of [-1, 1]) {
+      const brow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 12, 8),
+        materials.darkMetal
+      );
+      brow.scale.set(1.25, 0.35, 0.55);
+      brow.position.set(side * 0.2, 0.28, 0.12);
+      boss.add(brow);
+    }
+
+    // Horns.
+    const hornMaterial = new THREE.MeshStandardMaterial({
+      color: 0x685238,
+      roughness: 0.48,
+      metalness: 0.55
+    });
+
+    function createHorn(side) {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(side * 0.3, 0.38, 0.13),
+        new THREE.Vector3(side * 0.47, 0.56, 0.12),
+        new THREE.Vector3(side * 0.6, 0.8, 0.1),
+        new THREE.Vector3(side * 0.54, 0.98, 0.08)
+      ]);
+
+      const horn = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 24, 0.045, 8, false),
+        hornMaterial
+      );
+      horn.castShadow = true;
+      boss.add(horn);
+    }
+
+    createHorn(-1);
+    createHorn(1);
+
+    // Crown.
+    const crown = new THREE.Mesh(
+      new THREE.TorusGeometry(0.31, 0.045, 10, 48, Math.PI),
+      materials.gold
+    );
+    crown.position.set(0, 0.59, 0.1);
+    boss.add(crown);
+
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const spike = new THREE.Mesh(
+        new THREE.ConeGeometry(0.045, 0.25, 7),
+        materials.brightGold
+      );
+      spike.position.set(
+        Math.cos(angle) * 0.29,
+        0.78,
+        Math.sin(angle) * 0.29
+      );
+      spike.rotation.z = Math.cos(angle) * 0.2;
+      spike.rotation.x = Math.sin(angle) * 0.2;
+      boss.add(spike);
+    }
+
+    // Mouth.
+    const mouth = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.035, 0.025),
+      materials.black
+    );
+    mouth.position.set(0, -0.39, 0.205);
+    boss.add(mouth);
+
+    // Boss aura.
+    const aura = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0x66ddff,
+        transparent: true,
+        opacity: 0.18,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    aura.position.set(0, 0.18, 0.42);
+    aura.scale.set(2.35, 2.35, 1);
+    shield.add(aura);
+
+    const bossLight = new THREE.PointLight(0x52dcff, 1.4, 3.5, 2);
+    bossLight.position.set(0, 0.18, 0.55);
+    shield.add(bossLight);
+
+    // Invisible hit target.
+    const bossHit = new THREE.Mesh(
+      new THREE.SphereGeometry(0.9, 20, 16),
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        colorWrite: false,
+        depthWrite: false
+      })
+    );
+    bossHit.position.copy(boss.position);
+    boss.add(bossHit);
+
+    // ---------------------------------------------------------------------
+    // Adventurer figure
+    // ---------------------------------------------------------------------
+
+    const adventurer = new THREE.Group();
+    adventurer.position.set(-2.35, -0.02, 0.45);
+    adventurer.rotation.y = 0.28;
+    scene.add(adventurer);
+
+    const armor = new THREE.MeshStandardMaterial({
+      color: 0x354152,
+      roughness: 0.46,
+      metalness: 0.75
+    });
+
+    const boots = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.13, 0.16, 0.42, 10),
+      materials.leather
+    );
+    boots.position.y = 0.08;
+    boots.castShadow = true;
+    adventurer.add(boots);
+
+    const legs = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.19, 0.27, 0.9, 10),
+      armor
+    );
+    legs.position.y = 0.62;
+    legs.castShadow = true;
+    adventurer.add(legs);
+
+    const torso = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.34, 0.48, 1.05, 12),
+      armor
+    );
+    torso.position.y = 1.45;
+    torso.castShadow = true;
+    adventurer.add(torso);
+
+    const chestPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(0.43, 0.58, 0.08),
+      materials.steel
+    );
+    chestPlate.position.set(0, 1.48, 0.39);
+    chestPlate.castShadow = true;
+    adventurer.add(chestPlate);
+
+    const helmet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.36, 16, 10),
+      materials.steel
+    );
+    helmet.scale.set(1, 0.68, 1);
+    helmet.position.y = 1.98;
+    helmet.castShadow = true;
+    adventurer.add(helmet);
+
+    const visor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.23, 0.28, 0.08),
+      materials.cyan
+    );
+    visor.position.set(0, 1.98, 0.36);
+    adventurer.add(visor);
+
+    const shoulder = new THREE.Mesh(
+      new THREE.SphereGeometry(0.31, 12, 8),
+      armor
+    );
+    shoulder.scale.set(1.25, 0.7, 0.8);
+    shoulder.position.set(-0.34, 1.48, 0);
+    adventurer.add(shoulder);
+
+    const rightShoulder = shoulder.clone();
+    rightShoulder.position.x = 0.34;
+    adventurer.add(rightShoulder);
+
+    // Sword.
+    const swordGroup = new THREE.Group();
+    swordGroup.position.set(0.48, 0.65, 0.1);
+    swordGroup.rotation.z = -0.22;
+    adventurer.add(swordGroup);
+
+    const swordHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.42, 10),
+      materials.gold
+    );
+    swordHandle.rotation.z = Math.PI / 2;
+    swordHandle.position.z = 0.16;
+    swordGroup.add(swordHandle);
+
+    const swordBlade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.045, 1.05, 0.045),
+      materials.steel
+    );
+    swordBlade.position.set(0, 0, 0.38);
+    swordBlade.rotation.x = -0.08;
+    swordBlade.castShadow = true;
+    swordGroup.add(swordBlade);
+
+    const swordGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.052, 0.65, 0.052),
+      new THREE.MeshBasicMaterial({
+        color: 0x65dcff,
+        transparent: true,
+        opacity: 0.45,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    swordGlow.position.set(0, 0, 0.72);
+    swordGlow.rotation.x = -0.08;
+    swordGroup.add(swordGlow);
+
+    // ---------------------------------------------------------------------
+    // Background crystals
+    // ---------------------------------------------------------------------
+
+    const crystalMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0x5aa7d5,
+        emissive: 0x218bc2,
+        emissiveIntensity: 1.5,
+        roughness: 0.25,
+        metalness: 0.25
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xb76b55,
+        emissive: 0x8b321f,
+        emissiveIntensity: 1.2,
+        roughness: 0.35,
+        metalness: 0.2
+      })
+    ];
+
+    function createCrystal(x, y, z, scale, material) {
+      const crystal = new THREE.Group();
+      crystal.position.set(x, y, z);
+      crystal.scale.setScalar(scale);
+
+      const body = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.55, 1),
+        material
+      );
+      body.scale.set(0.8, 1.5, 0.8);
+      body.castShadow = true;
+      crystal.add(body);
+
+      const cap = new THREE.Mesh(
+        new THREE.ConeGeometry(0.36, 0.55, 5),
+        material
+      );
+      cap.position.y = 0.72;
+      crystal.add(cap);
+
+      scene.add(crystal);
+    }
+
+    createCrystal(3.2, 1.25, -2.7, 1.25, crystalMaterials[0]);
+    createCrystal(3.8, 0.55, -3.1, 0.75, crystalMaterials[1]);
+    createCrystal(-3.7, 1.65, -3.2, 1.4, crystalMaterials[0]);
+
+    // ---------------------------------------------------------------------
+    // Floating particles
+    // ---------------------------------------------------------------------
+
+    const particleCount = 240;
+    const particlePositions = new Float32Array(particleCount * 3);
+
+    let randomSeed = 928371;
+    function random() {
+      randomSeed = (randomSeed * 16807) % 2147483647;
+      return (randomSeed - 1) / 2147483646;
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (random() - 0.5) * 10;
+      particlePositions[i * 3 + 1] = 0.2 + random() * 5.5;
+      particlePositions[i * 3 + 2] = (random() - 0.5) * 7;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0x83d9ff,
+        size: 0.027,
+        transparent: true,
+        opacity: 0.48,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    scene.add(particles);
+
+    // ---------------------------------------------------------------------
+    // Custom orbit controls
+    // ---------------------------------------------------------------------
+
+    const target = new THREE.Vector3(-0.1, 1.25, 0);
+    const defaultView = {
+      theta: 0.28,
+      phi: 1.22,
+      radius: 7.15
+    };
+
+    let theta = defaultView.theta;
+    let phi = defaultView.phi;
+    let radius = defaultView.radius;
+    let targetTheta = theta;
+    let targetPhi = phi;
+    let targetRadius = radius;
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+    let pointerTravel = 0;
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    function updateCamera() {
+      const sinPhi = Math.sin(phi);
+
+      camera.position.set(
+        target.x + radius * sinPhi * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * sinPhi * Math.cos(theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      targetTheta = defaultView.theta;
+      targetPhi = defaultView.phi;
+      targetRadius = defaultView.radius;
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      pointerTravel = 0;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - pointerX;
+      const deltaY = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      pointerTravel += Math.abs(deltaX) + Math.abs(deltaY);
+
+      targetTheta -= deltaX * 0.006;
+      targetPhi = THREE.MathUtils.clamp(
+        targetPhi - deltaY * 0.005,
+        0.48,
+        1.48
+      );
+    });
+
+    function endPointer(event) {
+      dragging = false;
+
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+
+      if (pointerTravel < 6) {
+        testBossClick(event);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endPointer);
+    renderer.domElement.addEventListener("pointercancel", endPointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        targetRadius = THREE.MathUtils.clamp(
+          targetRadius + event.deltaY * 0.005,
+          4.3,
+          11
+        );
+      },
+      { passive: false }
+    );
+
+    // ---------------------------------------------------------------------
+    // Boss interaction
+    // ---------------------------------------------------------------------
+
+    function testBossClick(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+
+      pointer.x =
+        ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y =
+        -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObject(bossHit, false);
+
+      if (hits.length > 0) {
+        awakenBoss();
+      }
+    }
+
+    function awakenBoss() {
+      const isAlreadyAwake = statusText.textContent === "Boss ritual complete";
+      if (isAlreadyAwake) return;
+
+      let awakened = false;
+
+      const awaken = () => {
+        awakened = true;
+        statusText.textContent = "Boss ritual complete";
+        statusDot.style.background = "#70e7ff";
+        statusDot.style.boxShadow = "0 0 14px #70e7ff";
+
+        awakenButton.textContent = "Calmer the boss";
+
+        materials.cyan.emissiveIntensity = 3.2;
+        bossLight.intensity = 4.5;
+        aura.material.opacity = 0.72;
+        swordGlow.material.opacity = 0.9;
+        swordGlow.scale.setScalar(1.2);
+      };
+
+      awakenButton.addEventListener("click", awaken);
+      toast.textContent = "The boss awakens";
+      showToast();
+    }
+
+    function calmerBoss() {
+      let calmed = false;
+
+      const calmer = () => {
+        calmed = true;
+        statusText.textContent = "Boss medallion active";
+        statusDot.style.background = "#70e7ff";
+        statusDot.style.boxShadow = "0 0 10px #70e7ff";
+
+        awakenButton.textContent = "Awaken boss";
+
+        materials.cyan.emissiveIntensity = 1.8;
+        bossLight.intensity = 1.4;
+        aura.material.opacity = 0.18;
+        swordGlow.material.opacity = 0.45;
+        swordGlow.scale.setScalar(1);
+      };
+
+      awakenButton.addEventListener("click", calmer);
+      toast.textContent = "The boss rests";
+      showToast();
+    }
+
+    function showToast() {
+      toast.classList.add("visible");
+      setTimeout(() => {
+        toast.classList.remove("visible");
+      }, 2800);
+    }
+
+    awakenButton.addEventListener("click", () => {
+      if (awakened) {
+        calmerBoss();
+      } else {
+        awakenBoss();
+      }
+    });
+
+    resetButton.addEventListener("click", resetView);
+
+    // ---------------------------------------------------------------------
+    // Animation
+    // ---------------------------------------------------------------------
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = clock.getElapsedTime();
+      const easing = 0.075;
+
+      theta += (targetTheta - theta) * easing;
+      phi += (targetPhi - phi) * easing;
+      radius += (targetRadius - radius) * easing;
+
+      updateCamera();
+
+      shield.position.y = 1.48 + Math.sin(time * 0.75) * 0.035;
+      shield.rotation.z = Math.sin(time * 0.42) * 0.012;
+      shield.rotation.x = Math.sin(time * 0.31) * 0.008;
+
+      bossHalo.rotation.z = time * 0.16;
+      bossHaloInner.rotation.z = -time * 0.23;
+
+      const eyePulse = 0.5 + 0.5 * Math.sin(time * 2.4);
+      materials.cyan.emissiveIntensity =
+        (awakened ? 3.2 : 1.8) + eyePulse * 0.8;
+
+      aura.material.opacity =
+        (awakened ? 0.72 : 0.18) + eyePulse * 0.12;
+      aura.scale.setScalar(
+        (awakened ? 2.35 : 2.05) + eyePulse * 0.3
+      );
+
+      bossLight.intensity =
+        (awakened ? 4.5 : 1.4) + eyePulse * 1.2;
+
+      swordGlow.material.opacity =
+        (awakened ? 0.9 : 0.45) + eyePulse * 0.2;
+      swordGlow.scale.setScalar(
+        (awakened ? 1.2 : 1) + eyePulse * 0.25
+      );
+
+      particles.rotation.y = time * 0.025;
+      particles.position.y = Math.sin(time * 0.18) * 0.08;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateCamera();
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 600);
+    });
+  </script>
+</body>
+</html>

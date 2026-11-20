@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animated Four-Track Viaduct Station</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #9eb8c6;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: #f4f8fb;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    .title {
+      position: absolute;
+      top: 22px;
+      left: 24px;
+      max-width: 430px;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #83e7ff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(23px, 3vw, 38px);
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: rgba(244, 248, 251, 0.78);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: absolute;
+      right: 22px;
+      bottom: 22px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: white;
+      background: rgba(12, 27, 38, 0.78);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+    }
+
+    button:hover {
+      background: rgba(20, 48, 65, 0.92);
+      border-color: rgba(131, 231, 255, 0.65);
+    }
+
+    .status {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: rgba(12, 27, 38, 0.72);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #55ff9b;
+      box-shadow: 0 0 12px #55ff9b;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: #142836;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 0.4s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title {
+        top: 16px;
+        left: 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .status {
+        left: 16px;
+        bottom: 72px;
+      }
+
+      .controls {
+        right: 16px;
+        bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div class="hud">
+    <div class="title">
+      <div class="eyebrow">Live rail infrastructure</div>
+      <h1>Central Junction Station</h1>
+      <div class="subtitle">
+        Four-track elevated viaduct with branching flyovers, route-controlled
+        signals, canopies, stairs, and an operational lift.
+      </div>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      <span id="route-status">Main aligned route active</span>
+    </div>
+
+    <div class="controls">
+      <button id="pause">Pause</button>
+      <button id="route-button">Change route</button>
+      <button id="camera-button">Reset camera</button>
+    </div>
+  </div>
+
+  <div id="loading">Building station scene…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, lighting, and camera
+    // -------------------------------------------------------------------------
+
+    const app = document.getElementById("app");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x9eb8c6);
+    scene.fog = new THREE.Fog(0x9eb8c6, 145, 310);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      600
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xc9e7ff, 0x52634b, 2.1);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff1cf, 3.2);
+    sun.position.set(-55, 95, 65);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -125;
+    sun.shadow.camera.right = 125;
+    sun.shadow.camera.top = 110;
+    sun.shadow.camera.bottom = -110;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 260;
+    sun.shadow.bias = -0.00025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x8bc9e8, 0.65);
+    fill.position.set(70, 45, -80);
+    scene.add(fill);
+
+    const UP = new THREE.Vector3(0, 1, 0);
+    const tempDirection = new THREE.Vector3();
+
+    const materials = {
+      ground: new THREE.MeshStandardMaterial({
+        color: 0x707d68,
+        roughness: 1
+      }),
+      road: new THREE.MeshStandardMaterial({
+        color: 0x30383d,
+        roughness: 0.94
+      }),
+      curb: new THREE.MeshStandardMaterial({
+        color: 0xb4b6aa,
+        roughness: 0.9
+      }),
+      marking: new THREE.MeshStandardMaterial({
+        color: 0xe8e4c9,
+        roughness: 0.8
+      }),
+      concrete: new THREE.MeshStandardMaterial({
+        color: 0xa9afa9,
+        roughness: 0.88
+      }),
+      deck: new THREE.MeshStandardMaterial({
+        color: 0x858d88,
+        roughness: 0.9
+      }),
+      ballast: new THREE.MeshStandardMaterial({
+        color: 0x666b68,
+        roughness: 1,
+        side: THREE.DoubleSide
+      }),
+      rail: new THREE.MeshStandardMaterial({
+        color: 0x9da6a8,
+        metalness: 0.85,
+        roughness: 0.28
+      }),
+      sleeper: new THREE.MeshStandardMaterial({
+        color: 0x4d4740,
+        roughness: 0.95
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x34414a,
+        metalness: 0.72,
+        roughness: 0.38
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x17232b,
+        metalness: 0.65,
+        roughness: 0.45
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xf4c542,
+        roughness: 0.65
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xb93838,
+        roughness: 0.55
+      }),
+      blue: new THREE.MeshStandardMaterial({
+        color: 0x287ca8,
+        roughness: 0.48,
+        metalness: 0.2
+      }),
+      glass: new THREE.MeshPhysicalMaterial({
+        color: 0x8cc9df,
+        transparent: true,
+        opacity: 0.28,
+        roughness: 0.12,
+        metalness: 0,
+        transmission: 0.15,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }),
+      roofGlass: new THREE.MeshPhysicalMaterial({
+        color: 0xb9dce8,
+        transparent: true,
+        opacity: 0.48,
+        roughness: 0.16,
+        metalness: 0.05,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      }),
+      tree: new THREE.MeshStandardMaterial({
+        color: 0x356b4c,
+        roughness: 1
+      }),
+      treeLight: new THREE.MeshStandardMaterial({
+        color: 0x54865b,
+        roughness: 1
+      }),
+      trunk: new THREE.MeshStandardMaterial({
+        color: 0x69503b,
+        roughness: 1
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // General helpers
+    // -------------------------------------------------------------------------
+
+    function addBox(
+      width,
+      height,
+      depth,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      castShadow = true
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addBeam(a, b, width, depth, material, parent = scene) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, length, depth),
+        material
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      radius,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      radialSegments = 12
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          height,
+          radialSegments
+        ),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Street grid
+    // -------------------------------------------------------------------------
+
+    addBox(320, 0.2, 320, materials.ground, 0, -0.17, 0, scene, false);
+
+    const roadZ = [-22, 0, 22];
+    const roadX = [-30, 0, 30];
+
+    for (const z of roadZ) {
+      addBox(280, 0.12, 8, materials.road, 0, 0.01, z, scene, false);
+      addBox(280, 0.24, 0.28, materials.curb, 0, 0.08, z - 4.15, scene, false);
+      addBox(280, 0.24, 0.28, materials.curb, 0, 0.08, z + 4.15, scene, false);
+
+      for (let x = -135; x <= 135; x += 12) {
+        addBox(5.4, 0.025, 0.12, materials.marking, x, 0.085, z, scene, false);
+      }
+    }
+
+    for (const x of roadX) {
+      addBox(8, 0.12, 260, materials.road, x, 0.01, 0, scene, false);
+      addBox(0.28, 0.24, 260, materials.curb, x - 4.15, 0.08, 0, scene, false);
+      addBox(0.28, 0.24, 260, materials.curb, x + 4.15, 0.08, 0, scene, false);
+
+      for (let z = -125; z <= 125; z += 12) {
+        addBox(0.12, 0.025, 5.4, materials.marking, x, 0.085, z, scene, false);
+      }
+    }
+
+    // Zebra crossings at the three main intersections.
+    for (const x of roadX) {
+      for (let z = -16; z <= 16; z += 4) {
+        addBox(3.2, 0.028, 0.42, materials.marking, x, 0.09, z, scene, false);
+      }
+    }
+
+    for (const z of roadZ) {
+      for (let x = -16; x <= 16; x += 4) {
+        addBox(0.42, 0.028, 3.2, materials.marking, x, 0.09, z, scene, false);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Main viaduct
+    // -------------------------------------------------------------------------
+
+    addBox(190, 1.2, 22, materials.concrete, 0, 9.6, 0);
+    addBox(190, 0.25, 22, materials.deck, 0, 10.25, 0);
+    addBox(190, 1.45, 0.8, materials.concrete, 0, 9.45, -10.8);
+    addBox(190, 1.45, 0.8, materials.concrete, 0, 9.45, 10.8);
+
+    for (let x = -90; x <= 90; x += 8) {
+      addBox(0.7, 1.35, 21.5, materials.deck, x, 9.45, 0);
+    }
+
+    // Platform deck and surface.
+    addBox(64, 1, 8, materials.concrete, 0, 9.7, 0);
+    addBox(64, 0.12, 8, materials.deck, 0, 10.26, 0);
+    addBox(64, 0.035, 0.16, materials.yellow, 0, 10.34, 3.93);
+    addBox(64, 0.035, 0.16, materials.yellow, 0, 10.34, -3.93);
+
+    // Platform edge tactile strips.
+    for (let x = -30; x <= 30; x += 2) {
+      addBox(0.7, 0.025, 0.55, materials.yellow, x, 10.34, 3.62);
+      addBox(0.7, 0.025, 0.55, materials.yellow, x, 10.34, -3.62);
+    }
+
+    // -------------------------------------------------------------------------
+    // Station canopy
+    // -------------------------------------------------------------------------
+
+    for (let x = -30; x <= 30; x += 10) {
+      for (const z of [-4.15, 4.15]) {
+        addBox(0.38, 6.1, 0.38, materials.steel, x, 13.25, z);
+        addBox(1.1, 0.18, 1.1, materials.steel, x, 10.32, z);
+      }
+    }
+
+    addBox(64, 0.38, 9, materials.roofGlass, 0, 16.45, 0);
+    addBox(64, 0.22, 0.22, materials.steel, 0, 16.18, -4.15);
+    addBox(64, 0.22, 0.22, materials.steel, 0, 16.18, 4.15);
+
+    for (const z of [-4.15, 4.15]) {
+      addBox(60, 4.4, 0.08, materials.glass, 0, 13.25, z, scene, false);
+    }
+
+    addBox(0.08, 4.4, 8, materials.glass, -31.8, 13.25, 0, scene, false);
+    addBox(0.08, 4.4, 8, materials.glass, 31.8, 13.25, 0, scene, false);
+
+    // Canopy roof ribs.
+    for (let x = -30; x <= 30; x += 10) {
+      addBox(0.16, 0.2, 9, materials.steel, x, 16.2, 0);
+    }
+
+    // Station sign.
+    const stationCanvas = document.createElement("canvas");
+    stationCanvas.width = 1024;
+    stationCanvas.height = 256;
+    const stationContext = stationCanvas.getContext("2d");
+    stationContext.fillStyle = "#102a36";
+    stationContext.fillRect(0, 0, 1024, 256);
+    stationContext.strokeStyle = "#75d9f5";
+    stationContext.lineWidth = 8;
+    stationContext.strokeRect(12, 12, 1000, 232);
+    stationContext.fillStyle = "#f4f8fb";
+    stationContext.textAlign = "center";
+    stationContext.font = "800 76px sans-serif";
+    stationContext.fillText("CENTRAL STATION", 512, 112);
+    stationContext.fillStyle = "#83e7ff";
+    stationContext.font = "600 29px sans-serif";
+    stationContext.fillText("LEVEL 02  •  FOUR TRACKS  •  JUNCTION ACCESS", 512, 177);
+
+    const stationTexture = new THREE.CanvasTexture(stationCanvas);
+    stationTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const stationSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 3.5),
+      new THREE.MeshBasicMaterial({ map: stationTexture })
+    );
+    stationSign.position.set(0, 17.1, 4.62);
+    scene.add(stationSign);
+
+    // -------------------------------------------------------------------------
+    // Stairs from street level to the platform
+    // -------------------------------------------------------------------------
+
+    const stairX = -29;
+    const stairStartZ = 15.5;
+    const stairRun = 0.66;
+    const stairRise = 0.58;
+    const stairCount = 18;
+
+    for (let i = 0; i < stairCount; i++) {
+      const height = (i + 1) * stairRise;
+      const z = stairStartZ - (i + 0.5) * stairRun;
+
+      addBox(
+        3,
+        0.22,
+        stairRun + 0.08,
+        materials.concrete,
+        stairX,
+        height,
+        z
+      );
+    }
+
+    addBeam(
+      [stairX - 1.55, 0.15, stairStartZ],
+      [stairX - 1.55, 10.25, 4.2],
+      0.28,
+      0.4,
+      materials.steel
+    );
+
+    addBeam(
+      [stairX + 1.55, 0.15, stairStartZ],
+      [stairX + 1.55, 10.25, 4.2],
+      0.28,
+      0.4,
+      materials.steel
+    );
+
+    for (const x of [stairX - 1.55, stairX + 1.55]) {
+      addBeam(
+        [x, 1.1, stairStartZ - 0.2],
+        [x, 10.45, 4.1],
+        0.1,
+        0.1,
+        materials.steel
+      );
+    }
+
+    addBeam(
+      [stairX - 1.55, 1.2, stairStartZ - 0.2],
+      [stairX - 1.55, 10.55, 4.1],
+      0.1,
+      0.1,
+      materials.steel
+    );
+
+    addBeam(
+      [stairX + 1.55, 1.2, stairStartZ - 0.2],
+      [stairX + 1.55, 10.55, 4.1],
+      0.1,
+      0.1,
+      materials.steel
+    );
+
+    // -------------------------------------------------------------------------
+    // Lift connecting street level and the platform
+    // -------------------------------------------------------------------------
+
+    const liftX = -25.5;
+    const liftZ = 2.2;
+
+    addBox(2.25, 10.2, 2.25, materials.glass, liftX, 5.1, liftZ, scene, false);
+
+    for (const x of [liftX - 1.1, liftX + 1.1]) {
+      for (const z of [liftZ - 1.1, liftZ + 1.1]) {
+        addBox(0.12, 10.3, 0.12, materials.steel, x, 5.15, z);
+      }
+    }
+
+    addBox(2.4, 0.16, 2.4, materials.steel, liftX, 10.25, liftZ);
+    addBox(2.4, 0.16, 2.4, materials.steel, liftX, 0.15, liftZ);
+
+    const liftCab = new THREE.Group();
+    liftCab.position.set(liftX, 1.4, liftZ);
+    scene.add(liftCab);
+
+    addBox(1.8, 0.2, 1.8, materials.yellow, 0, 0, 0, liftCab);
+    addBox(1.65, 2.1, 1.65, materials.glass, 0, 1.05, 0, liftCab, false);
+    addBox(1.9, 0.12, 1.9, materials.steel, 0, 2.12, 0, liftCab);
+
+    for (const x of [-0.8, 0.8]) {
+      addBox(0.1, 2.4, 0.1, materials.steel, x, 1.2, 1.18, liftCab);
+    }
+
+    // Lift call panels.
+    for (const y of [0.5, 5, 10]) {
+      addBox(0.18, 0.65, 0.18, materials.steel, liftX + 1.25, y, liftZ);
+      addBox(0.08, 0.25, 0.08, materials.yellow, liftX + 1.37, y, liftZ);
+    }
+
+    // -------------------------------------------------------------------------
+    // Track builder
+    // -------------------------------------------------------------------------
+
+    const GAUGE = 2.7;
+
+    function makeRibbon(path, width, yOffset) {
+      const samples = path.getPoints(180);
+      const positions = [];
+      const indices = [];
+
+      for (let i = 0; i < samples.length; i++) {
+        const point = samples[i];
+        const tangent = path.getTangentAt(i / (samples.length - 1));
+        const side = new THREE.Vector3()
+          .crossVectors(UP, tangent)
+          .normalize();
+
+        const left = point.clone().addScaledVector(side, width / 2);
+        const right = point.clone().addScaledVector(side, -width / 2);
+
+        left.y += yOffset;
+        right.y += yOffset;
+
+        positions.push(left.x, left.y, left.z);
+        positions.push(right.x, right.y, right.z);
+
+        if (i < samples.length - 1) {
+          const a = i * 2;
+          const b = a + 1;
+          const c = a + 2;
+          const d = a + 3;
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      return new THREE.Mesh(geometry, materials.ballast);
+    }
+
+    function addTrack(path) {
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const railPoints = [];
+
+      for (const side of [-1, 1]) {
+        const points = path.getPoints(220);
+        const offsetPoints = [];
+
+        for (let i = 0; i < points.length; i++) {
+          const point = points[i];
+          const tangent = path.getTangentAt(i / (points.length - 1));
+          const sideVector = new THREE.Vector3()
+            .crossVectors(UP, tangent)
+            .normalize();
+
+          const offset = point
+            .clone()
+            .addScaledVector(sideVector, side * GAUGE / 2);
+
+          offsetPoints.push(offset);
+          railPoints.push(offset);
+        }
+
+        const railCurve = new THREE.CatmullRomCurve3(railPoints);
+        const rail = new THREE.Mesh(
+          new THREE.TubeGeometry(railCurve, 240, 0.075, 5, false),
+          materials.rail
+        );
+        rail.castShadow = true;
+        rail.receiveShadow = true;
+        group.add(rail);
+      }
+
+      const ballast = makeRibbon(path, 3.5, -0.16);
+      ballast.receiveShadow = true;
+      group.add(ballast);
+
+      const length = path.getLength();
+      const sleeperCount = Math.max(2, Math.floor(length / 0.72));
+
+      for (let i = 0; i <= sleeperCount; i++) {
+        const u = i / sleeperCount;
+        const point = path.getPointAt(u);
+        const tangent = path.getTangentAt(u);
+        const side = new THREE.Vector3()
+          .crossVectors(UP, tangent)
+          .normalize();
+
+        const sleeper = new THREE.Mesh(
+          new THREE.BoxGeometry(0.24, 0.16, 2.5),
+          materials.sleeper
+        );
+
+        sleeper.position.copy(point);
+        sleeper.position.y -= 0.08;
+        sleeper.rotation.y = Math.atan2(side.x, side.z);
+        sleeper.castShadow = true;
+        sleeper.receiveShadow = true;
+        group.add(sleeper);
+      }
+
+      return group;
+    }
+
+    function makeBranchPair(centerPath, lateralOffset = 1.25) {
+      const paths = [];
+
+      for (const side of [-1, 1]) {
+        const points = centerPath.getPoints(180);
+        const offsetPoints = [];
+
+        for (let i = 0; i < points.length; i++) {
+          const point = points[i];
+          const tangent = centerPath.getTangentAt(i / (points.length - 1));
+          const sideVector = new THREE.Vector3()
+            .crossVectors(UP, tangent)
+            .normalize();
+
+          offsetPoints.push(
+            point.clone().addScaledVector(sideVector, side * lateralOffset)
+          );
+        }
+
+        const branchPath = new THREE.CatmullRomCurve3(offsetPoints);
+        paths.push(branchPath);
+        addTrack(branchPath);
+      }
+
+      return paths;
+    }
+
+    const mainPath = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-95, 10.4, 0),
+      new THREE.Vector3(95, 10.4, 0)
+    ]);
+
+    const branchAPath = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(25, 10.4, -4),
+      new THREE.Vector3(30, 10.4, -4.5),
+      new THREE.Vector3(37, 11.2, -7),
+      new THREE.Vector3(46, 12, -11),
+      new THREE.Vector3(58, 12, -17),
+      new THREE.Vector3(76, 12, -23)
+    ]);
+
+    const branchBPath = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(25, 10.4, 4),
+      new THREE.Vector3(30, 10.4, 4.5),
+      new THREE.Vector3(37, 11.2, 7),
+      new THREE.Vector3(46, 12, 11),
+      new THREE.Vector3(58, 12, 17),
+      new THREE.Vector3(76, 12, 23)
+    ]);
+
+    addTrack(mainPath);
+    makeBranchPair(branchAPath);
+    makeBranchPair(branchBPath);
+
+    // Junction approach details.
+    addBox(4.2, 1.25, 18, materials.concrete, 25, 9.85, 0);
+    addBox(4.2, 0.2, 18, materials.deck, 25, 10.46, 0);
+    addBox(0.3, 0.3, 16, materials.yellow, 22.85, 10.56, 0);
+
+    // -------------------------------------------------------------------------
+    // Route signal gantries
+    // -------------------------------------------------------------------------
+
+    const routeNames = [
+      "MAIN ALIGNED",
+      "NORTH JUNCTION",
+      "SOUTH JUNCTION",
+      "MAIN ALIGNED"
+    ];
+
+    const routeColors = [0x55ff9b, 0x55b8ff, 0xffc857, 0x55ff9b];
+
+    function createRoutePanelTexture(index) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 260;
+      const context = canvas.getContext("2d");
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      drawRoutePanel(context, texture, index);
+
+      return { canvas, context, texture };
+    }
+
+    function drawRoutePanel(context, texture, index) {
+      const c = texture.canvas;
+      const ctx = texture.context;
+
+      ctx.fillStyle = "#091821";
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.strokeStyle = "#4b91aa";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(8, 8, c.width - 16, c.height - 16);
+
+      ctx.fillStyle = "#75d9f5";
+      ctx.font = "800 29px sans-serif";
+      ctx.fillText(routeNames[index], 30, 48);
+
+      ctx.fillStyle = "#9fb2bd";
+      ctx.font = "600 20px sans-serif";
+      ctx.fillText("SELECTED ROUTE", 32, 78);
+
+      ctx.strokeStyle = index === 0 || index === 3 ? "#55ff9b" : "#ffc857";
+      ctx.lineWidth = 7;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      if (index === 0 || index === 3) {
+        ctx.beginPath();
+        ctx.moveTo(65, 155);
+        ctx.lineTo(575, 155);
+        ctx.stroke();
+
+        ctx.fillStyle = "#06120e";
+        ctx.beginPath();
+        ctx.arc(575, 155, 18, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (index === 1) {
+        ctx.beginPath();
+        ctx.moveTo(65, 115);
+        ctx.bezierCurveTo(145, 72, 225, 265, 390, 265);
+        ctx.bezierCurveTo(520, 265, 575, 155, 655, 155);
+        ctx.stroke();
+
+        ctx.fillStyle = "#06120e";
+        ctx.beginPath();
+        ctx.arc(655, 155, 18, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(65, 155);
+        ctx.bezierCurveTo(145, 72, 225, 265, 390, 265);
+        ctx.bezierCurveTo(520, 265, 575, 155, 655, 155);
+        ctx.stroke();
+
+        ctx.fillStyle = "#06120e";
+        ctx.beginPath();
+        ctx.arc(655, 155, 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "#8ba8b4";
+      ctx.font = "600 18px monospace";
+      ctx.fillText("ROUTE CONTROLLED", 30, 224);
+      ctx.fillText(`${index + 1}`, 570, 224);
+
+      texture.texture.needsUpdate = true;
+    }
+
+    function createSignal(index, x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      scene.add(group);
+
+      for (const zOffset of [-3.15, 3.15]) {
+        addBox(0.38, 4.25, 0.38, materials.steel, 0, 14.05, zOffset, group);
+        addBox(0.9, 0.18, 0.9, materials.steel, 0, 12.0, zOffset, group);
+      }
+
+      addBox(0.5, 0.42, 6.7, materials.steel, 0, 16.15, 0, group);
+
+      const housing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 1.7, 0.62),
+        materials.darkSteel
+      );
+      housing.position.set(0, 13.25, 0);
+      housing.castShadow = true;
+      group.add(housing);
+
+      const lenses = [];
+
+      for (let i = 0; i < 3; i++) {
+        const lensMaterial = new THREE.MeshBasicMaterial({
+          color: routeColors[i],
+          side: THREE.DoubleSide
+        });
+
+        const lens = new THREE.Mesh(
+          new THREE.CircleGeometry(0.31, 20),
+          lensMaterial
+        );
+        lens.rotation.y = Math.PI / 2;
+        lens.position.set(0.29, 13.25 - i * 0.58, 0);
+        group.add(lens);
+        lenses.push(lensMaterial);
+      }
+
+      const panel = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.35, 1.8),
+        new THREE.MeshBasicMaterial({
+          map: createRoutePanelTexture(index).texture
+        })
+      );
+      panel.rotation.y = Math.PI / 2;
+      panel.position.set(0.38, 12.2, 0);
+      group.add(panel);
+
+      return {
+        group,
+        lenses,
+        panel,
+        texture: createRoutePanelTexture(index)
+      };
+    }
+
+    const signals = [];
+
+    for (const z of [-8, -4, 4, 8]) {
+      signals.push(createSignal(0, 18, z));
+    }
+
+    signals.push(createSignal(1, 32, -9));
+    signals.push(createSignal(2, 32, 9));
+
+    let currentRoute = 0;
+    let nextRoute = 1;
+    let routeClock = 0;
+
+    function updateSignals(index) {
+      for (const signal of signals) {
+        const active =
+          index === 0 || index === 3 ? 0 :
+          index === 1 ? 1 :
+          index === 2 ? 2 : 0;
+
+        signal.lenses[0].color.set(active === 0 ? routeColors[0] : 0x261414);
+        signal.lenses[1].color.set(active === 1 ? routeColors[1] : 0x261414);
+        signal.lenses[2].color.set(active === 2 ? routeColors[2] : 0x261414);
+
+        drawRoutePanel(signal.texture.context, signal.texture, index);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Train models
+    // -------------------------------------------------------------------------
+
+    function createTrain(colorMaterial, accentMaterial) {
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const carLength = 9.5;
+      const carSpacing = 10.8;
+
+      for (let carIndex = 0; carIndex < 3; carIndex++) {
+        const car = new THREE.Group();
+        car.position.x = (carIndex - 1) * carSpacing;
+        root.add(car);
+
+        addBox(
+          carLength,
+          2.25,
+          2.55,
+          colorMaterial,
+          0,
+          1.75,
+          0,
+          car
+        );
+
+        addBox(
+          carLength + 0.08,
+          0.25,
+          2.61,
+          accentMaterial,
+          0,
+          1.08,
+          0,
+          car
+        );
+
+        addBox(
+          carLength - 0.35,
+          0.18,
+          2.42,
+          materials.darkSteel,
+          0,
+          2.94,
+          0,
+          car
+        );
+
+        for (const x of [-3.05, 0, 3.05]) {
+          addBox(
+            1.15,
+            0.78,
+            0.055,
+            materials.darkSteel,
+            x,
+            2.25,
+            1.29,
+            car
+          );
+          addBox(
+            1.15,
+            0.78,
+            0.055,
+            materials.darkSteel,
+            x,
+            2.25,
+            -1.29,
+            car
+          );
+        }
+
+        for (const z of [-0.78, 0.78]) {
+          addBox(
+            0.055,
+            0.78,
+            1.02,
+            materials.darkSteel,
+            carLength / 2 + 0.025,
+            2.25,
+            z,
+            car
+          );
+        }
+
+        for (const z of [-0.88, 0.88]) {
+          const lamp = new THREE.Mesh(
+            new THREE.SphereGeometry(0.17, 12, 8),
+            new THREE.MeshBasicMaterial({ color: 0xfff3b0 })
+          );
+          lamp.position.set(carLength / 2 + 0.08, 1.28, z);
+          car.add(lamp);
+        }
+
+        addBox(
+          0.65,
+          0.2,
+          0.2,
+          materials.darkSteel,
+          carLength / 2 + 0.25,
+          0.72,
+          0,
+          car
+        );
+
+        for (const x of [-3.1, 3.1]) {
+          addBox(
+            2.15,
+            0.34,
+            1.65,
+            materials.darkSteel,
+            x,
+            0.42,
+            0,
+            car
+          );
+
+          for (const wheelX of [x - 0.65, x + 0.65]) {
+            for (const z of [-1.2, 1.2]) {
+              const wheel = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.43, 0.43, 0.24, 14),
+                materials.darkSteel
+              );
+              wheel.rotation.x = Math.PI / 2;
+              wheel.position.set(wheelX, 0.45, z);
+              wheel.castShadow = true;
+              car.add(wheel);
+
+              const hub = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.16, 0.16, 0.26, 10),
+                materials.rail
+              );
+              hub.rotation.x = Math.PI / 2;
+              hub.position.set(wheelX, 0.45, z);
+              car.add(hub);
+            }
+          }
+        }
+      }
+
+      return root;
+    }
+
+    const mainRedTrain = createTrain(
+      new THREE.MeshStandardMaterial({
+        color: 0xc64b4b,
+        roughness: 0.48,
+        metalness: 0.18
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xf1b84b,
+        roughness: 0.5
+      })
+    );
+
+    const mainBlueTrain = createTrain(
+      new THREE.MeshStandardMaterial({
+        color: 0x337eae,
+        roughness: 0.45,
+        metalness: 0.22
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xf0f0df,
+        roughness: 0.5
+      })
+    );
+
+    const northTrain = createTrain(
+      new THREE.MeshStandardMaterial({
+        color: 0x39a78b,
+        roughness: 0.46,
+        metalness: 0.2
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xe36a45,
+        roughness: 0.5
+      })
+    );
+
+    const southTrain = createTrain(
+      new THREE.MeshStandardMaterial({
+        color: 0xd5a33c,
+        roughness: 0.48,
+        metalness: 0.18
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x486d87,
+        roughness: 0.5
+      })
+    );
+
+    const trains = [
+      { root: mainRedTrain, path: mainPath, u: 0.18, direction: 1, speed: 7.8 },
+      { root: mainBlueTrain, path: mainPath, u: 0.73, direction: -1, speed: 6.6 },
+      { root: northTrain, path: branchAPath[0], u: 0.3, direction: 1, speed: 5.2 },
+      { root: southTrain, path: branchBPath[1], u: 0.62, direction: -1, speed: 4.9 }
+    ];
+
+    function placeTrain(train, path, u, direction, speed, delta) {
+      const normalizedU = THREE.MathUtils.clamp(u + direction * speed * delta / path.getLength(), 0, 1);
+      const point = path.getPointAt(normalizedU);
+      const tangent = path.getTangentAt(normalizedU);
+
+      train.root.position.copy(point);
+      train.root.rotation.y = Math.atan2(tangent.z, tangent.x);
+    }
+
+    // -------------------------------------------------------------------------
+    // Junction signs
+    // -------------------------------------------------------------------------
+
+    function createWorldSign(title, subtitle, x, y, z, rotationY = 0) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 256;
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = "#102a36";
+      context.fillRect(0, 0, 1024, 256);
+      context.strokeStyle = "#75d9f5";
+      context.lineWidth = 8;
+      context.strokeRect(12, 12, 1000, 232);
+
+      context.fillStyle = "#f4f8fb";
+      context.textAlign = "center";
+      context.font = "800 67px sans-serif";
+      context.fillText(title, 512, 108);
+
+      context.fillStyle = "#83e7ff";
+      context.font = "600 28px sans-serif";
+      context.fillText(subtitle, 512, 170);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sign = new THREE.Mesh(
+        new THREE.PlaneGeometry(12, 3),
+        new THREE.MeshBasicMaterial({ map: texture })
+      );
+      sign.position.set(x, y, z);
+      sign.rotation.y = rotationY;
+      scene.add(sign);
+    }
+
+    createWorldSign(
+      "NORTH FLYOVER",
+      "JUNCTION 01  •  2 TRACKS",
+      32,
+      15.2,
+      10.1,
+      Math.PI / 2
+    );
+
+    createWorldSign(
+      "SOUTH FLYOVER",
+      "JUNCTION 02  •  2 TRACKS",
+      32,
+      15.2,
+      -10.1,
+      -Math.PI / 2
+    );
+
+    // -------------------------------------------------------------------------
+    // Street traffic
+    // -------------------------------------------------------------------------
+
+    function createCar(color) {
+      const root = new THREE.Group();
+      scene.add(root);
+
+      addBox(
+        3.5,
+        0.9,
+        1.65,
+        new THREE.MeshStandardMaterial({ color, roughness: 0.55 }),
+        0,
+        0.68,
+        0,
+        root
+      );
+
+      addBox(
+        2.05,
+        0.78,
+        1.4,
+        materials.glass,
+        -0.15,
+        1.42,
+        0,
+        root
+      );
+
+      for (const x of [-1.1, 1.1]) {
+        for (const z of [-0.82, 0.82]) {
+          const wheel = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.32, 0.32, 0.2, 10),
+            materials.darkSteel
+          );
+          wheel.rotation.x = Math.PI / 2;
+          wheel.position.set(x, 0.35, z);
+          root.add(wheel);
+        }
+      }
+
+      return root;
+    }
+
+    const traffic = [];
+
+    traffic.push({
+      root: createCar(0x315b8c),
+      axis: "x",
+      z: -22,
+      x: -55,
+      speed: 11,
+      direction: 1
+    });
+
+    traffic.push({
+      root: createCar(0xb5443e),
+      axis: "x",
+      z: -22,
+      x: 45,
+      speed: 10.5,
+      direction: -1
+    });
+
+    traffic.push({
+      root: createCar(0x477b58),
+      axis: "z",
+      x: 30,
+      z: -45,
+      speed: 9,
+      direction: 1,
+      rotation: Math.PI / 2
+    });
+
+    traffic.push({
+      root: createCar(0xd0a23c),
+      axis: "z",
+      x: 30,
+      z: 40,
+      speed: 8.5,
+      direction: -1,
+      rotation: Math.PI / 2
+    });
+
+    // -------------------------------------------------------------------------
+    // Surroundings: buildings and trees
+    // -------------------------------------------------------------------------
+
+    let seed = 8173;
+    function random() {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    }
+
+    for (let i = 0; i < 28; i++) {
+      const x = -112 + i * 8.4;
+      const z = -78 + (i % 3) * 15;
+      const height = 7 + random() * 28;
+      const width = 6 + random() * 8;
+      const depth = 6 + random() * 8;
+
+      addBox(
+        width,
+        height,
+        depth,
+        new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(
+            0.11 + random() * 0.05,
+            0.18,
+            0.48 + random() * 0.18
+          ),
+          roughness: 0.9
+        }),
+        x,
+        height / 2,
+        z
+      );
+
+      addBox(
+        width * 0.35,
+        1.2,
+        depth * 0.35,
+        materials.darkSteel,
+        x,
+        height + 0.6,
+        z
+      );
+    }
+
+    function addTree(x, z, scale = 1) {
+      addCylinder(
+        0.23 * scale,
+        2.4 * scale,
+        materials.trunk,
+        x,
+        1.2 * scale,
+        z,
+        scene,
+        8
+      );
+
+      const foliage = new THREE.Mesh(
+        new THREE.ConeGeometry(1.45 * scale, 4.3 * scale, 9),
+        random() > 0.5 ? materials.tree : materials.treeLight
+      );
+      foliage.position.set(x, 3.6 * scale, z);
+      foliage.castShadow = true;
+      scene.add(foliage);
+    }
+
+    for (let i = 0; i < 26; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      addTree(
+        side * (35 + random() * 27),
+        -38 + random() * 76,
+        0.75 + random() * 0.55
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      theta: 0.72,
+      phi: 1.02,
+      radius: 128,
+      target: new THREE.Vector3(0, 7, 0)
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(controls.phi);
+
+      camera.position.set(
+        controls.target.x + controls.radius * sinPhi * Math.sin(controls.theta),
+        controls.target.y + controls.radius * Math.cos(controls.phi),
+        controls.target.z + controls.radius * sinPhi * Math.cos(controls.theta)
+      );
+
+      camera.lookAt(controls.target);
+    }
+
+    function resetCamera() {
+      controls.theta = 0.72;
+      controls.phi = 1.02;
+      controls.radius = 128;
+      controls.target.set(0, 7, 0);
+      updateCamera();
+    }
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - pointerX;
+      const dy = event.clientY - pointerY;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      controls.theta -= dx * 0.005;
+      controls.phi = THREE.MathUtils.clamp(
+        controls.phi - dy * 0.005,
+        0.25,
+        1.46
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * Math.exp(event.deltaY * 0.001),
+          42,
+          220
+        );
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+
+      if (key === "r") {
+        resetCamera();
+      } else if (key === "arrowleft") {
+        controls.theta += 0.08;
+      } else if (key === "arrowright") {
+        controls.theta -= 0.08;
+      } else if (key === "arrowup") {
+        controls.phi = THREE.MathUtils.clamp(controls.phi - 0.06, 0.25, 1.46);
+      } else if (key === "arrowdown") {
+        controls.phi = THREE.MathUtils.clamp(controls.phi + 0.06, 0.25, 1.46);
+      } else if (key === "w") {
+        controls.target.x -= 8;
+      } else if (key === "s") {
+        controls.target.x += 8;
+      } else if (key === "a") {
+        controls.target.z += 8;
+      } else if (key === "d") {
+        controls.target.z -= 8;
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // UI and animation
+    // -------------------------------------------------------------------------
+
+    const pauseButton = document.getElementById("pause");
+    const routeButton = document.getElementById("route-button");
+    const cameraButton = document.getElementById("camera-button");
+    const routeStatus = document.getElementById("route-status");
+
+    let paused = false;
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume" : "Pause";
+    });
+
+    routeButton.addEventListener("click", () => {
+      nextRoute = (currentRoute + 1) % routeNames.length;
+      routeClock = 0;
+      updateSignals(nextRoute);
+    });
+
+    cameraButton.addEventListener("click", resetCamera);
+
+    updateSignals(currentRoute);
+    updateCamera();
+
+    let previousTime = performance.now();
+    let elapsed = 0;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min((now - previousTime) / 1000, 0.05);
+      previousTime = now;
+
+      if (!paused) {
+        elapsed += delta;
+
+        if (routeClock > 10) {
+          nextRoute = (currentRoute + 1) % routeNames.length;
+          routeClock = 0;
+          updateSignals(nextRoute);
+          routeStatus.textContent = `${routeNames[nextRoute]} active`;
+        }
+
+        for (const train of trains) {
+          placeTrain(
+            train,
+            train.path,
+            train.u,
+            train.direction,
+            train.speed,
+            delta
+          );
+        }
+
+        const liftCycle = (Math.sin(elapsed * 0.62) * 0.5 + 0.5) * 10;
+        liftCab.position.y = 1.3 + liftCycle;
+
+        for (const vehicle of traffic) {
+          if (vehicle.axis === "x") {
+            vehicle.root.position.x += vehicle.speed * vehicle.direction * delta;
+            if (vehicle.root.position.x > 140) vehicle.root.position.x = -140;
+            if (vehicle.root.position.x < -140) vehicle.root.position.x = 140;
+          } else {
+            vehicle.root.position.z +=
+              vehicle.speed * vehicle.direction * delta;
+
+            if (vehicle.root.position.z > 125) {
+              vehicle.root.position.z = -125;
+            } else if (vehicle.root.position.z < -125) {
+              vehicle.root.position.z = 125;
+            }
+          }
+        }
+      }
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    requestAnimationFrame(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 450);
+    });
+  </script>
+</body>
+</html>

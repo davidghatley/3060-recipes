@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ancient Acropolis District</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(24, 25, 22, 0.78);
+      --border: rgba(255, 255, 255, 0.18);
+      --accent: #e5b968;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #91abb7;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    #title {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      z-index: 10;
+      max-width: min(430px, calc(100vw - 52px));
+      padding: 16px 19px;
+      color: #f4ead3;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+
+    #title h1 {
+      margin: 0 0 6px;
+      font-size: clamp(20px, 3vw, 31px);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    #title p {
+      margin: 0;
+      color: #d8d0bd;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #controls {
+      position: fixed;
+      right: 22px;
+      bottom: 20px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #eee7d7;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    #controls span {
+      white-space: nowrap;
+    }
+
+    #reset {
+      pointer-events: auto;
+      padding: 7px 11px;
+      color: #f7efe0;
+      background: rgba(229, 185, 104, 0.2);
+      border: 1px solid rgba(255, 235, 190, 0.35);
+      border-radius: 3px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    #reset:hover {
+      background: rgba(229, 185, 104, 0.42);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      color: #f4ead3;
+      background: #26312f;
+      transition: opacity 0.6s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-mark {
+      text-align: center;
+    }
+
+    .loading-mark strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .loading-mark span {
+      color: #c8b991;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 650px) {
+      #title {
+        top: 12px;
+        left: 12px;
+        padding: 12px 14px;
+      }
+
+      #controls {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+        justify-content: center;
+      }
+
+      #controls .desktop-help {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loading-mark">
+      <strong>Ancient Acropolis</strong>
+      <span>Building the district…</span>
+    </div>
+  </div>
+
+  <div id="title">
+    <h1>Ancient Acropolis District</h1>
+    <p>
+      A procedural reconstruction of the sacred plateau, featuring a
+      monumental temple, a processional gateway, and a long civic stoa.
+    </p>
+  </div>
+
+  <div id="controls">
+    <span class="desktop-help">
+      Drag to orbit · Shift-drag to pan · Scroll to zoom
+    </span>
+    <span class="desktop-help">WASD to move · Arrow keys to look</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera, and lighting
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional ancient Acropolis district"
+    );
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xa9b9b4, 48, 132);
+
+    const camera = new THREE.PerspectiveCamera(
+      44,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      220
+    );
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xdcecf5,
+      0x76583b,
+      1.8
+    );
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xffd29a, 3.2);
+    sun.position.set(-28, 45, 25);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -48;
+    sun.shadow.camera.right = 48;
+    sun.shadow.camera.top = 42;
+    sun.shadow.camera.bottom = -42;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 120;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.035;
+    scene.add(sun);
+
+    const coolFill = new THREE.DirectionalLight(0xa9d5eb, 0.55);
+    coolFill.position.set(30, 20, -35);
+    scene.add(coolFill);
+
+    // -------------------------------------------------------------------------
+    // Procedural textures
+    // -------------------------------------------------------------------------
+
+    function makeStoneTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#b9aa82";
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 1800; i++) {
+        const value = 115 + Math.random() * 85;
+        const alpha = 0.015 + Math.random() * 0.055;
+        ctx.fillStyle = `rgba(${value}, ${value - 8}, ${value - 24}, ${alpha})`;
+        const size = 1 + Math.random() * 4;
+        ctx.fillRect(
+          Math.random() * 256,
+          Math.random() * 256,
+          size,
+          size
+        );
+      }
+
+      ctx.strokeStyle = "rgba(79, 68, 46, 0.18)";
+      ctx.lineWidth = 1;
+
+      for (let row = 0; row < 8; row++) {
+        const y = row * 32;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(256, y);
+        ctx.stroke();
+
+        const offset = row % 2 ? 32 : 0;
+        for (let x = offset; x < 256; x += 64) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + 32);
+          ctx.stroke();
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(3, 3);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeGroundTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#8d8066";
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 2500; i++) {
+        const light = Math.random() > 0.5;
+        ctx.fillStyle = light
+          ? "rgba(224, 207, 164, 0.09)"
+          : "rgba(62, 50, 34, 0.08)";
+        ctx.fillRect(
+          Math.random() * 256,
+          Math.random() * 256,
+          1 + Math.random() * 3,
+          1 + Math.random() * 3
+        );
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(18, 18);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const stoneTexture = makeStoneTexture();
+    const groundTexture = makeGroundTexture();
+
+    const materials = {
+      stone: new THREE.MeshStandardMaterial({
+        map: stoneTexture,
+        color: 0xd6c49a,
+        roughness: 0.92
+      }),
+      paleStone: new THREE.MeshStandardMaterial({
+        map: stoneTexture,
+        color: 0xe0d0a6,
+        roughness: 0.88
+      }),
+      darkStone: new THREE.MeshStandardMaterial({
+        map: stoneTexture,
+        color: 0x76694f,
+        roughness: 0.96
+      }),
+      ground: new THREE.MeshStandardMaterial({
+        map: groundTexture,
+        color: 0xb7a582,
+        roughness: 1
+      }),
+      path: new THREE.MeshStandardMaterial({
+        color: 0xb8a17a,
+        roughness: 1
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0x984f32,
+        roughness: 0.84
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x5c3b28,
+        roughness: 0.95
+      }),
+      soil: new THREE.MeshStandardMaterial({
+        color: 0x594632,
+        roughness: 1
+      }),
+      cypress: new THREE.MeshStandardMaterial({
+        color: 0x283d2d,
+        roughness: 1
+      }),
+      olive: new THREE.MeshStandardMaterial({
+        color: 0x53613a,
+        roughness: 1
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x171a16,
+        roughness: 1
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addBox(
+      width,
+      height,
+      depth,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      radiusTop,
+      radiusBottom,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      segments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function triangularPrism(width, height, depth, material) {
+      const shape = new THREE.Shape();
+      shape.moveTo(-width / 2, 0);
+      shape.lineTo(width / 2, 0);
+      shape.lineTo(0, height);
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth,
+        bevelEnabled: false,
+        curveSegments: 1
+      });
+      geometry.translate(0, 0, -depth / 2);
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Sky and distant sun
+    // -------------------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(125, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x6f9fbe) },
+          horizonColor: { value: new THREE.Color(0xd8c9a4) },
+          bottomColor: { value: new THREE.Color(0x9eaa91) }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vWorldPosition;
+          uniform vec3 topColor;
+          uniform vec3 horizonColor;
+          uniform vec3 bottomColor;
+          void main() {
+            float h = normalize(vWorldPosition).y;
+            float upper = smoothstep(0.0, 0.72, h);
+            float lower = smoothstep(-0.45, 0.12, h);
+            vec3 color = mix(bottomColor, horizonColor, lower);
+            color = mix(color, topColor, upper);
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+    scene.add(sky);
+
+    const sunCanvas = document.createElement("canvas");
+    sunCanvas.width = sunCanvas.height = 128;
+    const sunCtx = sunCanvas.getContext("2d");
+    const sunGradient = sunCtx.createRadialGradient(
+      64, 64, 2,
+      64, 64, 64
+    );
+    sunGradient.addColorStop(0, "rgba(255,245,205,1)");
+    sunGradient.addColorStop(0.2, "rgba(255,214,145,0.9)");
+    sunGradient.addColorStop(0.48, "rgba(255,183,91,0.35)");
+    sunGradient.addColorStop(1, "rgba(255,160,70,0)");
+    sunCtx.fillStyle = sunGradient;
+    sunCtx.fillRect(0, 0, 128, 128);
+
+    const sunSprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(sunCanvas),
+        color: 0xffd28a,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    sunSprite.position.set(-52, 34, -70);
+    sunSprite.scale.set(16, 16, 1);
+    scene.add(sunSprite);
+
+    // -------------------------------------------------------------------------
+    // Terrain, paths, and rocky plateau
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(160, 160, 70, 70),
+      materials.ground
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.16;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const plateau = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 1),
+      materials.darkStone
+    );
+    plateau.scale.set(21, 5.5, 16);
+    plateau.position.set(0, 1.1, 1);
+    plateau.rotation.y = 0.35;
+    plateau.castShadow = true;
+    plateau.receiveShadow = true;
+    scene.add(plateau);
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x81735b,
+      roughness: 1
+    });
+
+    function addRock(x, z, sx, sy, sz) {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1, 0),
+        rockMaterial
+      );
+      rock.position.set(x, sy * 0.45, z);
+      rock.scale.set(sx, sy, sz);
+      rock.rotation.set(
+        Math.random() * 0.5,
+        Math.random() * Math.PI,
+        Math.random() * 0.4
+      );
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    addRock(-24, 11, 6, 3, 4);
+    addRock(25, 13, 5, 2.5, 4);
+    addRock(-29, -16, 5, 3, 4);
+    addRock(30, -18, 6, 3.5, 4);
+    addRock(8, 25, 4, 2, 3);
+    addRock(-8, 28, 3, 1.5, 2.5);
+
+    addBox(44, 0.1, 12, materials.path, 0, 0.015, 15);
+    addBox(12, 0.1, 38, materials.path, 0, 0.018, 14);
+
+    // -------------------------------------------------------------------------
+    // Main temple
+    // -------------------------------------------------------------------------
+
+    const temple = new THREE.Group();
+    temple.position.set(0, 0, 0);
+    scene.add(temple);
+
+    addBox(24, 1.1, 16, materials.stone, 0, 0.55, 0, temple);
+    addBox(26, 0.45, 2.2, materials.paleStone, 0, 0.225, 8.35, temple);
+    addBox(24, 0.45, 2.0, materials.paleStone, 0, 0.675, 6.7, temple);
+    addBox(22, 0.45, 1.8, materials.paleStone, 0, 1.125, 5.35, temple);
+
+    // Dark cella and interior.
+    addBox(7.6, 6.5, 6.2, materials.darkStone, 0, 4.65, -1.25, temple);
+    addBox(5.8, 4.8, 0.35, materials.dark, 0, 4.05, 1.95, temple);
+
+    // Eight portico columns in two rows.
+    const columnXs = [-8.4, -6.3, -4.2, -2.1, 0, 2.1, 4.2, 6.3];
+    const columnZs = [-4.8, -1.6, 1.6, 4.8];
+
+    for (const x of columnXs) {
+      for (const z of columnZs) {
+        addCylinder(0.58, 0.66, 0.35, materials.paleStone, x, 1.525, z, temple, 16);
+        addCylinder(0.34, 0.43, 6.0, materials.paleStone, x, 4.525, z, temple, 14);
+        addCylinder(0.55, 0.4, 0.46, materials.paleStone, x, 7.85, z, temple, 14);
+      }
+    }
+
+    addBox(18.6, 0.8, 13.8, materials.stone, 0, 8.3, 0, temple);
+    addBox(19.2, 0.28, 14.4, materials.paleStone, 0, 8.77, 0, temple);
+
+    const frontPediment = triangularPrism(11.2, 3.15, 0.72, materials.paleStone);
+    frontPediment.position.set(0, 9.15, 6.85);
+    temple.add(frontPediment);
+
+    const backPediment = triangularPrism(11.2, 3.15, 0.72, materials.paleStone);
+    backPediment.position.set(0, 9.15, -6.85);
+    temple.add(backPediment);
+
+    const rosette = new THREE.Mesh(
+      new THREE.SphereGeometry(0.34, 12, 8),
+      materials.paleStone
+    );
+    rosette.scale.z = 0.45;
+    rosette.position.set(0, 9.15, 7.25);
+    rosette.castShadow = true;
+    temple.add(rosette);
+
+    // Small temple steps and side blocks.
+    for (const x of [-10.2, 10.2]) {
+      addBox(2.1, 0.35, 3.0, materials.stone, x, 0.175, 8.8, temple);
+    }
+
+    // -------------------------------------------------------------------------
+    // Gateway / Propylon
+    // -------------------------------------------------------------------------
+
+    const gateway = new THREE.Group();
+    gateway.position.set(-19, 0, 10);
+    scene.add(gateway);
+
+    addBox(12.5, 1.0, 10.5, materials.stone, 0, 0.5, 0, gateway);
+    addBox(13.2, 0.25, 11.2, materials.paleStone, 0, 1.05, 0, gateway);
+
+    const archShape = new THREE.Shape();
+    archShape.moveTo(-7.1, 0);
+    archShape.lineTo(7.1, 0);
+    archShape.lineTo(7.1, 6.0);
+    archShape.lineTo(-7.1, 6.0);
+    archShape.closePath();
+
+    const archHole = new THREE.Path();
+    archHole.moveTo(-3.15, 0);
+    archHole.lineTo(3.15, 0);
+    archHole.lineTo(3.15, 5.15);
+    archHole.quadraticCurveTo(0, 6.65, -3.15, 5.15);
+    archHole.closePath();
+    archShape.holes.push(archHole);
+
+    const archGeometry = new THREE.ExtrudeGeometry(archShape, {
+      depth: 1.45,
+      bevelEnabled: false,
+      curveSegments: 16
+    });
+    archGeometry.translate(0, 0, -0.725);
+
+    const arch = new THREE.Mesh(archGeometry, materials.stone);
+    arch.position.y = 1.18;
+    arch.castShadow = true;
+    arch.receiveShadow = true;
+    gateway.add(arch);
+
+    addBox(2.25, 5.8, 3.0, materials.stone, -5.35, 4.05, 0, gateway);
+    addBox(2.25, 5.8, 3.0, materials.stone, 5.35, 4.05, 0, gateway);
+    addBox(2.55, 0.45, 3.35, materials.paleStone, -5.35, 7.0, 0, gateway);
+    addBox(2.55, 0.45, 3.35, materials.paleStone, 5.35, 7.0, 0, gateway);
+    addBox(14.8, 0.55, 2.1, materials.paleStone, 0, 6.95, 0, gateway);
+
+    // Shadowed interior behind the arch.
+    const interior = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.2, 6.0),
+      materials.dark
+    );
+    interior.position.set(0, 4.15, -0.76);
+    gateway.add(interior);
+
+    // A simple standing figure in the gateway.
+    const gatewayStatue = new THREE.Group();
+    gatewayStatue.position.set(0, 1.25, -0.25);
+    gateway.add(gatewayStatue);
+
+    addCylinder(0.24, 0.36, 1.35, materials.paleStone, 0, 0.75, 0, gatewayStatue, 10);
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 12, 8),
+      materials.paleStone
+    );
+    head.position.set(0, 1.65, 0);
+    head.castShadow = true;
+    gatewayStatue.add(head);
+
+    const leftArm = addCylinder(
+      0.12, 0.15, 0.85,
+      materials.paleStone,
+      -0.25, 1.05, 0,
+      gatewayStatue,
+      8
+    );
+    leftArm.rotation.z = -0.25;
+
+    const rightArm = addCylinder(
+      0.12, 0.15, 0.85,
+      materials.paleStone,
+      0.25, 1.05, 0,
+      gatewayStatue,
+      8
+    );
+    rightArm.rotation.z = 0.25;
+
+    // -------------------------------------------------------------------------
+    // Long colonnade, stoa
+    // -------------------------------------------------------------------------
+
+    const stoa = new THREE.Group();
+    stoa.position.set(17, 0, -10);
+    scene.add(stoa);
+
+    addBox(15, 0.8, 8, materials.stone, 0, 0.4, 0, stoa);
+    addBox(15.5, 0.2, 8.5, materials.paleStone, 0, 0.85, 0, stoa);
+    addBox(15, 5.5, 0.8, materials.stone, 0, 3.55, -3.25, stoa);
+
+    for (let i = 0; i < 8; i++) {
+      const x = -5.25 + i * 1.875;
+      addCylinder(0.5, 0.58, 0.35, materials.paleStone, x, 1.025, 0.35, stoa, 16);
+      addCylinder(0.34, 0.43, 5.45, materials.paleStone, x, 3.85, 0.35, stoa, 14);
+      addCylinder(0.55, 0.4, 0.45, materials.paleStone, x, 6.7, 0.35, stoa, 14);
+    }
+
+    addBox(14.6, 0.75, 6.7, materials.stone, 0, 7.05, 0.25, stoa);
+    addBox(15.2, 0.2, 7.2, materials.paleStone, 0, 7.5, 0.25, stoa);
+
+    // Roof tile ridges.
+    for (let x = -6; x <= 6; x += 1.5) {
+      addBox(
+        0.12,
+        0.08,
+        6.6,
+        materials.roof,
+        x,
+        7.61,
+        0.25,
+        stoa
+      );
+    }
+
+    // Benches and a central altar.
+    addBox(4.4, 0.25, 0.8, materials.wood, 0, 1.45, 2.2, stoa);
+    addBox(0.3, 0.7, 0.5, materials.wood, -1.65, 1.1, 2.2, stoa);
+    addBox(0.3, 0.7, 0.5, materials.wood, 1.65, 1.1, 2.2, stoa);
+    addCylinder(0.65, 0.75, 0.8, materials.paleStone, 0, 1.35, 1.2, stoa, 12);
+
+    // -------------------------------------------------------------------------
+    // City buildings and defensive walls
+    // -------------------------------------------------------------------------
+
+    function makeBuilding(x, z, width, depth, height, rotation = 0) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.rotation.y = rotation;
+      scene.add(group);
+
+      addBox(
+        width,
+        height,
+        depth,
+        materials.stone,
+        0,
+        height / 2,
+        0,
+        group
+      );
+
+      addBox(
+        width + 0.4,
+        0.35,
+        depth + 0.4,
+        materials.roof,
+        0,
+        height + 0.12,
+        0,
+        group
+      );
+
+      addBox(
+        width + 0.2,
+        0.55,
+        0.35,
+        materials.stone,
+        0,
+        height + 0.45,
+        depth / 2,
+        group
+      );
+
+      for (const wx of [-width * 0.25, width * 0.25]) {
+        addBox(
+          0.75,
+          1.1,
+          0.12,
+          materials.dark,
+          wx,
+          height * 0.62,
+          depth / 2 + 0.02,
+          group
+        );
+      }
+
+      return group;
+    }
+
+    makeBuilding(-29, -29, 8, 7, 5.2, 0.08);
+    makeBuilding(-20, -34, 7, 6, 4.5, -0.12);
+    makeBuilding(-10, -36, 8, 7, 5.8, 0.04);
+    makeBuilding(7, -35, 9, 8, 6.0, -0.08);
+    makeBuilding(21, -32, 8, 7, 5.2, 0.1);
+    makeBuilding(32, -27, 9, 8, 6.5, -0.05);
+    makeBuilding(-36, -17, 6, 5, 4.2, 0.2);
+    makeBuilding(36, -20, 7, 6, 4.8, -0.15);
+
+    addBox(70, 3.4, 0.8, materials.darkStone, 0, 1.7, -40);
+    addBox(0.8, 3.4, 35, materials.darkStone, -34.5, 1.7, -20);
+    addBox(0.8, 3.4, 35, materials.darkStone, 34.5, 1.7, -20);
+
+    for (const x of [-34.5, 34.5]) {
+      addBox(3.2, 6.2, 3.2, materials.stone, x, 3.1, -39);
+      addBox(3.7, 0.45, 3.7, materials.paleStone, x, 6.4, -39);
+    }
+
+    // -------------------------------------------------------------------------
+    // Trees, statues, amphorae, and people
+    // -------------------------------------------------------------------------
+
+    function makeCypress(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      addCylinder(0.12, 0.18, 2.2, materials.wood, 0, 1.1, 0, group, 8);
+
+      const lower = new THREE.Mesh(
+        new THREE.ConeGeometry(1.05, 5.0, 9),
+        materials.cypress
+      );
+      lower.position.y = 3.0;
+      lower.castShadow = true;
+      group.add(lower);
+
+      const middle = new THREE.Mesh(
+        new THREE.ConeGeometry(0.82, 4.2, 9),
+        materials.cypress
+      );
+      middle.position.y = 4.2;
+      middle.castShadow = true;
+      group.add(middle);
+
+      const top = new THREE.Mesh(
+        new THREE.ConeGeometry(0.52, 3.4, 9),
+        materials.cypress
+      );
+      top.position.y = 5.55;
+      top.castShadow = true;
+      group.add(top);
+    }
+
+    function makeOliveTree(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      addCylinder(0.16, 0.28, 2.4, materials.wood, 0, 1.2, 0, group, 8);
+
+      const foliageGeometry = new THREE.IcosahedronGeometry(1, 1);
+      const positions = [
+        [0, 3.0, 0, 1.4],
+        [-0.8, 2.6, 0.25, 1.05],
+        [0.8, 2.8, -0.15, 1.1],
+        [0.1, 3.8, 0.1, 0.95]
+      ];
+
+      for (const [px, py, pz, radius] of positions) {
+        const foliage = new THREE.Mesh(foliageGeometry, materials.olive);
+        foliage.position.set(px, py, pz);
+        foliage.scale.set(radius, radius * 0.8, radius);
+        foliage.rotation.set(
+          Math.random(),
+          Math.random(),
+          Math.random()
+        );
+        foliage.castShadow = true;
+        group.add(foliage);
+      }
+    }
+
+    [
+      [-28, 12, 1.1],
+      [-23, -20, 1.0],
+      [-35, -30, 0.9],
+      [25, 15, 1.05],
+      [31, -20, 0.9],
+      [36, -31, 1.1],
+      [8, 25, 0.85],
+      [-8, 29, 0.8],
+      [29, 23, 0.8],
+      [-30, 25, 0.75]
+    ].forEach((args) => {
+      if (args[2] === 1.1) {
+        makeCypress(args[0], args[1], args[2]);
+      } else {
+        makeOliveTree(args[0], args[1], args[2]);
+      }
+    });
+
+    function makeStatue(x, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      addCylinder(0.22, 0.34, 1.35, materials.paleStone, 0, 0.85, 0, group, 10);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.24, 12, 8),
+        materials.paleStone
+      );
+      head.position.set(0, 1.72, 0);
+      head.castShadow = true;
+      group.add(head);
+
+      const leftArm = addCylinder(
+        0.11, 0.14, 0.72,
+        materials.paleStone,
+        -0.24, 1.12, 0,
+        group,
+        8
+      );
+      leftArm.rotation.z = -0.28;
+
+      const rightArm = addCylinder(
+        0.11, 0.14, 0.72,
+        materials.paleStone,
+        0.24, 1.12, 0,
+        group,
+        8
+      );
+      rightArm.rotation.z = 0.28;
+    }
+
+    makeStatue(-1.8, 7.6, 0.9);
+    makeStatue(1.8, 7.6, 0.9);
+    makeStatue(21.5, 2.5, 0.8);
+
+    function makeAmphora(x, z, scale = 1) {
+      const points = [
+        new THREE.Vector2(0.22, 0),
+        new THREE.Vector2(0.4, 0.18),
+        new THREE.Vector2(0.58, 0.65),
+        new THREE.Vector2(0.46, 1.05),
+        new THREE.Vector2(0.25, 1.25),
+        new THREE.Vector2(0.3, 1.45),
+        new THREE.Vector2(0.2, 1.58)
+      ];
+
+      const amphora = new THREE.Mesh(
+        new THREE.LatheGeometry(points, 14),
+        materials.stone
+      );
+      amphora.position.set(x, 0, z);
+      amphora.scale.setScalar(scale);
+      amphora.castShadow = true;
+      amphora.receiveShadow = true;
+      scene.add(amphora);
+    }
+
+    makeAmphora(10.4, 7.5, 0.9);
+    makeAmphora(11.2, 8.0, 0.7);
+    makeAmphora(-11.5, 8.2, 0.75);
+    makeAmphora(23.0, -7.5, 0.85);
+
+    function makePerson(x, z, color, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      const clothing = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.95
+      });
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.27, 0.8, 8),
+        clothing
+      );
+      body.position.y = 0.9;
+      body.castShadow = true;
+      group.add(body);
+
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 10, 7),
+        materials.soil
+      );
+      head.position.y = 1.48;
+      head.castShadow = true;
+      group.add(head);
+    }
+
+    makePerson(-4.2, 10.5, 0x704638, 0.9);
+    makePerson(3.8, 12.0, 0x465766, 0.85);
+    makePerson(20.0, 0.5, 0x80513a, 0.9);
+    makePerson(-22.0, -10.0, 0x526047, 0.8);
+
+    // A few scattered architectural fragments.
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 25 + Math.random() * 20;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+
+      const block = addBox(
+        0.6 + Math.random() * 1.8,
+        0.25 + Math.random() * 0.55,
+        0.45 + Math.random() * 1.1,
+        materials.darkStone,
+        x,
+        0.18,
+        z
+      );
+      block.rotation.y = Math.random() * Math.PI;
+    }
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls: orbit, pan, zoom, keyboard, and touch
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      theta: 0.72,
+      phi: 1.0,
+      radius: 48,
+      target: new THREE.Vector3(0, 3.1, 0)
+    };
+
+    const cameraSpherical = new THREE.Spherical();
+
+    function updateCamera() {
+      cameraSpherical.set(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+      camera.position.setFromSpherical(cameraSpherical).add(controls.target);
+      camera.lookAt(controls.target);
+    }
+
+    function resetView() {
+      controls.theta = 0.72;
+      controls.phi = 1.0;
+      controls.radius = 48;
+      controls.target.set(0, 3.1, 0);
+      updateCamera();
+    }
+
+    const canvas = renderer.domElement;
+    const activePointers = new Map();
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let lastPinchDistance = 0;
+    let activePointerId = null;
+
+    function pointerDistance() {
+      const points = [...activePointers.values()];
+      if (points.length < 2) return 0;
+      return Math.hypot(
+        points[0].x - points[1].x,
+        points[0].y - points[1].y
+      );
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 1) {
+        dragging = true;
+        activePointerId = event.pointerId;
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (activePointers.size === 2) {
+        dragging = false;
+        lastPinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!activePointers.has(event.pointerId)) return;
+
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 2) {
+        const distance = pointerDistance();
+        if (lastPinchDistance > 0 && distance > 0) {
+          controls.radius = THREE.MathUtils.clamp(
+            controls.radius * (lastPinchDistance / distance),
+            17,
+            92
+          );
+          updateCamera();
+        }
+        lastPinchDistance = distance;
+        return;
+      }
+
+      if (!dragging || event.pointerId !== activePointerId) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      if (event.shiftKey || event.buttons === 2) {
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+
+        const right = new THREE.Vector3()
+          .crossVectors(forward, new THREE.Vector3(0, 1, 0))
+          .normalize();
+
+        const panScale = controls.radius * 0.0013;
+        controls.target.addScaledVector(right, -dx * panScale);
+        controls.target.addScaledVector(forward, dy * panScale);
+
+        controls.target.x = THREE.MathUtils.clamp(
+          controls.target.x,
+          -36,
+          36
+        );
+        controls.target.z = THREE.MathUtils.clamp(
+          controls.target.z,
+          -32,
+          32
+        );
+        controls.target.y = THREE.MathUtils.clamp(
+          controls.target.y,
+          0.5,
+          13
+        );
+      } else {
+        controls.theta -= dx * 0.006;
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi + dy * 0.005,
+          0.24,
+          1.46
+        );
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      activePointers.delete(event.pointerId);
+
+      if (activePointers.size === 1) {
+        const remaining = [...activePointers.entries()][0];
+        activePointerId = remaining[0];
+        lastX = remaining[1].x;
+        lastY = remaining[1].y;
+        dragging = true;
+      } else {
+        activePointerId = null;
+        dragging = false;
+        lastPinchDistance = 0;
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * Math.exp(event.deltaY * 0.001),
+          17,
+          92
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+
+      if (["arrowleft", "arrowright", "arrowup", "arrowdown"].includes(key)) {
+        event.preventDefault();
+      }
+
+      if (key === "arrowleft") controls.theta += 0.08;
+      if (key === "arrowright") controls.theta -= 0.08;
+      if (key === "arrowup") controls.phi = Math.max(0.24, controls.phi - 0.06);
+      if (key === "arrowdown") controls.phi = Math.min(1.46, controls.phi + 0.06);
+
+      if (key === "w") {
+        controls.target.z -= 0.7;
+      }
+      if (key === "s") {
+        controls.target.z += 0.7;
+      }
+      if (key === "a") {
+        controls.target.x -= 0.7;
+      }
+      if (key === "d") {
+        controls.target.x += 0.7;
+      }
+
+      controls.target.x = THREE.MathUtils.clamp(
+        controls.target.x,
+        -36,
+        36
+      );
+      controls.target.z = THREE.MathUtils.clamp(
+        controls.target.z,
+        -32,
+        32
+      );
+      controls.target.y = THREE.MathUtils.clamp(
+        controls.target.y,
+        0.5,
+        13
+      );
+
+      updateCamera();
+    });
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // -------------------------------------------------------------------------
+    // Render loop
+    // -------------------------------------------------------------------------
+
+    updateCamera();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+
+    requestAnimationFrame(() => {
+      document.getElementById("loading").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

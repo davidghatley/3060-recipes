@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folded Plate Roof — Glazed Hall</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #263033;
+      --muted: #637073;
+      --line: rgba(38, 48, 51, 0.16);
+      --panel: rgba(247, 248, 245, 0.88);
+      --accent: #b2673d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #dbe3e3;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+    }
+
+    #app,
+    #viewport {
+      position: fixed;
+      inset: 0;
+    }
+
+    #viewport canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      outline: none;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      width: min(340px, calc(100vw - 48px));
+      padding: 19px 21px 18px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      box-shadow: 0 12px 35px rgba(36, 49, 52, 0.08);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 9px;
+      font-size: clamp(21px, 3vw, 29px);
+      font-weight: 650;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .fact {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      color: #526064;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      max-width: calc(100vw - 48px);
+    }
+
+    .controls button {
+      appearance: none;
+      padding: 9px 12px;
+      border: 1px solid rgba(38, 48, 51, 0.18);
+      border-radius: 3px;
+      background: rgba(247, 248, 245, 0.91);
+      color: var(--ink);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.035em;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(36, 49, 52, 0.07);
+      backdrop-filter: blur(10px);
+      transition:
+        background 150ms ease,
+        color 150ms ease,
+        transform 150ms ease;
+    }
+
+    .controls button:hover {
+      background: #fffdf8;
+      transform: translateY(-1px);
+    }
+
+    .controls button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .hint {
+      position: fixed;
+      left: 24px;
+      bottom: 25px;
+      z-index: 10;
+      color: rgba(38, 48, 51, 0.68);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        width: min(300px, calc(100vw - 28px));
+        padding: 15px 16px;
+      }
+
+      .description {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .controls button {
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+
+      .hint {
+        left: 14px;
+        bottom: 64px;
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="viewport"></div>
+
+    <section class="title-card">
+      <div class="eyebrow">Structural study / FP–07</div>
+      <h1>Folded Plate Roof</h1>
+      <p class="description">
+        A seven-bay concrete folded plate spans a fully glazed hall.
+        Alternating ridge and valley folds create a continuous zig-zag section.
+      </p>
+      <div class="facts">
+        <span class="fact">7 V-bays</span>
+        <span class="fact">14 × 2.2 m faces</span>
+        <span class="fact">30.8 m span</span>
+      </div>
+    </section>
+
+    <div class="hint">Drag to orbit · Shift-drag to pan · Scroll to zoom</div>
+
+    <nav class="controls" aria-label="Model controls">
+      <button type="button" data-view="orbit">Perspective</button>
+      <button type="button" data-view="plan">Plan</button>
+      <button type="button" data-view="end">End elevation</button>
+      <button type="button" data-view="side">Long elevation</button>
+      <button type="button" id="roofToggle" aria-pressed="false">Hide roof</button>
+    </nav>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Architectural dimensions
+    // ------------------------------------------------------------
+    const V_BAYS = 7;
+    const FACE_WIDTH = 2.2;
+    const HALL_WIDTH = V_BAYS * 2 * FACE_WIDTH; // 30.8 m
+    const HALL_LENGTH = 42;
+    const BASE_HEIGHT = 6.35;
+    const FOLD_RISE = 1.25;
+    const ROOF_THICKNESS = 0.32;
+    const EDGE_BEAM_HEIGHT = 0.56;
+    const EDGE_BEAM_WIDTH = 0.52;
+    const FLOOR_LEVEL = 0.18;
+
+    const viewport = document.getElementById("viewport");
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    viewport.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xdbe3e3);
+    scene.fog = new THREE.Fog(0xdbe3e3, 72, 155);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      250
+    );
+
+    // ------------------------------------------------------------
+    // Materials
+    // ------------------------------------------------------------
+    const concrete = new THREE.MeshStandardMaterial({
+      color: 0xc8c3b8,
+      roughness: 0.84,
+      metalness: 0.015,
+      flatShading: true
+    });
+
+    const concreteEdge = new THREE.MeshStandardMaterial({
+      color: 0xb9b4aa,
+      roughness: 0.9,
+      metalness: 0.01
+    });
+
+    const columnMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc2beb5,
+      roughness: 0.74,
+      metalness: 0.02
+    });
+
+    const mullionMaterial = new THREE.MeshStandardMaterial({
+      color: 0x465154,
+      roughness: 0.32,
+      metalness: 0.7
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0x77766f,
+      roughness: 0.92,
+      metalness: 0.02
+    });
+
+    const grooveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4f5553,
+      roughness: 0.88,
+      metalness: 0.08
+    });
+
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xb8dce0,
+      roughness: 0.08,
+      metalness: 0.0,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.1,
+      transparent: true,
+      opacity: 0.19,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe9e5dc,
+      roughness: 0.78,
+      metalness: 0.0
+    });
+
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd6d6ce,
+      roughness: 0.96,
+      metalness: 0.0
+    });
+
+    const lightMaterial = new THREE.MeshBasicMaterial({
+      color: 0xfff4db
+    });
+
+    // ------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------
+    function addBox(parent, width, height, depth, material, x, y, z) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(parent, radius, length, material, x, y, z, radialSegments = 12) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, radialSegments),
+        material
+      );
+      // CylinderGeometry runs along Y; rotate it to run longitudinally along Z.
+      mesh.rotation.x = Math.PI / 2;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinderBetween(parent, start, end, radius, material, radialSegments = 10) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+      const midpoint = new THREE.Vector3()
+        .addVectors(start, end)
+        .multiplyScalar(0.5);
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length,
+          radialSegments
+        ),
+        material
+      );
+
+      mesh.position.copy(midpoint);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+    const hemisphere = new THREE.HemisphereLight(
+      0xe9f3f5,
+      0x9b958a,
+      2.1
+    );
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff3dc, 3.2);
+    sun.position.set(-24, 38, 18);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -42;
+    sun.shadow.camera.right = 42;
+    sun.shadow.camera.top = 42;
+    sun.shadow.camera.bottom = -42;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 100;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xbdd7df, 0.8);
+    fill.position.set(25, 15, -30);
+    scene.add(fill);
+
+    // ------------------------------------------------------------
+    // Site and floor
+    // ------------------------------------------------------------
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(180, 180),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.065;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const floor = addBox(
+      scene,
+      HALL_WIDTH + 0.8,
+      0.16,
+      HALL_LENGTH + 0.8,
+      floorMaterial,
+      0,
+      0.08,
+      0
+    );
+    floor.castShadow = false;
+
+    // ------------------------------------------------------------
+    // Folded roof profile
+    //
+    // Seven repeating V-bays, each made from two 2.2 m faces.
+    // The section alternates valley, ridge, valley, ridge...
+    // ------------------------------------------------------------
+    const profile = [];
+
+    for (let i = 0; i <= V_BAYS * 2; i++) {
+      const x = -HALL_WIDTH / 2 + i * FACE_WIDTH;
+      const y = BASE_HEIGHT + (i % 2 === 1 ? FOLD_RISE : 0);
+      profile.push(new THREE.Vector2(x, y));
+    }
+
+    const roofGroup = new THREE.Group();
+    roofGroup.name = "Folded concrete roof";
+    scene.add(roofGroup);
+
+    // ------------------------------------------------------------
+    // Solid folded slab: top, soffit, end fascias and outer edges
+    // ------------------------------------------------------------
+    const roofVertices = [];
+    const roofIndices = [];
+
+    function roofVertex(x, y, z) {
+      const index = roofVertices.length / 3;
+      roofVertices.push(x, y, z);
+      return index;
+    }
+
+    const topFront = [];
+    const topBack = [];
+    const bottomFront = [];
+    const bottomBack = [];
+
+    for (const point of profile) {
+      topFront.push(
+        roofVertex(point.x, point.y, -HALL_LENGTH / 2)
+      );
+      topBack.push(
+        roofVertex(point.x, point.y, HALL_LENGTH / 2)
+      );
+      bottomFront.push(
+        roofVertex(point.x, point.y - ROOF_THICKNESS, -HALL_LENGTH / 2)
+      );
+      bottomBack.push(
+        roofVertex(point.x, point.y - ROOF_THICKNESS, HALL_LENGTH / 2)
+      );
+    }
+
+    for (let i = 0; i < profile.length - 1; i++) {
+      const j = i + 1;
+
+      // Upper folded surface.
+      roofIndices.push(
+        topFront[i], topBack[i], topFront[j],
+        topFront[j], topBack[i], topBack[j]
+      );
+
+      // Underside.
+      roofIndices.push(
+        bottomFront[i], bottomFront[j], bottomBack[i],
+        bottomFront[j], bottomBack[j], bottomBack[i]
+      );
+
+      // Front end fascia.
+      roofIndices.push(
+        topFront[i], topFront[j], bottomFront[i],
+        topFront[j], bottomFront[j], bottomFront[i]
+      );
+
+      // Rear end fascia.
+      roofIndices.push(
+        topBack[i], bottomFront[i], topBack[j],
+        topBack[j], bottomFront[i], bottomBack[j]
+      );
+    }
+
+    // Outer longitudinal slab edges.
+    roofIndices.push(
+      topFront[0], bottomFront[0], topBack[0],
+      bottomFront[0], bottomBack[0], topBack[0]
+    );
+
+    const last = profile.length - 1;
+    roofIndices.push(
+      topFront[last], topBack[last], bottomFront[last],
+      topFront[last], bottomBack[last], topBack[last]
+    );
+
+    const indexedRoofGeometry = new THREE.BufferGeometry();
+    indexedRoofGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(roofVertices, 3)
+    );
+    indexedRoofGeometry.setIndex(roofIndices);
+
+    // Non-indexed geometry gives the folds crisp, planar shading.
+    const roofGeometry = indexedRoofGeometry.toNonIndexed();
+    roofGeometry.computeVertexNormals();
+    indexedRoofGeometry.dispose();
+
+    const roofMesh = new THREE.Mesh(roofGeometry, concrete);
+    roofMesh.name = "Seven-bay folded concrete plate";
+    roofMesh.castShadow = true;
+    roofMesh.receiveShadow = true;
+    roofGroup.add(roofMesh);
+
+    // ------------------------------------------------------------
+    // Exposure formwork lines and valley drip grooves
+    // ------------------------------------------------------------
+    profile.forEach((point, index) => {
+      const isValley = index % 2 === 0;
+
+      if (isValley) {
+        // Fine dark channel running longitudinally through each valley.
+        addBox(
+          roofGroup,
+          0.072,
+          0.018,
+          HALL_LENGTH - 0.04,
+          grooveMaterial,
+          point.x,
+          point.y + 0.007,
+          0
+        );
+
+        // Narrow concrete lips distinguish the recessed drainage channel.
+        addCylinder(
+          roofGroup,
+          0.016,
+          HALL_LENGTH - 0.04,
+          concreteEdge,
+          point.x - 0.052,
+          point.y + 0.012,
+          0,
+          8
+        );
+
+        addCylinder(
+          roofGroup,
+          0.016,
+          HALL_LENGTH - 0.04,
+          concreteEdge,
+          point.x + 0.052,
+          point.y + 0.012,
+          0,
+          8
+        );
+      } else {
+        // Fine exposed-formwork joint following the ridge fold.
+        addCylinder(
+          roofGroup,
+          0.018,
+          HALL_LENGTH - 0.03,
+          jointMaterial,
+          point.x,
+          point.y + 0.008,
+          0,
+          8
+        );
+      }
+    });
+
+    // ------------------------------------------------------------
+    // Longitudinal edge beams
+    // ------------------------------------------------------------
+    const edgeX = HALL_WIDTH / 2;
+    const beamTop = BASE_HEIGHT - ROOF_THICKNESS;
+    const beamBottom = beamTop - EDGE_BEAM_HEIGHT;
+    const beamCenterY = beamTop - EDGE_BEAM_HEIGHT / 2;
+
+    for (const side of [-1, 1]) {
+      addBox(
+        scene,
+        EDGE_BEAM_WIDTH,
+        EDGE_BEAM_HEIGHT,
+        HALL_LENGTH + 0.8,
+        concreteEdge,
+        side * edgeX,
+        beamCenterY,
+        0
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Slender perimeter columns and small base collars
+    // ------------------------------------------------------------
+    const columnZPositions = [-16, -8, 0, 8, 16];
+    const columnBottom = FLOOR_LEVEL + 0.04;
+    const columnHeight = beamBottom - columnBottom;
+
+    for (const side of [-1, 1]) {
+      for (const z of columnZPositions) {
+        const column = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            0.125,
+            0.145,
+            columnHeight,
+            18
+          ),
+          columnMaterial
+        );
+
+        column.position.set(
+          side * edgeX,
+          columnBottom + columnHeight / 2,
+          z
+        );
+        column.castShadow = true;
+        column.receiveShadow = true;
+        scene.add(column);
+
+        const collar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.22, 0.22, 0.08, 20),
+          mullionMaterial
+        );
+        collar.position.set(
+          side * edgeX,
+          FLOOR_LEVEL + 0.04,
+          z
+        );
+        collar.castShadow = true;
+        scene.add(collar);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Long glazed side walls
+    // ------------------------------------------------------------
+    const sideGlassHeight = BASE_HEIGHT - ROOF_THICKNESS - FLOOR_LEVEL;
+
+    for (const side of [-1, 1]) {
+      const sideGlass = new THREE.Mesh(
+        new THREE.PlaneGeometry(
+          HALL_LENGTH - 0.12,
+          sideGlassHeight
+        ),
+        glassMaterial
+      );
+      sideGlass.rotation.y = Math.PI / 2;
+      sideGlass.position.set(
+        side * (edgeX - 0.045),
+        FLOOR_LEVEL + sideGlassHeight / 2,
+        0
+      );
+      sideGlass.renderOrder = 2;
+      scene.add(sideGlass);
+
+      // Horizontal transom and sill.
+      addBox(
+        scene,
+        0.075,
+        0.075,
+        HALL_LENGTH,
+        mullionMaterial,
+        side * (edgeX - 0.055),
+        3.25,
+        0
+      );
+
+      addBox(
+        scene,
+        0.085,
+        0.09,
+        HALL_LENGTH,
+        mullionMaterial,
+        side * (edgeX - 0.055),
+        FLOOR_LEVEL + 0.02,
+        0
+      );
+
+      // Vertical side-wall mullions.
+      for (let z = -HALL_LENGTH / 2 + 0.2; z <= HALL_LENGTH / 2; z += 3.5) {
+        addBox(
+          scene,
+          0.075,
+          sideGlassHeight,
+          0.075,
+          mullionMaterial,
+          side * (edgeX - 0.06),
+          FLOOR_LEVEL + sideGlassHeight / 2,
+          z
+        );
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Glazed end walls following the folded underside
+    //
+    // A vertical mullion is placed at every fold point and terminates
+    // precisely at the concrete soffit.
+    // ------------------------------------------------------------
+    function buildEndGlazing(z) {
+      const vertices = [];
+      const indices = [];
+
+      for (let i = 0; i < profile.length - 1; i++) {
+        const p0 = profile[i];
+        const p1 = profile[i + 1];
+        const offset = vertices.length / 3;
+
+        vertices.push(
+          p0.x, FLOOR_LEVEL, z,
+          p1.x, FLOOR_LEVEL, z,
+          p0.x, p0.y - ROOF_THICKNESS, z,
+          p1.x, p1.y - ROOF_THICKNESS, z
+        );
+
+        indices.push(
+          offset, offset + 1, offset + 2,
+          offset + 1, offset + 3, offset + 2
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const glass = new THREE.Mesh(geometry, glassMaterial);
+      glass.renderOrder = 2;
+      scene.add(glass);
+    }
+
+    buildEndGlazing(-HALL_LENGTH / 2 + 0.045);
+    buildEndGlazing(HALL_LENGTH / 2 - 0.045);
+
+    for (const z of [
+      -HALL_LENGTH / 2 + 0.035,
+      HALL_LENGTH / 2 - 0.035
+    ]) {
+      // Vertical mullions terminate at the underside of every fold.
+      profile.forEach((point) => {
+        const top = point.y - ROOF_THICKNESS;
+        const height = top - FLOOR_LEVEL;
+
+        addBox(
+          scene,
+          0.066,
+          height,
+          0.08,
+          mullionMaterial,
+          point.x,
+          FLOOR_LEVEL + height / 2,
+          z
+        );
+      });
+
+      // Zig-zag top rail follows the folded plate.
+      for (let i = 0; i < profile.length - 1; i++) {
+        const p0 = profile[i];
+        const p1 = profile[i + 1];
+
+        addCylinderBetween(
+          scene,
+          new THREE.Vector3(
+            p0.x,
+            p0.y - ROOF_THICKNESS,
+            z
+          ),
+          new THREE.Vector3(
+            p1.x,
+            p1.y - ROOF_THICKNESS,
+            z
+          ),
+          0.038,
+          mullionMaterial,
+          10
+        );
+      }
+
+      // Bottom perimeter track.
+      addBox(
+        scene,
+        HALL_WIDTH,
+        0.09,
+        0.09,
+        mullionMaterial,
+        0,
+        FLOOR_LEVEL + 0.02,
+        z
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Restrained interior lighting strips
+    // ------------------------------------------------------------
+    for (const z of [-12, 0, 12]) {
+      addBox(
+        scene,
+        0.09,
+        0.055,
+        8.5,
+        lightMaterial,
+        0,
+        5.55,
+        z
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Custom camera controls — no external control modules
+    // ------------------------------------------------------------
+    const desired = {
+      theta: 0.72,
+      phi: 1.12,
+      radius: 60,
+      target: new THREE.Vector3(0, 3.0, 0)
+    };
+
+    const current = {
+      theta: desired.theta,
+      phi: desired.phi,
+      radius: desired.radius,
+      target: desired.target.clone()
+    };
+
+    const canvas = renderer.domElement;
+    const pointers = new Map();
+    let activePointer = null;
+    let panMode = false;
+    let lastPinchDistance = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        activePointer = event.pointerId;
+        panMode = event.button === 2 || event.shiftKey;
+      } else if (pointers.size === 2) {
+        lastPinchDistance = pointerDistance();
+        activePointer = null;
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 2) {
+        const distance = pointerDistance();
+
+        if (lastPinchDistance > 0 && distance > 0) {
+          desired.radius = THREE.MathUtils.clamp(
+            desired.radius * (lastPinchDistance / distance),
+            12,
+            115
+          );
+        }
+
+        lastPinchDistance = distance;
+        return;
+      }
+
+      if (event.pointerId !== activePointer) return;
+
+      if (panMode) {
+        const scale = desired.radius * 0.0014;
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+
+        camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+        desired.target.addScaledVector(right, -dx * scale);
+        desired.target.addScaledVector(up, dy * scale);
+
+        desired.target.x = THREE.MathUtils.clamp(
+          desired.target.x,
+          -30,
+          30
+        );
+        desired.target.y = THREE.MathUtils.clamp(
+          desired.target.y,
+          0.5,
+          15
+        );
+        desired.target.z = THREE.MathUtils.clamp(
+          desired.target.z,
+          -35,
+          35
+        );
+      } else {
+        desired.theta -= dx * 0.005;
+        desired.phi = THREE.MathUtils.clamp(
+          desired.phi - dy * 0.005,
+          0.13,
+          1.48
+        );
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (activePointer === event.pointerId) {
+        activePointer = null;
+      }
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.entries()][0];
+        activePointer = remaining[0];
+        panMode = false;
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+    canvas.addEventListener("lostpointercapture", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          12,
+          115
+        );
+      },
+      { passive: false }
+    );
+
+    // ------------------------------------------------------------
+    // Preset views
+    // ------------------------------------------------------------
+    const views = {
+      orbit: {
+        theta: 0.72,
+        phi: 1.12,
+        radius: 60,
+        target: new THREE.Vector3(0, 3.0, 0)
+      },
+      plan: {
+        theta: 0.0,
+        phi: 0.14,
+        radius: 57,
+        target: new THREE.Vector3(0, 2.2, 0)
+      },
+      end: {
+        theta: 0.0,
+        phi: 1.32,
+        radius: 49,
+        target: new THREE.Vector3(0, 3.5, 0)
+      },
+      side: {
+        theta: Math.PI / 2,
+        phi: 1.28,
+        radius: 56,
+        target: new THREE.Vector3(0, 3.2, 0)
+      }
+    };
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = views[button.dataset.view];
+        desired.theta = view.theta;
+        desired.phi = view.phi;
+        desired.radius = view.radius;
+        desired.target.copy(view.target);
+      });
+    });
+
+    const roofToggle = document.getElementById("roofToggle");
+    roofToggle.addEventListener("click", () => {
+      const hidden = roofGroup.visible;
+      roofGroup.visible = !hidden;
+      roofToggle.setAttribute("aria-pressed", String(!hidden));
+      roofToggle.textContent = hidden ? "Hide roof" : "Show roof";
+    });
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+    function shortestAngleDifference(from, to) {
+      return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+    }
+
+    function animate() {
+      const damping = 0.085;
+
+      current.theta +=
+        shortestAngleDifference(current.theta, desired.theta) * damping;
+      current.phi += (desired.phi - current.phi) * damping;
+      current.radius += (desired.radius - current.radius) * damping;
+      current.target.lerp(desired.target, damping);
+
+      const spherical = new THREE.Spherical(
+        current.radius,
+        current.phi,
+        current.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(current.target);
+      camera.lookAt(current.target);
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

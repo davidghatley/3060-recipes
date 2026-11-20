@@ -1,0 +1,1039 @@
+We need answer likely provide HTML code. Need satisfy exact. Standalone HTML scene Three.js core ES module from cdnjs, no addons. Need depict ball-and-stick water molecule, red oxygen sphere apex wide V, two smaller white hydrogen spheres, short gray cylinders, bonds angled ~104, end in shallow sleeves around each atom. Need perhaps polished scene. We should output complete HTML. Need ensure "ball-and-stick" and sleeve ends. Need use only three.module.min.js. Implement camera controls directly HTML, perhaps orbit via pointer drag and wheel. Need no external assets. Could use CSS and JS module. Need likely no explanation beyond code. Need code robust.
+
+Let's design scene. Three.js 0.160.0 core. Molecule centered. Red oxygen sphere at apex maybe y=1.4, hydrogens at x ±? Need bond angle 104. We can define O at (0,1.35,0), H positions ±0.75, y=0.85? Vector from O to H: x=0.75, y=-0.5. Angle between vectors to left/right: each makes 32° from vertical, total 64°, not 104. Wait H-O-H bond angle is 104°, so each H vector is 52° from y axis. Place O at y=1.45, H y=1.45 - 0.75*sin52=0.968, x=±0.75*cos52=±0.464. Total V wide. Short gray cylinders between. Shallow sleeves around each atom: likely cylinders/short collars at ends, perhaps each bond terminates in a slightly flared sleeve around H, and O has central sleeve. User: "The bonds are angled at about 104 degrees and end in shallow sleeves around each atom." Could render cylinders ending in short truncated cone sleeves around each atom. Need perhaps bond gray cylinder from O to H, with sleeves at ends: at O, a short cylinder/cone oriented along bond; at H, a small collar. "shallow sleeves around each atom" maybe each bond end has a sleeve around atom. We can create cylinder between points and add cone frustum at each end, same axis. Use CylinderGeometry(radiusTop, radiusBottom, height) oriented along vector. Three CylinderGeometry axis y. We can make a helper align cylinder from a to b using quaternion setFromUnitVectors(yAxis, direction). For sleeve, use CylinderGeometry(radius*1.18, radius*0.85, sleeveLength) maybe at a and b. But need shallow sleeves around each atom. Maybe create a "sleeve" as a short hollow-looking ring? Could use CylinderGeometry openEnded true and TorusGeometry? But ball-and-stick style likely sleeve collars. We can use cone frustum at each atom, with gray material. The actual bond cylinder enters it.
+
+Scene: dark gradient background via CSS, canvas. Add floor? User asked scene. Could make a subtle pedestal/shadow and labels. But no need. Better standalone with title and legend maybe. Need camera controls directly. Could implement pointer drag orbit, wheel zoom, touch. Use spherical coordinates and target. Need ensure no OrbitControls import. Use Three core only.
+
+Need perhaps use renderer alpha and CSS background. Add lighting. Molecule perhaps floating in dark navy. Add subtle grid? Standalone. We can add labels O and H with CSS positioned? Could be nice but not necessary. We can create sprites using canvas textures, but that involves canvas and no external. However "only Three.js core" okay. But perhaps labels can be HTML overlay, but positions need update. Could use CSS2DRenderer addon not allowed. We can project 3D positions to screen each frame and position labels. That's direct. Add label divs for O and H. Could include instruction.
+
+Need be careful with geometry orientation and sleeve. Let's formulate.
+
+Coordinate:
+O = (0, 1.55, 0)
+H angle = 104 deg. Half=52.
+distance=0.95
+H positions:
+x=±0.95*Math.sin(52°)=±0.749
+y=1.55 -0.95*Math.cos(52°)=0.882
+z=0.
+This gives total angle 104.
+
+Bond cylinder between O and H, radius 0.075, length 0.95. Gray material roughness 0.55, metalness 0.15.
+Sleeve at O: oriented from O toward H. A sleeve around O maybe centered slightly along bond? "bonds end in shallow sleeves around each atom" Could have a short sleeve at each atom along the bond. At O, a frustum centered at O, length 0.18, radius outer 0.14 inner 0.095. But a solid frustum may cover bond. Use CylinderGeometry(0.13,0.10,0.18,32,1,true) openEnded true, axis along bond. It looks like hollow sleeve. Add torus ring at outer end? Torus oriented to axis. At H, smaller sleeve around H: center H, length .14, outer radius .13 inner .09, perhaps. Need "end in shallow sleeves around each atom" maybe sleeve is at atom ends. We can make open-ended truncated cylinder with a ring at outer edge. A torus at O end and H end. But if torus around axis, TorusGeometry default in XY plane around Z axis, so need rotate to align normal with bond. Helper align torus normal? Torus normal is Z, quaternion from z to direction. Could use.
+
+Could also add a second "sleeve" as a short solid cylinder with a different radius at each atom, making bond end fade into atom. But "shallow sleeves around each atom" likely visual requirement. We can create hollow sleeve and ring.
+
+Need maybe red oxygen sphere with physical material, white hydrogen. Use MeshPhysicalMaterial. Red sphere radius .34, H .22. Add slight emissive. Gray cylinders.
+
+Need perhaps add a faint "electron cloud" or no, ball-and-stick. User specifically ball-and-stick. Keep clean.
+
+Need maybe animate subtle rotation? Camera controls. Could slowly auto-rotate until interaction? Maybe scene is static but camera controls. We can add gentle floating animation, but molecule should be clear. Could rotate molecule group very slowly, and user can drag. But "scene" maybe. We can include autoRotate true and pause on interaction, resume after 4 sec? Simpler: group rotation y slowly, but then labels need project. Camera orbit direct. A slight rotation can make 3D clear. But if user wants inspect, controls. We can implement pointer drag and wheel. Need no controls addon.
+
+Need maybe responsive.
+
+Let's create full HTML:
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt; meta etc, style body radial gradient, #app, canvas; overlay title, subtitle, legend, help.
+&lt;body&gt;
+&lt;div id=app&gt;&lt;/div&gt;
+&lt;div class=...&gt;
+...
+&lt;script type=module&gt;
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+...
+&lt;/script&gt;
+Need only core import.
+
+Renderer:
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+renderer.shadowMap.enabled maybe.
+app.appendChild(renderer.domElement).
+
+Scene fog? background transparent but fog with color maybe. Use scene.fog = new THREE.FogExp2(0x07111f,0.035) but transparent background and fog? Objects fade to fog color, okay. Or scene.background = Color(0x07111f). CSS gradient won't show. Use alpha and scene.background null, fog perhaps. Better use a large backdrop plane? Could use CSS.
+
+Camera Perspective 38, aspect, near .1 far 100, pos (3.2,2.1,6.5). Target (0,1.0,0).
+Controls: spherical radius, theta, phi. On pointerdown capture, store; pointermove update theta/phi; wheel preventDefault radius clamp. Touch via pointer events. Double click reset. Use pointerup.
+Need avoid label overlap? We can position labels by projecting.
+Maybe camera target and group orientation. We can set molecule group at y? no.
+
+Lighting: HemisphereLight(0xbfe8ff,0x101827,2); Directional key at (4,6,5) intensity 3, cast shadow; Point rim at (-4,2,-3) blue 20? Three r160 physically correct lights default? intensity. Add point warm.
+
+Ground? Could add circular platform below y=-0.65, but molecule is floating and maybe not needed. A shadow plane can ground. But scene is molecule, no need. Could add subtle concentric rings in background? Could distract.
+
+Maybe add a "pedestal" disc under molecule at y=-0.75, horizontal, with MeshStandardMaterial dark blue, transparent .55, and rings. But user didn't ask, and ball-and-stick should stand out. A clean scientific display can have a floor. Yet "apex of wide V" and sleeves around each atom. A pedestal might be okay. But perhaps no.
+
+Could add a soft halo behind molecule using CSS pseudo element? The canvas alpha over body gradient. Fine.
+
+Geometry:
+const molecule = new THREE.Group();
+molecule.position.y maybe 0.1.
+Add sphere:
+const oxygenMat = new THREE.MeshPhysicalMaterial({color:0xff3055, roughness:.22, metalness:0, clearcoat:1, clearcoatRoughness:.12, emissive:0x4b0008, emissiveIntensity:.16});
+const oxygen = new THREE.Mesh(new THREE.SphereGeometry(.34,64,48), mat); oxygen.position.copy(O); molecule.add.
+hydrogen mat white 0xf7fbff roughness .18 clearcoat .8.
+sphere maybe wire? no.
+
+Cylinder:
+function cylinderBetween(a,b,r,material, radial=24) {
+ const dir = b-a; len=dir.length();
+ const geo = new THREE.CylinderGeometry(r,r,len,radial,1,false);
+ const mesh = new THREE.Mesh(geo,material);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+ ...
+}
+For sleeve:
+function makeSleeve(center, direction, radius, length, scale=1) {
+ const geo = new THREE.CylinderGeometry(radius*scale*1.12, radius*scale*0.88, length, 32,1,true);
+ // top radius? CylinderGeometry(radiusTop, radiusBottom,height). Direction from a to b. If center, top at +dir*len/2 corresponds radiusTop. We want outer at atom side? For O sleeve, outer at O side, inner at bond side. If direction points O->H, at -dir end outer radius, at +dir end inner radius. CylinderGeometry top radius corresponds +y, bottom -y. So radiusTop=inner, radiusBottom=outer. center.
+ mesh.position center; quaternion from y to direction.
+ add ring at center - direction*len/2 maybe Torus normal along direction, outer radius etc. But ring at O end. For H sleeve, perhaps outer at H side? The bond ends at H, sleeve around H, the outer edge at H, inner at bond side. Direction O->H, H is +dir, so outer at + end, inner at - end: top radius outer, bottom radius inner. So different orientation. But we can just use a sleeve at each end with a ring. "end in shallow sleeves around each atom" maybe sleeve centered at atom. We'll create O sleeve centered at O, direction toward H, with open end toward bond and outer rim at O. H sleeve centered at H, direction toward O (or same), with open end toward bond and outer rim at H. Need helper sleeve(center, axis, outerRadius, innerRadius, length) where axis is from bond center to atom? Let's define axis = atom - bondCenter (outward). For O, axis=H-O points down/out; outer at center - axis*l/2, inner at center+axis*l/2. For H, axis=O-H points up/in; outer at center+axis*l/2, inner at center-axis*l/2. So generic based on outward.
+Could create a solid short collar using CylinderGeometry and a torus ring. OpenEnded true. Add inner dark disk? Since open, visible. Add ring at outer end. At O outer rim, torus; at H outer rim. Torus radius outerRadius*0.93, tube .025. Need orient torus normal along axis. Torus default normal z, quaternion setFromUnitVectors(z, axis).
+But if the sleeve is centered exactly on atom and extends along bond, it overlaps sphere. The outer rim at sphere surface. Good.
+For O radius maybe 0.145, length .18; H radius .12, length .15.
+Bond cylinder radius .07. Sleeve inner radius .105, so starts outside cylinder. At O, cylinder enters sleeve. At H, cylinder enters sleeve. This creates a step.
+
+Maybe add a second thin ring at bond endpoint? "end in shallow sleeves" enough.
+
+To make sleeve more sleeve-like, use a truncated hollow tube. The torus ring at outer end. Could also add inner dark disk at bond-side to show depth, but not needed. Add a dark circle at inner end maybe CircleGeometry radius inner, material dark, oriented to axis, positioned at inner edge. This can show hollow. But might be hidden. We can add.
+
+Need label positions. HTML labels:
+<div id=labels><div class=atom-label data...>O</div> etc.
+In JS, create label elements perhaps. Each frame:
+const v = new THREE.Vector3(...).project(camera);
+if v.z between -1,1 etc; x=(v.x*.5+.5)*w; y=(-v.y*.5+.5)*h;
+label.style.transform = translate(x,y); opacity if behind? We can set.
+Need account molecule group maybe static. Could put molecule in group and rotate? If auto rotate, labels need group local positions. We can project molecule.localToWorld. But camera controls and auto rotation. Better no auto rotation, or subtle. Could rotate molecule group around y by 0.25 initial and controls orbit camera. The labels positions can be from molecule.localToWorld.
+
+Maybe initial camera at (3,2.2,6), molecule in center. The V is visible. Add a slight auto-rotation of molecule around y, but then label projection. Let's do group.rotation.y = -0.25; animate group.rotation.y += 0.0008 if not dragging? It might make labels move. Fine. But user can orbit camera; molecule rotates independently. Could be scientifically dynamic. Yet if screenshot, angle still. Maybe no auto rotation to preserve exact. Add gentle "breathing" scale? no.
+
+Need maybe camera controls direct. We can implement drag:
+let dragging=false,lastX,lastY;
+canvas.addEventListener('pointerdown', e => {dragging=true; canvas.setPointerCapture(e.pointerId); lastX=e.clientX; ...; canvas.classList.add('dragging')});
+pointermove if dragging:
+const dx = e.clientX-lastX; dy...
+theta -= dx*0.006; phi -= dy*0.006; phi=clamp(phi,0.25, Math.PI-0.25)
+Maybe spherical:
+camera.position.set(
+ target.x + radius*Math.sin(phi)*Math.sin(theta),
+ target.y + radius*Math.cos(phi),
+ target.z + radius*Math.sin(phi)*Math.cos(theta)
+)
+camera.lookAt(target)
+Wheel radius *= exp(deltaY*0.001); clamp 3.6, 10.
+Double click reset.
+Keyboard? arrow keys, +/-. Add.
+Need maybe no accidental scrolling.
+
+Could also add a reset button. But direct controls enough. UI "Drag to orbit · Scroll to zoom". A reset view button.
+
+Need ensure labels don't intercept.
+
+Maybe add subtle "104°" annotation? The user asks depiction, not educational annotation. Could include small badge "H–O–H / 104°". Nice. But labels maybe.
+
+Need perhaps use CSS for responsive.
+
+Potential issue with `THREE.CylinderGeometry` and quaternion. Good.
+Torus orientation: `mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), axis);`
+For outer ring at O: axis outward from bond to O = O-H. Center ring at O - axis*len/2. At H: axis outward O->H, ring at H + axis*len/2.
+Sleeve geometry orientation:
+function sleeve(center, axis, outerR, innerR, length) {
+ const geo = new CylinderGeometry(innerR, outerR, length, 32,1,true);
+ // +y end is center+axis*l/2. If outer at center+axis, top radius outer; if outer at center-axis, top radius inner.
+ if (axis points to outer?) set radiusTop=outerR, radiusBottom=innerR else radiusTop=innerR, radiusBottom=outerR.
+ mesh.quaternion set y->axis.
+}
+For O outer at O, axis O->H? center - axis*l/2 = O if axis=O-H. So outer side is - axis. radiusBottom (at -y) outer. Thus geo radiusTop=inner, radiusBottom=outer.
+For H outer at H, axis=H-O (O->H), center+axis*l/2=H, radiusTop outer. So geo radiusTop=outer, radiusBottom=inner.
+Great.
+Ring at outer side:
+O outer = O - (O-H)*l/2; normal axis O-H.
+H outer = H + (H-O)*l/2; normal H-O.
+Need make torus ring radius maybe outerR*0.95, tube .025.
+Could also add a short "shoulder" cylinder at bond endpoint? Sleeve itself.
+
+Need maybe red oxygen is apex. Our O at y=1.55, H y=.882. Yes.
+
+Need maybe wide V: 104°.
+
+Need maybe short gray cylinders: length .95, radius .065. "short" relative molecule. Good.
+
+Need maybe white hydrogen spheres smaller. O .36 H .23.
+
+Need maybe a little red glow. Good.
+
+Need maybe use `MeshPhysicalMaterial` clearcoat. Fine.
+
+Need maybe background particles? no.
+
+Could add a floor shadow to make scene grounded. But molecule is small and floating. We can add a subtle circular platform at y=-0.75, but it might not align with molecule. User didn't request. A scene can be clean.
+
+Maybe add a faint elliptical orbit line? no.
+
+Let's consider if CSS background and renderer alpha: scene fog with transparent background? Fog blends to fog color, but background CSS not same. Set scene.background = new Color(0x07111f) to be consistent. Then no CSS gradient. Could create large background via scene background color only. Better visual with CSS gradient and renderer alpha true, `scene.fog = new THREE.Fog(0x07111f, 8, 18)`; objects far? camera distance 6, no. CSS radial gradient.
+
+Need maybe add a backdrop plane with transparent? no.
+
+Renderer clear alpha 0.
+
+Add `renderer.domElement.setAttribute('aria-label',...)`.
+
+Need maybe fallback message if WebGL unavailable? Could catch. Not necessary but nice.
+
+Need no imports besides exact URL. Good.
+
+Need maybe use `import * as THREE from '...';` exact.
+
+Need output likely code block. Could say save as index.html. User asked "Make..." So deliver complete code.
+
+Let's ensure no use of addons. Great.
+
+Let's craft code with comments.
+
+Potential issue `THREE.MathUtils.clamp`.
+Potential issue `renderer.domElement` pointer events and UI. labels pointer-events none.
+Potential issue `e.deltaY` on wheel.
+Potential issue `camera.updateProjectionMatrix`.
+Potential issue `window.addEventListener('resize')`.
+Potential issue `label` projection with `molecule.localToWorld` but molecule group transform includes rotation. `molecule.localToWorld(pos.clone())`.
+Potential issue if label elements created in HTML with IDs. Fine.
+
+Let's perhaps add a small `div class="badge"` showing "104° bond angle". The title "WATER / H₂O". Legend colors.
+
+Need maybe use `font-family: Inter, ui-sans-serif...` no external font.
+
+Need maybe add `canvas` display block.
+
+Need maybe add `touch-action:none`.
+
+Need maybe add `#reset` button pointer events.
+
+Need maybe add `#loading`? no.
+
+Let's think of geometry visually:
+O red sphere at (0,1.6,0), H at ±.75,.9,0. The bond cylinder is diagonal. Sleeve O extends from O toward H .18, outer edge slightly above sphere? O center, sleeve length .18 along bond, outer at O - .09*axis. Since axis has y=-.615, outer is y=1.71, x=-.044. So ring above O. Inner at O + .09*axis = y=1.549. This sleeve overlaps sphere from y1.55 to1.71. Good.
+H sleeve center H, axis from O to H (down? H-O vector = (0.75,-.718)), outer at H + .075*axis = x=.945,y=.809, ring beyond H away from bond. Inner at H-.075*axis = x=.699,y=.991, and cylinder ends at H, so overlaps. Good.
+This clearly shows sleeves around each atom, outer ring on outside.
+
+Maybe red sphere at apex and white H. Good.
+
+Need maybe label O and H positions. Use `data` and JS.
+
+Could add `label.style.left = x+'px'; top=...`. transform maybe none. We can set `translate(-50%,-50%)`.
+If projected outside, hide.
+
+Need maybe `molecule.rotation.y = -0.18` and `molecule.rotation.z`? If rotate around y, labels follow. Camera at theta .45? Our spherical formula theta maybe .55, phi 1.15. Need initial camera position. Let's set theta=0.55, phi=1.18, radius=6.2, target=(0,1.05,0). camera x=6.2*sin1.18*.sin.55=2.76, y=1.05+6.2*.38=3.4, z=4.55. Looking down. Molecule appears. Maybe too high. phi=1.32 (75.6° from y), y=1.05+1.45=2.5, x2.84,z4.7. Good. Target 1.0. Use phi 1.28, theta .55, radius 6.4. camera y=2.8. Fine.
+Could set molecule group y=0.0.
+
+Maybe camera target y=1.0.
+
+Need maybe `camera.lookAt(target)`.
+
+Need maybe a soft shadow on a plane. We can add a plane at y=-.72, rotated -PI/2, with `ShadowMaterial({opacity:.18})`, but plane needs lights and scene background. It would show shadow, but molecule is floating. It might enhance. However `ShadowMaterial` is core. Add plane size 20, receiveShadow. But CSS alpha and fog. A shadow on transparent plane may not show because shadow material blends black over transparent? It will show dark shadows on canvas, but no background. Fine. Yet the molecule's shadows may be subtle. Could add a circular platform instead. I think no.
+
+Could add a faint "halo" ring in 3D behind molecule? Not needed.
+
+Maybe add `AmbientLight` and `DirectionalLight`.
+- HemisphereLight(0xd8efff,0x07101d,1.8)
+- DirectionalLight(0xffffff,3.2) pos (4,6,5), castShadow
+- DirectionalLight(0x4b8cff,1.8) pos (-4,2,-3)
+- PointLight(0xff3055, 1.5, 8) at O maybe gives red glow. But physical material emissive enough.
+Three r160 light intensity behavior. Fine.
+
+Need maybe `renderer.shadowMap.type=THREE.PCFSoftShadowMap`; directional cast. But no receiver. Could add a ground plane to receive shadow. Let's add a `GridHelper`? no. A plane with `ShadowMaterial` can receive. `const shadowPlane = new Mesh(new PlaneGeometry(30,30), new ShadowMaterial({opacity:.16})); rotate x -PI/2; y=-.7; receiveShadow=true;`. It will show a soft-ish directional shadow. But the plane itself transparent, and CSS gradient behind. Nice. It can make molecule grounded. Yet user only asks molecule, and a shadow plane can be seen as weird. Still scientific scene.
+
+Maybe add a circular "stage" using CircleGeometry and MeshStandardMaterial, at y=-.72, color 0x0b1c31, roughness 1, transparent .65, depthWrite false. But no need.
+
+Let's focus.
+
+Need perhaps add a `Line` representing 104 angle? Not asked. Avoid.
+
+Need maybe ensure the bond cylinders are gray, not blue. Use `0x9ba8b8`.
+
+Need maybe add `flatShading`? no.
+
+Need maybe add `renderer.setAnimationLoop(animate)` or requestAnimationFrame. Use setAnimationLoop.
+
+Need maybe add `document.getElementById('reset').addEventListener('click', resetCamera)`.
+Need maybe `resetCamera` set theta/phi/radius and target.
+Need maybe `canvas.addEventListener('dblclick', resetCamera)`.
+
+Need maybe `window.addEventListener('keydown', e => { if arrow...})`, but if button? fine.
+Need maybe prevent default for arrows.
+
+Need maybe `onPointerMove` only if dragging. `canvas.setPointerCapture` may throw? no.
+Need maybe `pointerup` and `pointercancel`.
+Need maybe `lostpointercapture`.
+
+Need maybe `canvas.style.cursor`.
+
+Need maybe `label` opacity. Use `label.style.display = visible ? 'block' : 'none'`.
+
+Need maybe `molecule.localToWorld` mutates vector. We can create temp.
+
+Need maybe `const labelData = [...]`.
+HTML:
+<div id="labels" aria-hidden=true>
+ <div class="label oxygen" id="label-o">O</div>
+ <div class="label hydrogen" id="label-h1">H</div>
+ <div class="label hydrogen" id="label-h2">H</div>
+</div>
+CSS labels position fixed, font etc. Add pseudo dot.
+
+Need maybe title and badge.
+
+Let's write final with code. But desired oververbosity 5 maybe include brief instructions. The user likely wants code only. We can say "Save as index.html and open it." Then code.
+
+Let's ensure no forbidden imports. Exactly one import.
+
+Let's think of `CylinderGeometry` sleeve open ended and `DoubleSide` material? `MeshPhysicalMaterial` default FrontSide. Open cylinder viewed from outside should show inner walls? The inner surface is backface, so from inside you won't see it. But camera outside mostly. The outer surface visible. The torus ring. Fine. Could set side: THREE.DoubleSide to show inner sleeve. Use `sleeveMat` with side DoubleSide. But for physical material, `side: THREE.DoubleSide`. Great.
+Need maybe `depthWrite=true`.
+
+Need maybe `TorusGeometry` ring material gray. `new MeshStandardMaterial({color:0x667485, metalness:.6, roughness:.35})`.
+Need maybe `sphere` castShadow true.
+
+Need maybe `molecule.traverse` after building to cast/receive. But shadow plane. Do it.
+
+Need maybe `molecule` group rotation. If labels project, okay.
+
+Potential issue if `molecule.rotation.y` changes, the local positions of H labels are updated. Good.
+
+Need maybe no `controls` UI. Good.
+
+Let's create code.
+
+Wait, user says "from cdnjs" exact. We use cdnjs URL. Good.
+
+Need maybe "standalone HTML" means no build. yes.
+
+Let's ensure code not use `OrbitControls`. no.
+
+Let's maybe add a small note in UI "104° H–O–H". Good.
+
+Let's formulate final.
+=====CONTENT=====
+Save this as `index.html` and open it in a browser. It uses only the Three.js core ES module from cdnjs and includes direct mouse/touch camera controls.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Molecule — Ball-and-Stick Model</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #eaf5ff;
+      background:
+        radial-gradient(circle at 50% 42%, #17314a 0%, #0b1725 42%, #050b13 100%);
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+      outline: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .header {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: #72d5ff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: rgba(220, 237, 255, 0.62);
+      font-size: 0.88rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      padding: 8px 11px;
+      border: 1px solid rgba(114, 213, 255, 0.22);
+      border-radius: 999px;
+      background: rgba(10, 25, 42, 0.55);
+      color: rgba(230, 245, 255, 0.82);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+    }
+
+    .badge::before {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #43dcff;
+      box-shadow: 0 0 10px #43dcff;
+      content: "";
+    }
+
+    .legend {
+      position: fixed;
+      right: clamp(18px, 3vw, 38px);
+      bottom: clamp(18px, 3vw, 30px);
+      display: flex;
+      gap: 18px;
+      padding: 11px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(7, 15, 25, 0.62);
+      color: rgba(224, 238, 255, 0.72);
+      font-size: 0.72rem;
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .legend .oxygen {
+      color: #ff4064;
+      background: #ff4064;
+    }
+
+    .legend .hydrogen {
+      color: #f4f9ff;
+      background: #f4f9ff;
+    }
+
+    .legend .bond {
+      color: #8e9baa;
+      background: #8e9baa;
+    }
+
+    .help {
+      position: fixed;
+      left: clamp(20px, 4vw, 52px);
+      bottom: clamp(20px, 3vw, 30px);
+      color: rgba(214, 231, 248, 0.48);
+      font-size: 0.72rem;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #reset {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      right: clamp(20px, 4vw, 48px);
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(10, 22, 36, 0.65);
+      color: rgba(230, 244, 255, 0.76);
+      font: inherit;
+      font-size: 0.72rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    #reset:hover {
+      border-color: rgba(114, 213, 255, 0.45);
+      color: #ffffff;
+    }
+
+    .atom-label {
+      position: fixed;
+      z-index: 3;
+      display: none;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(7, 15, 25, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 700;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+
+    .atom-label::after {
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 18px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.35);
+      content: "";
+    }
+
+    #label-oxygen {
+      color: #ff5272;
+      border-color: rgba(255, 82, 114, 0.35);
+      box-shadow: 0 0 10px rgba(255, 82, 114, 0.25);
+    }
+
+    #label-hydrogen {
+      color: #f4f9ff;
+      border-color: rgba(244, 249, 255, 0.3);
+      box-shadow: 0 0 10px rgba(244, 249, 255, 0.18);
+    }
+
+    @media (max-width: 650px) {
+      .legend {
+        right: 14px;
+        bottom: 14px;
+        gap: 10px;
+        padding: 9px 11px;
+      }
+
+      .help {
+        display: none;
+      }
+
+      .subtitle {
+        max-width: 220px;
+        line-height: 1.5;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <header class="header">
+    <div class="eyebrow">Molecular Structure</div>
+    <h1>Water</h1>
+    <div class="subtitle">A ball-and-stick representation of the H₂O molecule</div>
+    <div class="badge">104° H–O–H bond angle</div>
+  </header>
+
+  <button id="reset" type="button">Reset view</button>
+
+  <div class="legend" aria-hidden="true">
+    <span><i class="oxygen"></i>Oxygen</span>
+    <span><i class="hydrogen"></i>Hydrogen</span>
+    <span><i class="bond"></i>Bond</span>
+  </div>
+
+  <div class="help">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <div id="label-oxygen" class="atom-label">O</div>
+  <div id="label-hydrogen-1" class="atom-label">H</div>
+  <div id="label-hydrogen-2" class="atom-label">H</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional water molecule"
+    );
+    app.appendChild(renderer.domElement);
+
+    // Scene and camera
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x08131f, 9, 18);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 1.0, 0);
+
+    const cameraState = {
+      theta: 0.55,
+      phi: 1.28,
+      radius: 6.4
+    };
+
+    function updateCamera() {
+      const { theta, phi, radius } = cameraState;
+
+      camera.position.set(
+        target.x + radius * Math.sin(phi) * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * Math.sin(phi) * Math.cos(theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xc8e8ff, 0x07101a, 1.8));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    keyLight.position.set(4, 6, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 15;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x4b8cff, 2.0);
+    rimLight.position.set(-4, 2, -3);
+    scene.add(rimLight);
+
+    const oxygenGlow = new THREE.PointLight(0xff3055, 1.2, 7, 2);
+    oxygenGlow.position.set(0, 1.6, 0);
+    scene.add(oxygenGlow);
+
+    // Molecule geometry
+    const molecule = new THREE.Group();
+    molecule.rotation.y = -0.18;
+    scene.add(molecule);
+
+    const oxygenPosition = new THREE.Vector3(0, 1.6, 0);
+
+    // The two O-H bonds form a 104-degree H-O-H angle.
+    const bondLength = 0.95;
+    const halfBondAngle = THREE.MathUtils.degToRad(52);
+
+    const hydrogenPositions = [-bondLength * Math.sin(halfBondAngle),
+                                 bondLength * Math.sin(halfBondAngle)];
+
+    const hydrogenHeights = oxygenPosition.y - bondLength * Math.cos(halfBondAngle);
+
+    const oxygen = new THREE.Mesh(
+      new THREE.SphereGeometry(0.36, 64, 48),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xff3055,
+        emissive: 0x3c0008,
+        emissiveIntensity: 0.18,
+        roughness: 0.2,
+        metalness: 0,
+        clearcoat: 1,
+        clearcoatRoughness: 0.12
+      })
+    );
+
+    oxygen.position.copy(oxygenPosition);
+    molecule.add(oxygen);
+
+    const hydrogenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf4f9ff,
+      emissive: 0x101722,
+      emissiveIntensity: 0.12,
+      roughness: 0.18,
+      metalness: 0,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.15
+    });
+
+    const hydrogenGeometry = new THREE.SphereGeometry(0.235, 48, 36);
+
+    hydrogenPositions.forEach((x) => {
+      const hydrogen = new THREE.Mesh(hydrogenGeometry, hydrogenMaterial);
+      hydrogen.position.set(x, hydrogenHeights, 0);
+      molecule.add(hydrogen);
+    });
+
+    const bondMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9ba8b8,
+      roughness: 0.48,
+      metalness: 0.22
+    });
+
+    const sleeveMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8794a3,
+      roughness: 0.32,
+      metalness: 0.38,
+      clearcoat: 0.5,
+      side: THREE.DoubleSide
+    });
+
+    const ringMaterial = new THREE.MeshStandardMaterial({
+      color: 0x657487,
+      roughness: 0.3,
+      metalness: 0.65
+    });
+
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const zAxis = new THREE.Vector3(0, 0, 1);
+
+    /**
+     * Creates a cylinder between two points.
+     */
+    function addBond(a, b, radius) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        24,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, bondMaterial);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(yAxis, direction.normalize());
+      molecule.add(mesh);
+    }
+
+    /**
+     * Creates a hollow, shallow sleeve around an atom.
+     * The outer rim is placed on the atom side, and the opening faces the bond.
+     */
+    function addSleeve(center, outwardAxis, outerRadius, innerRadius, length) {
+      // CylinderGeometry(radiusTop, radiusBottom, height).
+      const geometry = new THREE.CylinderGeometry(
+        innerRadius,
+        outerRadius,
+        length,
+        32,
+        1,
+        true
+      );
+
+      const sleeve = new THREE.Mesh(geometry, sleeveMaterial);
+      sleeve.position.copy(center);
+      sleeve.quaternion.setFromUnitVectors(yAxis, outwardAxis.clone().normalize());
+      molecule.add(sleeve);
+
+      // Visible outer rim of the sleeve.
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(outerRadius * 0.94, 0.025, 12, 48),
+        ringMaterial
+      );
+
+      rim.position.copy(center).addScaledVector(
+        outwardAxis,
+        Math.sign(outwardAxis.y) * length * 0.5
+      );
+
+      rim.quaternion.setFromUnitVectors(zAxis, outwardAxis.clone().normalize());
+      molecule.add(rim);
+    }
+
+    const leftHydrogen = new THREE.Vector3(
+      hydrogenPositions[0],
+      hydrogenHeights,
+      0
+    );
+
+    const rightHydrogen = new THREE.Vector3(
+      hydrogenPositions[1],
+      hydrogenHeights,
+      0
+    );
+
+    // Main O-H bonds
+    addBond(oxygenPosition, leftHydrogen, 0.068);
+    addBond(oxygenPosition, rightHydrogen, 0.068);
+
+    // Shallow sleeves at both ends of each bond
+    addSleeve(
+      oxygenPosition,
+      new THREE.Vector3().subVectors(leftHydrogen, oxygenPosition),
+      0.145,
+      0.105,
+      0.18
+    );
+
+    addSleeve(
+      leftHydrogen,
+      new THREE.Vector3().subVectors(oxygenPosition, leftHydrogen),
+      0.125,
+      0.09,
+      0.15
+    );
+
+    addSleeve(
+      oxygenPosition,
+      new THREE.Vector3().subVectors(rightHydrogen, oxygenPosition),
+      0.145,
+      0.105,
+      0.18
+    );
+
+    addSleeve(
+      rightHydrogen,
+      new THREE.Vector3().subVectors(oxygenPosition, rightHydrogen),
+      0.125,
+      0.09,
+      0.15
+    );
+
+    // Subtle contact shadow plane
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.ShadowMaterial({
+        color: 0x000000,
+        opacity: 0.18
+      })
+    );
+
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -0.72;
+    shadowPlane.receiveShadow = true;
+    scene.add(shadowPlane);
+
+    molecule.traverse((object) => {
+      if (object.isMesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+      }
+    });
+
+    // Projected atom labels
+    const labels = [
+      {
+        element: document.getElementById("label-oxygen"),
+        position: oxygenPosition
+      },
+      {
+        element: document.getElementById("label-hydrogen-1"),
+        position: leftHydrogen
+      },
+      {
+        element: document.getElementById("label-hydrogen-2"),
+        position: rightHydrogen
+      }
+    ];
+
+    const projected = new THREE.Vector3();
+
+    function updateLabels() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      labels.forEach((label) => {
+        projected.copy(label.position);
+        molecule.localToWorld(projected);
+        projected.project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.15 &&
+          Math.abs(projected.y) < 1.15;
+
+        label.element.style.display = visible ? "block" : "none";
+
+        if (visible) {
+          const x = (projected.x * 0.5 + 0.5) * width;
+          const y = (-projected.y * 0.5 + 0.5) * height;
+
+          label.element.style.left = `${x}px`;
+          label.element.style.top = `${y}px`;
+        }
+      });
+    }
+
+    // Direct camera controls: pointer drag, wheel, touch, keyboard
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      canvas.classList.add("dragging");
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      cameraState.theta -= deltaX * 0.006;
+      cameraState.phi = THREE.MathUtils.clamp(
+        cameraState.phi - deltaY * 0.006,
+        0.25,
+        Math.PI - 0.25
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      canvas.classList.remove("dragging");
+
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("lostpointercapture", () => {
+      dragging = false;
+      canvas.classList.remove("dragging");
+    });
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          3.6,
+          10
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      cameraState.theta = 0.55;
+      cameraState.phi = 1.28;
+      cameraState.radius = 6.4;
+      updateCamera();
+    }
+
+    canvas.addEventListener("dblclick", resetView);
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      let handled = true;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          cameraState.theta -= 0.08;
+          break;
+        case "ArrowRight":
+          cameraState.theta += 0.08;
+          break;
+        case "ArrowUp":
+          cameraState.phi = THREE.MathUtils.clamp(
+            cameraState.phi - 0.06,
+            0.25,
+            Math.PI - 0.25
+          );
+          break;
+        case "ArrowDown":
+          cameraState.phi = THREE.MathUtils.clamp(
+            cameraState.phi + 0.06,
+            0.25,
+            Math.PI - 0.25
+          );
+          break;
+        case "+":
+        case "=":
+          cameraState.radius = Math.max(3.6, cameraState.radius - 0.3);
+          break;
+        case "-":
+          cameraState.radius = Math.min(10, cameraState.radius + 0.3);
+          break;
+        case "r":
+        case "R":
+          resetView();
+          break;
+        default:
+          handled = false;
+      }
+
+      if (handled) {
+        event.preventDefault();
+        updateCamera();
+      }
+    });
+
+    // Resize handling
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Render loop
+    renderer.setAnimationLoop(() => {
+      updateLabels();
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
+```

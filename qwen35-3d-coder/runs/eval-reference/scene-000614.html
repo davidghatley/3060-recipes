@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cycle Works — Bicycle Service Workshop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --cream: #f4eee2;
+      --muted: rgba(244, 238, 226, 0.62);
+      --accent: #ef704c;
+      --line: rgba(255, 255, 255, 0.14);
+      --glass: rgba(15, 21, 23, 0.72);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #101719;
+      color: var(--cream);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    #app canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #app canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 52% 47%, transparent 48%, rgba(3, 7, 8, 0.35) 100%),
+        linear-gradient(180deg, rgba(4, 8, 9, 0.15), transparent 25%, transparent 78%, rgba(4, 8, 9, 0.25));
+      z-index: 2;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .brand {
+      position: absolute;
+      top: 28px;
+      left: 30px;
+      max-width: 420px;
+      text-shadow: 0 2px 22px rgba(0, 0, 0, 0.55);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 25px;
+      height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(239, 112, 76, 0.7);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 56px);
+      line-height: 0.98;
+      font-weight: 850;
+      letter-spacing: -0.055em;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+    }
+
+    .actions {
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: var(--cream);
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(239, 112, 76, 0.17);
+      border-color: rgba(239, 112, 76, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .bay {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--accent);
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+    }
+
+    .hint {
+      position: absolute;
+      left: 30px;
+      bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hint span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    kbd {
+      min-width: 25px;
+      padding: 4px 6px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--cream);
+      background: rgba(8, 12, 13, 0.52);
+      box-shadow: inset 0 -1px rgba(0, 0, 0, 0.3);
+      font: inherit;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .caption {
+      position: absolute;
+      right: 28px;
+      bottom: 27px;
+      color: rgba(244, 238, 226, 0.38);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: #101719;
+      transition: opacity 500ms ease, visibility 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader {
+      display: grid;
+      justify-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 850ms linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 700px) {
+      .brand {
+        top: 19px;
+        left: 19px;
+      }
+
+      .subtitle,
+      .caption {
+        display: none;
+      }
+
+      .actions {
+        top: 18px;
+        right: 18px;
+      }
+
+      .actions button {
+        display: none;
+      }
+
+      .hint {
+        left: 19px;
+        right: 19px;
+        bottom: 18px;
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="vignette"></div>
+
+  <div class="hud">
+    <header class="brand">
+      <div class="eyebrow">Precision bicycle service</div>
+      <h1>Cycle Works</h1>
+      <div class="subtitle">A compact service bay built for frame repairs, wheel truing, and the tools that keep riders moving.</div>
+    </header>
+
+    <div class="actions">
+      <div class="bay">04</div>
+      <button id="resetView" type="button">Reset view</button>
+    </div>
+
+    <div class="hint">
+      <span><kbd>Drag</kbd> orbit</span>
+      <span><kbd>Scroll</kbd> zoom</span>
+      <span><kbd>Shift</kbd> + drag to pan</span>
+      <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move</span>
+    </div>
+
+    <div class="caption">Service bay / north wall / 18:42</div>
+  </div>
+
+  <div id="loading">
+    <div class="loader">
+      <div class="spinner"></div>
+      <span>Opening the workshop</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+    const loading = document.getElementById("loading");
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance"
+      });
+    } catch (error) {
+      loading.innerHTML = '<div class="loader">WebGL is required to open this workshop.</div>';
+      throw error;
+    }
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x11191b);
+    scene.fog = new THREE.Fog(0x11191b, 10, 19);
+
+    const camera = new THREE.PerspectiveCamera(
+      window.innerWidth < 700 ? 58 : 48,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      45
+    );
+
+    const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+    const standard = (color, roughness = 0.65, metalness = 0) =>
+      new THREE.MeshStandardMaterial({ color, roughness, metalness });
+
+    function canvasTexture(canvas, repeatX = 1, repeatY = 1) {
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(repeatX, repeatY);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeConcreteTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+      const image = ctx.createImageData(512, 512);
+
+      for (let i = 0; i < image.data.length; i += 4) {
+        const value = 91 + Math.random() * 28;
+        image.data[i] = value;
+        image.data[i + 1] = value + 2;
+        image.data[i + 2] = value;
+        image.data[i + 3] = 255;
+      }
+
+      ctx.putImageData(image, 0, 0);
+      ctx.strokeStyle = "rgba(40,45,44,0.12)";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < 45; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.random() * 40 - 20, y + Math.random() * 10 - 5);
+        ctx.stroke();
+      }
+
+      return canvasTexture(canvas, 3, 5);
+    }
+
+    function makeWoodTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+      gradient.addColorStop(0, "#9a6743");
+      gradient.addColorStop(0.5, "#815237");
+      gradient.addColorStop(1, "#a16b45");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 256);
+
+      for (let i = 0; i < 180; i++) {
+        const y = Math.random() * 256;
+        ctx.strokeStyle = `rgba(55,27,15,${0.03 + Math.random() * 0.11})`;
+        ctx.lineWidth = 0.5 + Math.random() * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(
+          260,
+          y + Math.random() * 18 - 9,
+          680,
+          y + Math.random() * 18 - 9,
+          1024,
+          y + Math.random() * 8 - 4
+        );
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 256;
+        ctx.strokeStyle = "rgba(46,22,12,0.18)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 22 + Math.random() * 18, 5 + Math.random() * 4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      return canvasTexture(canvas, 2, 1);
+    }
+
+    function makePegboardTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#ad8158";
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let y = 16; y < 512; y += 32) {
+        for (let x = 16; x < 512; x += 32) {
+          ctx.fillStyle = "#493729";
+          ctx.beginPath();
+          ctx.arc(x, y + 1.5, 3.1, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255,225,185,0.25)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(x, y, 3.7, Math.PI * 0.1, Math.PI * 0.9);
+          ctx.stroke();
+        }
+      }
+
+      return canvasTexture(canvas);
+    }
+
+    function makeSignTexture(title, subtitle, accent = "#ef704c", background = "#233033") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 320;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 1024, 320);
+      gradient.addColorStop(0, background);
+      gradient.addColorStop(1, "#111a1c");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 320);
+
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, 0, 28, 320);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(50, 38, 938, 244);
+
+      ctx.fillStyle = "#f5eee2";
+      ctx.textAlign = "center";
+      ctx.font = "900 92px Arial, sans-serif";
+      ctx.fillText(title, 512, 150);
+
+      ctx.fillStyle = accent;
+      ctx.font = "700 30px Arial, sans-serif";
+      ctx.letterSpacing = "8px";
+      ctx.fillText(subtitle, 512, 220);
+
+      return canvasTexture(canvas);
+    }
+
+    const concreteTexture = makeConcreteTexture();
+    const woodTexture = makeWoodTexture();
+    const pegboardTexture = makePegboardTexture();
+
+    const M = {
+      wall: standard(0x59635d, 0.94),
+      wallLower: standard(0x34413e, 0.9),
+      wallDark: standard(0x3e4946, 0.92),
+      trim: standard(0x252e2d, 0.75),
+      beam: standard(0x2a3332, 0.72, 0.2),
+      floor: new THREE.MeshStandardMaterial({
+        map: concreteTexture,
+        color: 0xffffff,
+        roughness: 0.97
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        map: woodTexture,
+        color: 0xffffff,
+        roughness: 0.72
+      }),
+      frame: standard(0x594333, 0.72),
+      pegboard: new THREE.MeshStandardMaterial({
+        map: pegboardTexture,
+        color: 0xffffff,
+        roughness: 0.9
+      }),
+      metal: standard(0xbec7c7, 0.25, 0.82),
+      darkMetal: standard(0x202a2c, 0.38, 0.68),
+      chrome: standard(0xd7dedd, 0.18, 0.92),
+      rubber: standard(0x15191a, 0.92),
+      tire: standard(0x171b1c, 0.96),
+      tread: standard(0x0d1011, 0.98),
+      spoke: standard(0x9ca7a8, 0.34, 0.72),
+      bike: standard(0xe45e43, 0.3, 0.35),
+      bikeDark: standard(0xa83d2d, 0.38, 0.28),
+      blue: standard(0x2f6170, 0.43, 0.3),
+      blueDark: standard(0x1c3c45, 0.52, 0.3),
+      orange: standard(0xda713f, 0.58),
+      cream: standard(0xd8d0bc, 0.72),
+      white: standard(0xe9e7dd, 0.78),
+      red: standard(0xc74832, 0.48),
+      green: standard(0x56745e, 0.68),
+      mat: standard(0x1b3034, 0.98),
+      matLine: standard(0x315158, 0.95),
+      lamp: new THREE.MeshStandardMaterial({
+        color: 0xfff0c8,
+        emissive: 0xffd99b,
+        emissiveIntensity: 2.7,
+        roughness: 0.4
+      })
+    };
+
+    function addMesh(geometry, material, parent = scene) {
+      const object = new THREE.Mesh(geometry, material);
+      object.castShadow = true;
+      object.receiveShadow = true;
+      parent.add(object);
+      return object;
+    }
+
+    function box(w, h, d, material, x, y, z, parent = scene) {
+      const object = addMesh(new THREE.BoxGeometry(w, h, d), material, parent);
+      object.position.set(x, y, z);
+      return object;
+    }
+
+    function cylinder(rt, rb, h, material, x, y, z, parent = scene, segments = 16) {
+      const object = addMesh(
+        new THREE.CylinderGeometry(rt, rb, h, segments),
+        material,
+        parent
+      );
+      object.position.set(x, y, z);
+      return object;
+    }
+
+    function torus(radius, thickness, material, x, y, z, parent = scene, radial = 10, tubular = 40) {
+      const object = addMesh(
+        new THREE.TorusGeometry(radius, thickness, radial, tubular),
+        material,
+        parent
+      );
+      object.position.set(x, y, z);
+      return object;
+    }
+
+    function tube(a, b, radius, material, parent = scene, segments = 10) {
+      const start = Array.isArray(a) ? V(...a) : a.clone();
+      const end = Array.isArray(b) ? V(...b) : b.clone();
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const object = addMesh(
+        new THREE.CylinderGeometry(radius, radius, direction.length(), segments),
+        material,
+        parent
+      );
+      object.position.copy(start).add(end).multiplyScalar(0.5);
+      object.quaternion.setFromUnitVectors(V(0, 1, 0), direction.normalize());
+      return object;
+    }
+
+    function textPlane(width, height, texture, x, y, z, parent = scene, rotationY = 0) {
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.86,
+        metalness: 0
+      });
+      const plane = addMesh(new THREE.PlaneGeometry(width, height), material, parent);
+      plane.position.set(x, y, z);
+      plane.rotation.y = rotationY;
+      plane.castShadow = false;
+      return plane;
+    }
+
+    // ------------------------------------------------------------------
+    // Narrow workshop shell
+    // ------------------------------------------------------------------
+
+    const floor = box(6.5, 0.16, 12.3, M.floor, 0, -0.08, 0);
+    floor.castShadow = false;
+
+    box(0.18, 4.15, 12.25, M.wall, -3.25, 2.0, 0);
+    box(6.5, 4.15, 0.18, M.wall, 0, 2.0, -6.08);
+    box(0.18, 0.72, 12.25, M.wallLower, 3.25, 0.36, 0);
+
+    box(0.045, 1.02, 12.1, M.wallLower, -3.145, 0.51, 0);
+    box(6.34, 1.02, 0.045, M.wallLower, 0, 0.51, -5.97);
+
+    box(0.09, 0.18, 12.1, M.trim, -3.11, 0.09, 0);
+    box(6.34, 0.18, 0.09, M.trim, 0, 0.09, -5.93);
+    box(0.09, 0.18, 12.1, M.trim, 3.11, 0.09, 0);
+
+    for (let z = -5; z <= 5; z += 2) {
+      box(0.025, 3.4, 0.025, M.wallDark, -3.145, 2.05, z);
+      box(6.25, 0.015, 0.018, M.wallDark, 0, 0.012, z);
+    }
+
+    for (const z of [-4.25, -0.55]) {
+      box(6.45, 0.11, 0.14, M.beam, 0, 4.03, z);
+    }
+
+    const pipe = cylinder(0.045, 0.045, 6.15, M.darkMetal, -3.06, 3.52, -0.25);
+    pipe.rotation.x = Math.PI / 2;
+
+    const serviceMat = box(4.35, 0.022, 3.35, M.mat, -0.05, 0.014, -1.15);
+    serviceMat.castShadow = false;
+
+    for (let x = -1.8; x <= 1.8; x += 0.6) {
+      box(0.012, 0.005, 3.15, M.matLine, x, 0.028, -1.15);
+    }
+    for (let z = -2.55; z <= 0.35; z += 0.6) {
+      box(4.15, 0.005, 0.012, M.matLine, -0.05, 0.028, z);
+    }
+
+    // ------------------------------------------------------------------
+    // Workbench and drawer unit
+    // ------------------------------------------------------------------
+
+    const benchTop = box(1.28, 0.16, 5.8, M.wood, -2.46, 1.04, -0.45);
+    benchTop.receiveShadow = true;
+
+    box(0.08, 0.19, 5.82, M.frame, -1.80, 1.02, -0.45);
+    box(1.08, 0.08, 5.35, M.wood, -2.48, 0.27, -0.45);
+
+    for (const x of [-2.93, -2.02]) {
+      for (const z of [-2.95, -0.45, 2.02]) {
+        box(0.11, 0.92, 0.11, M.darkMetal, x, 0.55, z);
+        box(0.16, 0.06, 0.16, M.rubber, x, 0.04, z);
+      }
+    }
+
+    box(0.10, 0.12, 4.95, M.darkMetal, -2.94, 0.91, -0.45);
+    box(0.10, 0.12, 4.95, M.darkMetal, -2.02, 0.91, -0.45);
+
+    box(0.92, 0.70, 1.42, M.blueDark, -2.49, 0.68, -2.28);
+    for (let i = 0; i < 3; i++) {
+      const y = 0.47 + i * 0.21;
+      box(0.045, 0.18, 1.32, M.blue, -2.01, y, -2.28);
+      const handle = cylinder(0.018, 0.018, 0.30, M.metal, -1.965, y, -2.28);
+      handle.rotation.x = Math.PI / 2;
+    }
+
+    // Bench vise.
+    box(0.34, 0.12, 0.38, M.blueDark, -2.12, 1.17, 1.35);
+    box(0.16, 0.23, 0.34, M.blue, -2.27, 1.31, 1.35);
+    box(0.16, 0.23, 0.34, M.blue, -1.98, 1.31, 1.35);
+    const viseScrew = cylinder(0.034, 0.034, 0.47, M.chrome, -1.93, 1.28, 1.35);
+    viseScrew.rotation.z = Math.PI / 2;
+    const viseHandle = cylinder(0.018, 0.018, 0.34, M.metal, -1.68, 1.28, 1.35);
+    viseHandle.rotation.x = Math.PI / 2;
+
+    // Bench clutter.
+    box(0.46, 0.18, 0.56, M.red, -2.62, 1.22, -1.23);
+    box(0.48, 0.035, 0.58, M.darkMetal, -2.62, 1.325, -1.23);
+    box(0.19, 0.035, 0.03, M.metal, -2.62, 1.27, -0.94);
+
+    cylinder(0.105, 0.095, 0.22, M.cream, -2.72, 1.23, 0.25);
+    cylinder(0.083, 0.083, 0.012, standard(0x34251d, 0.6), -2.72, 1.346, 0.25);
+    torus(0.078, 0.022, M.cream, -2.60, 1.25, 0.25);
+
+    cylinder(0.065, 0.075, 0.29, M.green, -2.78, 1.27, 0.65);
+    cylinder(0.028, 0.028, 0.12, M.darkMetal, -2.78, 1.47, 0.65);
+
+    const benchDriver = cylinder(0.055, 0.055, 0.25, M.orange, -2.13, 1.18, 0.25);
+    benchDriver.rotation.x = Math.PI / 2;
+    const benchDriverShaft = cylinder(0.017, 0.017, 0.30, M.chrome, -2.13, 1.18, 0.53);
+    benchDriverShaft.rotation.x = Math.PI / 2;
+
+    box(0.42, 0.025, 0.34, standard(0x657b84, 0.96), -2.37, 1.135, -0.18);
+
+    // ------------------------------------------------------------------
+    // Pegboard panels and hand tools
+    // ------------------------------------------------------------------
+
+    const panelCenters = [-2.38, -0.45, 1.48];
+
+    for (const z of panelCenters) {
+      const panel = addMesh(new THREE.PlaneGeometry(1.78, 1.56), M.pegboard);
+      panel.position.set(-3.14, 2.25, z);
+      panel.rotation.y = Math.PI / 2;
+      panel.castShadow = false;
+    }
+
+    for (const z of [-3.31, -1.42, 0.52, 2.42]) {
+      box(0.085, 1.68, 0.055, M.frame, -3.105, 2.25, z);
+    }
+    box(0.085, 0.06, 5.8, M.frame, -3.105, 3.06, -0.45);
+    box(0.085, 0.06, 5.8, M.frame, -3.105, 1.44, -0.45);
+
+    function hangingWrench(z, y, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(-2.92, y, z);
+      group.rotation.y = Math.PI / 2;
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      box(0.055, 0.57, 0.045, M.metal, 0, 0, 0.015, group);
+      torus(0.105, 0.028, M.metal, 0, -0.34, 0.015, group, 8, 20);
+      box(0.05, 0.18, 0.055, M.metal, -0.073, 0.33, 0.015, group);
+      box(0.05, 0.18, 0.055, M.metal, 0.073, 0.33, 0.015, group);
+      box(0.15, 0.055, 0.055, M.metal, 0, 0.25, 0.015, group);
+
+      const hook = cylinder(0.014, 0.014, 0.22, M.darkMetal, -3.02, y + 0.42, z);
+      hook.rotation.z = Math.PI / 2;
+    }
+
+    function hangingDriver(z, y, color) {
+      const group = new THREE.Group();
+      group.position.set(-2.91, y, z);
+      group.rotation.y = Math.PI / 2;
+      scene.add(group);
+
+      cylinder(0.065, 0.065, 0.28, color, 0, 0.12, 0.015, group);
+      cylinder(0.024, 0.024, 0.38, M.chrome, 0, -0.22, 0.015, group);
+      box(0.035, 0.06, 0.035, M.chrome, 0, -0.43, 0.015, group);
+
+      const hook = cylinder(0.013, 0.013, 0.21, M.darkMetal, -3.02, y + 0.25, z);
+      hook.rotation.z = Math.PI / 2;
+    }
+
+    function hangingPliers(z, y) {
+      const group = new THREE.Group();
+      group.position.set(-2.90, y, z);
+      group.rotation.y = Math.PI / 2;
+      scene.add(group);
+
+      const left = box(0.07, 0.42, 0.055, M.red, -0.08, -0.11, 0.02, group);
+      const right = box(0.07, 0.42, 0.055, M.red, 0.08, -0.11, 0.02, group);
+      left.rotation.z = -0.16;
+      right.rotation.z = 0.16;
+      tube([-0.045, 0.10, 0.02], [0.015, 0.35, 0.02], 0.022, M.metal, group);
+      tube([0.045, 0.10, 0.02], [-0.015, 0.35, 0.02], 0.022, M.metal, group);
+
+      const hook = cylinder(0.013, 0.013, 0.20, M.darkMetal, -3.02, y + 0.30, z);
+      hook.rotation.z = Math.PI / 2;
+    }
+
+    function hangingHammer(z, y) {
+      const group = new THREE.Group();
+      group.position.set(-2.90, y, z);
+      group.rotation.y = Math.PI / 2;
+      scene.add(group);
+
+      cylinder(0.043, 0.052, 0.63, M.wood, 0, -0.04, 0.025, group);
+      const head = cylinder(0.09, 0.09, 0.31, M.darkMetal, 0, 0.31, 0.025, group);
+      head.rotation.z = Math.PI / 2;
+
+      const hook = cylinder(0.014, 0.014, 0.21, M.darkMetal, -3.02, y + 0.31, z);
+      hook.rotation.z = Math.PI / 2;
+    }
+
+    hangingWrench(-2.83, 2.40, 1.05);
+    hangingWrench(-2.22, 2.47, 0.82);
+    hangingDriver(-1.67, 2.48, M.orange);
+    hangingHammer(-1.13, 2.43);
+    hangingPliers(-0.47, 2.44);
+    hangingWrench(0.13, 2.48, 0.92);
+    hangingDriver(0.69, 2.47, M.blue);
+    hangingPliers(1.24, 2.43);
+    hangingWrench(1.83, 2.46, 0.74);
+
+    // ------------------------------------------------------------------
+    // Bicycle wheel helper
+    // ------------------------------------------------------------------
+
+    function makeWheel(parent, center, outerRadius = 0.64, spokeCount = 20) {
+      const group = new THREE.Group();
+      group.position.set(...center);
+      parent.add(group);
+
+      const major = outerRadius - 0.05;
+      torus(major, 0.05, M.tire, 0, 0, 0, group, 10, 48);
+      torus(major - 0.045, 0.018, M.chrome, 0, 0, 0, group, 8, 48);
+
+      const hub = cylinder(0.055, 0.055, 0.17, M.chrome, 0, 0, 0, group);
+      hub.rotation.x = Math.PI / 2;
+
+      for (let i = 0; i < spokeCount; i++) {
+        const angle = (i / spokeCount) * Math.PI * 2;
+        const innerRadius = 0.045;
+        const outer = major - 0.065;
+        tube(
+          [Math.cos(angle) * innerRadius, Math.sin(angle) * innerRadius, i % 2 ? 0.025 : -0.025],
+          [Math.cos(angle + 0.07) * outer, Math.sin(angle + 0.07) * outer, 0],
+          0.0055,
+          M.spoke,
+          group,
+          5
+        );
+      }
+
+      const nut = cylinder(0.033, 0.033, 0.205, M.darkMetal, 0, 0, 0, group);
+      nut.rotation.x = Math.PI / 2;
+
+      return group;
+    }
+
+    // ------------------------------------------------------------------
+    // Bicycle in the repair stand
+    // ------------------------------------------------------------------
+
+    const bicycle = new THREE.Group();
+    bicycle.position.set(-0.34, 1.16, -1.18);
+    bicycle.rotation.y = -0.14;
+    scene.add(bicycle);
+
+    makeWheel(bicycle, [-0.91, 0, 0], 0.64, 20);
+    makeWheel(bicycle, [0.91, 0, 0], 0.64, 20);
+
+    const rearHub = [-0.91, 0, 0];
+    const crank = [-0.18, -0.28, 0];
+    const seatJoint = [-0.36, 0.48, 0];
+    const headTop = [0.56, 0.46, 0];
+    const headBottom = [0.65, 0.15, 0];
+    const frontHub = [0.91, 0, 0];
+
+    tube(rearHub, seatJoint, 0.032, M.bike, bicycle);
+    tube(seatJoint, crank, 0.034, M.bike, bicycle);
+    tube(crank, rearHub, 0.029, M.bike, bicycle);
+    tube(seatJoint, headTop, 0.035, M.bike, bicycle);
+    tube(crank, headBottom, 0.038, M.bike, bicycle);
+    tube(headTop, headBottom, 0.046, M.bikeDark, bicycle);
+
+    tube([headBottom[0], headBottom[1], -0.055], [frontHub[0], frontHub[1], -0.075], 0.026, M.chrome, bicycle);
+    tube([headBottom[0], headBottom[1], 0.055], [frontHub[0], frontHub[1], 0.075], 0.026, M.chrome, bicycle);
+
+    tube(seatJoint, [-0.39, 0.68, 0], 0.025, M.chrome, bicycle);
+    const saddle = addMesh(new THREE.SphereGeometry(0.18, 18, 10), M.rubber, bicycle);
+    saddle.position.set(-0.40, 0.69, 0);
+    saddle.scale.set(1.05, 0.30, 0.58);
+    saddle.rotation.z = -0.06;
+
+    tube(headTop, [0.55, 0.69, 0], 0.027, M.chrome, bicycle);
+    tube([0.55, 0.69, -0.24], [0.55, 0.69, 0.24], 0.022, M.darkMetal, bicycle);
+    tube([0.55, 0.69, -0.25], [0.58, 0.68, -0.36], 0.033, M.rubber, bicycle);
+    tube([0.55, 0.69, 0.25], [0.58, 0.68, 0.36], 0.033, M.rubber, bicycle);
+
+    const chainring = torus(0.125, 0.014, M.chrome, crank[0], crank[1], 0.055, bicycle, 8, 28);
+    chainring.castShadow = true;
+    const chainDisc = cylinder(0.115, 0.115, 0.018, M.darkMetal, crank[0], crank[1], 0.055, bicycle, 28);
+    chainDisc.rotation.x = Math.PI / 2;
+
+    tube([-0.91, 0.045, 0.07], [-0.18, -0.17, 0.07], 0.009, M.darkMetal, bicycle, 6);
+    tube([-0.91, -0.045, 0.07], [-0.18, -0.39, 0.07], 0.009, M.darkMetal, bicycle, 6);
+    box(0.10, 0.13, 0.11, M.darkMetal, -0.83, -0.16, 0.09, bicycle);
+
+    tube(crank, [-0.03, -0.40, 0.08], 0.017, M.chrome, bicycle);
+    box(0.20, 0.04, 0.09, M.rubber, 0.02, -0.40, 0.12, bicycle);
+    tube(crank, [-0.32, -0.18, -0.08], 0.017, M.chrome, bicycle);
+    box(0.20, 0.04, 0.09, M.rubber, -0.37, -0.18, -0.12, bicycle);
+
+    tube([0.56, 0.68, 0], [0.80, 0.25, 0.05], 0.009, M.rubber, bicycle, 6);
+    tube([0.55, 0.67, -0.05], [0.88, 0.04, -0.08], 0.008, M.rubber, bicycle, 6);
+
+    const headlight = cylinder(0.075, 0.075, 0.10, M.chrome, 0.78, 0.38, 0, bicycle);
+    headlight.rotation.z = Math.PI / 2;
+    const headlightLens = cylinder(0.061, 0.061, 0.012, M.lamp, 0.836, 0.38, 0, bicycle);
+    headlightLens.rotation.z = Math.PI / 2;
+
+    const bottle = cylinder(0.045, 0.05, 0.22, M.cream, 0.13, 0.11, 0.075, bicycle);
+    bottle.rotation.z = -0.62;
+
+    // ------------------------------------------------------------------
+    // Repair stand and clamp
+    // ------------------------------------------------------------------
+
+    const standBase = V(-1.30, 0.12, -0.45);
+    const legEnds = [
+      V(-1.86, 0.07, -0.68),
+      V(-0.73, 0.07, -0.67),
+      V(-1.28, 0.07, 0.12)
+    ];
+
+    for (const end of legEnds) {
+      tube(standBase, end, 0.045, M.blueDark);
+      const caster = addMesh(new THREE.SphereGeometry(0.075, 12, 8), M.rubber);
+      caster.position.copy(end).add(V(0, -0.01, 0));
+      caster.scale.set(1, 0.72, 1);
+    }
+
+    cylinder(0.07, 0.09, 1.18, M.blueDark, -1.30, 0.71, -0.45);
+    cylinder(0.044, 0.044, 0.58, M.chrome, -1.30, 1.46, -0.45);
+    box(0.15, 0.11, 0.13, M.darkMetal, -1.30, 1.16, -0.45);
+    const heightKnob = cylinder(0.07, 0.07, 0.12, M.red, -1.30, 1.17, -0.31);
+    heightKnob.rotation.x = Math.PI / 2;
+
+    bicycle.updateMatrixWorld(true);
+    const clampPoint = bicycle.localToWorld(V(-0.285, 0.19, 0.045));
+    tube([-1.30, 1.70, -0.45], clampPoint, 0.041, M.darkMetal);
+    box(0.18, 0.14, 0.17, M.red, clampPoint.x, clampPoint.y, clampPoint.z);
+    box(0.09, 0.09, 0.24, M.darkMetal, clampPoint.x, clampPoint.y + 0.07, clampPoint.z);
+    const clampKnob = cylinder(0.065, 0.065, 0.14, M.darkMetal, clampPoint.x, clampPoint.y, clampPoint.z + 0.15);
+    clampKnob.rotation.x = Math.PI / 2;
+
+    // ------------------------------------------------------------------
+    // Wheel truing station
+    // ------------------------------------------------------------------
+
+    const truingCenter = [1.38, 1.31, -1.66];
+    makeWheel(scene, truingCenter, 0.62, 18);
+
+    box(0.82, 0.13, 1.12, M.blue, 1.56, 0.12, -1.96);
+    box(0.90, 0.05, 1.20, M.darkMetal, 1.56, 0.055, -1.96);
+    for (const x of [1.20, 1.92]) {
+      for (const z of [-2.38, -1.54]) {
+        box(0.14, 0.10, 0.15, M.rubber, x, 0.055, z);
+      }
+    }
+
+    cylinder(0.075, 0.09, 1.30, M.blueDark, 1.70, 0.83, -2.02);
+    box(0.24, 0.30, 0.22, M.blue, 1.70, 1.26, -2.02);
+    tube([1.70, 1.26, -2.02], [1.38, 1.26, -2.02], 0.045, M.metal);
+    tube([1.38, 1.26, -2.02], [1.38, 1.31, -1.66], 0.032, M.chrome);
+
+    const dial = cylinder(0.115, 0.115, 0.06, M.cream, 1.71, 1.57, -1.91);
+    dial.rotation.x = Math.PI / 2;
+    const dialFace = cylinder(0.092, 0.092, 0.012, M.white, 1.71, 1.57, -1.87);
+    dialFace.rotation.x = Math.PI / 2;
+    const dialNeedle = box(0.012, 0.073, 0.012, M.red, 1.71, 1.586, -1.854);
+    dialNeedle.rotation.z = -0.45;
+
+    for (const side of [-1, 1]) {
+      const tipX = truingCenter[0] + side * 0.56;
+      tube(
+        [1.38, 1.26, -1.94],
+        [tipX, 1.31, -1.69],
+        0.012,
+        M.metal
+      );
+      box(0.085, 0.10, 0.075, M.orange, tipX, 1.31, -1.65);
+    }
+
+    const truingKnob = cylinder(0.09, 0.09, 0.13, M.red, 1.70, 1.10, -1.88);
+    truingKnob.rotation.x = Math.PI / 2;
+    box(0.37, 0.09, 0.24, M.darkMetal, 1.18, 0.24, -2.16);
+    for (let i = 0; i < 4; i++) {
+      cylinder(0.028, 0.028, 0.13, M.metal, 1.06 + i * 0.08, 0.32, -2.16);
+    }
+
+    // ------------------------------------------------------------------
+    // Hanging tires and hooks
+    // ------------------------------------------------------------------
+
+    function makeHangingTire(x, y, z, radius = 0.52) {
+      torus(radius, 0.105, M.tire, x, y, z, scene, 12, 48);
+
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2;
+        const tread = box(
+          0.075,
+          0.035,
+          0.19,
+          M.tread,
+          x + Math.cos(angle) * (radius + 0.095),
+          y + Math.sin(angle) * (radius + 0.095),
+          z,
+          scene
+        );
+        tread.rotation.z = angle + Math.PI / 2;
+      }
+
+      tube([x, y + radius + 0.22, z - 0.06], [x, y + radius + 0.08, z + 0.02], 0.026, M.darkMetal);
+      tube([x, y + radius + 0.08, z + 0.02], [x, y + radius + 0.02, z + 0.13], 0.026, M.darkMetal);
+    }
+
+    makeHangingTire(-2.10, 2.28, -5.73, 0.52);
+    makeHangingTire(-1.15, 2.46, -5.70, 0.48);
+
+    // ------------------------------------------------------------------
+    // Parts-bin shelving
+    // ------------------------------------------------------------------
+
+    const shelfX = 1.42;
+    const shelfWidth = 3.55;
+
+    for (const y of [1.35, 2.10]) {
+      box(shelfWidth, 0.09, 0.48, M.wood, shelfX, y, -5.72);
+      box(shelfWidth, 0.055, 0.05, M.darkMetal, shelfX, y - 0.07, -5.45);
+    }
+
+    for (const x of [0.03, 2.80]) {
+      tube([x, 0.96, -5.93], [x, 1.32, -5.48], 0.025, M.darkMetal);
+      tube([x, 1.96, -5.93], [x, 2.07, -5.48], 0.025, M.darkMetal);
+    }
+
+    function makePartsBin(color, x, y, z, index) {
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      scene.add(group);
+
+      const w = 0.39;
+      const h = 0.29;
+      const d = 0.31;
+
+      box(w, 0.035, d, color, 0, 0, 0, group);
+      box(w, h, 0.035, color, 0, h / 2, d / 2, group);
+      box(w, h, 0.028, color, 0, h / 2, -d / 2, group);
+      box(0.032, h, d, color, -w / 2, h / 2, 0, group);
+      box(0.032, h, d, color, w / 2, h / 2, 0, group);
+
+      box(0.17, 0.065, 0.009, M.white, 0, 0.115, d / 2 + 0.019, group);
+      box(0.10, 0.012, 0.012, M.darkMetal, 0, 0.115, d / 2 + 0.027, group);
+
+      if (index % 3 === 0) {
+        const part = cylinder(0.035, 0.035, 0.06, M.metal, 0.08, 0.07, 0.02, group);
+        part.rotation.z = Math.PI / 2;
+      } else if (index % 3 === 1) {
+        const part = addMesh(new THREE.SphereGeometry(0.055, 10, 8), M.darkMetal, group);
+        part.position.set(-0.08, 0.075, -0.02);
+      }
+
+      return group;
+    }
+
+    const binColors = [M.blue, M.orange, M.cream, M.blueDark, M.red];
+    let binIndex = 0;
+    for (const shelfY of [1.40, 2.15]) {
+      for (let i = 0; i < 7; i++) {
+        makePartsBin(
+          binColors[binIndex % binColors.length],
+          -0.05 + i * 0.49,
+          shelfY,
+          -5.43,
+          binIndex++
+        );
+      }
+    }
+
+    const partsSign = textPlane(
+      2.72,
+      0.62,
+      makeSignTexture("PARTS", "INVENTORY & HARDWARE", "#4c91a2", "#1b2b30"),
+      1.36,
+      2.87,
+      -5.93
+    );
+    partsSign.castShadow = false;
+
+    const workshopSign = textPlane(
+      2.72,
+      0.72,
+      makeSignTexture("CYCLE WORKS", "SERVICE BAY 04", "#ef704c", "#26302f"),
+      -1.65,
+      3.54,
+      -5.93
+    );
+    workshopSign.castShadow = false;
+
+    // Wall clock.
+    const clockBody = cylinder(0.23, 0.23, 0.06, M.darkMetal, 2.78, 3.55, -5.91, scene, 36);
+    clockBody.rotation.x = Math.PI / 2;
+    const clockFace = cylinder(0.195, 0.195, 0.012, M.white, 2.78, 3.55, -5.868, scene, 36);
+    clockFace.rotation.x = Math.PI / 2;
+    const hourHand = box(0.018, 0.115, 0.012, M.darkMetal, 2.78, 3.588, -5.856);
+    hourHand.rotation.z = -0.62;
+    const minuteHand = box(0.014, 0.16, 0.012, M.red, 2.80, 3.61, -5.854);
+    minuteHand.rotation.z = 0.48;
+
+    // ------------------------------------------------------------------
+    // Lighting and overhead fixtures
+    // ------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xc9e1e4, 0x3b342b, 1.65));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.22));
+
+    const key = new THREE.DirectionalLight(0xffeed5, 2.75);
+    key.position.set(4.5, 7.5, 5.0);
+    key.target.position.set(-0.5, 0.5, -1.5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -6;
+    key.shadow.camera.right = 6;
+    key.shadow.camera.top = 7;
+    key.shadow.camera.bottom = -5;
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 22;
+    key.shadow.bias = -0.00035;
+    key.shadow.normalBias = 0.025;
+    scene.add(key, key.target);
+
+    const fill = new THREE.DirectionalLight(0x9fc9d6, 0.85);
+    fill.position.set(-4, 4, 0);
+    scene.add(fill);
+
+    for (const z of [-3.85, 0.25]) {
+      box(0.34, 0.09, 1.85, M.darkMetal, -0.62, 3.83, z);
+      box(0.25, 0.018, 1.68, M.lamp, -0.62, 3.775, z);
+      tube([-0.62, 3.88, z - 0.60], [-0.62, 4.03, z - 0.60], 0.012, M.darkMetal);
+      tube([-0.62, 3.88, z + 0.60], [-0.62, 4.03, z + 0.60], 0.012, M.darkMetal);
+
+      const light = new THREE.PointLight(0xffd9a7, 21, 7, 2);
+      light.position.set(-0.62, 3.55, z);
+      scene.add(light);
+    }
+
+    const bayLight = new THREE.PointLight(0xffc98d, 15, 6.5, 2);
+    bayLight.position.set(1.2, 2.8, -0.4);
+    scene.add(bayLight);
+
+    const coolLight = new THREE.PointLight(0x9ccbd5, 11, 6, 2);
+    coolLight.position.set(-2.7, 2.8, -2.6);
+    scene.add(coolLight);
+
+    // Subtle airborne dust.
+    const dustPositions = new Float32Array(110 * 3);
+    for (let i = 0; i < 110; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * 6;
+      dustPositions[i * 3 + 1] = Math.random() * 3.6 + 0.3;
+      dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 11;
+    }
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xe8d7b5,
+        size: 0.018,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false
+      })
+    );
+    scene.add(dust);
+
+    // ------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // ------------------------------------------------------------------
+
+    const view = {
+      target: V(-0.25, 1.28, -1.55),
+      radius: 7.25,
+      theta: 0.40,
+      phi: 1.29
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(view.phi);
+      camera.position.set(
+        view.target.x + view.radius * sinPhi * Math.sin(view.theta),
+        view.target.y + view.radius * Math.cos(view.phi),
+        view.target.z + view.radius * sinPhi * Math.cos(view.theta)
+      );
+      camera.lookAt(view.target);
+    }
+
+    function clampView() {
+      view.radius = THREE.MathUtils.clamp(view.radius, 5.0, 8.0);
+      view.theta = THREE.MathUtils.clamp(view.theta, -0.28, 0.52);
+      view.phi = THREE.MathUtils.clamp(view.phi, 0.95, 1.42);
+      view.target.x = THREE.MathUtils.clamp(view.target.x, -1.8, 1.8);
+      view.target.y = THREE.MathUtils.clamp(view.target.y, 0.75, 2.35);
+      view.target.z = THREE.MathUtils.clamp(view.target.z, -4.2, 0.4);
+    }
+
+    function resetView() {
+      view.target.set(-0.25, 1.28, -1.55);
+      view.radius = 7.25;
+      view.theta = 0.40;
+      view.phi = 1.29;
+      updateCamera();
+    }
+
+    let drag = null;
+
+    renderer.domElement.addEventListener("contextmenu", event => event.preventDefault());
+
+    renderer.domElement.addEventListener("pointerdown", event => {
+      drag = {
+        x: event.clientX,
+        y: event.clientY,
+        pan: event.shiftKey || event.button === 2
+      };
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", event => {
+      if (!drag) return;
+
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+
+      if (drag.pan) {
+        const right = V().setFromMatrixColumn(camera.matrix, 0);
+        const up = V().setFromMatrixColumn(camera.matrix, 1);
+        const scale = view.radius * 0.00125;
+
+        view.target.addScaledVector(right, -dx * scale);
+        view.target.addScaledVector(up, dy * scale);
+      } else {
+        view.theta -= dx * 0.0046;
+        view.phi -= dy * 0.0038;
+      }
+
+      clampView();
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      drag = null;
+      if (event.pointerId !== undefined && renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        view.radius *= Math.exp(event.deltaY * 0.001);
+        clampView();
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    window.addEventListener("keydown", event => {
+      const key = event.key.toLowerCase();
+      let handled = true;
+
+      if (key === "arrowleft") view.theta += 0.045;
+      else if (key === "arrowright") view.theta -= 0.045;
+      else if (key === "arrowup") view.phi -= 0.035;
+      else if (key === "arrowdown") view.phi += 0.035;
+      else if (key === "+" || key === "=") view.radius -= 0.25;
+      else if (key === "-" || key === "_") view.radius += 0.25;
+      else if (key === "r") resetView();
+      else handled = false;
+
+      if (handled) {
+        event.preventDefault();
+        clampView();
+        updateCamera();
+      }
+    });
+
+    document.getElementById("resetView").addEventListener("click", resetView);
+
+    function onResize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.fov = width < 700 ? 58 : 48;
+      camera.updateProjectionMatrix();
+      updateCamera();
+    }
+
+    window.addEventListener("resize", onResize);
+
+    // ------------------------------------------------------------------
+    // Render loop
+    // ------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+      dust.rotation.y = Math.sin(elapsed * 0.055) * 0.018;
+      dust.position.y = Math.sin(elapsed * 0.18) * 0.035;
+      renderer.render(scene, camera);
+    }
+
+    updateCamera();
+    renderer.render(scene, camera);
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 600);
+    });
+  </script>
+</body>
+</html>

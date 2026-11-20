@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lunar Crane — Telescopic Boom Simulator</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(11, 17, 22, 0.78);
+      --border: rgba(255, 255, 255, 0.16);
+      --muted: #9caab2;
+      --accent: #f2b84b;
+      --cyan: #77d5dc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #05080c;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    #stage canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #stage canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .title-block {
+      position: absolute;
+      top: 24px;
+      left: 26px;
+      max-width: min(440px, calc(100vw - 52px));
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.75);
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: #f4f7f8;
+      font-size: clamp(25px, 3.2vw, 43px);
+      font-weight: 760;
+      letter-spacing: -0.035em;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: #b7c1c6;
+      font-size: 13px;
+      letter-spacing: 0.035em;
+    }
+
+    .panel {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 242px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--panel);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      pointer-events: auto;
+    }
+
+    .panel-title {
+      margin-bottom: 12px;
+      color: #dce4e7;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      flex: 1;
+      min-height: 35px;
+      border: 1px solid rgba(255, 255, 255, 0.17);
+      border-radius: 7px;
+      color: #edf3f5;
+      background: rgba(255, 255, 255, 0.065);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(242, 184, 75, 0.65);
+      background: rgba(242, 184, 75, 0.1);
+    }
+
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .camera-help {
+      margin: 11px 0 0;
+      color: #829099;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .timeline {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      left: 24px;
+      display: grid;
+      grid-template-columns: minmax(170px, 240px) 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 13px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(8, 13, 18, 0.72);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #e9eff1;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    .progress-wrap {
+      position: relative;
+      height: 5px;
+      overflow: hidden;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #progress {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #e49b31, #f3d477 65%, #77d5dc);
+      box-shadow: 0 0 16px rgba(242, 184, 75, 0.35);
+    }
+
+    #boot {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: #cbd6da;
+      background: #05080c;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #boot.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title-block {
+        top: 18px;
+        left: 18px;
+      }
+
+      .subtitle {
+        max-width: 270px;
+        font-size: 11px;
+      }
+
+      .panel {
+        top: auto;
+        right: 14px;
+        bottom: 82px;
+        width: 190px;
+        padding: 11px;
+      }
+
+      .camera-help {
+        display: none;
+      }
+
+      .timeline {
+        right: 14px;
+        bottom: 14px;
+        left: 14px;
+        grid-template-columns: 1fr;
+        gap: 9px;
+        padding: 11px 13px;
+      }
+
+      .status-line {
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage"></div>
+
+  <div class="hud">
+    <div class="title-block">
+      <div class="eyebrow">Lunar Logistics Division</div>
+      <h1>LUNA / LIFT-07</h1>
+      <div class="subtitle">Three-stage telescopic boom · four-cable pallet hoist</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Simulation Controls</div>
+
+      <div class="button-row">
+        <button id="pause" type="button">Pause</button>
+        <button id="reset-view" type="button">Reset View</button>
+      </div>
+
+      <div class="range-label">
+        <span>Simulation speed</span>
+        <span id="speed-value">1.0×</span>
+      </div>
+      <input
+        id="speed"
+        type="range"
+        min="0.25"
+        max="1.75"
+        step="0.05"
+        value="1"
+        aria-label="Simulation speed"
+      >
+
+      <p class="camera-help">
+        Drag: orbit · Wheel: zoom · Right-drag / Shift-drag: pan<br>
+        Double-click: reset camera
+      </p>
+    </div>
+
+    <div class="timeline">
+      <div class="status-line">
+        <span class="status-dot"></span>
+        <span id="status">STOWED · SYSTEM HOLD</span>
+      </div>
+      <div class="progress-wrap">
+        <div id="progress"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="boot">Initializing lunar crane systems…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // -------------------------------------------------------------------------
+
+    const stage = document.getElementById("stage");
+    const boot = document.getElementById("boot");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05080d);
+    scene.fog = new THREE.Fog(0x05080d, 34, 110);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      220
+    );
+
+    // Custom camera controls; no examples/addons are used.
+    const view = {
+      theta: 0.88,
+      phi: 1.08,
+      radius: 20.5,
+      target: new THREE.Vector3(1.7, 2.15, 0),
+      dragging: false,
+      panning: false,
+      lastX: 0,
+      lastY: 0,
+      pointerId: null
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(view.phi);
+      const cosPhi = Math.cos(view.phi);
+
+      camera.position.set(
+        view.target.x + view.radius * sinPhi * Math.sin(view.theta),
+        view.target.y + view.radius * cosPhi,
+        view.target.z + view.radius * sinPhi * Math.cos(view.theta)
+      );
+
+      camera.lookAt(view.target);
+    }
+
+    function resetCamera() {
+      view.theta = 0.88;
+      view.phi = 1.08;
+      view.radius = 20.5;
+      view.target.set(1.7, 2.15, 0);
+      updateCamera();
+    }
+
+    updateCamera();
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", (event) => {
+      view.dragging = true;
+      view.panning = event.button === 2 || event.shiftKey;
+      view.lastX = event.clientX;
+      view.lastY = event.clientY;
+      view.pointerId = event.pointerId;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!view.dragging || event.pointerId !== view.pointerId) return;
+
+      const dx = event.clientX - view.lastX;
+      const dy = event.clientY - view.lastY;
+
+      view.lastX = event.clientX;
+      view.lastY = event.clientY;
+
+      if (view.panning) {
+        const forward = new THREE.Vector3()
+          .subVectors(view.target, camera.position)
+          .normalize();
+
+        const right = new THREE.Vector3()
+          .crossVectors(forward, new THREE.Vector3(0, 1, 0))
+          .normalize();
+
+        const up = new THREE.Vector3()
+          .crossVectors(right, forward)
+          .normalize();
+
+        const panScale = view.radius * 0.00135;
+
+        view.target.addScaledVector(right, -dx * panScale);
+        view.target.addScaledVector(up, dy * panScale);
+      } else {
+        view.theta -= dx * 0.006;
+        view.phi = THREE.MathUtils.clamp(view.phi - dy * 0.005, 0.22, 1.48);
+      }
+
+      updateCamera();
+    });
+
+    function endPointer(event) {
+      if (event.pointerId !== view.pointerId) return;
+
+      view.dragging = false;
+      view.panning = false;
+      view.pointerId = null;
+
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        view.radius = THREE.MathUtils.clamp(
+          view.radius * Math.exp(event.deltaY * 0.001),
+          8,
+          42
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    // -------------------------------------------------------------------------
+    // Materials and reusable geometry helpers
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      hull: new THREE.MeshStandardMaterial({
+        color: 0x8e9ca2,
+        metalness: 0.62,
+        roughness: 0.4
+      }),
+      paleHull: new THREE.MeshStandardMaterial({
+        color: 0xc4ced1,
+        metalness: 0.58,
+        roughness: 0.33
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x202a31,
+        metalness: 0.72,
+        roughness: 0.4
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x0b1014,
+        metalness: 0.45,
+        roughness: 0.65
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xe4942e,
+        metalness: 0.42,
+        roughness: 0.36
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xf0c451,
+        metalness: 0.38,
+        roughness: 0.34
+      }),
+      silver: new THREE.MeshStandardMaterial({
+        color: 0xbfc9cd,
+        metalness: 0.8,
+        roughness: 0.25
+      }),
+      cable: new THREE.MeshStandardMaterial({
+        color: 0xaab7bd,
+        metalness: 0.85,
+        roughness: 0.28
+      }),
+      leadCable: new THREE.MeshStandardMaterial({
+        color: 0x39464d,
+        metalness: 0.6,
+        roughness: 0.45
+      }),
+      cargo: new THREE.MeshStandardMaterial({
+        color: 0x435c54,
+        metalness: 0.3,
+        roughness: 0.62
+      })
+    };
+
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const UP = V(0, 1, 0);
+
+    function addBox(parent, size, position, material) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      position,
+      material,
+      segments = 24
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        material
+      );
+
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function setRod(mesh, a, b, radius) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.scale.set(radius, length, radius);
+    }
+
+    function addRod(parent, a, b, radius, material, segments = 10) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 1, 1, segments),
+        material
+      );
+
+      setRod(mesh, a, b, radius);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addSphere(parent, radius, position, material) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 18, 12),
+        material
+      );
+
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addEdges(mesh, color = 0x1b252a, opacity = 0.62) {
+      const edgeMaterial = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity
+      });
+
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(mesh.geometry, 25),
+        edgeMaterial
+      );
+
+      edges.position.copy(mesh.position);
+      edges.rotation.copy(mesh.rotation);
+      edges.scale.copy(mesh.scale);
+      mesh.parent.add(edges);
+
+      return edges;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lunar environment
+    // -------------------------------------------------------------------------
+
+    let randomSeed = 74621;
+
+    function random() {
+      randomSeed = (randomSeed * 1664525 + 1013904223) >>> 0;
+      return randomSeed / 4294967296;
+    }
+
+    const terrainGeometry = new THREE.PlaneGeometry(110, 110, 70, 70);
+    const terrainPosition = terrainGeometry.attributes.position;
+    const terrainColors = [];
+
+    const lowColor = new THREE.Color(0x555c60);
+    const highColor = new THREE.Color(0x85898a);
+
+    for (let i = 0; i < terrainPosition.count; i++) {
+      const x = terrainPosition.getX(i);
+      const y = terrainPosition.getY(i);
+
+      const height =
+        Math.sin(x * 0.13) * 0.07 +
+        Math.cos(y * 0.16) * 0.06 +
+        Math.sin((x + y) * 0.07) * 0.055 +
+        (random() - 0.5) * 0.025;
+
+      terrainPosition.setZ(i, height);
+
+      const color = lowColor.clone().lerp(highColor, THREE.MathUtils.clamp(
+        height * 4.2 + 0.45,
+        0,
+        1
+      ));
+
+      terrainColors.push(color.r, color.g, color.b);
+    }
+
+    terrainGeometry.setAttribute(
+      "color",
+      new THREE.Float32BufferAttribute(terrainColors, 3)
+    );
+
+    terrainGeometry.rotateX(-Math.PI / 2);
+    terrainGeometry.computeVertexNormals();
+
+    const terrain = new THREE.Mesh(
+      terrainGeometry,
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 1,
+        metalness: 0,
+        flatShading: true
+      })
+    );
+
+    terrain.receiveShadow = true;
+    scene.add(terrain);
+
+    function addCrater(x, z, radius) {
+      const crater = new THREE.Group();
+      crater.position.set(x, 0.09, z);
+
+      const floor = new THREE.Mesh(
+        new THREE.CircleGeometry(radius * 0.87, 48),
+        new THREE.MeshStandardMaterial({
+          color: 0x353b3e,
+          roughness: 1
+        })
+      );
+
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      crater.add(floor);
+
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, radius * 0.09, 8, 48),
+        new THREE.MeshStandardMaterial({
+          color: 0x747a7c,
+          roughness: 1
+        })
+      );
+
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = 0.025;
+      rim.receiveShadow = true;
+      crater.add(rim);
+
+      scene.add(crater);
+    }
+
+    addCrater(8.5, -6.5, 1.7);
+    addCrater(-7.5, 5.5, 1.15);
+    addCrater(12, 8, 2.3);
+    addCrater(-13, -8, 2.8);
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x666c6e,
+      roughness: 1,
+      metalness: 0,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 42; i++) {
+      const angle = random() * Math.PI * 2;
+      const distance = 6 + random() * 35;
+      const size = 0.09 + random() * 0.48;
+
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(size, 0),
+        rockMaterial
+      );
+
+      rock.position.set(
+        Math.cos(angle) * distance,
+        size * 0.4,
+        Math.sin(angle) * distance
+      );
+
+      rock.rotation.set(random() * 3, random() * 3, random() * 3);
+      rock.scale.set(1, 0.65 + random() * 0.55, 0.8 + random() * 0.6);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // Star field.
+    const starPositions = [];
+
+    for (let i = 0; i < 1000; i++) {
+      const theta = random() * Math.PI * 2;
+      const phi = Math.acos(random() * 0.92 + 0.04);
+      const radius = 55 + random() * 40;
+
+      starPositions.push(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0xdde9f4,
+        size: 0.13,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.88
+      })
+    );
+
+    scene.add(stars);
+
+    // Procedural Earth texture.
+    const earthCanvas = document.createElement("canvas");
+    earthCanvas.width = 1024;
+    earthCanvas.height = 512;
+
+    const earthContext = earthCanvas.getContext("2d");
+    const oceanGradient = earthContext.createLinearGradient(
+      0,
+      0,
+      0,
+      512
+    );
+
+    oceanGradient.addColorStop(0, "#2d6ea8");
+    oceanGradient.addColorStop(0.55, "#174f82");
+    oceanGradient.addColorStop(1, "#123d67");
+
+    earthContext.fillStyle = oceanGradient;
+    earthContext.fillRect(0, 0, 1024, 512);
+
+    earthContext.fillStyle = "#718967";
+
+    for (let i = 0; i < 28; i++) {
+      const x = random() * 1024;
+      const y = random() * 512;
+      const radius = 12 + random() * 50;
+
+      earthContext.beginPath();
+
+      for (let p = 0; p < 9; p++) {
+        const a = (p / 9) * Math.PI * 2;
+        const r = radius * (0.45 + random() * 0.55);
+        const px = x + Math.cos(a) * r;
+        const py = y + Math.sin(a) * r * 0.62;
+
+        if (p === 0) earthContext.moveTo(px, py);
+        else earthContext.lineTo(px, py);
+      }
+
+      earthContext.closePath();
+      earthContext.fill();
+    }
+
+    earthContext.fillStyle = "rgba(255,255,255,0.62)";
+
+    for (let i = 0; i < 50; i++) {
+      earthContext.beginPath();
+      earthContext.ellipse(
+        random() * 1024,
+        random() * 512,
+        5 + random() * 25,
+        2 + random() * 8,
+        random() * 0.5,
+        0,
+        Math.PI * 2
+      );
+      earthContext.fill();
+    }
+
+    const earthTexture = new THREE.CanvasTexture(earthCanvas);
+    earthTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(3.25, 48, 32),
+      new THREE.MeshStandardMaterial({
+        map: earthTexture,
+        roughness: 0.95,
+        metalness: 0,
+        emissive: 0x16354d,
+        emissiveIntensity: 0.3
+      })
+    );
+
+    earth.position.set(-19, 12, -25);
+    earth.rotation.set(0.2, -1.1, -0.3);
+    scene.add(earth);
+
+    const atmosphere = new THREE.Mesh(
+      new THREE.SphereGeometry(3.42, 40, 28),
+      new THREE.MeshBasicMaterial({
+        color: 0x75c8ff,
+        transparent: true,
+        opacity: 0.13,
+        side: THREE.BackSide
+      })
+    );
+
+    atmosphere.position.copy(earth.position);
+    scene.add(atmosphere);
+
+    // Lighting.
+    const hemisphere = new THREE.HemisphereLight(
+      0x91b5d0,
+      0x272421,
+      1.0
+    );
+
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff2d8, 3.1);
+    sun.position.set(-10, 18, 9);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.00025;
+    sun.target.position.set(1, 1.5, 0);
+    scene.add(sun);
+    scene.add(sun.target);
+
+    const rimLight = new THREE.DirectionalLight(0x7da9d8, 0.8);
+    rimLight.position.set(11, 8, -13);
+    scene.add(rimLight);
+
+    // -------------------------------------------------------------------------
+    // Crane chassis and four outriggers
+    // -------------------------------------------------------------------------
+
+    const crane = new THREE.Group();
+    scene.add(crane);
+
+    const chassis = new THREE.Group();
+    crane.add(chassis);
+
+    const chassisBody = addBox(
+      chassis,
+      [4.2, 0.42, 2.7],
+      [0, 0.96, 0],
+      materials.hull
+    );
+    addEdges(chassisBody);
+
+    addBox(
+      chassis,
+      [4.35, 0.17, 2.82],
+      [0, 1.22, 0],
+      materials.paleHull
+    );
+
+    addBox(
+      chassis,
+      [3.5, 0.09, 0.035],
+      [0.2, 1.04, 1.365],
+      materials.orange
+    );
+
+    // Side identification plate.
+    const labelCanvas = document.createElement("canvas");
+    labelCanvas.width = 512;
+    labelCanvas.height = 128;
+
+    const labelContext = labelCanvas.getContext("2d");
+    labelContext.fillStyle = "#182229";
+    labelContext.fillRect(0, 0, 512, 128);
+    labelContext.fillStyle = "#f1c45c";
+    labelContext.font = "700 52px sans-serif";
+    labelContext.textAlign = "center";
+    labelContext.textBaseline = "middle";
+    labelContext.fillText("LUNA-07", 256, 65);
+
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    labelTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const label = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.5, 0.375),
+      new THREE.MeshBasicMaterial({ map: labelTexture })
+    );
+
+    label.position.set(0.55, 0.98, 1.39);
+    chassis.add(label);
+
+    const legCorners = [
+      [-1.55, -1.0, -2.18, -1.48],
+      [1.55, -1.0, 2.18, -1.48],
+      [-1.55, 1.0, -2.18, 1.48],
+      [1.55, 1.0, 2.18, 1.48]
+    ];
+
+    for (const [topX, topZ, bottomX, bottomZ] of legCorners) {
+      const top = V(topX, 1.02, topZ);
+      const bottom = V(bottomX, 0.28, bottomZ);
+
+      addRod(chassis, top, bottom, 0.13, materials.dark, 12);
+      addRod(
+        chassis,
+        top.clone().lerp(bottom, 0.56),
+        bottom,
+        0.085,
+        materials.silver,
+        12
+      );
+
+      const collar = addRod(
+        chassis,
+        top,
+        top.clone().lerp(bottom, 0.45),
+        0.18,
+        materials.orange,
+        12
+      );
+
+      collar.castShadow = true;
+
+      addCylinder(
+        chassis,
+        0.48,
+        0.52,
+        0.17,
+        [bottomX, 0.14, bottomZ],
+        materials.dark,
+        32
+      );
+
+      addCylinder(
+        chassis,
+        0.37,
+        0.37,
+        0.055,
+        [bottomX, 0.25, bottomZ],
+        materials.yellow,
+        32
+      );
+
+      addCylinder(
+        chassis,
+        0.1,
+        0.1,
+        0.09,
+        [bottomX, 0.3, bottomZ],
+        materials.silver,
+        16
+      );
+    }
+
+    // Cross braces beneath the chassis.
+    addRod(
+      chassis,
+      V(-1.5, 0.65, -1.0),
+      V(1.5, 0.65, 1.0),
+      0.075,
+      materials.dark
+    );
+
+    addRod(
+      chassis,
+      V(1.5, 0.65, -1.0),
+      V(-1.5, 0.65, 1.0),
+      0.075,
+      materials.dark
+    );
+
+    // Fixed slew bearing.
+    addCylinder(
+      chassis,
+      1.2,
+      1.25,
+      0.2,
+      [0, 1.35, 0],
+      materials.dark,
+      48
+    );
+
+    addCylinder(
+      chassis,
+      1.08,
+      1.08,
+      0.08,
+      [0, 1.48, 0],
+      materials.silver,
+      48
+    );
+
+    // -------------------------------------------------------------------------
+    // Slewing upper assembly
+    // -------------------------------------------------------------------------
+
+    const slew = new THREE.Group();
+    slew.position.y = 1.48;
+    crane.add(slew);
+
+    addCylinder(
+      slew,
+      1.17,
+      1.17,
+      0.26,
+      [0, 0.02, 0],
+      materials.hull,
+      48
+    );
+
+    addCylinder(
+      slew,
+      1.23,
+      1.23,
+      0.08,
+      [0, 0.16, 0],
+      materials.orange,
+      48
+    );
+
+    addCylinder(
+      slew,
+      1.12,
+      1.12,
+      0.15,
+      [0, 0.24, 0],
+      materials.dark,
+      48
+    );
+
+    // Visible slew bearing teeth.
+    for (let i = 0; i < 32; i++) {
+      const angle = (i / 32) * Math.PI * 2;
+      const tooth = addBox(
+        slew,
+        [0.12, 0.1, 0.18],
+        [
+          Math.cos(angle) * 1.13,
+          0.01,
+          Math.sin(angle) * 1.13
+        ],
+        materials.silver
+      );
+
+      tooth.rotation.y = -angle;
+    }
+
+    // Counterweight.
+    const counterweight = addBox(
+      slew,
+      [1.18, 1.05, 1.65],
+      [-1.08, 0.78, 0],
+      materials.orange
+    );
+
+    addEdges(counterweight, 0x392516, 0.85);
+
+    addBox(
+      slew,
+      [1.28, 0.11, 1.76],
+      [-1.08, 1.34, 0],
+      materials.dark
+    );
+
+    for (let i = 0; i < 4; i++) {
+      const stripe = addBox(
+        slew,
+        [0.11, 0.68, 0.035],
+        [-1.42 + i * 0.23, 0.8, 0.845],
+        materials.black
+      );
+      stripe.rotation.z = -0.3;
+    }
+
+    const weightEye = new THREE.Mesh(
+      new THREE.TorusGeometry(0.18, 0.055, 10, 24),
+      materials.dark
+    );
+    weightEye.position.set(-1.08, 1.48, 0);
+    weightEye.rotation.y = Math.PI / 2;
+    weightEye.castShadow = true;
+    slew.add(weightEye);
+
+    // A-frame pivot supports.
+    for (const side of [-1, 1]) {
+      addRod(
+        slew,
+        V(-0.02, 0.32, side * 0.58),
+        V(0.7, 0.82, side * 0.36),
+        0.095,
+        materials.yellow
+      );
+
+      addRod(
+        slew,
+        V(-0.3, 0.34, side * 0.48),
+        V(0.48, 0.7, side * 0.34),
+        0.065,
+        materials.silver
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Winch assembly and rotating drum
+    // -------------------------------------------------------------------------
+
+    const winchAssembly = new THREE.Group();
+    winchAssembly.position.set(-0.2, 0.7, 0.68);
+    slew.add(winchAssembly);
+
+    addBox(
+      winchAssembly,
+      [1.0, 0.15, 1.1],
+      [0, -0.45, 0],
+      materials.dark
+    );
+
+    for (const side of [-1, 1]) {
+      addBox(
+        winchAssembly,
+        [0.15, 0.65, 0.14],
+        [0, -0.12, side * 0.57],
+        materials.hull
+      );
+    }
+
+    const drum = new THREE.Group();
+    winchAssembly.add(drum);
+
+    const drumCore = addCylinder(
+      drum,
+      0.39,
+      0.39,
+      0.94,
+      [0, 0, 0],
+      materials.dark,
+      32
+    );
+    drumCore.rotation.x = Math.PI / 2;
+
+    for (const side of [-1, 1]) {
+      const flange = addCylinder(
+        drum,
+        0.52,
+        0.52,
+        0.075,
+        [0, 0, side * 0.5],
+        materials.silver,
+        32
+      );
+      flange.rotation.x = Math.PI / 2;
+    }
+
+    // Helical winding makes the drum rotation easy to see.
+    const coilPoints = [];
+
+    for (let i = 0; i <= 190; i++) {
+      const u = i / 190;
+      const angle = u * Math.PI * 2 * 12;
+      coilPoints.push(
+        V(
+          Math.cos(angle) * 0.415,
+          Math.sin(angle) * 0.415,
+          -0.43 + u * 0.86
+        )
+      );
+    }
+
+    const coil = new THREE.Mesh(
+      new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(coilPoints),
+        260,
+        0.022,
+        6,
+        false
+      ),
+      materials.leadCable
+    );
+
+    coil.castShadow = true;
+    drum.add(coil);
+
+    // A colored flange marker makes the drum rotation visible.
+    addBox(
+      drum,
+      [0.68, 0.075, 0.035],
+      [0.19, 0, 0.555],
+      materials.orange
+    );
+
+    addSphere(
+      drum,
+      0.08,
+      [0.44, 0, 0.565],
+      materials.yellow
+    );
+
+    const winchAnchor = new THREE.Object3D();
+    winchAnchor.position.set(-0.2, 1.18, 0.68);
+    slew.add(winchAnchor);
+
+    // -------------------------------------------------------------------------
+    // Three nested telescoping boom sections
+    // -------------------------------------------------------------------------
+
+    const boomMount = new THREE.Group();
+    boomMount.position.set(0.7, 0.82, 0);
+    slew.add(boomMount);
+
+    // Fixed guide housing around the first sliding section.
+    addBox(
+      boomMount,
+      [1.2, 0.79, 0.8],
+      [0.25, 0, 0],
+      materials.yellow
+    );
+
+    const pivotAxle = addCylinder(
+      boomMount,
+      0.18,
+      0.18,
+      1.18,
+      [0, 0, 0],
+      materials.dark,
+      24
+    );
+    pivotAxle.rotation.x = Math.PI / 2;
+
+    function makeBoomSection(parent, length, height, width, material) {
+      const section = new THREE.Group();
+      parent.add(section);
+
+      const beam = addBox(
+        section,
+        [length, height, width],
+        [length * 0.5, 0, 0],
+        material
+      );
+      addEdges(beam);
+
+      addBox(
+        section,
+        [length - 0.08, 0.065, width + 0.035],
+        [length * 0.5, height * 0.5 + 0.033, 0],
+        materials.yellow
+      );
+
+      addBox(
+        section,
+        [0.15, height + 0.12, width + 0.12],
+        [length - 0.075, 0, 0],
+        materials.dark
+      );
+
+      addBox(
+        section,
+        [0.07, height + 0.14, width + 0.14],
+        [0.035, 0, 0],
+        materials.silver
+      );
+
+      return section;
+    }
+
+    const boom1 = makeBoomSection(
+      boomMount,
+      5.2,
+      0.72,
+      0.68,
+      materials.dark
+    );
+
+    const boom2 = makeBoomSection(
+      boom1,
+      4.7,
+      0.57,
+      0.52,
+      materials.hull
+    );
+
+    const boom3 = makeBoomSection(
+      boom2,
+      4.0,
+      0.43,
+      0.38,
+      materials.paleHull
+    );
+
+    // Lattice boom tip.
+    const lattice = new THREE.Group();
+    boom3.add(lattice);
+
+    const latticeStart = 3.55;
+    const latticeEnd = 4.95;
+    const half = 0.27;
+
+    for (const y of [-half, half]) {
+      for (const z of [-half, half]) {
+        addRod(
+          lattice,
+          V(latticeStart, y, z),
+          V(latticeEnd, y, z),
+          0.043,
+          materials.orange
+        );
+      }
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const x0 = latticeStart + (i / 4) * (latticeEnd - latticeStart);
+      const x1 = latticeStart + ((i + 1) / 4) * (latticeEnd - latticeStart);
+
+      for (const z of [-half, half]) {
+        addRod(
+          lattice,
+          V(x0, -half, z),
+          V(x1, half, z),
+          0.028,
+          materials.yellow
+        );
+        addRod(
+          lattice,
+          V(x0, half, z),
+          V(x1, -half, z),
+          0.028,
+          materials.yellow
+        );
+      }
+
+      for (const y of [-half, half]) {
+        addRod(
+          lattice,
+          V(x0, y, -half),
+          V(x1, y, half),
+          0.028,
+          materials.yellow
+        );
+        addRod(
+          lattice,
+          V(x0, y, half),
+          V(x1, y, -half),
+          0.028,
+          materials.yellow
+        );
+      }
+    }
+
+    const tipSheave = new THREE.Mesh(
+      new THREE.TorusGeometry(0.22, 0.055, 10, 28),
+      materials.silver
+    );
+    tipSheave.position.set(4.82, -0.02, 0);
+    tipSheave.castShadow = true;
+    lattice.add(tipSheave);
+
+    const sheavePin = addCylinder(
+      lattice,
+      0.075,
+      0.075,
+      0.72,
+      [4.82, -0.02, 0],
+      materials.dark,
+      16
+    );
+    sheavePin.rotation.x = Math.PI / 2;
+
+    // Four distinct cable attachment points beneath the lattice tip.
+    const tipAnchors = [];
+
+    for (const x of [4.58, 4.84]) {
+      for (const z of [-0.23, 0.23]) {
+        const anchor = new THREE.Object3D();
+        anchor.position.set(x, -0.16, z);
+        boom3.add(anchor);
+        tipAnchors.push(anchor);
+      }
+    }
+
+    const tipReference = new THREE.Object3D();
+    tipReference.position.set(4.86, -0.12, 0);
+    boom3.add(tipReference);
+
+    // -------------------------------------------------------------------------
+    // Pallet and cargo
+    // -------------------------------------------------------------------------
+
+    const pallet = new THREE.Group();
+    scene.add(pallet);
+
+    // Pallet runners.
+    for (const x of [-0.82, 0, 0.82]) {
+      addBox(
+        pallet,
+        [0.18, 0.14, 1.52],
+        [x, 0.08, 0],
+        materials.dark
+      );
+    }
+
+    // Pallet slats.
+    for (let i = 0; i < 7; i++) {
+      const z = -0.66 + i * 0.22;
+      addBox(
+        pallet,
+        [2.15, 0.12, 0.16],
+        [0, 0.2, z],
+        materials.yellow
+      );
+    }
+
+    // Cargo container.
+    const crate = addBox(
+      pallet,
+      [1.62, 0.95, 1.12],
+      [0, 0.76, 0],
+      materials.cargo
+    );
+    addEdges(crate, 0x182821, 0.82);
+
+    addBox(
+      pallet,
+      [1.72, 0.09, 1.19],
+      [0, 1.27, 0],
+      materials.paleHull
+    );
+
+    // Cargo restraint straps.
+    for (const x of [-0.54, 0.54]) {
+      addBox(
+        pallet,
+        [0.1, 1.01, 1.17],
+        [x, 0.77, 0],
+        materials.orange
+      );
+    }
+
+    addBox(
+      pallet,
+      [1.66, 0.09, 0.045],
+      [0, 0.77, 0.585],
+      materials.orange
+    );
+
+    // Four pallet lifting eyes.
+    const palletAnchors = [];
+
+    for (const x of [-0.95, 0.95]) {
+      for (const z of [-0.63, 0.63]) {
+        const anchor = new THREE.Object3D();
+        anchor.position.set(x, 0.29, z);
+        pallet.add(anchor);
+        palletAnchors.push(anchor);
+
+        const eye = new THREE.Mesh(
+          new THREE.TorusGeometry(0.095, 0.026, 8, 16),
+          materials.silver
+        );
+        eye.position.copy(anchor.position);
+        eye.rotation.y = Math.PI / 2;
+        eye.castShadow = true;
+        pallet.add(eye);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Dynamic cables
+    // -------------------------------------------------------------------------
+
+    const dynamicCableGeometry = new THREE.CylinderGeometry(1, 1, 1, 8);
+
+    function createDynamicCable(material) {
+      const mesh = new THREE.Mesh(dynamicCableGeometry, material);
+      mesh.castShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    const hoistCables = Array.from({ length: 4 }, () =>
+      createDynamicCable(materials.cable)
+    );
+
+    // A routed lead line from the drum, along the boom, to the tip sheave.
+    const leadPoints = [
+      winchAnchor,
+      new THREE.Object3D(),
+      new THREE.Object3D(),
+      new THREE.Object3D(),
+      new THREE.Object3D(),
+      new THREE.Object3D()
+    ];
+
+    leadPoints[1].position.set(0, 0.43, 0);
+    boomMount.add(leadPoints[1]);
+
+    leadPoints[2].position.set(2.4, 0.41, 0);
+    boom1.add(leadPoints[2]);
+
+    leadPoints[3].position.set(2.1, 0.34, 0);
+    boom2.add(leadPoints[3]);
+
+    leadPoints[4].position.set(3.65, 0.28, 0);
+    boom3.add(leadPoints[4]);
+
+    leadPoints[5].position.set(4.84, 0.2, 0);
+    boom3.add(leadPoints[5]);
+
+    const leadSegments = Array.from({ length: leadPoints.length - 1 }, () =>
+      createDynamicCable(materials.leadCable)
+    );
+
+    const worldA = new THREE.Vector3();
+    const worldB = new THREE.Vector3();
+    const midpoint = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+
+    function updateCable(mesh, a, b, radius) {
+      direction.subVectors(b, a);
+      const length = direction.length();
+
+      midpoint.copy(a).add(b).multiplyScalar(0.5);
+      mesh.position.copy(midpoint);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.scale.set(radius, length, radius);
+    }
+
+    // -------------------------------------------------------------------------
+    // Animation timeline
+    // -------------------------------------------------------------------------
+
+    const DURATION = 16;
+    let elapsed = 0;
+    let paused = false;
+    let simulationSpeed = 1;
+    let drumAngle = 0;
+    let previousPayout = null;
+    let palletInitialized = false;
+
+    const statusElement = document.getElementById("status");
+    const progressElement = document.getElementById("progress");
+
+    function clamp01(value) {
+      return Math.max(0, Math.min(1, value));
+    }
+
+    function smoothRange(time, start, end) {
+      const t = clamp01((time - start) / (end - start));
+      return t * t * (3 - 2 * t);
+    }
+
+    function mix(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function getAnimationState(time) {
+      let boom1Amount;
+      let boom2Amount;
+      let boom3Amount;
+
+      if (time < 13.6) {
+        boom1Amount = smoothRange(time, 1.0, 2.4);
+        boom2Amount = smoothRange(time, 2.4, 3.8);
+        boom3Amount = smoothRange(time, 3.8, 5.2);
+      } else {
+        boom3Amount = 1 - smoothRange(time, 13.6, 14.7);
+        boom2Amount = 1 - smoothRange(time, 14.7, 15.4);
+        boom1Amount = 1 - smoothRange(time, 15.4, 16.0);
+      }
+
+      let slewAngle;
+
+      if (time < 5.2) {
+        slewAngle = -0.68;
+      } else if (time < 7.8) {
+        slewAngle = mix(
+          -0.68,
+          0.88,
+          smoothRange(time, 5.2, 7.8)
+        );
+      } else if (time < 11.2) {
+        slewAngle = 0.88;
+      } else if (time < 13.6) {
+        slewAngle = mix(
+          0.88,
+          -0.68,
+          smoothRange(time, 11.2, 13.6)
+        );
+      } else {
+        slewAngle = -0.68;
+      }
+
+      let liftAmount;
+
+      if (time < 5.2) {
+        liftAmount = 0;
+      } else if (time < 7.8) {
+        liftAmount = mix(
+          0,
+          0.42,
+          smoothRange(time, 5.2, 7.8)
+        );
+      } else if (time < 9.2) {
+        liftAmount = mix(
+          0.42,
+          1,
+          smoothRange(time, 7.8, 9.2)
+        );
+      } else if (time < 11.2) {
+        liftAmount = 1;
+      } else if (time < 13.6) {
+        liftAmount = 1 - smoothRange(time, 11.2, 13.6);
+      } else {
+        liftAmount = 0;
+      }
+
+      return {
+        boom1Amount,
+        boom2Amount,
+        boom3Amount,
+        slewAngle,
+        liftAmount
+      };
+    }
+
+    function getStatus(time) {
+      if (time < 1.0) return "STOWED · SYSTEM HOLD";
+      if (time < 2.4) return "BOOM 01 · FIRST-STAGE DEPLOY";
+      if (time < 3.8) return "BOOM 02 · SECOND-STAGE DEPLOY";
+      if (time < 5.2) return "BOOM 03 · INNER SECTION DEPLOY";
+      if (time < 7.8) return "SLEW DRIVE · CROSS-BASE TRAVERSE";
+      if (time < 9.2) return "WINCH · PALLET ASCENT";
+      if (time < 11.2) return "HOIST · LOAD HOLD";
+      if (time < 13.6) return "RETURN · SLEW AND LOWER";
+      if (time < 14.7) return "BOOM 03 · RETRACTION";
+      if (time < 15.4) return "BOOM 02 · RETRACTION";
+      return "BOOM 01 · STOWING";
+    }
+
+    function updateCrane(time, delta) {
+      const state = getAnimationState(time);
+
+      boom1.position.x = mix(0, 0.75, state.boom1Amount);
+      boom2.position.x = mix(0.35, 2.35, state.boom2Amount);
+      boom3.position.x = mix(0.3, 1.7, state.boom3Amount);
+
+      slew.rotation.y = state.slewAngle;
+      boomMount.rotation.z = 0.2 + state.liftAmount * 0.12;
+
+      // The pallet follows beneath the slewing tip with a small inertial lag.
+      scene.updateMatrixWorld(true);
+
+      const tipPosition = new THREE.Vector3();
+      tipReference.getWorldPosition(tipPosition);
+
+      const followAmount = 1 - Math.exp(-delta * 5.5);
+
+      if (!palletInitialized) {
+        pallet.position.x = tipPosition.x;
+        pallet.position.z = tipPosition.z;
+        pallet.rotation.y = state.slewAngle;
+        palletInitialized = true;
+      } else {
+        pallet.position.x = THREE.MathUtils.lerp(
+          pallet.position.x,
+          tipPosition.x,
+          followAmount
+        );
+
+        pallet.position.z = THREE.MathUtils.lerp(
+          pallet.position.z,
+          tipPosition.z,
+          followAmount
+        );
+
+        let angleDifference =
+          state.slewAngle - pallet.rotation.y;
+
+        angleDifference = Math.atan2(
+          Math.sin(angleDifference),
+          Math.cos(angleDifference)
+        );
+
+        pallet.rotation.y += angleDifference * followAmount;
+      }
+
+      pallet.position.y = 0.025 + state.liftAmount * 3.05;
+
+      pallet.rotation.z =
+        Math.sin(elapsed * 1.7) * 0.022 * state.liftAmount;
+
+      pallet.rotation.x =
+        Math.cos(elapsed * 1.35) * 0.014 * state.liftAmount;
+
+      scene.updateMatrixWorld(true);
+
+      // Update the four pallet hoist cables.
+      let totalPayout = 0;
+
+      for (let i = 0; i < 4; i++) {
+        tipAnchors[i].getWorldPosition(worldA);
+        palletAnchors[i].getWorldPosition(worldB);
+
+        updateCable(hoistCables[i], worldA, worldB, 0.023);
+        totalPayout += worldA.distanceTo(worldB);
+      }
+
+      const payout = totalPayout / 4;
+
+      if (previousPayout !== null) {
+        drumAngle += (payout - previousPayout) * 2.8;
+      }
+
+      previousPayout = payout;
+      drum.rotation.z = drumAngle;
+
+      // Update the routed drum-to-tip lead line.
+      for (let i = 0; i < leadSegments.length; i++) {
+        leadPoints[i].getWorldPosition(worldA);
+        leadPoints[i + 1].getWorldPosition(worldB);
+        updateCable(leadSegments[i], worldA, worldB, 0.022);
+      }
+
+      statusElement.textContent = getStatus(time);
+      progressElement.style.width = `${(time / DURATION) * 100}%`;
+    }
+
+    // -------------------------------------------------------------------------
+    // Interface controls
+    // -------------------------------------------------------------------------
+
+    const pauseButton = document.getElementById("pause");
+    const speedInput = document.getElementById("speed");
+    const speedValue = document.getElementById("speed-value");
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume" : "Pause";
+    });
+
+    document
+      .getElementById("reset-view")
+      .addEventListener("click", resetCamera);
+
+    speedInput.addEventListener("input", () => {
+      simulationSpeed = Number(speedInput.value);
+      speedValue.textContent = `${simulationSpeed.toFixed(2).replace(/0$/, "")}×`;
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    // -------------------------------------------------------------------------
+    // Render loop
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let firstFrame = true;
+
+    renderer.setAnimationLoop(() => {
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      if (!paused) {
+        elapsed = (elapsed + delta * simulationSpeed) % DURATION;
+      }
+
+      updateCrane(elapsed, delta);
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        boot.classList.add("hidden");
+        setTimeout(() => boot.remove(), 500);
+      }
+    });
+  </script>
+</body>
+</html>

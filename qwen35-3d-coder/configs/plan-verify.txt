@@ -1,0 +1,6 @@
+# Cost of a small batch (= one speculative verify step) vs one token, by quant, at depth 0 and 10k.
+q4-a      | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 1,2,3,4,5,8,16 -n 0 -d 0,10000 -r 8
+q5        | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf -fa on -p 1,2,3,4,5,8,16 -n 0 -d 0,10000 -r 8
+q8        | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf -fa on -p 1,2,3,4,5,8,16 -n 0 -d 0,10000 -r 8
+q4-b      | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 1,2,3,4,5,8,16 -n 0 -d 0,10000 -r 8
+q4-tg     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 64 -d 0,10000 -r 8

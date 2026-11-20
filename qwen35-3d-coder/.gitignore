@@ -1,0 +1,5 @@
+# downloaded by tools/download.sh (pinned sha256)
+runs/data/*.parquet
+# screenshots of the eval pages; tools/render.mjs regenerates them from the committed HTML
+runs/**/render/*.png
+__pycache__/

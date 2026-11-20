@@ -1,0 +1,1441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giant Clam — Folded Mantle</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #176f78;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 10;
+      color: #e9fff8;
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 28, 33, 0.7);
+    }
+
+    .title-card h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 3.3vw, 3rem);
+      font-weight: 600;
+      letter-spacing: 0.035em;
+    }
+
+    .title-card p {
+      margin: 0.45rem 0 0;
+      color: rgba(229, 255, 248, 0.76);
+      font-size: 0.78rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      position: fixed;
+      right: 24px;
+      bottom: 20px;
+      z-index: 10;
+      padding: 0.62rem 0.85rem;
+      border: 1px solid rgba(225, 255, 249, 0.22);
+      border-radius: 999px;
+      color: rgba(236, 255, 250, 0.82);
+      background: rgba(7, 48, 55, 0.32);
+      backdrop-filter: blur(8px);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        top: 18px;
+        left: 18px;
+      }
+
+      .hint {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="title-card">
+    <h1>Giant Clam</h1>
+    <p>Tridacna · folded reef mantle</p>
+  </div>
+
+  <div class="hint">Drag to orbit · Scroll to zoom</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x237f89);
+    scene.fog = new THREE.FogExp2(0x287f87, 0.027);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.08,
+      80
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 1.05, 0);
+    const desired = {
+      theta: 0.25,
+      phi: 1.20,
+      radius: 9.1
+    };
+
+    const current = {
+      theta: desired.theta,
+      phi: desired.phi,
+      radius: desired.radius
+    };
+
+    // -------------------------------------------------------------------------
+    // Utilities and deterministic random generator
+    // -------------------------------------------------------------------------
+
+    let randomSeed = 0x4d595df4;
+
+    function random() {
+      randomSeed =
+        (Math.imul(randomSeed, 1664525) + 1013904223) >>> 0;
+      return randomSeed / 4294967296;
+    }
+
+    function randomRange(min, max) {
+      return min + (max - min) * random();
+    }
+
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function cylinderBetween(a, b, radiusTop, radiusBottom, material, radialSegments = 8) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          length,
+          radialSegments,
+          1,
+          false
+        ),
+        material
+      );
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function makeCanvasTexture(canvas, repeatX = 1, repeatY = 1) {
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(repeatX, repeatY);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // Procedural underwater background
+    // -------------------------------------------------------------------------
+
+    const background = new THREE.Mesh(
+      new THREE.SphereGeometry(35, 48, 32),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x62c8c3) },
+          middleColor: { value: new THREE.Color(0x248d98) },
+          bottomColor: { value: new THREE.Color(0x075263) }
+        },
+        vertexShader: `
+          varying vec3 vWorldPosition;
+
+          void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 topColor;
+          uniform vec3 middleColor;
+          uniform vec3 bottomColor;
+          varying vec3 vWorldPosition;
+
+          void main() {
+            float h = normalize(vWorldPosition).y * 0.5 + 0.5;
+            vec3 lower = mix(bottomColor, middleColor, smoothstep(0.05, 0.55, h));
+            vec3 color = mix(lower, topColor, smoothstep(0.48, 1.0, h));
+
+            float sunGlow = pow(
+              max(dot(normalize(vWorldPosition), normalize(vec3(-0.35, 0.82, 0.45))), 0.0),
+              18.0
+            );
+
+            color += vec3(0.34, 0.43, 0.30) * sunGlow;
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+
+    scene.add(background);
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(
+      new THREE.HemisphereLight(0xa9fff0,0x795a42, 1.65)
+    );
+
+    const sun = new THREE.DirectionalLight(0xfff1c2, 3.1);
+    sun.position.set(4.5, 8.5, 5.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 24;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const rimLight = new THREE.DirectionalLight(0x56e8ef, 1.25);
+    rimLight.position.set(-5, 3.8, -4.5);
+    scene.add(rimLight);
+
+    const mantleLight = new THREE.PointLight(0x53ffe5, 16, 5.5, 2);
+    mantleLight.position.set(0, 0.9, 1.5);
+    scene.add(mantleLight);
+
+    // -------------------------------------------------------------------------
+    // Procedural sand textures
+    // -------------------------------------------------------------------------
+
+    function createSandTextures() {
+      const size = 1024;
+      const colorCanvas = document.createElement("canvas");
+      const bumpCanvas = document.createElement("canvas");
+
+      colorCanvas.width = colorCanvas.height = size;
+      bumpCanvas.width = bumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const bumpContext = bumpCanvas.getContext("2d");
+      const colorData = colorContext.createImageData(size, size);
+      const bumpData = bumpContext.createImageData(size, size);
+
+      for (let i = 0; i < size * size; i++) {
+        const grain = randomRange(-17, 17);
+        const broad = Math.sin(i * 0.000013) * 5;
+
+        colorData.data[i * 4] = 188 + grain + broad;
+        colorData.data[i * 4 + 1] = 166 + grain * 0.8 + broad;
+        colorData.data[i * 4 + 2] = 124 + grain * 0.65 + broad * 0.4;
+        colorData.data[i * 4 + 3] = 255;
+
+        const height = 132 + grain * 2.2 + broad;
+        bumpData.data[i * 4] = height;
+        bumpData.data[i * 4 + 1] = height;
+        bumpData.data[i * 4 + 2] = height;
+        bumpData.data[i * 4 + 3] = 255;
+      }
+
+      colorContext.putImageData(colorData, 0, 0);
+      bumpContext.putImageData(bumpData, 0, 0);
+
+      colorContext.globalAlpha = 0.38;
+
+      for (let i = 0; i < 8500; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = randomRange(0.35, 1.8);
+        const light = random() > 0.45;
+
+        colorContext.fillStyle = light
+          ? "rgba(255,235,191,0.75)"
+          : "rgba(78,70,53,0.65)";
+
+        colorContext.beginPath();
+        colorContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorContext.fill();
+      }
+
+      colorContext.globalAlpha = 1;
+
+      return {
+        color: makeCanvasTexture(colorCanvas, 8, 8),
+        bump: makeCanvasTexture(bumpCanvas, 8, 8)
+      };
+    }
+
+    const sandTextures = createSandTextures();
+    sandTextures.bump.colorSpace = THREE.NoColorSpace;
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30, 1, 1),
+      new THREE.MeshStandardMaterial({
+        map: sandTextures.color,
+        bumpMap: sandTextures.bump,
+        bumpScale: 0.075,
+        color: 0xdfc89e,
+        roughness: 0.96,
+        metalness: 0
+      })
+    );
+
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.018;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Soft animated-looking caustic pattern, made from a procedural texture.
+    const causticCanvas = document.createElement("canvas");
+    causticCanvas.width = causticCanvas.height = 512;
+    const causticContext = causticCanvas.getContext("2d");
+
+    causticContext.clearRect(0, 0, 512, 512);
+    causticContext.lineCap = "round";
+    causticContext.filter = "blur(1.6px)";
+
+    for (let i = 0; i < 42; i++) {
+      const y = random() * 512;
+      const amplitude = randomRange(9, 31);
+      const phase = random() * Math.PI * 2;
+
+      causticContext.beginPath();
+
+      for (let x = -20; x <= 532; x += 8) {
+        const wave =
+          y +
+          Math.sin(x * 0.022 + phase) * amplitude +
+          Math.sin(x * 0.052 - phase) * amplitude * 0.28;
+
+        if (x === -20) {
+          causticContext.moveTo(x, wave);
+        } else {
+          causticContext.lineTo(x, wave);
+        }
+      }
+
+      causticContext.strokeStyle = `rgba(226,255,231,${randomRange(0.08, 0.24)})`;
+      causticContext.lineWidth = randomRange(1.1, 3.2);
+      causticContext.stroke();
+    }
+
+    const causticTexture = makeCanvasTexture(causticCanvas, 2.4, 2.4);
+
+    const caustics = new THREE.Mesh(
+      new THREE.PlaneGeometry(24, 24),
+      new THREE.MeshBasicMaterial({
+        map: causticTexture,
+        transparent: true,
+        opacity: 0.28,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false
+      })
+    );
+
+    caustics.rotation.x = -Math.PI / 2;
+    caustics.position.y = 0.006;
+    scene.add(caustics);
+
+    // -------------------------------------------------------------------------
+    // Sand grains and rubble
+    // -------------------------------------------------------------------------
+
+    const grainGeometry = new THREE.DodecahedronGeometry(0.035, 0);
+    const grainMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd7bc89,
+      roughness: 1
+    });
+
+    const grainCount = 330;
+    const grains = new THREE.InstancedMesh(grainGeometry, grainMaterial, grainCount);
+    const dummy = new THREE.Object3D();
+    const grainColor = new THREE.Color();
+
+    for (let i = 0; i < grainCount; i++) {
+      let x = randomRange(-8.5, 8.5);
+      let z = randomRange(-7.5, 7.5);
+
+      if (Math.hypot(x, z) < 2.6) {
+        x += x < 0 ? -2.8 : 2.8;
+        z += randomRange(-0.8, 0.8);
+      }
+
+      dummy.position.set(x, 0.018, z);
+      dummy.rotation.set(random() * 3, random() * 3, random() * 3);
+
+      const scale = randomRange(0.55, 2.5);
+      dummy.scale.set(scale, scale * randomRange(0.45, 0.85), scale);
+      dummy.updateMatrix();
+      grains.setMatrixAt(i, dummy.matrix);
+
+      grainColor.setHSL(
+        randomRange(0.085, 0.13),
+        randomRange(0.28, 0.48),
+        randomRange(0.55, 0.76)
+      );
+      grains.setColorAt(i, grainColor);
+    }
+
+    grains.receiveShadow = true;
+    scene.add(grains);
+
+    const rubbleMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb5a082,
+      roughness: 0.92
+    });
+
+    for (let i = 0; i < 15; i++) {
+      const angle = random() * Math.PI * 2;
+      const distance = randomRange(3.2, 7.2);
+      const size = randomRange(0.07, 0.21);
+
+      const rubble = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(size, 0),
+        rubbleMaterial
+      );
+
+      rubble.position.set(
+        Math.cos(angle) * distance,
+        size * 0.42,
+        Math.sin(angle) * distance
+      );
+      rubble.rotation.set(random() * 3, random() * 3, random() * 3);
+      rubble.scale.y = randomRange(0.4, 0.8);
+      rubble.castShadow = true;
+      rubble.receiveShadow = true;
+      scene.add(rubble);
+    }
+
+    // -------------------------------------------------------------------------
+    // Shell texture
+    // -------------------------------------------------------------------------
+
+    function createShellTexture() {
+      const size = 512;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const context = canvas.getContext("2d");
+
+      const gradient = context.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, "#e6c994");
+      gradient.addColorStop(0.45, "#c99f67");
+      gradient.addColorStop(1, "#9b7048");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, size, size);
+
+      // Darker bands follow the angular coordinate of the valve.
+      for (let band = 0; band < 12; band++) {
+        const y = (band / 12) * size + 8;
+        const gradientBand = context.createLinearGradient(0, y - 10, 0, y + 12);
+        gradientBand.addColorStop(0, "rgba(255,236,190,0)");
+        gradientBand.addColorStop(0.5, "rgba(100,66,38,0.23)");
+        gradientBand.addColorStop(1, "rgba(255,236,190,0)");
+
+        context.fillStyle = gradientBand;
+        context.fillRect(0, y - 10, size, 23);
+      }
+
+      for (let i = 0; i < 4200; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const alpha = randomRange(0.025, 0.13);
+
+        context.fillStyle = random() > 0.45
+          ? `rgba(255,242,210,${alpha})`
+          : `rgba(72,48,30,${alpha})`;
+
+        const radius = randomRange(0.4, 1.5);
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      return makeCanvasTexture(canvas, 1, 1);
+    }
+
+    const shellTexture = createShellTexture();
+
+    const shellOuterMaterial = new THREE.MeshStandardMaterial({
+      map: shellTexture,
+      color: 0xf0c995,
+      vertexColors: true,
+      roughness: 0.58,
+      metalness: 0.025,
+      side: THREE.DoubleSide
+    });
+
+    const shellInnerMaterial = new THREE.MeshStandardMaterial({
+      map: shellTexture,
+      color: 0xf2dfb9,
+      vertexColors: true,
+      roughness: 0.48,
+      metalness: 0.015,
+      side: THREE.DoubleSide
+    });
+
+    const shellRimMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc59a68,
+      roughness: 0.62,
+      metalness: 0.02,
+      side: THREE.DoubleSide
+    });
+
+    // -------------------------------------------------------------------------
+    // Custom thick fluted valve geometry
+    //
+    // Each valve is a closed, thick shell segment with:
+    //   - ten strong radial flutes,
+    //   - a convex exterior,
+    //   - a pale interior,
+    //   - a visibly thick, scalloped rim.
+    // -------------------------------------------------------------------------
+
+    function buildValveGeometry(sign) {
+      const radialSegments = 44;
+      const angularSegments = 30;
+      const minimumU = 0.004;
+
+      const positions = [];
+      const uvs = [];
+      const colors = [];
+      const indices = [];
+
+      const vertexColor = new THREE.Color();
+
+      function shellPoint(u, v, front) {
+        const theta = v * 1.16;
+
+        const edgeLength =
+          (2.50 + 0.16 * Math.cos(v * Math.PI * 0.5)) *
+          (1 +
+            0.027 *
+            Math.sin(v * Math.PI * 9 + sign * 0.8) *
+            Math.pow(u, 5));
+
+        const radius = edgeLength * u;
+
+        // Ten strong radial flutes running from the umbo to the margin.
+        const rib = Math.pow(
+          0.5 + 0.5 * Math.cos(v * Math.PI * 10),
+          3
+        ) * 0.17 * u;
+
+        // Shallow concentric growth ridges.
+        const growthRidge = Math.sin(u * Math.PI * 13) * 0.018 * u;
+
+        // The rim has an irregular, gently scalloped contour.
+        const marginWave =
+          0.075 *
+          Math.pow(u, 5) *
+          Math.sin(v * Math.PI * 8 + sign * 0.65);
+
+        const bowlDepth =
+          0.94 *
+          u * u *
+          (0.5 + 0.5 * Math.cos(theta));
+
+        return new THREE.Vector3(
+          sign * Math.sin(theta) * radius,
+          -Math.cos(theta) * radius * 0.90,
+          bowlDepth + rib + growthRidge + marginWave + (front ? 0.075 : -0.075)
+        );
+      }
+
+      function appendSurface(front, materialIndex) {
+        const indexStart = indices.length;
+        const vertexStart = positions.length / 3;
+
+        for (let i = 0; i <= radialSegments; i++) {
+          const u = minimumU + (1 - minimumU) * (i / radialSegments);
+
+          for (let j = 0; j <= angularSegments; j++) {
+            const v = j / angularSegments;
+            const point = shellPoint(u, v, front);
+
+            positions.push(point.x, point.y, point.z);
+            uvs.push(u, v);
+
+            const fluteShade =
+              0.80 +
+              0.18 *
+              Math.pow(0.5 + 0.5 * Math.cos(v * Math.PI * 10), 2);
+
+            const growthShade = 0.95 + Math.sin(u * Math.PI * 13) * 0.035;
+
+            vertexColor.setRGB(
+              fluteShade * growthShade,
+              fluteShade * growthShade,
+              fluteShade * growthShade
+            );
+
+            colors.push(vertexColor.r, vertexColor.g, vertexColor.b);
+          }
+        }
+
+        const row = angularSegments + 1;
+
+        for (let i = 0; i < radialSegments; i++) {
+          for (let j = 0; j < angularSegments; j++) {
+            const a = vertexStart + i * row + j;
+            const b = a + row;
+            const c = a + 1;
+            const d = b + 1;
+
+            if ((sign > 0) === front) {
+              indices.push(a, b, c, b, d, c);
+            } else {
+              indices.push(a, c, b, b, c, d);
+            }
+          }
+        }
+
+        geometry.addGroup(
+          indexStart,
+          indices.length - indexStart,
+          materialIndex
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry();
+
+      appendSurface(true, 0);
+      appendSurface(false, 1);
+
+      // Closed perimeter around the complete valve.
+      const perimeter = [];
+
+      for (let i = 0; i <= radialSegments; i++) {
+        const u = minimumU + (1 - minimumU) * (i / radialSegments);
+        perimeter.push([u, 0]);
+      }
+
+      for (let j = 1; j <= angularSegments; j++) {
+        perimeter.push([1, j / angularSegments]);
+      }
+
+      for (let i = radialSegments - 1; i >= 0; i--) {
+        const u = minimumU + (1 - minimumU) * (i / radialSegments);
+        perimeter.push([u, 1]);
+      }
+
+      const rimIndexStart = indices.length;
+      const rimVertexStart = positions.length / 3;
+
+      for (const [u, v] of perimeter) {
+        const frontPoint = shellPoint(u, v, true);
+        const backPoint = shellPoint(u, v, false);
+
+        positions.push(frontPoint.x, frontPoint.y, frontPoint.z);
+        positions.push(backPoint.x, backPoint.y, backPoint.z);
+
+        uvs.push(u, v, u, v);
+
+        colors.push(0.92, 0.86, 0.72);
+        colors.push(0.72, 0.60, 0.44);
+      }
+
+      for (let i = 0; i < perimeter.length; i++) {
+        const next = (i + 1) % perimeter.length;
+        const a = rimVertexStart + i * 2;
+        const b = a + 1;
+        const c = rimVertexStart + next * 2;
+        const d = c + 1;
+
+        indices.push(a, b, c, b, d, c);
+      }
+
+      geometry.addGroup(
+        rimIndexStart,
+        indices.length - rimIndexStart,
+        2
+      );
+
+      geometry.setIndex(indices);
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "uv",
+        new THREE.Float32BufferAttribute(uvs, 2)
+      );
+      geometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(colors, 3)
+      );
+      geometry.computeVertexNormals();
+      geometry.computeBoundingSphere();
+
+      return geometry;
+    }
+
+    const rightValve = new THREE.Mesh(
+      buildValveGeometry(1),
+      [
+        shellOuterMaterial,
+        shellInnerMaterial,
+        shellRimMaterial
+      ]
+    );
+
+    const leftValve = new THREE.Mesh(
+      buildValveGeometry(-1),
+      [
+        shellOuterMaterial,
+        shellInnerMaterial,
+        shellRimMaterial
+      ]
+    );
+
+    for (const [valve, sign] of [
+      [rightValve, 1],
+      [leftValve, -1]
+    ]) {
+      valve.position.set(0, 2.42, -0.30);
+      valve.rotation.y = sign * -0.18;
+      valve.castShadow = true;
+      valve.receiveShadow = true;
+      scene.add(valve);
+    }
+
+    // Thick, organic hinge ligament joining the two valves.
+    const hingeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb58b59,
+      roughness: 0.74
+    });
+
+    const hinge = new THREE.Mesh(
+      new THREE.SphereGeometry(0.46, 32, 18),
+      hingeMaterial
+    );
+
+    hinge.position.set(0, 2.43, -0.24);
+    hinge.scale.set(1.05, 0.55, 0.76);
+    hinge.castShadow = true;
+    scene.add(hinge);
+
+    for (let i = 0; i < 3; i++) {
+      const hingeFold = new THREE.Mesh(
+        new THREE.TorusGeometry(0.27 + i * 0.055, 0.065, 10, 32),
+        hingeMaterial
+      );
+
+      hingeFold.position.set(0, 2.43, -0.08 + i * 0.06);
+      hingeFold.scale.y = 0.58;
+      hingeFold.castShadow = true;
+      scene.add(hingeFold);
+    }
+
+    // -------------------------------------------------------------------------
+    // Colorful folded mantle
+    // -------------------------------------------------------------------------
+
+    function createMantleTexture() {
+      const size = 512;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const context = canvas.getContext("2d");
+
+      const image = context.createImageData(size, size);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const index = (y * size + x) * 4;
+
+          const waveA = Math.sin(x * 0.055 + Math.sin(y * 0.032) * 3.1);
+          const waveB = Math.sin(x * 0.018 - y * 0.047 + 1.7);
+          const pattern = (waveA * 0.62 + waveB * 0.38 + 1) * 0.5;
+
+          let r;
+          let g;
+          let b;
+
+          if (pattern < 0.38) {
+            r = 22;
+            g = 142;
+            b = 139;
+          } else if (pattern < 0.64) {
+            r = 73;
+            g = 54;
+            b = 143;
+          } else if (pattern < 0.82) {
+            r = 43;
+            g = 170;
+            b = 115;
+          } else {
+            r = 202;
+            g = 116;
+            b = 49;
+          }
+
+          const variation = randomRange(-13, 13);
+          image.data[index] = r + variation;
+          image.data[index + 1] = g + variation * 0.7;
+          image.data[index + 2] = b + variation * 0.5;
+          image.data[index + 3] = 255;
+        }
+      }
+
+      context.putImageData(image, 0, 0);
+
+      for (let i = 0; i < 180; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = randomRange(1.2, 5.5);
+
+        context.fillStyle =
+          random() > 0.48
+            ? "rgba(19,49,72,0.55)"
+            : "rgba(255,220,120,0.48)";
+
+        context.beginPath();
+        context.ellipse(
+          x,
+          y,
+          radius,
+          radius * randomRange(0.45, 1.0),
+          random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
+      }
+
+      return makeCanvasTexture(canvas, 1.6, 1.6);
+    }
+
+    const mantleTexture = createMantleTexture();
+
+    const mantleMaterial = new THREE.MeshStandardMaterial({
+      map: mantleTexture,
+      color: 0xffffff,
+      roughness: 0.38,
+      metalness: 0.025,
+      side: THREE.DoubleSide
+    });
+
+    const mantleGroup = new THREE.Group();
+    scene.add(mantleGroup);
+
+    function mantlePoint(x, v) {
+      const lower = 0.12 + Math.sin(x * 4.7) * 0.055;
+      const upper = 0.92 + Math.sin(x * 3.9 + 0.4) * 0.11;
+      const y = THREE.MathUtils.lerp(lower, upper, v);
+
+      const z =
+        0.70 +
+        Math.sin(x * 7.0 + v * 2.8) * 0.075 +
+        Math.sin(x * 16.0 - v * 4.0) * 0.028;
+
+      return new THREE.Vector3(x, y, z);
+    }
+
+    function createMantleSheet() {
+      const widthSegments = 64;
+      const heightSegments = 20;
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+
+      for (let i = 0; i <= widthSegments; i++) {
+        const x = THREE.MathUtils.lerp(-1.35, 1.35, i / widthSegments);
+
+        for (let j = 0; j <= heightSegments; j++) {
+          const v = j / heightSegments;
+          const point = mantlePoint(x, v);
+
+          positions.push(point.x, point.y, point.z);
+          uvs.push(i / widthSegments, v);
+        }
+      }
+
+      const row = heightSegments + 1;
+
+      for (let i = 0; i < widthSegments; i++) {
+        for (let j = 0; j < heightSegments; j++) {
+          const a = i * row + j;
+          const b = a + row;
+          const c = a + 1;
+          const d = b + 1;
+
+          indices.push(a, b, c, b, d, c);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setIndex(indices);
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "uv",
+        new THREE.Float32BufferAttribute(uvs, 2)
+      );
+      geometry.computeVertexNormals();
+
+      const sheet = new THREE.Mesh(geometry, mantleMaterial);
+      sheet.castShadow = true;
+      sheet.receiveShadow = true;
+      mantleGroup.add(sheet);
+    }
+
+    createMantleSheet();
+
+    // Rounded mantle folds, each following a different sinuous path.
+    for (let i = 0; i < 11; i++) {
+      const x0 = THREE.MathUtils.lerp(-1.23, 1.23, i / 10);
+      const points = [];
+
+      for (let j = 0; j <= 6; j++) {
+        const v = j / 6;
+        const x =
+          x0 +
+          Math.sin(v * 6.2 + i * 0.83) * 0.075 +
+          Math.sin(v * 12 + i) * 0.018;
+
+        const point = mantlePoint(x, v);
+        point.z += 0.09 + Math.sin(v * Math.PI) * 0.055;
+        points.push(point);
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const fold = new THREE.Mesh(
+        new THREE.TubeGeometry(
+          curve,
+          36,
+          0.052 + (i % 3) * 0.009,
+          9,
+          false
+        ),
+        mantleMaterial
+      );
+
+      fold.castShadow = true;
+      fold.receiveShadow = true;
+      mantleGroup.add(fold);
+    }
+
+    // Small contrasting mantle speckles.
+    const speckleGeometry = new THREE.SphereGeometry(0.026, 8, 6);
+    const speckleMaterial = new THREE.MeshStandardMaterial({
+      color: 0x153b58,
+      roughness: 0.4
+    });
+
+    const speckles = new THREE.InstancedMesh(
+      speckleGeometry,
+      speckleMaterial,
+      48
+    );
+
+    for (let i = 0; i < 48; i++) {
+      const x = randomRange(-1.24, 1.24);
+      const v = randomRange(0.08, 0.9);
+      const point = mantlePoint(x, v);
+
+      dummy.position.set(
+        point.x + randomRange(-0.035, 0.035),
+        point.y,
+        point.z + 0.145
+      );
+      dummy.rotation.set(random() * 3, random() * 3, random() * 3);
+
+      const scale = randomRange(0.55, 1.6);
+      dummy.scale.setScalar(scale);
+      dummy.updateMatrix();
+      speckles.setMatrixAt(i, dummy.matrix);
+    }
+
+    mantleGroup.add(speckles);
+
+    // A paired, tubular siphon with dark openings.
+    const siphonGold = new THREE.MeshStandardMaterial({
+      color: 0xd78a4a,
+      roughness: 0.42,
+      metalness: 0.03
+    });
+
+    const siphonTeal = new THREE.MeshStandardMaterial({
+      color: 0x35b6a6,
+      roughness: 0.4,
+      metalness: 0.03
+    });
+
+    const openingMaterial = new THREE.MeshStandardMaterial({
+      color: 0x102a31,
+      roughness: 0.9,
+      side: THREE.DoubleSide
+    });
+
+    function addSiphon(points, radius, material, openingRadius) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point))
+      );
+
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 42, radius, 12, false),
+        material
+      );
+
+      tube.castShadow = true;
+      mantleGroup.add(tube);
+
+      const end = points[points.length - 1];
+
+      const lip = new THREE.Mesh(
+        new THREE.TorusGeometry(openingRadius, radius * 0.31, 10, 28),
+        material
+      );
+
+      lip.position.set(end[0], end[1], end[2] + 0.01);
+      lip.castShadow = true;
+      mantleGroup.add(lip);
+
+      const hole = new THREE.Mesh(
+        new THREE.CircleGeometry(openingRadius * 0.82, 24),
+        openingMaterial
+      );
+
+      hole.position.set(end[0], end[1], end[2] + 0.018);
+      mantleGroup.add(hole);
+    }
+
+    addSiphon(
+      [
+        [-0.22, 0.24, 0.80],
+        [-0.25, 0.48, 0.96],
+        [-0.18, 0.73, 1.12],
+        [-0.10, 0.94, 1.24]
+      ],
+      0.14,
+      siphonGold,
+      0.12
+    );
+
+    addSiphon(
+      [
+        [0.14, 0.20, 0.80],
+        [0.18, 0.40, 0.92],
+        [0.19, 0.61, 1.04],
+        [0.16, 0.78, 1.12]
+      ],
+      0.105,
+      siphonTeal,
+      0.085
+    );
+
+    // -------------------------------------------------------------------------
+    // Branching coral
+    // -------------------------------------------------------------------------
+
+    function createBranchCoral(origin, color, scale = 1) {
+      const group = new THREE.Group();
+      group.position.copy(origin);
+      group.scale.setScalar(scale);
+
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.72,
+        metalness: 0.01
+      });
+
+      function branch(start, direction, length, radius, depth) {
+        const end = start.clone().addScaledVector(direction, length);
+        const segment = cylinderBetween(
+          start,
+          end,
+          radius * 0.68,
+          radius,
+          material,
+          9
+        );
+
+        group.add(segment);
+
+        const joint = new THREE.Mesh(
+          new THREE.SphereGeometry(radius * 0.85, 10, 8),
+          material
+        );
+        joint.position.copy(end);
+        joint.castShadow = true;
+        group.add(joint);
+
+        if (depth <= 0) return;
+
+        const branches = depth > 1 ? 3 : 2;
+
+        for (let i = 0; i < branches; i++) {
+          const nextDirection = direction.clone();
+
+          nextDirection.x += randomRange(-0.55, 0.55);
+          nextDirection.z += randomRange(-0.48, 0.48);
+          nextDirection.y += randomRange(0.05, 0.34);
+          nextDirection.normalize();
+
+          branch(
+            end,
+            nextDirection,
+            length * randomRange(0.56, 0.76),
+            radius * 0.67,
+            depth - 1
+          );
+        }
+      }
+
+      branch(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(
+          randomRange(-0.12, 0.12),
+          1,
+          randomRange(-0.08, 0.08)
+        ).normalize(),
+        0.75,
+        0.11,
+        3
+      );
+
+      scene.add(group);
+    }
+
+    createBranchCoral(
+      new THREE.Vector3(-3.7, 0, -2.25),
+      0xe46f68,
+      1.2
+    );
+
+    createBranchCoral(
+      new THREE.Vector3(3.9, 0, -2.65),
+      0xe7a15f,
+      1.35
+    );
+
+    createBranchCoral(
+      new THREE.Vector3(-4.7, 0, 0.65),
+      0xb95b82,
+      0.82
+    );
+
+    createBranchCoral(
+      new THREE.Vector3(4.6, 0, 0.9),
+      0xcf685e,
+      0.78
+    );
+
+    // Fan coral behind the clam.
+    const fanMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc65482,
+      roughness: 0.7
+    });
+
+    const fan = new THREE.Group();
+    fan.position.set(2.65, 0, -3.6);
+
+    for (let i = 0; i < 13; i++) {
+      const angle = THREE.MathUtils.lerp(-0.8, 0.8, i / 12);
+      const points = [];
+
+      for (let j = 0; j <= 5; j++) {
+        const t = j / 5;
+        points.push(
+          new THREE.Vector3(
+            Math.sin(angle) * t * 1.3,
+            t * 1.55,
+            Math.cos(angle * 1.4) * t * 0.35
+          )
+        );
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const branch = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 24, 0.035, 7, false),
+        fanMaterial
+      );
+      branch.castShadow = true;
+      fan.add(branch);
+    }
+
+    scene.add(fan);
+
+    // Rounded brain-coral forms.
+    const brainMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd89a70,
+      roughness: 0.78
+    });
+
+    for (const [x, z, size] of [
+      [-2.7, -3.15, 0.7],
+      [3.0, -3.65, 0.55],
+      [-4.55, -1.25, 0.43]
+    ]) {
+      const brain = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 32, 18),
+        brainMaterial
+      );
+      brain.position.set(x, size * 0.38, z);
+      brain.scale.y = 0.55;
+      brain.castShadow = true;
+      brain.receiveShadow = true;
+      scene.add(brain);
+    }
+
+    // -------------------------------------------------------------------------
+    // Sea grass
+    // -------------------------------------------------------------------------
+
+    const grassMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3c8d68,
+      roughness: 0.82
+    });
+
+    function addSeaGrass(x, z, count, height) {
+      for (let i = 0; i < count; i++) {
+        const baseX = x + randomRange(-0.38, 0.38);
+        const baseZ = z + randomRange(-0.32, 0.32);
+        const h = height * randomRange(0.68, 1.2);
+        const bendX = randomRange(-0.3, 0.3);
+        const bendZ = randomRange(-0.25, 0.25);
+
+        const curve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(baseX, 0.02, baseZ),
+          new THREE.Vector3(
+            baseX + bendX * 0.25,
+            h * 0.42,
+            baseZ + bendZ * 0.2
+          ),
+          new THREE.Vector3(
+            baseX + bendX,
+            h,
+            baseZ + bendZ
+          )
+        ]);
+
+        const blade = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 18, 0.026, 6, false),
+          grassMaterial
+        );
+
+        blade.castShadow = true;
+        scene.add(blade);
+      }
+    }
+
+    addSeaGrass(-2.55, 2.05, 9, 0.95);
+    addSeaGrass(2.7, 2.15, 8, 0.82);
+    addSeaGrass(-4.0, -0.2, 6, 0.7);
+
+    // -------------------------------------------------------------------------
+    // Suspended particles
+    // -------------------------------------------------------------------------
+
+    const particlePositions = [];
+    const particleCount = 210;
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions.push(
+        randomRange(-9, 9),
+        randomRange(0.2, 7.5),
+        randomRange(-7, 7)
+      );
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xc8fff1,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+
+    scene.add(particles);
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: no external controls or addons
+    // -------------------------------------------------------------------------
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - pointerX;
+      const deltaY = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      desired.theta -= deltaX * 0.0052;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.0045,
+        0.55,
+        1.48
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          5.8,
+          14.5
+        );
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      const delta = clock.getDelta();
+
+      current.theta += (desired.theta - current.theta) * 0.085;
+      current.phi += (desired.phi - current.phi) * 0.085;
+      current.radius += (desired.radius - current.radius) * 0.085;
+
+      const sinPhi = Math.sin(current.phi);
+      const cosPhi = Math.cos(current.phi);
+
+      camera.position.set(
+        cameraTarget.x +
+          current.radius * sinPhi * Math.sin(current.theta),
+        cameraTarget.y + current.radius * cosPhi,
+        cameraTarget.z +
+          current.radius * sinPhi * Math.cos(current.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+
+      // A restrained breathing motion keeps the living mantle from feeling rigid.
+      const breath = 1 + Math.sin(elapsed * 0.85) * 0.009;
+      mantleGroup.scale.set(1, breath, 1);
+      mantleGroup.position.z = Math.sin(elapsed * 0.72) * 0.018;
+
+      causticTexture.offset.x = elapsed * 0.004;
+      causticTexture.offset.y = elapsed * 0.0025;
+      causticTexture.rotation = Math.sin(elapsed * 0.08) * 0.025;
+
+      particles.rotation.y = elapsed * 0.006;
+      particles.position.y = Math.sin(elapsed * 0.2) * 0.035;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

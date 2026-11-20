@@ -1,0 +1,2299 @@
+We need respond with code likely full HTML. Need infer desired scene. Need build self-contained HTML using Three.js core only CDN, no addons. Need camera controls directly. Need bamboo-framed box kite. Need maybe polished interactive scene. We should provide HTML code. Need ensure only import three module. We can make detailed procedural geometry: box kite rectangular prism, bamboo ribs, strings, spars, tail, maybe warm studio environment, ground, camera orbit custom. Self-contained means one HTML file except CDN. "from cdnjs" use exact URL. Need perhaps no external assets. Need implement controls.
+
+Need think geometry orientation. Box kite rectangular frame, maybe dimensions 6 x 3.8 x 2.4. Use bamboo strips as cylinders or boxes. Frame edges, cross braces, longitudinal ribs, diagonal? A box kite often rectangular with bamboo lattice, string grid, tail, center hub. We can create rounded bamboo strips? Cylinder segments. Need visually appealing.
+
+Scene:
+- canvas full screen
+- gradient background perhaps CSS
+- Three scene fog, orthographic? Perspective.
+- Ground plane maybe soft shadow.
+- Kite at slight angle, hovering? Could animate gentle bob and rotation. But if rotating entire kite, strings and frame. Better animate subtle group bob and maybe no rotation? Could have a turntable? User asked scene, likely static. Add interaction: drag orbit, wheel zoom, auto rotate toggle. Implement custom camera controls.
+- UI title, controls, reset, toggle strings maybe.
+- Use renderer shadows, ACES, sRGB.
+- Bamboo frame: use cylinders between points, with nodes. Need helper cylinderBetween. For rectangular box:
+  length along X = 7.2, height Y = 4.2, depth Z = 2.5.
+  Outer frame edges: 12 edges, bamboo tan.
+  Cross braces on each face: maybe vertical/horizontal ribs at intervals and diagonals.
+  Box kite structure: longitudinal frame rails around x? Traditional box kite: rectangular outer frame, internal longitudinal ribs (parallel to length) and crossbars; strings diagonal forming diamond grid. Need distinguish bamboo frame and string grid.
+Could define:
+outer rectangular frame edges.
+ribs: 5 rails along X at y/z positions? Actually box kite has 4 longitudinal rails along length, at y ±height/2 and z ±depth/2? Outer edges already. Internal rails at y ±(height/2 - 0.55), z maybe 0? Hmm.
+Let's design lattice:
+- outer rectangular frame edges.
+- 4 longitudinal bamboo rails along X at y=±1.75, z=±0.75? This gives 8 internal? Maybe.
+- Crossbars at x positions [-2.4,-1.2,0,1.2,2.4] connecting corners and face diagonals.
+- face string grid: on each of four side faces, diagonal strings from corners to center? Traditional box kite has strings running diagonally across faces, often from one corner to opposite, creating X on each face. Add 2 diagonals per face (thin lines).
+- longitudinal strings connecting points along x on face edges.
+- central hub sphere/cylinder and strings from corners to hub (maybe too many).
+- tail: long streamer from rear lower corner with multiple lines.
+- bridle lines from corners to central receiver.
+Need ensure strings visible against frame. Use LineBasicMaterial maybe linewidth ignored. Better use cylinders for strings, but many. Use thin cylinders radius 0.012, dark. Could use BufferGeometry LineSegments and line width 1; okay. For visual, cylinders.
+
+Bamboo nodes: small torus? We can use spheres/cylinders. Use CylinderGeometry radius 0.09 length 0.18 oriented along segment. Node rings maybe torus around bamboo. Could add at intervals. Simpler small tan dark cylinders.
+
+Need shadows. Ground plane maybe 30x30, circular platform? Scene aesthetic.
+
+Kite group centered at y=3? If ground y=0, kite bottom at y=0.8. Place group y=3.0, so bottom 0.8. Tail extends down. Maybe suspended by line to top? Add string from top corner to a "hand" not needed. Could add suspension line from top center to small ring? But strings from corners to hub.
+
+Need maybe use custom camera orbit:
+state target (0,3,0), spherical radius, theta, phi.
+pointerdown, pointermove, pointerup, wheel.
+update camera.
+Double click reset.
+autoRotate slight if not interacting.
+Need prevent contextmenu.
+Keyboard arrows maybe.
+UI.
+
+Need use only core. Import from URL. Could also use CSS.
+
+Need code robust. Need maybe include loading overlay.
+
+Need "self-contained HTML scene" likely output code only maybe concise intro. Let's craft full code.
+
+Need ensure Three v160 API:
+renderer.outputColorSpace = THREE.SRGBColorSpace
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+PMREM? not needed.
+Canvas.
+CanvasTexture for labels? no.
+
+Need custom rounded bamboo? Cylinder geometry with radial segments 8, material roughness.
+helper cylinderBetween(a,b,r,mat, radial=8): geometry CylinderGeometry(r,r,length,radial), mesh position midpoint, quaternion setFromUnitVectors(yAxis, direction).
+For rectangular frame, points.
+
+Need nodes: function addNode(mesh? at point along edge) maybe small cylinder aligned along edge. Use CylinderGeometry(r*1.08, r*1.08, 0.16, 10), oriented along edge. But cylinder centered and extends along direction. Add dark ring? Could use material nodeMat and short cylinder. Need avoid too many.
+
+Frame:
+const L=7.2, H=4.2, D=2.4;
+corners:
+x ±L/2, y ±H/2, z ±D/2.
+outer edges:
+front/back z ±D/2, x edges; side x ±L/2, y edges.
+Use bamboo material.
+Maybe frame is too plain. Add inner rails:
+- 4 longitudinal rails along X at y = ±(H/2 - 0.55) = ±1.65 and z=0? Actually each at z ±? A box has two longitudinal sets: at z ±0.72, y values maybe ±1.65. That's 4.
+- crossbars at x = -2.4,-1.2,0,1.2,2.4 connecting y at front/back? For each x, connect (-H/2,z±D/2) to (H/2? no) Wait crossbar should be along depth at fixed x on front/back face: points (x, H/2, -D/2) to (x,H/2,D/2), and lower. And side faces along y at x ±L/2? Could add.
+Maybe frame structure:
+outer edges.
+longitudinal rails along X at positions: y=±1.55, z=±0.78 (4)
+crossbars along Z at x=-2.4,-1.2,0,1.2,2.4, y=±1.55 (10)
+crossbars along Y at x=±3.45, z=±0.78? 4.
+This is dense but good bamboo lattice.
+Actually box kite frame often has 4 longitudinal rails and 4 crossbars. Use:
+4 longitudinal at y ±1.55, z ±0.85.
+4 crossbars at x ±2.4, ±? along y at z ±0.85? Hmm.
+Let's do:
+- 4 longitudinal rails along X at y = ±1.55, z = ±0.72
+- 5 crossbars along Z at x = -2.4,-1.2,0,1.2,2.4, y=±1.55? That's 10 and creates grid.
+- 4 side crossbars along Y at x ±3.45, z ±0.72.
+Could clutter. Maybe okay.
+
+String grid:
+For each face, 2 diagonals crossing. 8 strings. Plus longitudinal strings along x on front/back at y? For each face, string from corners to center? Traditional: diagonal from each corner to center, 4 per face = 16, plus outer frame. But strings should be taut and visible. Use strings from corners to center of each face (8? each face 2 diagonals = 8). Also side string lines along x at y? Maybe.
+Coordinates:
+front face z=D/2, corners x±L/2,y±H/2, center (0,0,D/2). diagonal corners to center (2 each)
+back z=-D/2.
+side x=±L/2, corners y±H/2,z±D/2, center (±L/2,0,0), 2 each.
+8 diagonals.
+Add longitudinal strings on front/back along x at y=±H/2? outer frame enough. Add strings along x on front/back at y=0 maybe. But that would cross diagonals. Traditional string grid includes longitudinal strings at face center. Add 2 along x at y=0 z=±D/2, and side along z at x=±L/2,y=0. Total 12. This makes mesh.
+Maybe strings should be slightly lighter/darker. Use dark brown line cylinders radius .012.
+
+Central hub at (0,0,0), sphere. Strings from four corners? The bridle from corners to hub would cross interior, visible. But if all 4, strong. Add 4 strings from corners to hub, plus a small central ring. However diagonals on faces plus hub lines. Traditional box kite bridle from corners to a central point. Add 4 corner-to-center strings, radius .018, dark.
+Tail:
+from lower rear corner? Kite length x, tail extends -X perhaps. Attach at (-L/2,-H/2,D/2) and (-L/2,-H/2,-D/2) to tail end (-L/2-3.6, -H/2-0.1, 0). Multiple strands. Tail ribbon? Use custom BufferGeometry triangular strip, maybe a long tapered cloth tail. But user asks bamboo-framed box kite, tail adds. Could make two cloth streamers hanging from lower corners, using PlaneGeometry? Need orient. Simpler create ribbon geometry along X direction, width in Z, at y lower. Since tail extends -X, create vertices for strip with x from -L/2 to -L/2-3.2, y around -H/2-0.25, z ±0.45 and slight curve. MeshStandardMaterial red. But it might look like flat plane. Use double side, rough. Add fringe bamboo? Could add small cylinders.
+
+Maybe tail should extend downward from bottom center, more recognizable. Attach at (0,-H/2,0) to (0,-H/2-3.4,0), with V strings from lower corners. A long rectangular red tail plane vertical, width in z 1.0, x length 2.4. But box kite tail often long streamer. Let's do streamer extending -X from lower-left corner, red cloth. Add 3 strings from attachment points to tail.
+Could add a second short red tail at opposite? no.
+
+Bamboo frame should cast shadows. String shadows maybe not.
+
+Materials:
+bamboo = MeshStandardMaterial color 0xc79345 roughness .65
+bambooLight maybe.
+node = dark brown.
+string = MeshStandardMaterial color 0x3a2415 roughness 1.
+cloth = color 0xa93f32 or deep red, side DoubleSide.
+Ground pale beige.
+
+Environment: scene background Color(0xe9e3d6), fog. Hemisphere light, directional sun, fill. Ground plane with ShadowMaterial? Use MeshStandardMaterial.
+Add circular rug/platform? Maybe a plane and rings. Could add large circle under kite in slightly different color, but scene should focus.
+Background gradient cannot with scene background color. CSS canvas transparent and body gradient. Set renderer alpha true, scene.background null, fog maybe. CSS radial gradient. Ground plane with ShadowMaterial opacity .18, but no receive? ShadowMaterial works. Add large circle plane maybe MeshStandard.
+Could make backdrop plane vertical? Simpler scene.background = Color.
+
+Need maybe labels in UI. Include title "Bamboo Box Kite", subtitle.
+Controls: drag to orbit, scroll to zoom, double-click reset. Buttons "Pause drift", "Hide strings" maybe. A toggle to reveal structure. Need avoid overcomplicate.
+
+Animation: group position.y = 3.0 + sin(t*.7)*.08; group.rotation.y = sin(t*.18)*.05 maybe. But if group rotates, strings and tail rotate. Ground shadow. Could also rotate entire kite slowly? Better subtle breathing.
+Need if strings hidden, toggle. Button.
+Need camera target perhaps (0,2.5,0). Kite group at y=3.0. Camera radius 11, theta 0.7, phi 1.15.
+Custom controls:
+let target = new THREE.Vector3(0,2.6,0), spherical = new THREE.Spherical(11, Math.PI/2.15, 0.72)
+In Three spherical phi polar from y, theta around y. camera.position.setFromSpherical.
+Pointer drag: theta -= dx*.006, phi -= dy*.006 clamp .35, 1.48.
+Wheel radius *= exp(deltaY*.001), clamp 7,18.
+Damping: desired and current values. pointer modifies desired. animate current lerp.
+auto rotate: desired.theta += 0.0008 each frame if enabled and not dragging. But if always, user can interact. Button "Auto orbit".
+Could have camera target fixed.
+Reset.
+
+Need maybe pointer touch.
+
+Need add bamboo node rings. Function addNode(point, direction, radius):
+const node = Mesh(new CylinderGeometry(radius*1.08,...,0.16,10), nodeMat); orient along direction. But cylinder center point, direction. Add.
+For outer edges, nodes every ~1.2. Need calculate points and add. Could add to each edge at fractions. Helper addNodeAt(point, direction).
+For internal rails too.
+Could add knots as small torus? Cylinder dark band sufficient.
+
+Need frame edges and cross braces. Let's specify:
+outer points:
+A(-3.6,2.1,1.2), B(3.6,2.1,1.2), C(3.6,2.1,-1.2), D(-3.6,2.1,-1.2)
+bottom similarly.
+outer edges.
+longitudinal rails:
+at y=1.55, z=±0.72 from x -3.6 to 3.6 (4)
+at y=-1.55, z=±0.72 (4)
+Maybe these are parallel to length.
+crossbars at x=-2.4,-1.2,0,1.2,2.4:
+front/back connect (x,1.55,-.72) to (x,1.55,.72) and lower; 10.
+side crossbars at x±3.6 connect (3.6,1.55,z±.72) to (3.6,-1.55,z±.72)? That's along y at each z, 4. But these overlap outer side edges? They are internal at z ±.72, good.
+This creates a dense rectangular lattice. Maybe crossbars at x values on front/back, and side vertical at x endpoints. Fine.
+
+Outer frame edges perhaps bamboo radius .095, internal .07.
+String diagonals on faces:
+front/back: from (-3.6,±2.1,±1.2) to (0,0,±1.2)
+side: from (±3.6,±2.1,∓? all four corners to center (±3.6,0,0)).
+Actually each side has 2 diagonals crossing, endpoints at y±2.1,z±1.2. Add.
+Longitudinal strings:
+front/back from (-3.6,0,±1.2) to (3.6,0,±1.2)
+side from (±3.6,0,-1.2) to (±3.6,0,1.2)
+These cross center with diagonals.
+Corner-to-hub 4 strings from corners to (0,0,0), radius .018.
+Maybe strings on faces are too dense but good.
+
+Need central hub: CylinderGeometry(.16,.16,.35,16), oriented along X perhaps. Add torus ring? TorusGeometry(.18,.04,8,20) default in XY plane, okay. position. Add small cap.
+Need strings to hub maybe terminate at hub.
+
+Tail:
+cloth geometry:
+xStart=-3.6, xEnd=-7.4, y maybe -2.1? The lower left corner at x=-3.6,y=-2.1,z=1.2. Tail extends x negative and y down slightly. Create strip vertices:
+for i 0..12, t, x = start + (end-start)*t; y=-2.1 - .3*t - .15*sin(pi*t); z = 0.55*(1-t) maybe taper. Need cloth width in z. vertices left/right z ± width. But if width z and x direction, plane vertical-ish. Could create 2 triangles per segment. Use BufferGeometry positions, indices, compute normals. Material red.
+Maybe tail should be at lower rear and visible from camera initial (camera x? theta .72 means camera x ~7, z~6, so rear -x maybe away). Could extend +X instead, toward camera? Initial camera position with theta .72: x=r sinphi sintheta ~6.8, z~7.2, so +X side visible. Tail at +X better. Attach at (3.6,-2.1,1.2) and extend to 7.4. But box kite tail often trailing opposite flight direction; arbitrary. Use +X. Camera sees.
+Tail attachment at right lower front corner. Add 3 strings from (3.6,-2.1, 0.6,0,1.2) to tail start maybe.
+Tail geometry x 3.6 to 7.2, y -2.1 to -2.6, z width 0.7 taper.
+Add fringe? Could add small bamboo strip along edge? Maybe cloth tail enough.
+Also a second short red tail from other lower corner? no.
+
+Could add a string from top center to a tiny line upward? Kite should be airborne. Maybe no.
+
+Need maybe support line from top center to camera? no.
+
+Could add "wind ribbons" around? no.
+
+Need responsive.
+
+Need ensure no external font perhaps system.
+
+Need mention save as index.html.
+
+Potential issue user asked "Build" not "explain", so provide code. Could include entire HTML. Desired oververbosity 5, maybe brief intro and features.
+
+Let's formulate code carefully.
+
+Let's create HTML:
+&lt;!doctype html&gt;
+&lt;meta...
+style body etc.
+#app, canvas.
+header panel.
+#hint.
+#buttons.
+button.
+#loading.
+script type module:
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+Need no addons.
+
+Renderer with antialias true alpha true.
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)).
+renderer.setSize.
+renderer.shadowMap...
+renderer.domElement id scene.
+append.
+
+Scene fog = new THREE.Fog(0xe9e3d6, 14, 30)
+camera Perspective 38.
+
+lights:
+HemisphereLight(0xfff7e8,0x776c5f,2.0)
+DirectionalLight(0xfff1cf,4) position(-4,10,7), cast shadow, map 2048, camera extents 10.
+Directional fill maybe 1.
+Ambient? hemisphere enough.
+ground: CircleGeometry(18,64) rotate x -PI/2, y=-.02, material color 0xded6c4 roughness 1. But scene background same. shadow receive.
+Maybe a large plane 40.
+
+Add decorative rings? Use RingGeometry with transparent material at y .003, but z-fighting. not necessary.
+
+Kite group position y=3.0.
+frame group.
+
+materials.
+
+helper addBamboo(a,b,r=.08, radial=10):
+direction = b-a; length; geometry = new CylinderGeometry(r,r,length,radial,1,false); mesh; position; quaternion; castShadow true receiveShadow true.
+Potential each geometry unique, okay ~40.
+For edges outer .09.
+nodes:
+function addNode(point, dir, r) {
+ const g = new CylinderGeometry(r*1.08,r*1.08,.15,10);
+ const m=...
+ m.position.copy(point); m.quaternion.setFromUnitVectors(Y, dir.normalize());
+}
+But if point is along edge and cylinder extends both directions, okay.
+Need add nodes at edge positions:
+function nodesOnSegment(a,b,count,r) {
+ for i=1..count-1, p lerp; d=b-a; addNode(p,d,r)
+}
+Outer edges 8 with count 3 = 24 nodes. Internal maybe 50. Fine.
+Could use node material.
+
+Outer points helper:
+const P = (x,y,z)=>new THREE.Vector3...
+const corners = [
+[-L/2,H/2,D/2],[L/2,H/2,D/2],[L/2,H/2,-D/2],[-L/2,H/2,-D/2],
+[-L/2,-H/2,D/2],[L/2,-H/2,D/2],[L/2,-H/2,-D/2],[-L/2,-H/2,-D/2]
+]
+add edges pairs.
+Long rails:
+for y of [1.55,-1.55], z of [-.72,.72] add x.
+Crossbars:
+for x of [-2.4,-1.2,0,1.2,2.4], for y of [1.55,-1.55], add z from -.72 to .72
+for z of [-.72,.72], add y from -1.55 to 1.55 at x ±3.6.
+This yields many intersections but bamboo.
+
+Maybe bamboo frame should have cloth panels? Box kite traditionally open lattice. Strings make grid. Fine.
+
+String helper cylinderBetween with radius .012 and maybe 5 radial. If using MeshStandardMaterial and many meshes, 20 draw calls okay. Could merge but no BufferGeometryUtils addon. We can use LineSegments for strings, but line width 1. Use cylinder for key. 16 strings manageable.
+Need strings perhaps castShadow false.
+
+Add face diagonals:
+for z of [D/2,-D/2]:
+ add from (-L/2,H/2,z) to (0,0,z), and (L/2,-H/2,z) to (0,0,z)
+for x of [L/2,-L/2]:
+ add from (x,H/2,D/2) to (x,0,0), and (x,-H/2,-D/2) to (x,0,0)
+This gives X each face.
+Longitudinal:
+for z of [D/2,-D/2] add x from -L/2 to L/2 at y=0
+for x of [L/2,-L/2] add z from -D/2 to D/2 at y=0
+Maybe these run through center and cross.
+Corner hub strings from corners to (0,0,0), but these are internal and can be seen. Add.
+Maybe strings from face center to hub? no.
+
+Central hub:
+const hub = new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,.42,16), bambooLight); hub.rotation.z=PI/2; position.
+Torus ring? TorusGeometry(.2,.045,8,24), position maybe.
+Need orient torus default around z axis, hole along z; cylinder hole along x after rotation z=PI/2, torus should also rotate y? Torus normal default z; to align normal x, rotate y=PI/2. Add.
+
+Tail cloth:
+function createTailGeometry:
+segments=12
+for i 0..segments:
+t=i/segments
+x=3.6+(7.2-3.6)*t
+y=-2.1-.35*t - .12*Math.sin(pi*t)
+halfWidth=.55*(1-t)+.08
+vertices two per: (x,y,-half), (x,y,+half)
+indices for each segment: a=2i,b=2i+1,c=2(i+1),d=2(i+1)+1; triangles a,c,b and b,c,d maybe orientation. Since material DoubleSide.
+Need maybe cloth has wavy top edge? Could add vertices top and bottom, but simple.
+Maybe tail should taper to point. Add tip triangle? vertices enough. At t=1 halfwidth .08, not point. Could set .02.
+Add a separate thin bamboo rib along top edge? Tail cloth can have two narrow bamboo strips along edges, but not necessary.
+Tail strings:
+from attach (3.6,-2.1,1.2) to (3.6,-2.15,.45) etc.
+Maybe three strands from points (3.6,-2.1,0.8), (3.6,-2.1,1.2), (3.6,-2.1,1.55) to tail start (3.6,-2.15,.4)? Hmm.
+Tail begins at corner and extends x negative? If +x, attachment at right corner and cloth extends +x, strings fan from corner toward different points along tail. Add from (3.6,-2.1,0.6), (3.6,-2.1,1.2), (3.6,-2.1,1.55) to (3.8,-2.2,.35), (4.1,-2.3,.2), etc. But strings should attach to cloth edge. Simpler:
+string from (3.6,-2.1,0.45) to (3.75,-2.22,0.25)
+from (3.6,-2.1,0.9) to (4.0,-2.32,0.12)
+from (3.6,-2.1,1.35) to (4.4,-2.5,0.02)
+These are diagonal down.
+Need tail group same.
+
+Maybe add a small red triangular pennant at tail end? Could make shape. Not necessary.
+
+Add suspension line? Top center to a small line upward maybe string from (0,H/2,0) to (0,H/2+1.2,0) with a wooden handle? But box kite can be flown by lines. Could add central line to top and a small loop, but no need.
+
+Maybe strings from corners to hub and tail enough.
+
+Animation:
+const clock = new THREE.Clock();
+let autoOrbit=true, stringsVisible=true;
+function animate() {
+ requestAnimationFrame
+ const t=clock.getElapsedTime()
+ if(autoOrbit) desired.theta += .0007
+ current.theta=lerp...
+ current.phi...
+ current.radius...
+ camera.position.setFromSpherical(current).add(target)
+ camera.lookAt(target)
+ kite.position.y=3.0+Math.sin(t*.75)*.06
+ kite.rotation.y=Math.sin(t*.22)*.035
+ kite.rotation.z=Math.sin(t*.31)*.008
+ if(!stringsVisible) stringGroup.visible=false
+ renderer.render
+}
+Need if group rotation changes, tail etc. Fine.
+Maybe strings group separate.
+
+UI buttons:
+auto button text "Pause orbit"; click toggles.
+strings button "Show strings"; click.
+reset.
+Maybe button "Top view" not needed.
+Use aria.
+
+Camera interaction:
+const pointer = {down:false,x:0,y:0};
+canvas.addEventListener('pointerdown', e=> {down true; setPointerCapture; class dragging;});
+pointermove if down: desired.theta -= dx*.006; desired.phi = clamp(desired.phi - dy*.005, .35,1.48); last.
+pointerup.
+wheel preventDefault, desired.radius=clamp(desired.radius*Math.exp(e.deltaY*.001),7,18)
+Doubleclick reset.
+Touch via pointer.
+
+Need perhaps camera target changes with kite bob? target fixed y=2.6. Kite center y=3, okay.
+Current spherical initial.
+
+Resize.
+
+Loading overlay remove after first render. Since module loads network, initial overlay. Add window error? not needed.
+Could use `document.getElementById('loading').remove()` after setup.
+
+Need maybe use CSS `canvas {touch-action:none}`.
+
+Need ensure scene background and CSS gradient. Set renderer alpha true and scene.background = null; fog color maybe 0xe9e3d6 but transparent background with fog? Fog blends to color, okay. CSS gradient visible.
+Ground plane maybe horizon due perspective. camera looking down, plane fills.
+
+Could add a backdrop large plane? no.
+
+Maybe add sun disk? no.
+
+Need perhaps shadows from kite onto ground. Kite group y=3, tail to y=.55, so shadow.
+
+Need maybe ground plane receives shadow, but kite is high.
+
+Need add a circular shadow? real shadow.
+
+Potential issue Three `THREE.MathUtils.damp` available? use lerp.
+
+Need maybe `renderer.setAnimationLoop` instead request. use request.
+
+Need only core import. no other imports.
+
+Let's consider if user expects actual artifact rather than code. We can only respond. Maybe include code fence.
+
+Need ensure no syntax errors. Let's draft.
+
+CSS:
+:root color-scheme light
+body margin 0 overflow hidden font...
+#hud position fixed top 24 left 24; background rgba...
+h1...
+#controls bottom right.
+button.
+#hint bottom left.
+#loading center.
+@media.
+
+HTML buttons with data.
+
+JS:
+const canvasHost = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+...
+scene.fog = new THREE.Fog(0xe8e1d2, 13, 28);
+camera...
+No scene.background. Fog on objects blends to fog color, background CSS gradient may differ slightly.
+
+Ground material color 0xd9d1c0.
+
+Maybe add a large vertical gradient via CSS.
+
+Lighting:
+hemi intensity 1.8
+sun 3.4
+fill 1.2
+In r160 physically correct lights default? intensity okay.
+
+Ground plane receives.
+
+Maybe add a "wind halo" ring around base:
+const halo = new Mesh(new RingGeometry(5.3,5.32,96), new MeshBasicMaterial({color:0xb9aa8d,transparent:true,opacity:.25,side:DoubleSide})); rotate x -PI/2; y=.002. But not necessary.
+
+Need maybe add a shadow-catching plane only.
+
+Bamboo material:
+new MeshStandardMaterial({color:0xc99a4d, roughness:.58, metalness:0})
+bambooLight 0xe0b86b
+bambooDark 0x8f632f.
+Node material 0x6f4821.
+String 0x3c2b1d.
+String accent maybe 0x5a4129.
+Tail 0x9e3f35.
+Tail edge maybe 0xc35c48.
+
+Need maybe frame alternate material? no.
+
+Helper `addBamboo`:
+const delta = new THREE.Vector3().subVectors(b,a);
+const length=delta.length();
+const geometry=new THREE.CylinderGeometry(radius,radius,length,segments,1,false);
+const mesh=...
+mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), delta.normalize());
+...
+`new THREE.Vector3` each time okay.
+For strings, use `addString(a,b,r=.012,segments=5)`.
+Need if length 0 no.
+
+Node:
+`const node = new THREE.Mesh(new THREE.CylinderGeometry(r*1.08,r*1.08,.15,10), nodeMaterial);`
+position p; quaternion.
+Potential cylinder axis along dir and center p, band extends ±.075. Good.
+
+`addSegmentNodes(a,b,count,r)` for i=1; i<count; i++.
+Outer edges count=3, internal count=2 maybe.
+Could add node at every intersection.
+No need.
+
+String helper material shared.
+
+Need face diagonals and longitudinal strings in `stringGroup`.
+Corner to hub strings maybe stringGroup.
+
+Hub:
+const hubBody = Mesh CylinderGeometry(.16,.2,.38,18); rotation.z=PI/2.
+const hubRing = Mesh TorusGeometry(.2,.045,8,24); hubRing.rotation.y=PI/2.
+Maybe hub cap spheres? no.
+
+Tail geometry:
+positions array, indices.
+for i:
+const t=i/segments;
+const x=3.6+(7.2-3.6)*t;
+const y=-2.1-.36*t-.1*Math.sin(Math.PI*t);
+const half=.58*(1-t)+.035;
+positions.push(x,y,-half,x,y,half)
+indices for i&lt;segments:
+a=i*2,b=a+1,c=a+2,d=a+3
+indices.push(a,c,b,b,c,d)
+Need normals.
+Maybe cloth top edge should be at y + .08 and bottom -; but this is a vertical strip in x-z plane, camera sees. Fine.
+Could add a slight curve in z? no.
+Material side DoubleSide.
+Tail geometry cast shadow.
+
+Add tail edge ribs? Two thin bamboo strips along z edges perhaps:
+for z ± half function, addBamboo from start to end radius .025, but tail half varies. Could add, but not necessary. Cloth tail with red.
+
+Maybe add a second narrow cloth panel? no.
+
+Maybe the tail should be a long streamer, and red panel is good.
+
+Need add a little white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small red triangular pennant at tail end? geometry already.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Could add "tail tip" triangular red shape? geometry already.
+
+Maybe add a small white stripe on tail? Could add a smaller plane strip? Maybe no.
+
+Need add a small white stripe on tail
+=====CONTENT=====

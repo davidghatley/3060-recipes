@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cliff Dwelling — Timber Ladders & Counterweighted Door</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --cream: #efe4c7;
+      --muted: #b9ad91;
+      --panel: rgba(17, 21, 25, 0.78);
+      --line: rgba(239, 228, 199, 0.18);
+      --accent: #d7a85c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #111820;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: var(--cream);
+    }
+
+    .title-panel {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      max-width: 430px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: linear-gradient(135deg, rgba(20, 25, 30, 0.9), rgba(20, 25, 30, 0.55));
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(25px, 3vw, 38px);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .sequence-panel {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      width: min(390px, calc(100vw - 48px));
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .sequence-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 11px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    #status {
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .step {
+      color: #716c61;
+      font-size: 10px;
+      line-height: 1.45;
+      transition: color 250ms ease;
+    }
+
+    .step.active {
+      color: var(--cream);
+    }
+
+    .step.complete {
+      color: #c6aa69;
+    }
+
+    .progress-track {
+      height: 3px;
+      margin-top: 13px;
+      overflow: hidden;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #progress {
+      width: 0;
+      height: 100%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(215, 168, 92, 0.6);
+    }
+
+    .controls-hint {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
+      background: rgba(17, 21, 25, 0.65);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+    }
+
+    .controls-hint strong {
+      color: var(--cream);
+      font-weight: 600;
+    }
+
+    @media (max-width: 650px) {
+      .title-panel {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        max-width: none;
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .sequence-panel {
+        left: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+      }
+
+      .controls-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hud">
+    <section class="title-panel">
+      <div class="eyebrow">Mountain settlement · interactive study</div>
+      <h1>Cliff Dwelling</h1>
+      <p class="subtitle">
+        Three removable timber ladders climb from the ledge path in sequence,
+        followed by the counterweighted plank door sealing the upper refuge.
+      </p>
+    </section>
+
+    <section class="sequence-panel">
+      <div class="sequence-heading">
+        <span>Settlement sequence</span>
+        <span id="status">Preparing settlement</span>
+      </div>
+
+      <div class="steps">
+        <div class="step active" id="step-0">Raise ladder I</div>
+        <div class="step" id="step-1">Raise ladder II</div>
+        <div class="step" id="step-2">Raise ladder III</div>
+      </div>
+
+      <div class="progress-track">
+        <div id="progress"></div>
+      </div>
+    </section>
+
+    <div class="controls-hint">
+      <strong>Drag</strong> to orbit · <strong>Scroll</strong> to zoom
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene and camera
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111820);
+    scene.fog = new THREE.FogExp2(0x111820, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      120
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 3.15, 0.35);
+    const spherical = {
+      theta: 0.57,
+      phi: 1.14,
+      radius: 18.5
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(spherical.phi);
+
+      camera.position.set(
+        cameraTarget.x + spherical.radius * sinPhi * Math.sin(spherical.theta),
+        cameraTarget.y + spherical.radius * Math.cos(spherical.phi),
+        cameraTarget.z + spherical.radius * sinPhi * Math.cos(spherical.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // Direct camera controls: no external controls module is used.
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      spherical.theta -= dx * 0.005;
+      spherical.phi = THREE.MathUtils.clamp(
+        spherical.phi - dy * 0.005,
+        0.38,
+        1.46
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          10,
+          28
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    // -------------------------------------------------------------------------
+    // Materials and helpers
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      cliff: new THREE.MeshStandardMaterial({
+        color: 0x555b5b,
+        roughness: 0.98,
+        metalness: 0,
+        flatShading: true
+      }),
+      cliffDark: new THREE.MeshStandardMaterial({
+        color: 0x303638,
+        roughness: 1,
+        flatShading: true
+      }),
+      stone: new THREE.MeshStandardMaterial({
+        color: 0x77766b,
+        roughness: 0.94,
+        flatShading: true
+      }),
+      stoneLight: new THREE.MeshStandardMaterial({
+        color: 0x928c78,
+        roughness: 0.9,
+        flatShading: true
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x684328,
+        roughness: 0.88,
+        metalness: 0
+      }),
+      woodLight: new THREE.MeshStandardMaterial({
+        color: 0x9a6a3d,
+        roughness: 0.82,
+        metalness: 0
+      }),
+      woodDark: new THREE.MeshStandardMaterial({
+        color: 0x38251b,
+        roughness: 0.95,
+        metalness: 0
+      }),
+      iron: new THREE.MeshStandardMaterial({
+        color: 0x25292b,
+        roughness: 0.5,
+        metalness: 0.78
+      }),
+      rope: new THREE.LineBasicMaterial({
+        color: 0x302a23,
+        transparent: true,
+        opacity: 0.9
+      }),
+      interior: new THREE.MeshBasicMaterial({
+        color: 0x080b0c
+      }),
+      window: new THREE.MeshStandardMaterial({
+        color: 0xe8a853,
+        emissive: 0x8f4210,
+        emissiveIntensity: 1.6,
+        roughness: 0.5
+      })
+    };
+
+    function addBox(
+      width,
+      height,
+      depth,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      radius,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      radialSegments = 10
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, height, radialSegments),
+        material
+      );
+
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x9bb4c4, 0x30281d, 1.45));
+
+    const sun = new THREE.DirectionalLight(0xffe2b0, 3.2);
+    sun.position.set(-8, 14, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -15;
+    sun.shadow.camera.right = 15;
+    sun.shadow.camera.top = 15;
+    sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 40;
+    sun.shadow.bias = -0.0004;
+    scene.add(sun);
+
+    const coolFill = new THREE.DirectionalLight(0x789bb5, 1.1);
+    coolFill.position.set(10, 7, -8);
+    scene.add(coolFill);
+
+    const fireLight = new THREE.PointLight(0xff8b38, 13, 11, 2);
+    fireLight.position.set(0, 0.8, 2.4);
+    scene.add(fireLight);
+
+    const doorwayLight = new THREE.PointLight(0xffa247, 4.5, 7, 2);
+    doorwayLight.position.set(0, 3.5, -0.2);
+    scene.add(doorwayLight);
+
+    // -------------------------------------------------------------------------
+    // Ground, cliff and ledges
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(100, 100),
+      new THREE.MeshStandardMaterial({
+        color: 0x242927,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.16;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const cliffMass = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 2),
+      materials.cliff
+    );
+    cliffMass.position.set(0, 3.65, -4.65);
+    cliffMass.scale.set(15.5, 8.2, 4.6);
+    cliffMass.rotation.set(0.08, -0.18, -0.03);
+    cliffMass.castShadow = true;
+    cliffMass.receiveShadow = true;
+    scene.add(cliffMass);
+
+    const cliffTop = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 2),
+      materials.cliffDark
+    );
+    cliffTop.position.set(0, 7.7, -4.2);
+    cliffTop.scale.set(15, 1.25, 4.3);
+    cliffTop.rotation.y = 0.18;
+    cliffTop.castShadow = true;
+    cliffTop.receiveShadow = true;
+    scene.add(cliffTop);
+
+    const dwellingXs = [-4.25, 0, 4.25];
+
+    dwellingXs.forEach((x, index) => {
+      // Recessed dark opening.
+      addBox(2.45, 2.65, 0.16, materials.interior, x, 2.72, -2.19);
+
+      // Heavy timber frame.
+      addBox(0.2, 2.8, 0.3, materials.woodDark, x - 1.28, 2.72, -2.02);
+      addBox(0.2, 2.8, 0.3, materials.woodDark, x + 1.28, 2.72, -2.02);
+      addBox(2.78, 0.22, 0.32, materials.woodDark, x, 4.12, -2.02);
+
+      // Horizontal timber braces.
+      addBox(2.5, 0.12, 0.12, materials.wood, x, 1.55, -1.93);
+      addBox(2.5, 0.12, 0.12, materials.wood, x, 3.88, -1.93);
+
+      // Irregular rock surrounding the recess.
+      const rock = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1, 1),
+        index === 1 ? materials.cliffDark : materials.cliff
+      );
+      rock.position.set(x + 1.65, 2.75, -2.25);
+      rock.scale.set(1.1, 1.3, 0.75);
+      rock.rotation.set(0.3, index * 0.8, 0.1);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+
+      // Small upper dwelling roof / eave.
+      const roof = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.85, 2.05, 0.24, 7),
+        materials.woodDark
+      );
+      roof.position.set(x, 5.25, -2.75);
+      roof.rotation.z = Math.PI / 2;
+      roof.castShadow = true;
+      roof.receiveShadow = true;
+      scene.add(roof);
+
+      const eave = addBox(
+        3.5,
+        0.18,
+        0.7,
+        materials.wood,
+        x,
+        5.08,
+        -2.25
+      );
+      eave.rotation.z = -0.12;
+
+      // Warm window in the recess.
+      const windowMesh = addBox(
+        0.48,
+        0.62,
+        0.08,
+        materials.window,
+        x + 0.68,
+        3.75,
+        -2.04
+      );
+      windowMesh.castShadow = false;
+    });
+
+    // -------------------------------------------------------------------------
+    // Upper landings
+    // -------------------------------------------------------------------------
+
+    dwellingXs.forEach((x) => {
+      addBox(3.25, 0.34, 1.75, materials.wood, x, 4.47, -0.95);
+      addBox(3.45, 0.16, 0.18, materials.woodDark, x, 4.3, 0.29);
+
+      // Side railing posts.
+      addBox(0.14, 0.8, 0.14, materials.woodDark, x - 1.45, 5.0, 0.24);
+      addBox(0.14, 0.8, 0.14, materials.woodDark, x + 1.45, 5.0, 0.24);
+
+      // Railing beam.
+      addBox(3.1, 0.14, 0.14, materials.woodDark, x, 5.38, 0.24);
+
+      // Stone support below the landing.
+      addBox(
+        3.1,
+        1.1,
+        0.7,
+        materials.stone,
+        x,
+        3.95,
+        -1.55
+      );
+    });
+
+    // -------------------------------------------------------------------------
+    // Ledge path
+    // -------------------------------------------------------------------------
+
+    addBox(4.6, 0.22, 0.45, materials.stone, 0, -0.01, -1.65);
+    addBox(4.35, 0.2, 1.1, materials.stone, 0, 0.01, 0.15);
+    addBox(4.15, 0.19, 1.35, materials.stoneLight, 0, 0.02, 2.0);
+    addBox(4.0, 0.18, 1.4, materials.stone, 0, 0.02, 3.65);
+    addBox(3.85, 0.17, 1.45, materials.stoneLight, 0, 0.02, 5.4);
+    addBox(3.7, 0.16, 1.4, materials.stone, 0, 0.02, 6.9);
+
+    // Irregular path stones.
+    for (let i = 0; i < 12; i++) {
+      const stone = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1, 0),
+        i % 2 ? materials.stone : materials.stoneLight
+      );
+      stone.position.set(
+        (Math.random() - 0.5) * 3.7,
+        0.08,
+        0.8 + Math.random() * 5.3
+      );
+      stone.scale.set(
+        0.28 + Math.random() * 0.35,
+        0.12 + Math.random() * 0.16,
+        0.3 + Math.random() * 0.4
+      );
+      stone.rotation.set(
+        Math.random() * 0.5,
+        Math.random() * Math.PI,
+        Math.random() * 0.3
+      );
+      stone.castShadow = true;
+      stone.receiveShadow = true;
+      scene.add(stone);
+    }
+
+    // Low path edging.
+    addBox(0.28, 0.34, 7.1, materials.stone, -2.18, 0.08, 2.75);
+    addBox(0.28, 0.34, 7.1, materials.stone, 2.18, 0.08, 2.75);
+
+    // -------------------------------------------------------------------------
+    // Ladders
+    // -------------------------------------------------------------------------
+
+    const ladderLength = 4.6;
+    const ladderWidth = 0.98;
+    const ladderRungs = 12;
+    const ladderGroup = new THREE.Group();
+    const ladders = [];
+
+    function createLadder(x, index) {
+      const group = new THREE.Group();
+      group.position.set(x, 0.16, -1.35);
+      group.rotation.z = -1.48;
+      scene.add(group);
+
+      // Two structural rails.
+      addBox(
+        0.12,
+        ladderLength,
+        0.12,
+        materials.woodDark,
+        -ladderWidth / 2,
+        ladderLength / 2,
+        0,
+        group
+      );
+
+      addBox(
+        0.12,
+        ladderLength,
+        0.12,
+        materials.woodDark,
+        ladderWidth / 2,
+        ladderLength / 2,
+        0,
+        group
+      );
+
+      // Cross rungs.
+      for (let i = 0; i <= ladderRungs; i++) {
+        const y = (i / ladderRungs) * ladderLength;
+        addBox(
+          ladderWidth,
+          0.1,
+          0.1,
+          i % 3 === 0 ? materials.woodLight : materials.wood,
+          0,
+          y,
+          0,
+          group
+        );
+      }
+
+      // Iron hooks at the top.
+      addBox(0.16, 0.16, 0.32, materials.iron, -0.48, ladderLength, 0.08, group);
+      addBox(0.16, 0.16, 0.32, materials.iron, 0.48, ladderLength, 0.08, group);
+
+      group.userData.index = index;
+      ladders.push(group);
+    }
+
+    createLadder(-4.25, 0);
+    createLadder(0, 1);
+    createLadder(4.25, 2);
+
+    // -------------------------------------------------------------------------
+    // Counterweighted plank door
+    // -------------------------------------------------------------------------
+
+    const doorPivot = new THREE.Group();
+    doorPivot.position.set(-1.35, 4.65, -0.95);
+    scene.add(doorPivot);
+
+    const doorWidth = 2.6;
+    const doorHeight = 2.3;
+
+    // Five vertical planks.
+    for (let i = 0; i < 5; i++) {
+      addBox(
+        doorWidth / 5 - 0.025,
+        doorHeight,
+        0.17,
+        i % 2 === 0 ? materials.wood : materials.woodLight,
+        (i + 0.5) * (doorWidth / 5),
+        0,
+        0,
+        doorPivot
+      );
+    }
+
+    // Iron straps and crossbar.
+    addBox(0.12, doorHeight + 0.05, 0.08, materials.iron, 0.55, 0, 0.12, doorPivot);
+    addBox(0.12, doorHeight + 0.05, 0.08, materials.iron, 1.95, 0, 0.12, doorPivot);
+    addBox(2.6, 0.12, 0.1, materials.iron, 1.3, 0.78, 0.13, doorPivot);
+    addBox(2.6, 0.12, 0.1, materials.iron, 1.3, -0.78, 0.13, doorPivot);
+
+    // Iron handle.
+    addBox(0.1, 0.38, 0.1, materials.iron, 2.45, 0, 0.24, doorPivot);
+    addBox(0.32, 0.1, 0.12, materials.iron, 2.45, 0, 0.24, doorPivot);
+
+    // Stone piers forming the ledge gap.
+    addBox(0.8, 1.45, 1.45, materials.stone, -1.85, 4.0, -0.95);
+    addBox(0.8, 1.45, 1.45, materials.stone, 1.85, 4.0, -0.95);
+    addBox(0.95, 0.3, 1.65, materials.stoneLight, -1.85, 4.78, -0.95);
+    addBox(0.95, 0.3, 1.65, materials.stoneLight, 1.85, 4.78, -0.95);
+
+    // Dark recess behind the door.
+    addBox(2.8, 2.35, 0.2, materials.interior, 0, 4.65, -1.31);
+
+    // Door frame.
+    addBox(0.18, 2.48, 0.26, materials.woodDark, -1.36, 4.65, -0.95);
+    addBox(0.18, 2.48, 0.26, materials.woodDark, 1.36, 4.65, -0.95);
+    addBox(2.9, 0.2, 0.28, materials.woodDark, 0, 5.88, -0.95);
+    addBox(2.9, 0.16, 0.25, materials.woodDark, 0, 3.42, -0.95);
+
+    // Pulley.
+    const pulleyPosition = new THREE.Vector3(1.35, 6.35, -0.95);
+
+    const pulley = new THREE.Mesh(
+      new THREE.TorusGeometry(0.24, 0.065, 8, 24),
+      materials.iron
+    );
+    pulley.position.copy(pulleyPosition);
+    pulley.castShadow = true;
+    scene.add(pulley);
+
+    addCylinder(
+      0.055,
+      0.55,
+      materials.iron,
+      pulleyPosition.x,
+      pulleyPosition.y,
+      pulleyPosition.z,
+      scene,
+      10
+    );
+
+    // Counterweight.
+    const counterweight = new THREE.Group();
+    counterweight.position.set(pulleyPosition.x, 3.2, pulleyPosition.z);
+    scene.add(counterweight);
+
+    addBox(0.68, 0.78, 0.68, materials.woodDark, 0, 0, 0, counterweight);
+    addBox(0.78, 0.12, 0.78, materials.iron, 0, 0.39, 0, counterweight);
+    addBox(0.12, 0.75, 0.12, materials.iron, 0, -0.36, 0, counterweight);
+
+    // Two animated rope segments.
+    function makeRope() {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(new Float32Array(6), 3)
+      );
+
+      const line = new THREE.Line(geometry, materials.rope);
+      line.frustumCulled = false;
+      scene.add(line);
+      return line;
+    }
+
+    const ropeToPulley = makeRope();
+    const ropeToWeight = makeRope();
+
+    function positionRope(line, a, b) {
+      const positions = line.geometry.attributes.position;
+      positions.setXYZ(0, a.x, a.y, a.z);
+      positions.setXYZ(1, b.x, b.y, b.z);
+      positions.needsUpdate = true;
+      line.geometry.computeBoundingSphere();
+    }
+
+    // -------------------------------------------------------------------------
+    // Small environmental details
+    // -------------------------------------------------------------------------
+
+    // Dry grass on the path.
+    const grassMaterial = new THREE.MeshStandardMaterial({
+      color: 0x697044,
+      roughness: 1,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 24; i++) {
+      const grass = new THREE.Mesh(
+        new THREE.ConeGeometry(0.035, 0.28 + Math.random() * 0.22, 3),
+        grassMaterial
+      );
+      grass.position.set(
+        (Math.random() - 0.5) * 3.6,
+        0.17,
+        0.5 + Math.random() * 5.8
+      );
+      grass.rotation.z = (Math.random() - 0.5) * 0.5;
+      scene.add(grass);
+    }
+
+    // A few shrubs on the cliff.
+    const shrubMaterial = new THREE.MeshStandardMaterial({
+      color: 0x343c2d,
+      roughness: 1,
+      flatShading: true
+    });
+
+    [
+      [-7.5, 6.2, -2.7],
+      [7.2, 6.5, -2.9],
+      [-6.2, 5.2, -2.6],
+      [6.5, 5.4, -2.7]
+    ].forEach((position) => {
+      const shrub = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.55, 1),
+        shrubMaterial
+      );
+      shrub.position.set(...position);
+      shrub.scale.set(1.3, 0.7, 0.9);
+      shrub.castShadow = true;
+      scene.add(shrub);
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const statusElement = document.getElementById("status");
+    const progressElement = document.getElementById("progress");
+    const stepElements = [
+      document.getElementById("step-0"),
+      document.getElementById("step-1"),
+      document.getElementById("step-2")
+    ];
+
+    const ladderStartTimes = [0.15, 3.15, 6.15];
+    const ladderDuration = 2.8;
+    const ladderHold = 1.15;
+    const doorStart = 8.45;
+    const doorDuration = 3.1;
+
+    const openDoorAngle = -1.48;
+    const closedDoorAngle = 0;
+    const ropeLength = 4.15;
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function updateLadders(elapsed) {
+      ladders.forEach((ladder, index) => {
+        const time = elapsed - ladderStartTimes[index];
+        let angle;
+
+        if (time < 0) {
+          angle = -1.48;
+        } else if (time < ladderDuration) {
+          angle = THREE.MathUtils.lerp(
+            -1.48,
+            -0.035,
+            easeOutCubic(time / ladderDuration)
+          );
+        } else {
+          angle = -0.035;
+        }
+
+        ladder.rotation.z = angle;
+      });
+    }
+
+    function updateDoor(elapsed) {
+      const time = elapsed - doorStart;
+      let rotation;
+
+      if (time < 0) {
+        rotation = openDoorAngle;
+      } else if (time < doorDuration) {
+        rotation = THREE.MathUtils.lerp(
+          openDoorAngle,
+          closedDoorAngle,
+          easeOutCubic(time / doorDuration)
+        );
+      } else {
+        rotation = closedDoorAngle;
+      }
+
+      doorPivot.rotation.y = rotation;
+      doorPivot.updateMatrixWorld(true);
+
+      // Counterweight rope is attached to the upper corner of the moving door.
+      const attachment = doorPivot.localToWorld(
+        new THREE.Vector3(doorWidth, 1.1, 0)
+      );
+
+      const ropeDistance = attachment.distanceTo(pulleyPosition);
+      const verticalRopeLength = ropeLength - ropeDistance;
+      const weightY = pulleyPosition.y - verticalRopeLength;
+
+      counterweight.position.y = weightY;
+
+      positionRope(
+        ropeToPulley,
+        attachment,
+        pulleyPosition
+      );
+
+      positionRope(
+        ropeToWeight,
+        pulleyPosition,
+        new THREE.Vector3(
+          pulleyPosition.x,
+          weightY + 0.43,
+          pulleyPosition.z
+        )
+      );
+    }
+
+    function updateInterface(elapsed) {
+      let status;
+      let progress = 0;
+
+      if (elapsed < 0.15) {
+        status = "Preparing settlement";
+      } else if (elapsed < 3.15) {
+        status = "Raising ladder I";
+        stepElements[0].classList.add("active");
+      } else if (elapsed < 6.15) {
+        status = "Raising ladder II";
+        stepElements[0].classList.add("complete");
+        stepElements[1].classList.add("active");
+      } else if (elapsed < 8.45) {
+        status = "Raising ladder III";
+        stepElements[0].classList.add("complete");
+        stepElements[1].classList.add("complete");
+        stepElements[2].classList.add("active");
+      } else if (elapsed < doorStart + doorDuration) {
+        status = "Counterweight door sealing";
+        stepElements[0].classList.add("complete");
+        stepElements[1].classList.add("complete");
+        stepElements[2].classList.add("complete");
+      } else {
+        status = "Settlement secured";
+        stepElements[0].classList.add("complete");
+        stepElements[1].classList.add("complete");
+        stepElements[2].classList.add("complete");
+      }
+
+      statusElement.textContent = status;
+      progressElement.style.width = `${Math.min(100, (elapsed / 11.6) * 100)}%`;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      updateLadders(elapsed);
+      updateDoor(elapsed);
+      updateInterface(elapsed);
+
+      // Gentle, restrained flicker for the warm settlement lights.
+      fireLight.intensity = 12 + Math.sin(elapsed * 8.3) * 0.7;
+      doorwayLight.intensity = 4.4 + Math.sin(elapsed * 6.1) * 0.25;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

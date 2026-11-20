@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brittle Star on a Barrel Sponge</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 34%, #1d5556 0%, #0b353b 43%, #03171d 100%);
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 44%, transparent 42%, rgba(0, 10, 14, 0.28) 100%),
+        linear-gradient(180deg, rgba(0, 13, 18, 0.12), transparent 28%);
+    }
+
+    .hud {
+      position: fixed;
+      top: clamp(24px, 5vw, 64px);
+      left: clamp(24px, 5vw, 72px);
+      max-width: 360px;
+      pointer-events: none;
+      color: #edf2df;
+      text-shadow: 0 2px 18px rgba(0, 18, 22, 0.65);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: #9fc5bd;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #78c6b2;
+      box-shadow: 0 0 12px #78c6b2;
+      content: "";
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 6vw, 76px);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 13px 0 0;
+      color: rgba(224, 235, 219, 0.68);
+      font-size: clamp(13px, 1.5vw, 16px);
+      font-style: italic;
+    }
+
+    .facts {
+      position: fixed;
+      right: clamp(22px, 4vw, 58px);
+      bottom: clamp(24px, 4vw, 48px);
+      display: flex;
+      gap: 24px;
+      pointer-events: none;
+      color: rgba(224, 235, 219, 0.62);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .facts span {
+      position: relative;
+    }
+
+    .facts span:not(:last-child)::after {
+      position: absolute;
+      top: 50%;
+      right: -12px;
+      width: 12px;
+      height: 1px;
+      background: rgba(174, 218, 201, 0.45);
+      content: "";
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%);
+      color: rgba(220, 235, 222, 0.42);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 680px) {
+      .facts {
+        display: none;
+      }
+
+      .controls {
+        bottom: 20px;
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="app" aria-label="Interactive three-dimensional brittle star scene"></main>
+  <div class="vignette"></div>
+
+  <header class="hud">
+    <div class="eyebrow">Deep-sea observatory · 18 m</div>
+    <h1>Brittle star</h1>
+    <p class="subtitle">A delicate ophiuroid resting inside a barrel sponge.</p>
+  </header>
+
+  <div class="facts">
+    <span>Five jointed arms</span>
+    <span>Open sponge habitat</span>
+  </div>
+
+  <div class="controls">Drag to orbit · Scroll or pinch to zoom</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const app = document.getElementById("app");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "A brittle star with five jointed arms resting on a barrel sponge"
+    );
+
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x07333a, 8, 22);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const orbit = {
+      theta: 0.58,
+      phi: 1.12,
+      radius: 7.25,
+      targetTheta: 0.58,
+      targetPhi: 1.12,
+      targetRadius: 7.25
+    };
+
+    const cameraTarget = new THREE.Vector3(0, 0.72, 0);
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+
+      camera.position.set(
+        cameraTarget.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        cameraTarget.y + orbit.radius * Math.cos(orbit.phi),
+        cameraTarget.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x83c9c4, 0x241b13, 1.45));
+
+    const keyLight = new THREE.DirectionalLight(0xffe4b5, 3.2);
+    keyLight.position.set(3.8, 6.5, 4.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -4;
+    keyLight.shadow.camera.right = 4;
+    keyLight.shadow.camera.top = 4;
+    keyLight.shadow.camera.bottom = -4;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 16;
+    keyLight.shadow.bias = -0.0004;
+    keyLight.shadow.normalBias = 0.025;
+    keyLight.target.position.set(0, 0.65, 0);
+    scene.add(keyLight, keyLight.target);
+
+    const tealLight = new THREE.PointLight(0x48b9b0, 18, 9, 2);
+    tealLight.position.set(-3.2, 2.4, -2.4);
+    scene.add(tealLight);
+
+    const warmLight = new THREE.PointLight(0xffb96e, 10, 7, 2);
+    warmLight.position.set(2.8, 1.2, 2.2);
+    scene.add(warmLight);
+
+    // ---------------------------------------------------------------------
+    // Procedural textures
+    // ---------------------------------------------------------------------
+
+    function mulberry32(seed) {
+      return function () {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function makeSpongeTextures() {
+      const size = 512;
+      const colorCanvas = document.createElement("canvas");
+      const bumpCanvas = document.createElement("canvas");
+
+      colorCanvas.width = colorCanvas.height = size;
+      bumpCanvas.width = bumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const bumpContext = bumpCanvas.getContext("2d");
+      const random = mulberry32(1847);
+
+      colorContext.fillStyle = "#d9a46d";
+      colorContext.fillRect(0, 0, size, size);
+
+      bumpContext.fillStyle = "#777777";
+      bumpContext.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 1800; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 1 + random() * 7;
+
+        const colorGradient = colorContext.createRadialGradient(
+          x, y, 0,
+          x, y, radius
+        );
+
+        colorGradient.addColorStop(0, "rgba(65, 31, 16, 0.42)");
+        colorGradient.addColorStop(0.42, "rgba(91, 45, 24, 0.20)");
+        colorGradient.addColorStop(1, "rgba(210, 145, 88, 0)");
+
+        colorContext.fillStyle = colorGradient;
+        colorContext.beginPath();
+        colorContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorContext.fill();
+
+        bumpContext.fillStyle = "rgba(35, 35, 35, 0.75)";
+        bumpContext.beginPath();
+        bumpContext.arc(x, y, radius, 0, Math.PI * 2);
+        bumpContext.fill();
+      }
+
+      for (let i = 0; i < 1800; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 0.4 + random() * 1.5;
+
+        colorContext.fillStyle = `rgba(255, 225, 178, ${0.08 + random() * 0.16})`;
+        colorContext.beginPath();
+        colorContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorContext.fill();
+      }
+
+      const colorTexture = new THREE.CanvasTexture(colorCanvas);
+      colorTexture.colorSpace = THREE.SRGBColorSpace;
+      colorTexture.wrapS = colorTexture.wrapT = THREE.RepeatWrapping;
+      colorTexture.repeat.set(2.4, 1.55);
+      colorTexture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+      bumpTexture.wrapS = bumpTexture.wrapT = THREE.RepeatWrapping;
+      bumpTexture.repeat.copy(colorTexture.repeat);
+      bumpTexture.anisotropy = colorTexture.anisotropy;
+
+      return { colorTexture, bumpTexture };
+    }
+
+    function makeSandTexture() {
+      const size = 512;
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+
+      const context = canvas.getContext("2d");
+      const random = mulberry32(9234);
+
+      context.fillStyle = "#9e9275";
+      context.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 3800; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 0.3 + random() * 2.2;
+        const light = random() > 0.5;
+
+        context.fillStyle = light
+          ? `rgba(235, 222, 185, ${0.08 + random() * 0.2})`
+          : `rgba(69, 57, 39, ${0.06 + random() * 0.16})`;
+
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      for (let i = 0; i < 65; i++) {
+        const x = random() * size;
+        const y = random() * size;
+
+        context.strokeStyle = "rgba(244, 229, 190, 0.10)";
+        context.lineWidth = 0.6 + random();
+        context.beginPath();
+
+        context.moveTo(x, y);
+
+        for (let step = 0; step <= 12; step++) {
+          const px = x + step * 12;
+          const py = y + Math.sin(step * 0.65 + i) * 2.4;
+          context.lineTo(px, py);
+        }
+
+        context.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(13, 13);
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      return texture;
+    }
+
+    function makeContactShadowTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(
+        128, 128, 8,
+        128, 128, 124
+      );
+
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0.48)");
+      gradient.addColorStop(0.45, "rgba(0, 0, 0, 0.22)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 256, 256);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // ---------------------------------------------------------------------
+    // Seabed
+    // ---------------------------------------------------------------------
+
+    const seabedGeometry = new THREE.PlaneGeometry(30, 30, 50, 50);
+    const seabedPositions = seabedGeometry.attributes.position;
+
+    for (let i = 0; i < seabedPositions.count; i++) {
+      const x = seabedPositions.getX(i);
+      const y = seabedPositions.getY(i);
+      const height =
+        Math.sin(x * 0.52) * 0.045 +
+        Math.cos(y * 0.41) * 0.035 +
+        Math.sin((x + y) * 0.24) * 0.025;
+
+      seabedPositions.setZ(i, height);
+    }
+
+    seabedGeometry.rotateX(-Math.PI / 2);
+
+    const seabed = new THREE.Mesh(
+      seabedGeometry,
+      new THREE.MeshStandardMaterial({
+        map: makeSandTexture(),
+        color: 0xb5a37e,
+        roughness: 1
+      })
+    );
+
+    seabed.position.y = -0.22;
+    seabed.receiveShadow = true;
+    scene.add(seabed);
+
+    const contactShadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.4, 4.4),
+      new THREE.MeshBasicMaterial({
+        map: makeContactShadowTexture(),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.72
+      })
+    );
+
+    contactShadow.rotation.x = -Math.PI / 2;
+    contactShadow.position.y = -0.205;
+    scene.add(contactShadow);
+
+    // Low, irregular seabed mounds.
+    const moundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9e8d6d,
+      roughness: 1
+    });
+
+    [
+      [-4.8, -0.08, -2.8, 1.1],
+      [4.6, -0.06, -3.7, 0.9],
+      [-5.2, -0.09, 3.2, 0.8],
+      [5.5, -0.08, 3.8, 1.2],
+      [-2.8, -0.10, 5.1, 0.7]
+    ].forEach(([x, y, z, radius]) => {
+      const mound = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 24, 12),
+        moundMaterial
+      );
+
+      mound.scale.set(1.4, 0.24, 1);
+      mound.position.set(x, y, z);
+      mound.receiveShadow = true;
+      scene.add(mound);
+    });
+
+    // ---------------------------------------------------------------------
+    // Barrel sponge
+    // ---------------------------------------------------------------------
+
+    const spongeProfile = [
+      new THREE.Vector2(0.00, 0.22),
+      new THREE.Vector2(0.38, 0.22),
+      new THREE.Vector2(0.57, 0.28),
+      new THREE.Vector2(0.78, 0.40),
+      new THREE.Vector2(0.98, 0.62),
+      new THREE.Vector2(1.14, 0.84),
+      new THREE.Vector2(1.27, 1.00),
+      new THREE.Vector2(1.31, 1.08),
+      new THREE.Vector2(1.25, 1.13),
+      new THREE.Vector2(1.17, 1.08),
+      new THREE.Vector2(1.11, 0.96),
+      new THREE.Vector2(0.98, 0.77),
+      new THREE.Vector2(0.78, 0.55),
+      new THREE.Vector2(0.52, 0.40),
+      new THREE.Vector2(0.25, 0.35),
+      new THREE.Vector2(0.00, 0.35)
+    ];
+
+    const spongeGeometry = new THREE.LatheGeometry(spongeProfile, 96);
+    const spongePositions = spongeGeometry.attributes.position;
+
+    for (let i = 0; i < spongePositions.count; i++) {
+      const x = spongePositions.getX(i);
+      const y = spongePositions.getY(i);
+      const z = spongePositions.getZ(i);
+      const radius = Math.hypot(x, z);
+
+      if (radius > 0.01) {
+        const angle = Math.atan2(z, x);
+        const irregularity =
+          1 +
+          Math.sin(angle * 3 + y * 0.4) * 0.018 +
+          Math.sin(angle * 7 - y * 1.1) * 0.011;
+
+        spongePositions.setX(i, x * irregularity);
+        spongePositions.setZ(i, z * irregularity);
+        spongePositions.setY(
+          i,
+          y + Math.sin(angle * 4 + y * 1.3) * 0.005
+        );
+      }
+    }
+
+    spongeGeometry.computeVertexNormals();
+
+    const { colorTexture, bumpTexture } = makeSpongeTextures();
+
+    const spongeMaterial = new THREE.MeshStandardMaterial({
+      map: colorTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.055,
+      roughness: 0.94,
+      metalness: 0
+    });
+
+    const sponge = new THREE.Mesh(spongeGeometry, spongeMaterial);
+    sponge.castShadow = true;
+    sponge.receiveShadow = true;
+
+    const organism = new THREE.Group();
+    organism.add(sponge);
+    scene.add(organism);
+
+    // A subtly darker floor visible deep inside the sponge cavity.
+    const innerFloor = new THREE.Mesh(
+      new THREE.CircleGeometry(0.28, 48),
+      new THREE.MeshStandardMaterial({
+        color: 0x3a251c,
+        roughness: 1
+      })
+    );
+
+    innerFloor.rotation.x = -Math.PI / 2;
+    innerFloor.position.y = 0.355;
+    sponge.add(innerFloor);
+
+    // ---------------------------------------------------------------------
+    // Actual pores distributed over the sponge exterior
+    // ---------------------------------------------------------------------
+
+    const outerProfile = [
+      [0.57, 0.28],
+      [0.78, 0.40],
+      [0.98, 0.62],
+      [1.14, 0.84],
+      [1.27, 1.00],
+      [1.31, 1.08]
+    ];
+
+    function radiusAtHeight(height) {
+      for (let i = 0; i < outerProfile.length - 1; i++) {
+        const [y0, r0] = outerProfile[i];
+        const [y1, r1] = outerProfile[i + 1];
+
+        if (height >= y0 && height <= y1) {
+          const t = (height - y0) / (y1 - y0);
+          return THREE.MathUtils.lerp(r0, r1, t);
+        }
+      }
+
+      return outerProfile[outerProfile.length - 1][1];
+    }
+
+    const poreRandom = mulberry32(551);
+    const poreCount = 48;
+    const poreGeometry = new THREE.CircleGeometry(1, 12);
+
+    const poreMaterial = new THREE.MeshBasicMaterial({
+      color: 0x693b25,
+      transparent: true,
+      opacity: 0.62,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    const pores = new THREE.InstancedMesh(
+      poreGeometry,
+      poreMaterial,
+      poreCount
+    );
+
+    const dummy = new THREE.Object3D();
+    const upAxis = new THREE.Vector3(0, 0, 1);
+    const normal = new THREE.Vector3();
+
+    for (let i = 0; i < poreCount; i++) {
+      const height = 0.31 + poreRandom() * 0.67;
+      const radius = radiusAtHeight(height);
+      const angle = poreRandom() * Math.PI * 2;
+      const poreRadius = 0.018 + poreRandom() * 0.035;
+
+      dummy.position.set(
+        Math.cos(angle) * (radius + 0.004),
+        height,
+        Math.sin(angle) * (radius + 0.004)
+      );
+
+      normal.set(Math.cos(angle) / radius, 0, Math.sin(angle) / radius);
+      dummy.quaternion.setFromUnitVectors(upAxis, normal);
+      dummy.scale.set(poreRadius, poreRadius, 1);
+      dummy.updateMatrix();
+
+      pores.setMatrixAt(i, dummy.matrix);
+    }
+
+    pores.instanceMatrix.needsUpdate = true;
+    sponge.add(pores);
+
+    // ---------------------------------------------------------------------
+    // Brittle star: central disc and five articulated, bending arms
+    // ---------------------------------------------------------------------
+
+    const discMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf0dfbd,
+      roughness: 0.72,
+      metalness: 0
+    });
+
+    const armMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe6d5b5,
+      roughness: 0.76,
+      metalness: 0
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xcbb38b,
+      roughness: 0.8,
+      metalness: 0
+    });
+
+    const tipMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf5e7c8,
+      roughness: 0.68,
+      metalness: 0
+    });
+
+    const centralDisc = new THREE.Mesh(
+      new THREE.SphereGeometry(0.34, 48, 24),
+      discMaterial
+    );
+
+    centralDisc.scale.set(1, 0.45, 1);
+    centralDisc.position.y = 1.16;
+    centralDisc.castShadow = true;
+    centralDisc.receiveShadow = true;
+    organism.add(centralDisc);
+
+    const centralBoss = new THREE.Mesh(
+      new THREE.SphereGeometry(0.075, 24, 16),
+      tipMaterial
+    );
+
+    centralBoss.position.y = 1.265;
+    centralBoss.castShadow = true;
+    organism.add(centralBoss);
+
+    const unitSphere = new THREE.SphereGeometry(1, 18, 12);
+    const upVector = new THREE.Vector3(0, 1, 0);
+
+    function addCylinderBetween(start, end, startRadius, endRadius, material) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        endRadius,
+        startRadius,
+        length,
+        14,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        upVector,
+        direction.clone().normalize()
+      );
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      organism.add(mesh);
+
+      return mesh;
+    }
+
+    const armSpecs = [
+      { angle: -2.15, rise: 0.10, reach: 1.48, tipY: 0.20 },
+      { angle: -1.05, rise: 0.18, reach: 1.56, tipY: 0.28 },
+      { angle:  0.05, rise: 0.22, reach: 1.64, tipY: 0.36 },
+      { angle:  1.15, rise: 0.16, reach: 1.52, tipY: 0.25 },
+      { angle:  2.25, rise: 0.08, reach: 1.40, tipY: 0.18 }
+    ];
+
+    function polarPoint(radius, height, angle) {
+      return new THREE.Vector3(
+        Math.sin(angle) * radius,
+        height,
+        Math.cos(angle) * radius
+      );
+    }
+
+    armSpecs.forEach((spec, armIndex) => {
+      const points = [
+        polarPoint(0.14, 1.19, spec.angle),
+        polarPoint(0.40, 1.23, spec.angle),
+        polarPoint(0.78, 1.32 + spec.rise, spec.angle),
+        polarPoint(1.08, 1.37 + spec.rise * 0.65, spec.angle),
+        polarPoint(1.38, 1.18 + spec.rise * 0.45, spec.angle),
+        polarPoint(1.62, 0.82 + spec.rise * 0.25, spec.angle),
+        polarPoint(1.78 * spec.reach, spec.tipY + spec.rise * 0.08, spec.angle)
+      ];
+
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "catmullrom",
+        0.32
+      );
+
+      const samples = curve.getPoints(5);
+
+      for (let i = 0; i < samples.length - 1; i++) {
+        const start = samples[i];
+        const end = samples[i + 1];
+
+        const radiusAt = 0.056 - i * 0.008;
+        addCylinderBetween(
+          start,
+          end,
+          radiusAt,
+          radiusAt * 0.54,
+          armMaterial
+        );
+      }
+
+      // Visible joints emphasize the brittle star's segmented anatomy.
+      for (let i = 1; i < samples.length - 1; i++) {
+        const joint = new THREE.Mesh(unitSphere, jointMaterial);
+        joint.position.copy(samples[i]);
+        joint.scale.setScalar(0.069 - (i - 1) * 0.008);
+        joint.castShadow = true;
+        joint.receiveShadow = true;
+        organism.add(joint);
+      }
+
+      const tip = new THREE.Mesh(unitSphere, tipMaterial);
+      tip.position.copy(samples[samples.length - 1]);
+      tip.scale.setScalar(0.043);
+      tip.castShadow = true;
+      organism.add(tip);
+    });
+
+    // ---------------------------------------------------------------------
+    // Suspended marine particles
+    // ---------------------------------------------------------------------
+
+    const particleCount = 240;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleSpeeds = new Float32Array(particleCount);
+    const particleRandom = mulberry32(812);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (particleRandom() - 0.5) * 14;
+      particlePositions[i * 3 + 1] = particleRandom() * 4.5;
+      particlePositions[i * 3 + 2] = (particleRandom() - 0.5) * 14;
+      particleSpeeds[i] = 0.018 + particleRandom() * 0.045;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xb7ded0,
+        size: 0.026,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+
+    scene.add(particles);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // ---------------------------------------------------------------------
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - pointerX;
+      const deltaY = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      orbit.targetTheta -= deltaX * 0.006;
+      orbit.targetPhi = THREE.MathUtils.clamp(
+        orbit.targetPhi - deltaY * 0.005,
+        0.32,
+        1.48
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.targetRadius = THREE.MathUtils.clamp(
+          orbit.targetRadius * Math.exp(event.deltaY * 0.001),
+          4.2,
+          11
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => {
+      orbit.targetTheta = 0.58;
+      orbit.targetPhi = 1.12;
+      orbit.targetRadius = 7.25;
+    });
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key;
+
+      if (key === "ArrowLeft") orbit.targetTheta -= 0.12;
+      if (key === "ArrowRight") orbit.targetTheta += 0.12;
+      if (key === "ArrowUp") {
+        orbit.targetPhi = THREE.MathUtils.clamp(orbit.targetPhi - 0.08, 0.32, 1.48);
+      }
+      if (key === "ArrowDown") {
+        orbit.targetPhi = THREE.MathUtils.clamp(orbit.targetPhi + 0.08, 0.32, 1.48);
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      const damping = 1 - Math.exp(-8 * delta);
+
+      orbit.theta += (orbit.targetTheta - orbit.theta) * damping;
+      orbit.phi += (orbit.targetPhi - orbit.phi) * damping;
+      orbit.radius += (orbit.targetRadius - orbit.radius) * damping;
+
+      updateCamera();
+
+      organism.position.y = Math.sin(elapsed * 0.45) * 0.018;
+
+      const positions = particleGeometry.attributes.position;
+
+      for (let i = 0; i < particleCount; i++) {
+        let y = positions.getY(i) + particleSpeeds[i] * delta;
+
+        if (y > 4.7) {
+          y = 0.08;
+        }
+
+        positions.setY(i, y);
+      }
+
+      positions.needsUpdate = true;
+
+      tealLight.intensity = 17 + Math.sin(elapsed * 0.7) * 2.2;
+      warmLight.intensity = 9 + Math.sin(elapsed * 0.48 + 1.4) * 1.4;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

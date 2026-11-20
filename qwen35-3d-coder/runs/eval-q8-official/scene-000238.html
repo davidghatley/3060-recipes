@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folding Clothes Drying Rack</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #d8d3c7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      max-width: 340px;
+      padding: 16px 18px;
+      color: #33291f;
+      background: rgba(250, 247, 239, 0.84);
+      border: 1px solid rgba(83, 63, 43, 0.14);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(61, 45, 27, 0.12);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .title-card h1 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: 0.01em;
+    }
+
+    .title-card p {
+      margin: 0;
+      color: #746557;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      position: fixed;
+      right: 22px;
+      bottom: 20px;
+      padding: 9px 12px;
+      color: #5e5144;
+      background: rgba(250, 247, 239, 0.78);
+      border: 1px solid rgba(83, 63, 43, 0.12);
+      border-radius: 999px;
+      box-shadow: 0 8px 25px rgba(61, 45, 27, 0.1);
+      font-size: 11px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #665647;
+      background: #d8d3c7;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: opacity 0.35s ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        max-width: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <div class="title-card">
+    <h1>Folding Drying Rack</h1>
+    <p>
+      Wooden A-frame supports, notched drying rails, and a pivot-mounted
+      lower shelf.
+    </p>
+  </div>
+
+  <div class="controls">
+    Drag to orbit · Scroll to zoom · Double-click to reset
+  </div>
+
+  <div class="loading" id="loading">Loading scene…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    container.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional folding clothes drying rack"
+    );
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xd8d3c7);
+    scene.fog = new THREE.Fog(0xd8d3c7, 11, 25);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 2.05, 0);
+
+    const cameraState = {
+      radius: 8.25,
+      phi: 1.31,
+      theta: 0.61
+    };
+
+    const desiredCamera = {
+      radius: cameraState.radius,
+      phi: cameraState.phi,
+      theta: cameraState.theta
+    };
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        desiredCamera.radius,
+        desiredCamera.phi,
+        desiredCamera.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // ---------------------------------------------------------------------
+    // Procedural wood texture
+    // ---------------------------------------------------------------------
+
+    function createWoodTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 128;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#c99358");
+      gradient.addColorStop(0.5, "#d8a468");
+      gradient.addColorStop(1, "#b87940");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 90; i++) {
+        const y = Math.random() * canvas.height;
+        const amplitude = 1 + Math.random() * 5;
+        const frequency = 0.008 + Math.random() * 0.018;
+        const phase = Math.random() * Math.PI * 2;
+
+        context.beginPath();
+        context.moveTo(0, y);
+
+        for (let x = 0; x <= canvas.width; x += 12) {
+          const wave =
+            Math.sin(x * frequency + phase) * amplitude +
+            Math.sin(x * frequency * 0.43 + phase) * amplitude * 0.45;
+          context.lineTo(x, y + wave);
+        }
+
+        context.strokeStyle = `rgba(83, 43, 18, ${0.035 + Math.random() * 0.09})`;
+        context.lineWidth = 0.5 + Math.random() * 1.4;
+        context.stroke();
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+
+        context.beginPath();
+        context.ellipse(x, y, 7 + Math.random() * 13, 2 + Math.random() * 4, 0, 0, Math.PI * 2);
+        context.strokeStyle = "rgba(83, 43, 18, 0.13)";
+        context.lineWidth = 1;
+        context.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1.4, 1);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      return texture;
+    }
+
+    const woodTexture = createWoodTexture();
+
+    const materials = {
+      wood: new THREE.MeshStandardMaterial({
+        map: woodTexture,
+        color: 0xffffff,
+        roughness: 0.67,
+        metalness: 0.02
+      }),
+      darkWood: new THREE.MeshStandardMaterial({
+        map: woodTexture,
+        color: 0x9a693e,
+        roughness: 0.72,
+        metalness: 0.01
+      }),
+      metal: new THREE.MeshStandardMaterial({
+        color: 0x69737c,
+        roughness: 0.3,
+        metalness: 0.86
+      }),
+      pin: new THREE.MeshStandardMaterial({
+        color: 0xb8c0c7,
+        roughness: 0.22,
+        metalness: 0.92
+      }),
+      floor: new THREE.MeshStandardMaterial({
+        color: 0xb8ad9d,
+        roughness: 0.96,
+        metalness: 0
+      })
+    };
+
+    // ---------------------------------------------------------------------
+    // Geometry helpers
+    // ---------------------------------------------------------------------
+
+    function addBox(parent, position, size, material, rotation = null) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+
+      mesh.position.set(position[0], position[1], position[2]);
+
+      if (rotation) {
+        mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
+      }
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addBeam(parent, start, end, width, depth, material) {
+      const a = new THREE.Vector3(...start);
+      const b = new THREE.Vector3(...end);
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(length, width, depth),
+        material
+      );
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    // Creates a rounded rectangular rail with two actual U-shaped notches.
+    function createNotchedRailGeometry(
+      length,
+      height,
+      depth,
+      notchDepth
+    ) {
+      const radius = height / 2;
+      const shape = new THREE.Shape();
+
+      shape.moveTo(-length / 2, -radius);
+      shape.lineTo(length / 2, -radius);
+      shape.lineTo(length / 2, radius);
+
+      // Right notch
+      shape.lineTo(length / 2 - notchDepth / 2, radius);
+      shape.lineTo(length / 2 - notchDepth / 2, radius - notchDepth);
+      shape.lineTo(length / 2 - notchDepth, radius - notchDepth);
+      shape.lineTo(length / 2 - notchDepth, radius);
+
+      // Top between the notches
+      shape.lineTo(-length / 2 + notchDepth / 2, radius);
+
+      // Left notch
+      shape.lineTo(-length / 2 + notchDepth / 2, radius - notchDepth);
+      shape.lineTo(-length / 2 + notchDepth, radius - notchDepth);
+      shape.lineTo(-length / 2 + notchDepth, radius);
+      shape.lineTo(-length / 2, radius);
+
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth,
+        steps: 1,
+        curveSegments: 5,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: 0.012,
+        bevelThickness: 0.012
+      });
+
+      geometry.center();
+      geometry.computeVertexNormals();
+
+      return geometry;
+    }
+
+    // ---------------------------------------------------------------------
+    // Rack model
+    // ---------------------------------------------------------------------
+
+    const rack = new THREE.Group();
+    scene.add(rack);
+
+    const frameX = 1.75;
+    const topY = 4.15;
+    const frontZ = 0.64;
+    const backZ = -0.58;
+
+    // Two A-frame side supports made from flat wooden slats.
+    for (const x of [-frameX, frameX]) {
+      addBeam(
+        rack,
+        [x, 0.12, frontZ],
+        [x, topY, 0],
+        0.15,
+        0.18,
+        materials.wood
+      );
+
+      addBeam(
+        rack,
+        [x, 0.12, backZ],
+        [x, topY, 0],
+        0.15,
+        0.18,
+        materials.wood
+      );
+
+      // Top cross piece of the A-frame.
+      addBox(
+        rack,
+        [x, topY, 0],
+        [0.18, 0.18, 1.28],
+        materials.darkWood
+      );
+
+      // Small wooden cap at the apex.
+      const cap = addBox(
+        rack,
+        [x, topY + 0.015, 0],
+        [0.22, 0.055, 0.24],
+        materials.wood
+      );
+      cap.rotation.x = -0.08;
+
+      // Feet and short floor stabilizers.
+      addBox(
+        rack,
+        [x, 0.055, frontZ],
+        [0.3, 0.11, 0.34],
+        materials.darkWood
+      );
+
+      addBox(
+        rack,
+        [x, 0.055, backZ],
+        [0.3, 0.11, 0.34],
+        materials.darkWood
+      );
+
+      addBox(
+        rack,
+        [x, 0.1, 0.02],
+        [0.13, 0.12, 1.25],
+        materials.darkWood
+      );
+    }
+
+    // Three horizontal rounded drying rails.
+    const railHeights = [1.25, 2.35, 3.45];
+
+    for (const y of railHeights) {
+      const railGeometry = createNotchedRailGeometry(
+        3.5,
+        0.17,
+        0.16,
+        0.055
+      );
+
+      const rail = new THREE.Mesh(railGeometry, materials.wood);
+      rail.position.set(0, y, 0.02);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      rack.add(rail);
+    }
+
+    // ---------------------------------------------------------------------
+    // Lower hinged shelf
+    // ---------------------------------------------------------------------
+
+    const shelfPivot = new THREE.Group();
+    shelfPivot.position.set(0, 0.64, -0.4);
+    shelfPivot.rotation.x = -0.52;
+    rack.add(shelfPivot);
+
+    // Three flat wooden shelf slats.
+    for (const z of [0.1, 0.4, 0.7]) {
+      addBox(
+        shelfPivot,
+        [0, 0, z],
+        [3.22, 0.11, 0.2],
+        materials.wood
+      );
+    }
+
+    // Cross supports beneath the shelf.
+    for (const x of [-1.32, 0, 1.32]) {
+      addBox(
+        shelfPivot,
+        [x, -0.075, 0.4],
+        [0.12, 0.1, 1.0],
+        materials.darkWood
+      );
+    }
+
+    // Small metal hinge plates on both side frames.
+    for (const x of [-1.42, 1.42]) {
+      addBox(
+        rack,
+        [x, 0.64, -0.4],
+        [0.17, 0.36, 0.075],
+        materials.metal
+      );
+
+      // Visible pivot pin running through the plates.
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.065, 0.065, 0.31, 18),
+        materials.pin
+      );
+      pin.rotation.z = Math.PI / 2;
+      pin.position.set(x, 0.64, -0.4);
+      pin.castShadow = true;
+      rack.add(pin);
+
+      // Outer bolt head.
+      const boltHead = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, 0.055, 20),
+        materials.pin
+      );
+      boltHead.rotation.z = Math.PI / 2;
+      boltHead.position.set(x + Math.sign(x) * 0.17, 0.64, -0.4);
+      boltHead.castShadow = true;
+      rack.add(boltHead);
+
+      // Hinge knuckle attached to the moving shelf.
+      const knuckle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.085, 0.085, 0.13, 18),
+        materials.metal
+      );
+      knuckle.rotation.z = Math.PI / 2;
+      knuckle.position.set(x, 0.015, -0.015);
+      knuckle.castShadow = true;
+      shelfPivot.add(knuckle);
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground and lighting
+    // ---------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      materials.floor
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.005;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xfff8eb,
+      0x716454,
+      2.1
+    );
+    scene.add(hemisphere);
+
+    const keyLight = new THREE.DirectionalLight(0xfff1d7, 3.2);
+    keyLight.position.set(4.5, 7.5, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -5;
+    keyLight.shadow.camera.right = 5;
+    keyLight.shadow.camera.top = 6;
+    keyLight.shadow.camera.bottom = -3;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.bias = -0.00025;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xdce8f1, 1.25);
+    fillLight.position.set(-4, 3.5, 4);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffdfb5, 0.8);
+    rimLight.position.set(-2, 5, -5);
+    scene.add(rimLight);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: pointer orbit, wheel zoom, keyboard, reset
+    // ---------------------------------------------------------------------
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function resetCamera() {
+      desiredCamera.radius = 8.25;
+      desiredCamera.phi = 1.31;
+      desiredCamera.theta = 0.61;
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      desiredCamera.theta -= deltaX * 0.006;
+      desiredCamera.phi = THREE.MathUtils.clamp(
+        desiredCamera.phi + deltaY * 0.005,
+        0.72,
+        1.5
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+
+      if (
+        event.pointerId !== undefined &&
+        renderer.domElement.hasPointerCapture(event.pointerId)
+      ) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        desiredCamera.radius = THREE.MathUtils.clamp(
+          desiredCamera.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          13
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      const step = 0.08;
+
+      if (event.key === "ArrowLeft") {
+        desiredCamera.theta += step;
+      } else if (event.key === "ArrowRight") {
+        desiredCamera.theta -= step;
+      } else if (event.key === "ArrowUp") {
+        desiredCamera.phi = Math.max(0.72, desiredCamera.phi - step);
+      } else if (event.key === "ArrowDown") {
+        desiredCamera.phi = Math.min(1.5, desiredCamera.phi + step);
+      } else if (event.key === "+" || event.key === "=") {
+        desiredCamera.radius = Math.max(5.2, desiredCamera.radius - 0.5);
+      } else if (event.key === "-") {
+        desiredCamera.radius = Math.min(13, desiredCamera.radius + 0.5);
+      } else if (event.key.toLowerCase() === "r") {
+        resetCamera();
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const damping = 0.085;
+
+      cameraState.radius +=
+        (desiredCamera.radius - cameraState.radius) * damping;
+      cameraState.phi +=
+        (desiredCamera.phi - cameraState.phi) * damping;
+      cameraState.theta +=
+        (desiredCamera.theta - cameraState.theta) * damping;
+
+      updateCamera();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 400);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ball-and-Stick Water Molecule</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 35%, #ffffff 0%, #eef4f8 45%, #dce6ee 100%);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .label {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      pointer-events: none;
+      color: #263746;
+      user-select: none;
+    }
+
+    .label h1 {
+      margin: 0 0 5px;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+    }
+
+    .label p {
+      margin: 0;
+      color: #657786;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .angle {
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      padding: 8px 12px;
+      border: 1px solid rgba(65, 83, 98, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.54);
+      color: #5c6d7b;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body>
+  <div class="label">
+    <h1>Water molecule</h1>
+    <p>Ball-and-stick model</p>
+  </div>
+  <div class="angle">Bond angle&nbsp; 104.5°</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional ball-and-stick model of a water molecule"
+    );
+
+    document.body.prepend(renderer.domElement);
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xeaf5ff, 0x73808c, 2.1));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(3.5, 5, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.camera.left = -4;
+    keyLight.shadow.camera.right = 4;
+    keyLight.shadow.camera.top = 4;
+    keyLight.shadow.camera.bottom = -4;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 15;
+    keyLight.shadow.bias = -0.0003;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xbdd7ff, 1.35);
+    fillLight.position.set(-4, 1.5, 3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.PointLight(0xffd7d2, 12, 12);
+    rimLight.position.set(0, 2, -3);
+    scene.add(rimLight);
+
+    // Materials
+    const oxygenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe53935,
+      roughness: 0.24,
+      metalness: 0.02,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.2
+    });
+
+    const hydrogenMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf8f8f4,
+      roughness: 0.3,
+      metalness: 0.02,
+      clearcoat: 0.28,
+      clearcoatRoughness: 0.24
+    });
+
+    const bondMaterial = new THREE.MeshStandardMaterial({
+      color: 0x858e96,
+      roughness: 0.36,
+      metalness: 0.4
+    });
+
+    const sleeveMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa5adb4,
+      roughness: 0.3,
+      metalness: 0.48
+    });
+
+    const molecule = new THREE.Group();
+    scene.add(molecule);
+
+    // Molecular geometry: 104.5° at the oxygen apex.
+    const oxygenRadius = 0.38;
+    const hydrogenRadius = 0.25;
+    const bondLength = 1.65;
+    const bondAngle = THREE.MathUtils.degToRad(104.5);
+    const halfAngle = bondAngle / 2;
+
+    const oxygenPosition = new THREE.Vector3(0, 0.68, 0);
+
+    const leftDirection = new THREE.Vector3(
+      -Math.sin(halfAngle),
+      -Math.cos(halfAngle),
+      0
+    );
+
+    const rightDirection = new THREE.Vector3(
+      Math.sin(halfAngle),
+      -Math.cos(halfAngle),
+      0
+    );
+
+    const leftHydrogen = oxygenPosition
+      .clone()
+      .addScaledVector(leftDirection, bondLength);
+
+    const rightHydrogen = oxygenPosition
+      .clone()
+      .addScaledVector(rightDirection, bondLength);
+
+    // Utility for creating a cylinder between two points.
+    function cylinderBetween(start, end, radius, material, openEnded = false) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        48,
+        1,
+        openEnded
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Atoms
+    const oxygen = new THREE.Mesh(
+      new THREE.SphereGeometry(oxygenRadius, 64, 40),
+      oxygenMaterial
+    );
+    oxygen.position.copy(oxygenPosition);
+    oxygen.castShadow = true;
+    oxygen.receiveShadow = true;
+    molecule.add(oxygen);
+
+    for (const hydrogenPosition of [leftHydrogen, rightHydrogen]) {
+      const hydrogen = new THREE.Mesh(
+        new THREE.SphereGeometry(hydrogenRadius, 48, 32),
+        hydrogenMaterial
+      );
+      hydrogen.position.copy(hydrogenPosition);
+      hydrogen.castShadow = true;
+      hydrogen.receiveShadow = true;
+      molecule.add(hydrogen);
+    }
+
+    // Bonds and shallow gray sleeves around each atomic connection.
+    function addBond(hydrogenPosition, direction) {
+      // Main bond.
+      molecule.add(
+        cylinderBetween(
+          oxygenPosition,
+          hydrogenPosition,
+          0.105,
+          bondMaterial
+        )
+      );
+
+      // Sleeve around the oxygen side of the bond.
+      const oxygenSleeveStart = oxygenPosition
+        .clone()
+        .addScaledVector(direction, oxygenRadius - 0.12);
+
+      const oxygenSleeveEnd = oxygenPosition
+        .clone()
+        .addScaledVector(direction, oxygenRadius + 0.075);
+
+      molecule.add(
+        cylinderBetween(
+          oxygenSleeveStart,
+          oxygenSleeveEnd,
+          0.19,
+          sleeveMaterial,
+          true
+        )
+      );
+
+      // Sleeve around the hydrogen side, pointing back toward oxygen.
+      const hydrogenSleeveStart = hydrogenPosition
+        .clone()
+        .addScaledVector(direction, -(hydrogenRadius + 0.075));
+
+      const hydrogenSleeveEnd = hydrogenPosition
+        .clone()
+        .addScaledVector(direction, -(hydrogenRadius - 0.1));
+
+      molecule.add(
+        cylinderBetween(
+          hydrogenSleeveStart,
+          hydrogenSleeveEnd,
+          0.15,
+          sleeveMaterial,
+          true
+        )
+      );
+    }
+
+    addBond(leftHydrogen, leftDirection);
+    addBond(rightHydrogen, rightDirection);
+
+    // Transparent floor for a soft contact shadow.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.ShadowMaterial({
+        color: 0x263746,
+        opacity: 0.14
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.91;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Direct camera controls implemented without Three.js addons.
+    const target = new THREE.Vector3(0, 0.08, 0);
+    const spherical = new THREE.Spherical(4.7, Math.PI / 2, 0);
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      spherical.theta -= deltaX * 0.006;
+      spherical.phi = THREE.MathUtils.clamp(
+        spherical.phi - deltaY * 0.005,
+        0.45,
+        Math.PI - 0.45
+      );
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+      updateCamera();
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event.pointerId !== undefined) {
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", stopDragging);
+    renderer.domElement.addEventListener("pointercancel", stopDragging);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius + event.deltaY * 0.003,
+          3.1,
+          8
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    updateCamera();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+
+      // Subtle floating motion; drag interaction remains available.
+      molecule.position.y = Math.sin(elapsed * 0.8) * 0.035;
+      molecule.rotation.y = Math.sin(elapsed * 0.42) * 0.07;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voxel Bonsai</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 30%, #f7f2e7 0%, #e6e1d5 55%, #cfd7d0 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .info {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      z-index: 2;
+      max-width: 280px;
+      padding: 16px 18px;
+      color: #29332f;
+      background: rgba(250, 247, 239, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(44, 50, 43, 0.1);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #718077;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(24px, 4vw, 34px);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .hint {
+      margin: 10px 0 0;
+      color: #69736d;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    button {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 3;
+      padding: 10px 14px;
+      color: #34413a;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(250, 247, 239, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(44, 50, 43, 0.12);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 252, 244, 0.96);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .info {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        max-width: none;
+      }
+
+      button {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="info">
+    <div class="eyebrow">Procedural study</div>
+    <h1>Voxel Bonsai</h1>
+    <p class="hint">
+      Drag to orbit · Scroll or pinch to zoom<br />
+      Double-click to reset the view
+    </p>
+  </div>
+
+  <button id="reset" type="button">Reset view</button>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional voxel bonsai tree"
+    );
+
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe8e3d8);
+    scene.fog = new THREE.Fog(0xe8e3d8, 13, 28);
+
+    const camera = new THREE.PerspectiveCamera(
+      36,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(0xfffaf0, 0x778078, 2.1);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff0d0, 3.25);
+    sun.position.set(-5.5, 9, 5.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -7;
+    sun.shadow.camera.right = 7;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -5;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 25;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0xb9d8ff, 1.15);
+    fillLight.position.set(6, 4, -5);
+    scene.add(fillLight);
+
+    const warmBounce = new THREE.PointLight(0xffc987, 18, 12, 2);
+    warmBounce.position.set(-3, 1.8, 3);
+    scene.add(warmBounce);
+
+    // -------------------------------------------------------------------------
+    // Ground
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      new THREE.MeshStandardMaterial({
+        color: 0xd8d2c5,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.015;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // -------------------------------------------------------------------------
+    // Ceramic pot
+    // -------------------------------------------------------------------------
+
+    const pot = new THREE.Group();
+    scene.add(pot);
+
+    const ceramic = new THREE.MeshPhysicalMaterial({
+      color: 0x286f82,
+      roughness: 0.3,
+      metalness: 0.06,
+      clearcoat: 0.4,
+      clearcoatRoughness: 0.25
+    });
+
+    const ceramicRim = new THREE.MeshPhysicalMaterial({
+      color: 0x3b8294,
+      roughness: 0.25,
+      metalness: 0.08,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.2
+    });
+
+    const potBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.45, 1.28, 0.66, 64),
+      ceramic
+    );
+
+    potBody.position.y = 0.33;
+    potBody.castShadow = true;
+    potBody.receiveShadow = true;
+    pot.add(potBody);
+
+    const potRim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.43, 0.11, 14, 72),
+      ceramicRim
+    );
+
+    potRim.rotation.x = Math.PI / 2;
+    potRim.position.y = 0.7;
+    potRim.castShadow = true;
+    potRim.receiveShadow = true;
+    pot.add(potRim);
+
+    const potFoot = new THREE.Mesh(
+      new THREE.TorusGeometry(1.18, 0.075, 12, 64),
+      ceramic
+    );
+
+    potFoot.rotation.x = Math.PI / 2;
+    potFoot.position.y = 0.035;
+    potFoot.castShadow = true;
+    pot.add(potFoot);
+
+    const soil = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.235, 1.235, 0.08, 48),
+      new THREE.MeshStandardMaterial({
+        color: 0x3c2b20,
+        roughness: 1
+      })
+    );
+
+    soil.position.y = 0.69;
+    soil.receiveShadow = true;
+    pot.add(soil);
+
+    // -------------------------------------------------------------------------
+    // Voxel construction helpers
+    // -------------------------------------------------------------------------
+
+    const unitCube = new THREE.BoxGeometry(1, 1, 1);
+    const dummy = new THREE.Object3D();
+
+    const trunkItems = [];
+    const branchItems = [];
+
+    const trunkColors = [
+      new THREE.Color(0x68432e),
+      new THREE.Color(0x795039),
+      new THREE.Color(0x593928),
+      new THREE.Color(0x8b5c3c),
+      new THREE.Color(0x6d4631)
+    ];
+
+    const branchColors = [
+      new THREE.Color(0x795039),
+      new THREE.Color(0x8a5d3f),
+      new THREE.Color(0x684531),
+      new THREE.Color(0x946341)
+    ];
+
+    function addCube(position, color, size = 0.32) {
+      trunkItems.push({
+        position: position.clone(),
+        color: color.clone(),
+        size
+      });
+    }
+
+    function addBranchCube(position, color, size = 0.28) {
+      branchItems.push({
+        position: position.clone(),
+        color: color.clone(),
+        size
+      });
+    }
+
+    function createCatmullCurve(points) {
+      return new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point)),
+        false,
+        "catmullrom",
+        0.45
+      );
+    }
+
+    // Twisting trunk: a diagonal chain of small, axis-aligned cubes.
+    const trunkCurve = createCatmullCurve([
+      [0.0, 0.72, 0.0],
+      [0.02, 1.15, 0.02],
+      [-0.08, 1.65, 0.04],
+      [0.08, 2.15, 0.02],
+      [-0.12, 2.65, 0.0],
+      [0.08, 3.15, 0.02],
+      [-0.03, 3.65, 0.0],
+      [0.02, 4.05, 0.0]
+    ]);
+
+    for (let i = 0; i <= 14; i++) {
+      const t = i / 14;
+      const point = trunkCurve.getPoint(t);
+      const tangent = trunkCurve.getTangent(t).normalize();
+      const side = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+
+      addCube(point, trunkColors[Math.floor(Math.random() * trunkColors.length)]);
+
+      // Four neighboring cubes create a chunky, block-built trunk.
+      const twist = 0.32 + Math.sin(i * 1.7) * 0.025;
+
+      addCube(
+        point.clone().addScaledVector(side, twist),
+        trunkColors[Math.floor(Math.random() * trunkColors.length)]
+      );
+
+      addCube(
+        point.clone().addScaledVector(side, -twist),
+        trunkColors[Math.floor(Math.random() * trunkColors.length)]
+      );
+
+      addCube(
+        point.clone().add(new THREE.Vector3(0, 0, twist)),
+        trunkColors[Math.floor(Math.random() * trunkColors.length)]
+      );
+
+      addCube(
+        point.clone().add(new THREE.Vector3(0, 0, -twist)),
+        trunkColors[Math.floor(Math.random() * trunkColors.length)]
+      );
+    }
+
+    // Three separate branches splitting from the trunk.
+    const leftBranch = createCatmullCurve([
+      [-0.04, 3.15, 0.0],
+      [-0.58, 3.42, 0.02],
+      [-1.15, 3.70, 0.10],
+      [-1.48, 3.92, 0.12]
+    ]);
+
+    const rightBranch = createCatmullCurve([
+      [0.02, 3.55, 0.0],
+      [0.62, 3.82, -0.08],
+      [1.18, 4.05, 0.02],
+      [1.48, 4.25, 0.04]
+    ]);
+
+    const upperBranch = createCatmullCurve([
+      [0.0, 3.98, 0.0],
+      [0.05, 4.28, 0.0],
+      [0.12, 4.55, 0.0],
+      [0.18, 4.76, 0.0]
+    ]);
+
+    for (const curve of [leftBranch, rightBranch, upperBranch]) {
+      const count = 9;
+
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const point = curve.getPoint(t);
+        const tangent = curve.getTangent(t).normalize();
+        const side = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+
+        addBranchCube(point, branchColors[Math.floor(Math.random() * branchColors.length)]);
+
+        // Paired side blocks make each branch read as a branching voxel structure.
+        addBranchCube(
+          point.clone().addScaledVector(side, 0.25),
+          branchColors[Math.floor(Math.random() * branchColors.length)]
+        );
+
+        addBranchCube(
+          point.clone().addScaledVector(side, -0.25),
+          branchColors[Math.floor(Math.random() * branchColors.length)]
+        );
+      }
+    }
+
+    // Exposed roots curling around the front of the pot.
+    const rootCurves = [
+      createCatmullCurve([
+        [0, 0.72, 0],
+        [0.25, 0.45, 0.1],
+        [0.75, 0.2, 0.35],
+        [1.25, 0.08, 0.58]
+      ]),
+      createCatmullCurve([
+        [0, 0.72, 0],
+        [-0.28, 0.42, -0.08],
+        [-0.78, 0.2, -0.35],
+        [-1.25, 0.08, -0.58]
+      ]),
+      createCatmullCurve([
+        [0, 0.72, 0],
+        [0.08, 0.46, 0.35],
+        [0.38, 0.24, 0.82],
+        [0.9, 0.08, 1.12]
+      ])
+    ];
+
+    for (const curve of rootCurves) {
+      for (let i = 0; i <= 7; i++) {
+        const point = curve.getPoint(i / 7);
+        addCube(
+          point,
+          trunkColors[Math.floor(Math.random() * trunkColors.length)],
+          0.27
+        );
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Rounded foliage clusters
+    // -------------------------------------------------------------------------
+
+    const clusters = [];
+    const foliageSpacing = 0.30;
+    const foliageSize = 0.285;
+
+    const foliagePalette = [
+      new THREE.Color(0x356d37),
+      new THREE.Color(0x3f7c3b),
+      new THREE.Color(0x4c8b3e),
+      new THREE.Color(0x579640),
+      new THREE.Color(0x67a649),
+      new THREE.Color(0x315f35)
+    ];
+
+    function createFoliageCluster(center, radii, phase) {
+      const group = new THREE.Group();
+      group.position.set(...center);
+      scene.add(group);
+
+      const localPositions = [];
+
+      for (let x = -3; x <= 3; x++) {
+        for (let y = -3; y <= 3; y++) {
+          for (let z = -3; z <= 3; z++) {
+            const px = x * foliageSpacing;
+            const py = y * foliageSpacing;
+            const pz = z * foliageSpacing;
+
+            const normalized =
+              (px * px) / (radii[0] * radii[0]) +
+              (py * py) / (radii[1] * radii[1]) +
+              (pz * pz) / (radii[2] * radii[2]);
+
+            if (normalized <= 1) {
+              localPositions.push({
+                position: new THREE.Vector3(px, py, pz),
+                color: foliagePalette[
+                  Math.floor(Math.random() * foliagePalette.length)
+                ]
+              });
+            }
+          }
+        }
+      }
+
+      const mesh = new THREE.InstancedMesh(
+        unitCube,
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.88,
+          metalness: 0
+        }),
+        localPositions.length
+      );
+
+      localPositions.forEach((item, index) => {
+        dummy.position.copy(item.position);
+        dummy.scale.setScalar(foliageSize);
+        dummy.updateMatrix();
+
+        mesh.setMatrixAt(index, dummy.matrix);
+        mesh.setColorAt(index, item.color);
+      });
+
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.computeBoundingSphere();
+      mesh.computeBoundingBox();
+
+      clusters.push({
+        group,
+        phase
+      });
+
+      return group;
+    }
+
+    // Left, lower cluster.
+    createFoliageCluster(
+      [-1.72, 4.16, 0.12],
+      [0.98, 0.74, 0.74],
+      0.2
+    );
+
+    // Right, lower cluster.
+    createFoliageCluster(
+      [1.62, 4.40, 0.04],
+      [0.92, 0.80, 0.74],
+      1.8
+    );
+
+    // Upper cluster.
+    createFoliageCluster(
+      [0.22, 4.93, 0.04],
+      [0.82, 0.70, 0.70],
+      3.4
+    );
+
+    // -------------------------------------------------------------------------
+    // Instanced voxel meshes
+    // -------------------------------------------------------------------------
+
+    function createInstancedMesh(items, material) {
+      const mesh = new THREE.InstancedMesh(
+        unitCube,
+        material,
+        items.length
+      );
+
+      items.forEach((item, index) => {
+        dummy.position.copy(item.position);
+        dummy.scale.setScalar(item.size);
+        dummy.updateMatrix();
+
+        mesh.setMatrixAt(index, dummy.matrix);
+        mesh.setColorAt(index, item.color);
+      });
+
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.computeBoundingSphere();
+      mesh.computeBoundingBox();
+
+      return mesh;
+    }
+
+    const trunkMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const branchMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.94,
+      metalness: 0
+    });
+
+    const foliageMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.86,
+      metalness: 0
+    });
+
+    const trunk = createInstancedMesh(trunkItems, trunkMaterial);
+    const branches = createInstancedMesh(branchItems, branchMaterial);
+
+    scene.add(trunk, branches);
+
+    clusters.forEach(({ group, phase }) => {
+      group.add(createInstancedMesh(group.children, foliageMaterial));
+    });
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // -------------------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(0, 2.55, 0);
+    const defaultView = {
+      theta: 0.56,
+      phi: 1.25,
+      radius: 10.5
+    };
+
+    let theta = defaultView.theta;
+    let phi = defaultView.phi;
+    let radius = defaultView.radius;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function updateCamera() {
+      const sinPhi = Math.sin(phi);
+
+      camera.position.set(
+        cameraTarget.x + radius * sinPhi * Math.sin(theta),
+        cameraTarget.y + radius * Math.cos(phi),
+        cameraTarget.z + radius * sinPhi * Math.cos(theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetView() {
+      theta = defaultView.theta;
+      phi = defaultView.phi;
+      radius = defaultView.radius;
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.classList.add("dragging");
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      theta -= deltaX * 0.008;
+      phi = THREE.MathUtils.clamp(phi - deltaY * 0.006, 0.48, 1.48);
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      renderer.domElement.classList.remove("dragging");
+
+      if (event.pointerId !== undefined &&
+          renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        radius = THREE.MathUtils.clamp(
+          radius + event.deltaY * 0.008,
+          6.4,
+          15
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      const step = 0.08;
+
+      if (event.key === "ArrowLeft") theta += step;
+      if (event.key === "ArrowRight") theta -= step;
+      if (event.key === "ArrowUp") phi = Math.max(0.48, phi - step);
+      if (event.key === "ArrowDown") phi = Math.min(1.48, phi + step);
+      if (event.key === "+" || event.key === "=") radius = Math.max(6.4, radius - 0.5);
+      if (event.key === "-") radius = Math.min(15, radius + 0.5);
+
+      updateCamera();
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = clock.getElapsedTime();
+
+      if (!reducedMotion) {
+        clusters.forEach(({ group, phase }) => {
+          group.rotation.z =
+            Math.sin(time * 0.62 + phase) * 0.012;
+          group.rotation.x =
+            Math.sin(time * 0.48 + phase * 1.3) * 0.008;
+        });
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

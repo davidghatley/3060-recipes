@@ -1,0 +1,45 @@
+  ffn                    4.530 GB  ['F16']
+  gdn                    2.025 GB  ['F16', 'F32']
+  lm_head(tied embd)     1.271 GB  ['F16']
+  attn_full              0.587 GB  ['F16', 'F32']
+  mtp                    0.241 GB  ['F16', 'F32']
+  TRUNK (per token)      8.413 GB
+  ctx      0: 8.514 GB/token ->   40.2 tok/s (24.89 ms)
+  ctx  16384: 9.051 GB/token ->   37.8 tok/s (26.46 ms)
+
+  ffn                    2.406 GB  ['Q8_0']
+  gdn                    1.077 GB  ['F32', 'Q8_0']
+  lm_head(tied embd)     0.675 GB  ['Q8_0']
+  attn_full              0.312 GB  ['F32', 'Q8_0']
+  mtp                    0.128 GB  ['F32', 'Q8_0']
+  TRUNK (per token)      4.471 GB
+  ctx      0: 4.572 GB/token ->   74.8 tok/s (13.37 ms)
+  ctx  16384: 5.109 GB/token ->   66.9 tok/s (14.94 ms)
+
+  ffn                    1.858 GB  ['Q6_K']
+  gdn                    0.833 GB  ['F32', 'Q6_K']
+  lm_head(tied embd)     0.521 GB  ['Q6_K']
+  attn_full              0.241 GB  ['F32', 'Q6_K']
+  mtp                    0.099 GB  ['F32', 'Q6_K']
+  TRUNK (per token)      3.453 GB
+  ctx      0: 3.554 GB/token ->   96.2 tok/s (10.39 ms)
+  ctx  16384: 4.091 GB/token ->   83.6 tok/s (11.96 ms)
+
+  ffn                    1.607 GB  ['Q5_K', 'Q6_K']
+  gdn                    0.732 GB  ['F32', 'Q5_K', 'Q6_K']
+  lm_head(tied embd)     0.521 GB  ['Q6_K']
+  attn_full              0.203 GB  ['F32', 'Q5_K', 'Q6_K']
+  mtp                    0.086 GB  ['F32', 'Q5_K', 'Q6_K']
+  TRUNK (per token)      3.064 GB
+  ctx      0: 3.165 GB/token ->  108.1 tok/s (9.25 ms)
+  ctx  16384: 3.702 GB/token ->   92.4 tok/s (10.82 ms)
+
+  ffn                    1.371 GB  ['Q4_K', 'Q6_K']
+  gdn                    0.637 GB  ['F32', 'Q4_K', 'Q6_K']
+  lm_head(tied embd)     0.521 GB  ['Q6_K']
+  attn_full              0.168 GB  ['F32', 'Q4_K', 'Q6_K']
+  mtp                    0.075 GB  ['F32', 'Q4_K', 'Q6_K']
+  TRUNK (per token)      2.698 GB
+  ctx      0: 2.798 GB/token ->  122.2 tok/s (8.18 ms)
+  ctx  16384: 3.335 GB/token ->  102.5 tok/s (9.75 ms)
+

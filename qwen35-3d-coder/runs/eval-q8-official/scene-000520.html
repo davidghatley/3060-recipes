@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bogie Roller Test Stand</title>
+
+  <style>
+    :root {
+      --bg: #071019;
+      --panel: rgba(10, 20, 29, 0.82);
+      --border: rgba(139, 181, 202, 0.2);
+      --text: #e8f2f7;
+      --muted: #91a7b5;
+      --accent: #ffb13b;
+      --green: #62e6a5;
+      --cyan: #55c9e8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    #info {
+      top: 22px;
+      left: 22px;
+      width: 340px;
+      padding: 20px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 7px 0 8px;
+      font-size: 25px;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.45;
+        transform: scale(0.8);
+      }
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 12px 9px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.055);
+      border-radius: 9px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: 5px;
+      font-size: 18px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-value small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    #load-panel {
+      right: 22px;
+      bottom: 22px;
+      width: 310px;
+      padding: 17px;
+    }
+
+    .load-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+    }
+
+    .load-heading strong {
+      font-size: 15px;
+    }
+
+    .load-state {
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .load-range {
+      width: 100%;
+      height: 5px;
+      margin: 7px 0 16px;
+      appearance: none;
+      border-radius: 999px;
+      outline: none;
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--load, 58%),
+        rgba(255, 255, 255, 0.12) var(--load, 58%),
+        rgba(255, 255, 255, 0.12) 100%
+      );
+      cursor: pointer;
+    }
+
+    .load-range::-webkit-slider-thumb {
+      width: 17px;
+      height: 17px;
+      appearance: none;
+      border: 3px solid #111b23;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .load-range::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border: 3px solid #111b23;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      min-height: 38px;
+      padding: 9px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.055);
+      color: var(--text);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    button.primary {
+      border-color: rgba(255, 177, 59, 0.45);
+      background: rgba(255, 177, 59, 0.12);
+      color: #ffd38b;
+    }
+
+    .hint {
+      position: fixed;
+      z-index: 10;
+      left: 22px;
+      bottom: 22px;
+      padding: 10px 13px;
+      color: var(--muted);
+      font-size: 11px;
+      pointer-events: none;
+    }
+
+    .hint b {
+      color: var(--text);
+    }
+
+    #loading {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #071019;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 350ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      #info {
+        top: 12px;
+        left: 12px;
+        width: calc(100% - 24px);
+        padding: 15px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .metrics {
+        margin-top: 13px;
+      }
+
+      #load-panel {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100% - 24px);
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">Initializing test cell…</div>
+
+  <section id="info" class="panel">
+    <div class="eyebrow">Heavy Freight Systems / Test Facility</div>
+    <h1>Bogie Roller Test Stand</h1>
+    <p class="subtitle">
+      Live roller-bed evaluation of a fully loaded freight bogie.
+      The cargo mass is simulated for load-cell calibration.
+    </p>
+
+    <div class="status-row">
+      <span class="status-dot"></span>
+      Test system running
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Axle load</div>
+        <div class="metric-value" id="axle-load">9.2 <small>t</small></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Roller speed</div>
+        <div class="metric-value" id="roller-speed">0.42 <small>m/s</small></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Roller count</div>
+        <div class="metric-value">37 <small>units</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="load-panel" class="panel">
+    <div class="load-heading">
+      <strong>Simulated cargo mass</strong>
+      <span class="load-state" id="load-state">Calibrated</span>
+    </div>
+
+    <input
+      id="load-slider"
+      type="range"
+      min="12"
+      max="30"
+      step="0.1"
+      value="18.4"
+      aria-label="Simulated cargo mass"
+    >
+
+    <div class="button-row">
+      <button id="pause-button" class="primary">Pause Test</button>
+      <button id="overview-button">Overview</button>
+      <button id="detail-button">Bogie Detail</button>
+    </div>
+  </section>
+
+  <div class="hint">
+    <b>Drag</b> to orbit · <b>Scroll / pinch</b> to zoom · <b>Double-click</b> to reset
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // -------------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071019);
+    scene.fog = new THREE.Fog(0x071019, 22, 58);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      innerWidth / innerHeight,
+      0.05,
+      120
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xb9d9ec, 0x182029, 1.55);
+    scene.add(hemi);
+
+    const keyLight = new THREE.DirectionalLight(0xfff1d8, 3.2);
+    keyLight.position.set(7, 13, 9);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -18;
+    keyLight.shadow.camera.right = 18;
+    keyLight.shadow.camera.top = 14;
+    keyLight.shadow.camera.bottom = -14;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 42;
+    keyLight.shadow.bias = -0.0003;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x5ebcff, 1.8);
+    rimLight.position.set(-10, 7, -10);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xff9b38, 22, 13, 2);
+    warmLight.position.set(-7, 3.5, 4);
+    scene.add(warmLight);
+
+    // -------------------------------------------------------------------------
+    // Materials and geometry helpers
+    // -------------------------------------------------------------------------
+
+    const material = (color, metalness = 0, roughness = 0.5, extra = {}) =>
+      new THREE.MeshStandardMaterial({
+        color,
+        metalness,
+        roughness,
+        ...extra
+      });
+
+    const mats = {
+      frame: material(0x293c47, 0.78, 0.34),
+      frameDark: material(0x17262e, 0.72, 0.42),
+      roller: material(0xaab6bd, 0.95, 0.2),
+      rollerDark: material(0x596972, 0.9, 0.28),
+      steel: material(0x566974, 0.85, 0.3),
+      deck: material(0x354750, 0.78, 0.4),
+      black: material(0x10171c, 0.2, 0.7),
+      rubber: material(0x080b0d, 0.05, 0.88),
+      orange: material(0xe97828, 0.48, 0.38),
+      yellow: material(0xf2b82e, 0.25, 0.48),
+      white: material(0xd9e2e6, 0.25, 0.45),
+      red: material(0xc72e26, 0.3, 0.4),
+      green: material(0x35b974, 0.2, 0.35, {
+        emissive: 0x124b29,
+        emissiveIntensity: 0.7
+      })
+    };
+
+    function box(w, h, d, mat, x, y, z, parent = scene) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(
+      radius,
+      length,
+      mat,
+      x,
+      y,
+      z,
+      axis = "y",
+      parent = scene,
+      segments = 40
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, segments),
+        mat
+      );
+
+      if (axis === "z") mesh.rotation.x = Math.PI / 2;
+      if (axis === "x") mesh.rotation.z = Math.PI / 2;
+
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function torus(radius, tube, mat, x, y, z, parent = scene) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tube, 10, 40),
+        mat
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeLabel(title, subtitle, color = "#ffb13b") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 192;
+
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgba(7, 16, 25, 0.88)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 14, canvas.height);
+
+      ctx.strokeStyle = "rgba(174, 205, 222, 0.25)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+      ctx.fillStyle = color;
+      ctx.font = "800 48px system-ui, sans-serif";
+      ctx.fillText(title, 42, 76);
+
+      ctx.fillStyle = "#aebdc8";
+      ctx.font = "600 30px system-ui, sans-serif";
+      ctx.fillText(subtitle, 43, 127);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false
+        })
+      );
+
+      sprite.scale.set(4.2, 1.05, 1);
+      return sprite;
+    }
+
+    function hazardMaterial() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#f2b82e";
+      ctx.fillRect(0, 0, 512, 128);
+
+      ctx.strokeStyle = "#172129";
+      ctx.lineWidth = 34;
+      for (let x = -128; x < 640; x += 96) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + 128, 128);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 1);
+
+      return material(0xffffff, 0.35, 0.55, { map: texture });
+    }
+
+    function floorText(text, x, z, width = 7, color = "#e8ad27") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, 1024, 128);
+      ctx.fillStyle = color;
+      ctx.font = "800 76px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 512, 64);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, width / 8),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(x, 0.025, z);
+      scene.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Floor and test-cell structure
+    // -------------------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(70, 50),
+      material(0x101a22, 0.12, 0.9)
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(60, 60, 0x31505e, 0x1c303a);
+    grid.position.y = 0.012;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.32;
+    scene.add(grid);
+
+    floorText("TEST BAY 07", 0, 3.65, 8.5);
+    floorText("KEEP CLEAR", 0, 4.35, 5.2);
+
+    // Main longitudinal beams.
+    box(19.2, 0.36, 0.34, mats.frameDark, 0, 0.22, -2.35);
+    box(19.2, 0.36, 0.34, mats.frameDark, 0, 0.22, 2.35);
+
+    // Support legs and cross members.
+    for (const x of [-8.5, -4.25, 0, 4.25, 8.5]) {
+      for (const z of [-2.35, 2.35]) {
+        box(0.28, 1.35, 0.28, mats.frame, x, 0.78, z);
+        box(0.62, 0.12, 0.62, mats.frameDark, x, 0.08, z);
+      }
+
+      box(0.18, 0.18, 4.65, mats.frameDark, x, 0.3, 0);
+    }
+
+    for (const x of [-9.25, 9.25]) {
+      box(0.34, 0.42, 5.25, mats.orange, x, 0.38, 0);
+      box(0.12, 2.1, 0.12, mats.frame, x, 1.4, -2.65);
+      box(0.12, 2.1, 0.12, mats.frame, x, 1.4, 2.65);
+    }
+
+    // End-frame warning panels.
+    const hazardMat = hazardMaterial();
+    const hazardLeft = box(
+      0.08,
+      1.2,
+      3.3,
+      hazardMat,
+      -9.43,
+      1.4,
+      0
+    );
+    const hazardRight = box(
+      0.08,
+      1.2,
+      3.3,
+      hazardMat,
+      9.43,
+      1.4,
+      0
+    );
+    hazardLeft.castShadow = false;
+    hazardRight.castShadow = false;
+
+    // Yellow floor safety lines.
+    box(19.4, 0.025, 0.09, mats.yellow, 0, 0.028, -2.83);
+    box(19.4, 0.025, 0.09, mats.yellow, 0, 0.028, 2.83);
+
+    // Overhead gantry.
+    for (const x of [-9.65, 9.65]) {
+      for (const z of [-2.75, 2.75]) {
+        box(0.22, 5.05, 0.22, mats.frame, x, 2.75, z);
+        box(0.55, 0.12, 0.55, mats.frameDark, x, 0.1, z);
+      }
+
+      box(0.28, 0.3, 5.75, mats.frame, x, 5.15, 0);
+      box(0.1, 0.1, 5.75, mats.yellow, x, 4.94, 0);
+    }
+
+    box(0.3, 0.3, 0.3, mats.frame, -9.65, 5.15, 2.75);
+    box(0.3, 0.3, 0.3, mats.frame, 9.65, 5.15, 2.75);
+
+    // -------------------------------------------------------------------------
+    // Roller bed
+    // -------------------------------------------------------------------------
+
+    const rollerGroups = [];
+    const rollerSpacing = 0.5;
+    const rollerCount = 37;
+
+    for (let i = 0; i < rollerCount; i++) {
+      const x = (i - (rollerCount - 1) / 2) * rollerSpacing;
+      const roller = new THREE.Group();
+      roller.position.set(x, 0.48, 0);
+      scene.add(roller);
+
+      cylinder(0.38, 2.35, mats.roller, 0, 0, 0, "z", roller, 48);
+
+      cylinder(
+        0.395,
+        0.045,
+        mats.rollerDark,
+        0,
+        0,
+        -1.19,
+        "z",
+        roller,
+        40
+      );
+
+      cylinder(
+        0.395,
+        0.045,
+        mats.rollerDark,
+        0,
+        0,
+        1.19,
+        "z",
+        roller,
+        40
+      );
+
+      torus(0.265, 0.045, mats.rollerDark, 0, 0, -1.13, roller);
+      torus(0.265, 0.045, mats.rollerDark, 0, 0, 1.13, roller);
+
+      rollerGroups.push(roller);
+    }
+
+    // -------------------------------------------------------------------------
+    // Loaded bogie
+    // -------------------------------------------------------------------------
+
+    const bogie = new THREE.Group();
+    bogie.position.x = 0;
+    scene.add(bogie);
+
+    // Main frame.
+    box(4.9, 0.28, 0.34, mats.frame, 0, 1.72, -1.05, bogie);
+    box(4.9, 0.28, 0.34, mats.frame, 0, 1.72, 1.05, bogie);
+
+    for (const x of [-2.1, 0, 2.1]) {
+      box(0.3, 0.3, 2.25, mats.frameDark, x, 1.72, 0, bogie);
+    }
+
+    // Axles and suspension mounting plates.
+    for (const x of [-2.1, 2.1]) {
+      cylinder(0.13, 2.7, mats.steel, x, 1.48, 0, "z", bogie, 32);
+
+      for (const z of [-1.05, 1.05]) {
+        box(0.55, 0.18, 0.5, mats.steel, x, 1.78, z, bogie);
+      }
+    }
+
+    // Coil suspension springs.
+    function createSpring(x, z) {
+      const points = [];
+      const turns = 7;
+      const radius = 0.19;
+      const baseY = 1.86;
+      const height = 0.86;
+
+      for (let i = 0; i <= 180; i++) {
+        const t = i / 180;
+        const angle = t * turns * Math.PI * 2;
+        points.push(
+          new THREE.Vector3(
+            x + Math.cos(angle) * radius,
+            baseY + t * height,
+            z + Math.sin(angle) * radius
+          )
+        );
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const spring = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 220, 0.045, 7, false),
+        mats.steel
+      );
+      spring.castShadow = true;
+      bogie.add(spring);
+
+      // Tapered leaf spring over the coil.
+      const leafWidths = [0.78, 0.7, 0.6, 0.48, 0.34, 0.2];
+      for (let i = 0; i < leafWidths.length; i++) {
+        box(
+          leafWidths[i],
+          0.055,
+          0.24,
+          mats.frameDark,
+          x,
+          2.49 + i * 0.075,
+          z,
+          bogie
+        );
+      }
+
+      for (const zOffset of [-0.1, 0.1]) {
+        box(0.1, 0.7, 0.1, mats.steel, x, 2.1, z + zOffset, bogie);
+      }
+    }
+
+    for (const x of [-1.25, 1.25]) {
+      createSpring(x, -1.05);
+      createSpring(x, 1.05);
+    }
+
+    // Bogie deck and load cell.
+    box(4.8, 0.24, 2.1, mats.deck, 0, 2.72, 0, bogie);
+    box(2.75, 0.16, 1.42, mats.black, 0, 2.87, 0, bogie);
+
+    for (const x of [-1.35, 1.35]) {
+      for (const z of [-0.7, 0.7]) {
+        box(0.13, 0.13, 0.13, mats.orange, x, 2.98, z, bogie);
+      }
+    }
+
+    // Loading mass / calibration weights.
+    const cargo = new THREE.Group();
+    bogie.add(cargo);
+
+    box(2.75, 1.02, 1.55, mats.orange, 0, 3.48, 0, cargo);
+    box(2.9, 0.12, 1.7, mats.frameDark, 0, 4.04, 0, cargo);
+
+    for (let i = 0; i < 7; i++) {
+      box(
+        0.075,
+        1.05,
+        1.58,
+        mats.frame,
+        -1.15 + i * 0.383,
+        3.48,
+        0,
+        cargo
+      );
+    }
+
+    for (const z of [-0.57, 0.57]) {
+      box(2.88, 0.09, 0.09, mats.black, 0, 3.5, z, cargo);
+    }
+
+    const cargoLabelCanvas = document.createElement("canvas");
+    cargoLabelCanvas.width = 768;
+    cargoLabelCanvas.height = 256;
+    const cargoLabelCtx = cargoLabelCanvas.getContext("2d");
+
+    cargoLabelCtx.fillStyle = "#14212a";
+    cargoLabelCtx.fillRect(0, 0, 768, 256);
+    cargoLabelCtx.strokeStyle = "#ffb13b";
+    cargoLabelCtx.lineWidth = 12;
+    cargoLabelCtx.strokeRect(12, 12, 744, 232);
+    cargoLabelCtx.fillStyle = "#ffb13b";
+    cargoLabelCtx.font = "800 65px system-ui, sans-serif";
+    cargoLabelCtx.fillText("CALIBRATION MASS", 48, 105);
+    cargoLabelCtx.fillStyle = "#eaf3f7";
+    cargoLabelCtx.font = "700 42px system-ui, sans-serif";
+    cargoLabelCtx.fillText("18.4 t", 49, 178);
+
+    const cargoLabelTexture = new THREE.CanvasTexture(cargoLabelCanvas);
+    cargoLabelTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const cargoLabel = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.85, 0.62),
+      new THREE.MeshBasicMaterial({ map: cargoLabelTexture })
+    );
+    cargoLabel.position.set(0, 3.48, 0.781);
+    cargo.add(cargoLabel);
+
+    // Wheel assemblies.
+    const wheelGroups = [];
+
+    function createWheel(x, z) {
+      const wheel = new THREE.Group();
+      wheel.position.set(x, 1.48, z);
+      bogie.add(wheel);
+
+      cylinder(0.62, 0.44, mats.rubber, 0, 0, 0, "z", wheel, 56);
+      cylinder(0.34, 0.49, mats.steel, 0, 0, 0, "z", wheel, 48);
+      cylinder(0.19, 0.55, mats.rollerDark, 0, 0, 0, "z", wheel, 40);
+
+      // Inner flange.
+      cylinder(
+        0.685,
+        0.055,
+        mats.frameDark,
+        0,
+        0,
+        -0.235,
+        "z",
+        wheel,
+        56
+      );
+
+      wheelGroups.push(wheel);
+    }
+
+    for (const x of [-2.1, 2.1]) {
+      createWheel(x, -1.05);
+      createWheel(x, 1.05);
+    }
+
+    // Bogie identification plate.
+    const bogiePlate = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.25, 0.42),
+      new THREE.MeshBasicMaterial({
+        map: makeLabel("BOGIE 04", "LOADED ASSEMBLY", "#62d9ed")[0].texture,
+        transparent: true
+      })
+    );
+    bogiePlate.position.set(0, 1.72, 1.226);
+    bogie.add(bogiePlate);
+
+    // -------------------------------------------------------------------------
+    // Control cabinet and signal mast
+    // -------------------------------------------------------------------------
+
+    const cabinet = new THREE.Group();
+    cabinet.position.set(-9.2, 0, 2.7);
+    scene.add(cabinet);
+
+    box(1.35, 2.65, 0.85, mats.frame, 0, 1.33, 0, cabinet);
+    box(1.5, 0.16, 1.0, mats.frameDark, 0, 2.7, 0, cabinet);
+    box(1.5, 0.16, 1.0, mats.frameDark, 0, 0.04, 0, cabinet);
+
+    const screenCanvas = document.createElement("canvas");
+    screenCanvas.width = 768;
+    screenCanvas.height = 384;
+    const screenCtx = screenCanvas.getContext("2d");
+    const screenTexture = new THREE.CanvasTexture(screenCanvas);
+    screenTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const screen = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.95, 0.58),
+      new THREE.MeshBasicMaterial({ map: screenTexture })
+    );
+    screen.position.set(0, 1.82, 0.431);
+    cabinet.add(screen);
+
+    box(1.12, 0.72, 0.08, mats.black, 0, 1.82, 0.44, cabinet);
+
+    // Status lamps.
+    for (let i = 0; i < 3; i++) {
+      const lamp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 16, 12),
+        i === 0 ? mats.green : mats.rollerDark
+      );
+      lamp.position.set(-0.32 + i * 0.24, 1.17, 0.45);
+      cabinet.add(lamp);
+    }
+
+    // Emergency stop.
+    cylinder(0.16, 0.1, mats.red, 0.38, 0.78, 0.49, "z", cabinet, 32);
+    cylinder(0.22, 0.08, mats.yellow, 0.38, 0.78, 0.43, "z", cabinet, 32);
+
+    const stopHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, 0.22, 20),
+      mats.red
+    );
+    stopHandle.rotation.x = Math.PI / 2;
+    stopHandle.position.set(0.38, 0.78, 0.57);
+    cabinet.add(stopHandle);
+
+    // Signal mast.
+    cylinder(0.07, 2.3, mats.frame, 9.25, 3.0, 2.7, "y", scene, 24);
+    cylinder(0.35, 0.12, mats.frameDark, 9.25, 4.18, 2.7, "y", scene, 28);
+
+    const greenLamp = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 24, 16),
+      mats.green
+    );
+    greenLamp.position.set(9.25, 4.43, 2.7);
+    scene.add(greenLamp);
+
+    const redLamp = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 24, 16),
+      material(0x8e2018, 0.1, 0.4, {
+        emissive: 0x4a0803,
+        emissiveIntensity: 0.4
+      })
+    );
+    redLamp.position.set(9.25, 3.9, 2.7);
+    scene.add(redLamp);
+
+    // -------------------------------------------------------------------------
+    // Dynamic power/signal cable
+    // -------------------------------------------------------------------------
+
+    const cableMaterial = material(0x090d10, 0.1, 0.7);
+    const cableCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-9.2, 2.65, 2.7),
+      new THREE.Vector3(-8.7, 3.0, 2.35),
+      new THREE.Vector3(-6.8, 2.75, 1.2),
+      new THREE.Vector3(-4.8, 1.95, 0.75)
+    ]);
+
+    const cable = new THREE.Mesh(
+      new THREE.TubeGeometry(cableCurve, 48, 0.035, 6, false),
+      cableMaterial
+    );
+    cable.castShadow = true;
+    scene.add(cable);
+
+    // -------------------------------------------------------------------------
+    // Labels
+    // -------------------------------------------------------------------------
+
+    const rollerLabel = makeLabel(
+      "ROLLER TEST CELL",
+      "37 individually driven rollers",
+      "#ffb13b"
+    );
+    rollerLabel.position.set(0, 2.15, 3.05);
+    scene.add(rollerLabel);
+
+    const loadLabel = makeLabel(
+      "LOAD CELL",
+      "Four-point force measurement",
+      "#62e6a5"
+    );
+    loadLabel.position.set(0, 3.48, 1.35);
+    scene.add(loadLabel);
+
+    const massLabel = makeLabel(
+      "18.4 t",
+      "Calibrated loading mass",
+      "#ffb13b"
+    );
+    massLabel.position.set(-0.8, 4.58, 0.45);
+    scene.add(massLabel);
+
+    // -------------------------------------------------------------------------
+    // Load-cell display
+    // -------------------------------------------------------------------------
+
+    function drawLoadDisplay(weight) {
+      const ctx = screenCtx;
+      const w = screenCanvas.width;
+      const h = screenCanvas.height;
+
+      ctx.fillStyle = "#061017";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = "#2b434e";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(14, 14, w - 28, h - 28);
+
+      ctx.fillStyle = "#65e5a4";
+      ctx.font = "800 70px monospace";
+      ctx.fillText(weight.toFixed(1) + " t", 58, 132);
+
+      ctx.fillStyle = "#7f9ca7";
+      ctx.font = "600 30px monospace";
+      ctx.fillText("AXLE LOAD  4.60 t EACH", 58, 205);
+      ctx.fillText("ROLLERS ACTIVE", 58, 255);
+      ctx.fillText("CELL CALIBRATED", 58, 305);
+
+      ctx.fillStyle = "#ffb13b";
+      ctx.fillRect(58, 337, 230, 10);
+
+      screenTexture.needsUpdate = true;
+    }
+
+    drawLoadDisplay(18.4);
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, zoom, keyboard, and touch pinch
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      target: new THREE.Vector3(0, 1.75, 0),
+      yaw: 0.72,
+      pitch: 0.58,
+      distance: 16.8
+    };
+
+    function updateCamera() {
+      const cp = Math.cos(cameraState.pitch);
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.distance * cp * Math.sin(cameraState.yaw),
+        cameraState.target.y +
+          cameraState.distance * Math.sin(cameraState.pitch),
+        cameraState.target.z +
+          cameraState.distance * cp * Math.cos(cameraState.yaw)
+      );
+      camera.lookAt(cameraState.target);
+    }
+
+    function setCamera(view) {
+      if (view === "detail") {
+        cameraState.target.set(0, 1.9, 0);
+        cameraState.yaw = 0.38;
+        cameraState.pitch = 0.34;
+        cameraState.distance = 10.2;
+      } else {
+        cameraState.target.set(0, 1.75, 0);
+        cameraState.yaw = 0.72;
+        cameraState.pitch = 0.58;
+        cameraState.distance = 16.8;
+      }
+      updateCamera();
+    }
+
+    const pointers = new Map();
+    let pinchDistance = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinchDistance = Math.hypot(a.x - b.x, a.y - b.y);
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const previous = pointers.get(event.pointerId);
+      const current = { x: event.clientX, y: event.clientY };
+      pointers.set(event.pointerId, current);
+
+      if (pointers.size === 1) {
+        const dx = current.x - previous.x;
+        const dy = current.y - previous.y;
+
+        cameraState.yaw -= dx * 0.006;
+        cameraState.pitch = THREE.MathUtils.clamp(
+          cameraState.pitch + dy * 0.005,
+          0.16,
+          1.28
+        );
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const distance = Math.hypot(a.x - b.x, a.y - b.y);
+
+        if (pinchDistance > 0 && distance > 0) {
+          cameraState.distance = THREE.MathUtils.clamp(
+            cameraState.distance * (pinchDistance / distance),
+            6.5,
+            29
+          );
+        }
+
+        pinchDistance = distance;
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      if (pointers.size < 2) pinchDistance = 0;
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.distance = THREE.MathUtils.clamp(
+          cameraState.distance * Math.exp(event.deltaY * 0.001),
+          6.5,
+          29
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", () => {
+      setCamera("overview");
+    });
+
+    addEventListener("keydown", (event) => {
+      if (event.key === "1") setCamera("overview");
+      if (event.key === "2") setCamera("detail");
+    });
+
+    // -------------------------------------------------------------------------
+    // UI
+    // -------------------------------------------------------------------------
+
+    const loadSlider = document.getElementById("load-slider");
+    const loadState = document.getElementById("load-state");
+    const pauseButton = document.getElementById("pause-button");
+    const axleLoad = document.getElementById("axle-load");
+    const rollerSpeed = document.getElementById("roller-speed");
+
+    let loadWeight = Number(loadSlider.value);
+    let paused = false;
+
+    function updateLoadUI() {
+      loadWeight = Number(loadSlider.value);
+      loadSlider.style.setProperty(
+        "--load",
+        `${((loadWeight - 12) / (30 - 12)) * 100}%`
+      );
+
+      axleLoad.innerHTML = `${(loadWeight / 2).toFixed(1)} <small>t</small>`;
+      drawLoadDisplay(loadWeight);
+
+      const labelCanvas = document.createElement("canvas");
+      labelCanvas.width = 768;
+      labelCanvas.height = 256;
+      const labelCtx = labelCanvas.getContext("2d");
+
+      labelCtx.fillStyle = "#14212a";
+      labelCtx.fillRect(0, 0, 768, 256);
+      labelCtx.strokeStyle = "#ffb13b";
+      labelCtx.lineWidth = 12;
+      labelCtx.strokeRect(12, 12, 744, 232);
+      labelCtx.fillStyle = "#ffb13b";
+      labelCtx.font = "800 65px system-ui, sans-serif";
+      labelCtx.fillText("CALIBRATION MASS", 48, 105);
+      labelCtx.fillStyle = "#eaf3f7";
+      labelCtx.font = "700 42px system-ui, sans-serif";
+      labelCtx.fillText(`${loadWeight.toFixed(1)} t`, 49, 178);
+
+      const labelTexture = new THREE.CanvasTexture(labelCanvas);
+      labelTexture.colorSpace = THREE.SRGBColorSpace;
+      cargoLabelTexture.dispose();
+      cargoLabelTexture = labelTexture;
+
+      loadState.textContent = loadWeight >= 16 && loadWeight <= 20
+        ? "Calibrated"
+        : "Adjusted";
+    }
+
+    loadSlider.addEventListener("input", updateLoadUI);
+    updateLoadUI();
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume Test" : "Pause Test";
+      loadState.textContent = paused ? "Hold" : "Calibrated";
+    });
+
+    document.getElementById("overview-button").addEventListener("click", () => {
+      setCamera("overview");
+    });
+
+    document.getElementById("detail-button").addEventListener("click", () => {
+      setCamera("detail");
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let elapsed = 0;
+    let wheelAngle = 0;
+    let rollerAngle = 0;
+    let frameNumber = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const now = performance.now();
+
+      if (!paused) {
+        elapsed += dt;
+
+        // Small reciprocating bogie motion on the roller bed.
+        const bogieX = Math.sin(elapsed * 0.42) * 0.32;
+        const bogieVelocity = Math.cos(elapsed * 0.42) * 0.32 * 0.42;
+
+        bogie.position.x = bogieX;
+
+        // No-slip rolling, with opposite signs for the two assemblies.
+        wheelAngle -= (bogieVelocity / 0.62) * dt;
+        rollerAngle -= (bogieVelocity / 0.38) * dt;
+
+        for (const wheel of wheelGroups) {
+          wheel.rotation.z = wheelAngle;
+        }
+
+        for (const roller of rollerGroups) {
+          roller.rotation.z = rollerAngle;
+        }
+      }
+
+      // Slightly animate the signal lamp pulse.
+      if (!paused) {
+        redLamp.material.emissiveIntensity =
+          0.35 + Math.sin(elapsed * 3.2) * 0.12;
+      }
+
+      // Update the cable to follow the moving bogie.
+      const cablePoints = [
+        new THREE.Vector3(-9.2, 2.65, 2.7),
+        new THREE.Vector3(-8.7, 3.0, 2.35),
+        new THREE.Vector3(bogieX + 2.7, 2.75, 1.2),
+        new THREE.Vector3(bogieX + 2.2, 1.95, 0.75)
+      ];
+
+      cableCurve.points.set(cablePoints);
+      cableCurve.autoClose = false;
+
+      if (frameNumber % 2 === 0) {
+        const nextGeometry = new THREE.TubeGeometry(
+          cableCurve,
+          48,
+          0.035,
+          6,
+          false
+        );
+        cable.geometry.dispose();
+        cable.geometry = nextGeometry;
+      }
+
+      frameNumber++;
+      renderer.render(scene, camera);
+    }
+
+    addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+
+    updateCamera();
+    animate();
+
+    requestAnimationFrame(() => {
+      document.getElementById("loading").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

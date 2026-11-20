@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collapsed Sinkhole — Exposed Soil Horizons</title>
+
+  <style>
+    :root {
+      --ink: #f4f0e6;
+      --muted: rgba(244, 240, 230, 0.68);
+      --glass: rgba(24, 29, 28, 0.68);
+      --line: rgba(255, 255, 255, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #aebfc2;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      outline: none;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      color: var(--ink);
+      background: var(--glass);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 40px rgba(15, 20, 18, 0.18);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+    }
+
+    .title-panel {
+      top: 24px;
+      left: 24px;
+      width: min(390px, calc(100vw - 48px));
+      padding: 20px 22px 18px;
+      border-radius: 4px;
+    }
+
+    .eyebrow {
+      margin-bottom: 9px;
+      color: #d8bd83;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 3vw, 38px);
+      font-weight: 520;
+      letter-spacing: -0.035em;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .title-rule {
+      width: 54px;
+      height: 2px;
+      margin: 17px 0 0;
+      background: #d8bd83;
+    }
+
+    .legend-panel {
+      left: 24px;
+      bottom: 24px;
+      width: 270px;
+      padding: 16px 18px 15px;
+      border-radius: 4px;
+    }
+
+    .legend-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .legend-title span:last-child {
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.08em;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      font-size: 11px;
+    }
+
+    .swatch {
+      width: 20px;
+      height: 8px;
+      border-radius: 1px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .controls {
+      right: 24px;
+      bottom: 24px;
+      padding: 11px 14px;
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.025em;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .controls strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      color: #f3ead8;
+      background: #26302f;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .loading.hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 700px) {
+      .title-panel {
+        top: 14px;
+        left: 14px;
+        width: calc(100vw - 28px);
+        padding: 16px 18px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .title-rule {
+        margin-top: 12px;
+      }
+
+      .legend-panel {
+        left: 14px;
+        bottom: 14px;
+        width: 210px;
+        padding: 12px 14px;
+      }
+
+      .legend-row {
+        margin: 6px 0;
+        font-size: 9px;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+        max-width: 120px;
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading" id="loading">Generating geological terrain</div>
+
+  <section class="panel title-panel">
+    <div class="eyebrow">Geological field study · Plate 01</div>
+    <h1>Collapsed Sinkhole</h1>
+    <p class="subtitle">
+      A procedural collapse cavity cut through grass, organic soil,
+      clay, silt, and gravel-rich substrate.
+    </p>
+    <div class="title-rule"></div>
+  </section>
+
+  <section class="panel legend-panel">
+    <div class="legend-title">
+      <span>Exposed horizons</span>
+      <span>Surface → depth</span>
+    </div>
+
+    <div class="legend-row">
+      <span class="swatch" style="background:#4b3321"></span>
+      <span>Organic topsoil</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch" style="background:#63391f"></span>
+      <span>Clay-rich subsoil</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch" style="background:#98552c"></span>
+      <span>Oxidized red clay</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch" style="background:#c38a4d"></span>
+      <span>Pale silt and loess</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch" style="background:#776d5b"></span>
+      <span>Gravelly substrate</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch" style="background:#3b3028"></span>
+      <span>Collapse debris</span>
+    </div>
+  </section>
+
+  <div class="panel controls">
+    <strong>Drag</strong> orbit<br>
+    <strong>Wheel</strong> zoom<br>
+    <strong>Shift / right-drag</strong> pan
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera, and lighting
+    // -------------------------------------------------------------------------
+
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional collapsed sinkhole with exposed soil horizons"
+    );
+
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xaebfc2);
+    scene.fog = new THREE.Fog(0xc5c7b6, 29, 79);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xd7e9ed, 0x493522, 1.75);
+    scene.add(hemisphere);
+
+    const sunLight = new THREE.DirectionalLight(0xffe1ad, 3.2);
+    sunLight.position.set(-18, 28, 14);
+    sunLight.target.position.set(0, -2, 0);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -23;
+    sunLight.shadow.camera.right = 23;
+    sunLight.shadow.camera.top = 23;
+    sunLight.shadow.camera.bottom = -23;
+    sunLight.shadow.camera.near = 1;
+    sunLight.shadow.camera.far = 65;
+    sunLight.shadow.bias = -0.00035;
+    sunLight.shadow.normalBias = 0.025;
+    scene.add(sunLight, sunLight.target);
+
+    const fillLight = new THREE.DirectionalLight(0x8eb5c6, 0.45);
+    fillLight.position.set(18, 10, -16);
+    scene.add(fillLight);
+
+    // -------------------------------------------------------------------------
+    // Procedural sky and sun sprite
+    // -------------------------------------------------------------------------
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(112, 32, 18),
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false,
+        vertexShader: `
+          varying vec3 vLocalPosition;
+          void main() {
+            vLocalPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vLocalPosition;
+          void main() {
+            float h = normalize(vLocalPosition).y;
+            vec3 horizon = vec3(0.78, 0.79, 0.69);
+            vec3 middle  = vec3(0.52, 0.66, 0.72);
+            vec3 zenith  = vec3(0.27, 0.49, 0.65);
+            vec3 color = mix(horizon, middle, smoothstep(-0.18, 0.28, h));
+            color = mix(color, zenith, smoothstep(0.18, 0.88, h));
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      })
+    );
+    sky.renderOrder = -10;
+    scene.add(sky);
+
+    function createSunTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 128;
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(64, 64, 2, 64, 64, 62);
+      gradient.addColorStop(0, "rgba(255,249,222,1)");
+      gradient.addColorStop(0.18, "rgba(255,229,164,0.95)");
+      gradient.addColorStop(0.48, "rgba(255,213,137,0.28)");
+      gradient.addColorStop(1, "rgba(255,205,120,0)");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 128, 128);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    const sunSprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: createSunTexture(),
+        transparent: true,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false
+      })
+    );
+    sunSprite.position.set(-49, 68, 38);
+    sunSprite.scale.set(16, 16, 1);
+    scene.add(sunSprite);
+
+    // -------------------------------------------------------------------------
+    // Shared procedural helpers
+    // -------------------------------------------------------------------------
+
+    const TAU = Math.PI * 2;
+
+    let randomSeed = 8675309;
+
+    function random() {
+      randomSeed |= 0;
+      randomSeed = (randomSeed + 0x6d2b79f5) | 0;
+      let value = Math.imul(randomSeed ^ (randomSeed >>> 15), 1 | randomSeed);
+      value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+    }
+
+    function smoothstep(min, max, value) {
+      const t = THREE.MathUtils.clamp((value - min) / (max - min), 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+
+    function rimRadius(angle) {
+      return (
+        9.2 +
+        0.44 * Math.sin(3 * angle + 0.35) +
+        0.27 * Math.sin(7 * angle + 1.15) +
+        0.16 * Math.sin(13 * angle - 0.8)
+      );
+    }
+
+    function groundHeight(x, z, radius = Math.hypot(x, z)) {
+      const broad =
+        0.22 * Math.sin(x * 0.13 + z * 0.05) +
+        0.14 * Math.sin(z * 0.19 - x * 0.07) +
+        0.07 * Math.sin((x + z) * 0.39);
+
+      // Flatten the terrain where it meets the sinkhole rim.
+      return broad * smoothstep(9.0, 15.0, radius);
+    }
+
+    // A sequence of concentric, irregular geological horizons.
+    const profiles = [
+      { depth: 0.00, inset: 0.00, phase: 0.0, color: 0x4b3321 },
+      { depth: 0.35, inset: 0.08, phase: 0.7, color: 0x4f3520 },
+      { depth: 0.95, inset: 0.32, phase: 1.4, color: 0x63391f },
+      { depth: 1.60, inset: 0.56, phase: 2.1, color: 0x8b4d28 },
+      { depth: 2.25, inset: 0.82, phase: 2.8, color: 0x98552c },
+      { depth: 2.90, inset: 1.08, phase: 3.5, color: 0xc38a4d },
+      { depth: 3.55, inset: 1.38, phase: 4.2, color: 0x9e5934 },
+      { depth: 4.20, inset: 1.72, phase: 4.9, color: 0x776d5b },
+      { depth: 4.75, inset: 2.10, phase: 5.6, color: 0x3b3028 }
+    ];
+
+    function profileRadius(angle, profile) {
+      const groove = Math.max(
+        0,
+        Math.sin(9 * angle + 0.4) + 0.35 * Math.sin(17 * angle - 1.1)
+      );
+
+      return (
+        rimRadius(angle) -
+        profile.inset -
+        groove * profile.inset * 0.08
+      );
+    }
+
+    function profileY(angle, profile) {
+      if (profile.depth === 0) return 0;
+
+      return (
+        -profile.depth +
+        0.055 * Math.sin(4 * angle + profile.phase) +
+        0.028 * Math.sin(11 * angle - profile.phase * 0.4)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Grass-covered terrain surrounding the sinkhole
+    // -------------------------------------------------------------------------
+
+    function buildTerrain() {
+      const angularSegments = 192;
+      const radialSegments = 34;
+      const positions = [];
+      const colors = [];
+      const indices = [];
+
+      const grassColor = new THREE.Color(0x637348);
+      const dryColor = new THREE.Color(0x8a7048);
+      const soilColor = new THREE.Color(0x6c4d31);
+
+      for (let ring = 0; ring <= radialSegments; ring++) {
+        const t = ring / radialSegments;
+
+        for (let segment = 0; segment <= angularSegments; segment++) {
+          const angle = (segment / angularSegments) * TAU;
+          const innerRadius = rimRadius(angle);
+          const radius =
+            innerRadius + (60 - innerRadius) * Math.pow(t, 1.12);
+
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
+          const y = groundHeight(x, z, radius);
+
+          positions.push(x, y, z);
+
+          const patch =
+            0.5 +
+            0.5 *
+              Math.sin(x * 0.21 + Math.sin(z * 0.11) * 2.1) *
+              Math.cos(z * 0.17 - x * 0.08);
+
+          const color = grassColor.clone().lerp(dryColor, patch * 0.42);
+
+          if (radius < 13.5) {
+            const edgeAmount = 1 - smoothstep(9.1, 13.5, radius);
+            color.lerp(soilColor, edgeAmount * 0.78);
+          }
+
+          color.offsetHSL(
+            (random() - 0.5) * 0.015,
+            (random() - 0.5) * 0.035,
+            (random() - 0.5) * 0.075
+          );
+
+          colors.push(color.r, color.g, color.b);
+        }
+      }
+
+      const row = angularSegments + 1;
+
+      for (let ring = 0; ring < radialSegments; ring++) {
+        for (let segment = 0; segment < angularSegments; segment++) {
+          const a = ring * row + segment;
+          const b = a + 1;
+          const c = a + row;
+          const d = c + 1;
+
+          indices.push(a, b, c, b, d, c);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(colors, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 1,
+        metalness: 0
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
+    }
+
+    buildTerrain();
+
+    // -------------------------------------------------------------------------
+    // Exposed soil horizons forming the sinkhole walls
+    // -------------------------------------------------------------------------
+
+    function buildHorizonBand(upper, lower, baseColor) {
+      const segments = 176;
+      const positions = [];
+      const colors = [];
+      const indices = [];
+
+      for (let segment = 0; segment <= segments; segment++) {
+        const angle = (segment / segments) * TAU;
+
+        const upperRadius = profileRadius(angle, upper);
+        const lowerRadius = profileRadius(angle, lower);
+        const upperY = profileY(angle, upper);
+        const lowerY = profileY(angle, lower);
+
+        positions.push(
+          Math.cos(angle) * upperRadius,
+          upperY,
+          Math.sin(angle) * upperRadius
+        );
+
+        positions.push(
+          Math.cos(angle) * lowerRadius,
+          lowerY,
+          Math.sin(angle) * lowerRadius
+        );
+
+        const color = new THREE.Color(baseColor);
+        color.offsetHSL(
+          (random() - 0.5) * 0.012,
+          (random() - 0.5) * 0.055,
+          (random() - 0.5) * 0.10
+        );
+
+        colors.push(color.r, color.g, color.b);
+        colors.push(color.r, color.g, color.b);
+      }
+
+      for (let segment = 0; segment < segments; segment++) {
+        const a = segment * 2;
+        const b = a + 1;
+        const c = a + 2;
+        const d = a + 3;
+
+        // Inward-facing winding.
+        indices.push(a, c, b, b, c, d);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(colors, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.98,
+        metalness: 0,
+        side: THREE.DoubleSide
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+
+    for (let index = 0; index < profiles.length - 1; index++) {
+      buildHorizonBand(
+        profiles[index],
+        profiles[index + 1],
+        profiles[index + 1].color
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Uneven collapse floor
+    // -------------------------------------------------------------------------
+
+    const lastProfile = profiles[profiles.length - 1];
+
+    function floorSurfaceAt(radius, angle) {
+      const outerRadius = profileRadius(angle, lastProfile);
+      const t = THREE.MathUtils.clamp(1 - radius / outerRadius, 0, 1);
+      const outerY = profileY(angle, lastProfile);
+
+      return (
+        THREE.MathUtils.lerp(outerY, -5.35, t) +
+        0.055 * Math.sin(6 * angle + radius * 2.1) * Math.sin(Math.PI * t)
+      );
+    }
+
+    function buildFloor() {
+      const segments = 176;
+      const rings = 14;
+      const positions = [];
+      const colors = [];
+      const indices = [];
+
+      const floorColor = new THREE.Color(0x3b3028);
+
+      for (let ring = 0; ring < rings; ring++) {
+        const t = ring / rings;
+
+        for (let segment = 0; segment <= segments; segment++) {
+          const angle = (segment / segments) * TAU;
+          const outerRadius = profileRadius(angle, lastProfile);
+          const radius = outerRadius * (1 - t);
+          const y =
+            THREE.MathUtils.lerp(
+              profileY(angle, lastProfile),
+              -5.35,
+              t
+            ) +
+            0.055 * Math.sin(6 * angle + radius * 2.1) * Math.sin(Math.PI * t);
+
+          positions.push(
+            Math.cos(angle) * radius,
+            y,
+            Math.sin(angle) * radius
+          );
+
+          const color = floorColor.clone();
+          color.offsetHSL(
+            0,
+            (random() - 0.5) * 0.04,
+            (random() - 0.5) * 0.10
+          );
+          colors.push(color.r, color.g, color.b);
+        }
+      }
+
+      const row = segments + 1;
+
+      for (let ring = 0; ring < rings - 1; ring++) {
+        for (let segment = 0; segment < segments; segment++) {
+          const a = ring * row + segment;
+          const b = a + 1;
+          const c = a + row;
+          const d = c + 1;
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+
+      const centerIndex = positions.length / 3;
+      positions.push(0, -5.35, 0);
+      colors.push(0.035, 0.028, 0.024);
+
+      const finalRing = (rings - 1) * row;
+      for (let segment = 0; segment < segments; segment++) {
+        indices.push(
+          finalRing + segment,
+          centerIndex,
+          finalRing + segment + 1
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "color",
+        new THREE.Float32BufferAttribute(colors, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 1,
+        side: THREE.DoubleSide
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+
+    buildFloor();
+
+    // -------------------------------------------------------------------------
+    // Crack ribbon utility
+    // -------------------------------------------------------------------------
+
+    function createCrackRibbon(points, width, material) {
+      const positions = [];
+      const indices = [];
+
+      for (let index = 0; index < points.length; index++) {
+        const previous = points[Math.max(0, index - 1)];
+        const next = points[Math.min(points.length - 1, index + 1)];
+
+        const direction = new THREE.Vector3(
+          next.x - previous.x,
+          0,
+          next.z - previous.z
+        ).normalize();
+
+        const perpendicular = new THREE.Vector3(
+          -direction.z,
+          0,
+          direction.x
+        );
+
+        const halfWidth = width * 0.5;
+        const point = points[index];
+
+        positions.push(
+          point.x + perpendicular.x * halfWidth,
+          point.y,
+          point.z + perpendicular.z * halfWidth
+        );
+
+        positions.push(
+          point.x - perpendicular.x * halfWidth,
+          point.y,
+          point.z - perpendicular.z * halfWidth
+        );
+      }
+
+      for (let index = 0; index < points.length - 1; index++) {
+        const a = index * 2;
+        const b = a + 1;
+        const c = a + 2;
+        const d = a + 3;
+        indices.push(a, b, c, b, d, c);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      return mesh;
+    }
+
+    const surfaceCrackMaterial = new THREE.MeshBasicMaterial({
+      color: 0x33271e,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    // Radial fractures around the collapsed rim.
+    for (let crack = 0; crack < 13; crack++) {
+      const baseAngle = (crack / 13) * TAU + (random() - 0.5) * 0.22;
+      const endRadius = rimRadius(baseAngle) + 0.12;
+      const points = [];
+      const steps = 7;
+
+      for (let step = 0; step <= steps; step++) {
+        const t = step / steps;
+        const radius = endRadius + (5.5 + random() * 2.5) * (1 - t);
+        const angle =
+          baseAngle +
+          Math.sin(t * Math.PI * 1.8 + crack) * 0.025 * (1 - t);
+
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+
+        points.push(
+          new THREE.Vector3(
+            x,
+            groundHeight(x, z, radius) + 0.027,
+            z
+          )
+        );
+      }
+
+      createCrackRibbon(points, 0.075, surfaceCrackMaterial);
+    }
+
+    // Dark fractures across the debris-covered floor.
+    const floorCrackMaterial = new THREE.MeshBasicMaterial({
+      color: 0x17120f,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    for (let crack = 0; crack < 10; crack++) {
+      const baseAngle = (crack / 10) * TAU + (random() - 0.5) * 0.3;
+      const points = [];
+      const steps = 8;
+
+      for (let step = 0; step <= steps; step++) {
+        const t = step / steps;
+        const radius = 0.45 + t * 5.65;
+        const angle =
+          baseAngle +
+          Math.sin(t * 8 + crack) * 0.025 * (1 - t);
+
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+
+        points.push(
+          new THREE.Vector3(
+            x,
+            floorSurfaceAt(radius, angle) + 0.025,
+            z
+          )
+        );
+      }
+
+      createCrackRibbon(points, 0.052, floorCrackMaterial);
+    }
+
+    // -------------------------------------------------------------------------
+    // Rubble, boulders, and stones embedded in the exposed walls
+    // -------------------------------------------------------------------------
+
+    const rockGeometry = new THREE.DodecahedronGeometry(1, 0);
+    rockGeometry.scale(1, 0.76, 1);
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.96,
+      metalness: 0,
+      flatShading: true
+    });
+
+    const rockCount = 420;
+    const rocks = new THREE.InstancedMesh(
+      rockGeometry,
+      rockMaterial,
+      rockCount
+    );
+
+    const dummy = new THREE.Object3D();
+    const rockPalette = [
+      new THREE.Color(0x756a59),
+      new THREE.Color(0x8a755e),
+      new THREE.Color(0x574d43),
+      new THREE.Color(0x9a8467),
+      new THREE.Color(0x665344)
+    ];
+
+    for (let index = 0; index < rockCount; index++) {
+      let x;
+      let y;
+      let z;
+      let scaleX;
+      let scaleY;
+      let scaleZ;
+
+      if (index < 165) {
+        // Debris resting on the collapse floor.
+        const angle = random() * TAU;
+        const radius = Math.sqrt(random()) * 6.45;
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        y = floorSurfaceAt(radius, angle);
+
+        scaleX = 0.10 + random() * 0.46;
+        scaleY = 0.07 + random() * 0.28;
+        scaleZ = 0.10 + random() * 0.43;
+      } else if (index < 315) {
+        // Broken blocks around the lip.
+        const angle = random() * TAU;
+        const radius = 9.15 + random() * 3.6;
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        y = groundHeight(x, z, radius);
+
+        scaleX = 0.10 + random() * 0.40;
+        scaleY = 0.08 + random() * 0.26;
+        scaleZ = 0.10 + random() * 0.38;
+      } else {
+        // Scattered stones in the surrounding plain.
+        const angle = random() * TAU;
+        const radius = 16 + random() * 31;
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        y = groundHeight(x, z, radius);
+
+        scaleX = 0.12 + random() * 0.50;
+        scaleY = 0.08 + random() * 0.28;
+        scaleZ = 0.12 + random() * 0.46;
+      }
+
+      dummy.position.set(x, y + scaleY * 0.27, z);
+      dummy.rotation.set(
+        random() * Math.PI,
+        random() * Math.PI,
+        random() * Math.PI
+      );
+      dummy.scale.set(scaleX, scaleY, scaleZ);
+      dummy.updateMatrix();
+
+      rocks.setMatrixAt(index, dummy.matrix);
+      rocks.setColorAt(
+        index,
+        rockPalette[Math.floor(random() * rockPalette.length)]
+      );
+    }
+
+    rocks.instanceMatrix.needsUpdate = true;
+    if (rocks.instanceColor) rocks.instanceColor.needsUpdate = true;
+    rocks.castShadow = true;
+    rocks.receiveShadow = true;
+    scene.add(rocks);
+
+    // Small stones and gravel inclusions exposed in the soil walls.
+    const inclusionCount = 190;
+    const inclusions = new THREE.InstancedMesh(
+      new THREE.DodecahedronGeometry(1, 0),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 1,
+        flatShading: true
+      }),
+      inclusionCount
+    );
+
+    const inclusionPalette = [
+      new THREE.Color(0xb5a07f),
+      new THREE.Color(0x6c5a45),
+      new THREE.Color(0xd0b98b),
+      new THREE.Color(0x4d4237)
+    ];
+
+    for (let index = 0; index < inclusionCount; index++) {
+      const band = Math.floor(random() * (profiles.length - 1));
+      const upper = profiles[band];
+      const lower = profiles[band + 1];
+      const t = random();
+      const angle = random() * TAU;
+
+      const upperRadius = profileRadius(angle, upper);
+      const lowerRadius = profileRadius(angle, lower);
+      const upperY = profileY(angle, upper);
+      const lowerY = profileY(angle, lower);
+
+      const radius = THREE.MathUtils.lerp(upperRadius, lowerRadius, t) - 0.045;
+      const y = THREE.MathUtils.lerp(upperY, lowerY, t);
+
+      const size = 0.035 + random() * 0.12;
+
+      dummy.position.set(
+        Math.cos(angle) * radius,
+        y,
+        Math.sin(angle) * radius
+      );
+      dummy.rotation.set(
+        random() * Math.PI,
+        random() * Math.PI,
+        random() * Math.PI
+      );
+      dummy.scale.set(
+        size,
+        size * (0.5 + random() * 0.7),
+        size * (0.65 + random() * 0.65)
+      );
+      dummy.updateMatrix();
+
+      inclusions.setMatrixAt(index, dummy.matrix);
+      inclusions.setColorAt(
+        index,
+        inclusionPalette[
+          Math.floor(random() * inclusionPalette.length)
+        ]
+      );
+    }
+
+    inclusions.instanceMatrix.needsUpdate = true;
+    if (inclusions.instanceColor) inclusions.instanceColor.needsUpdate = true;
+    inclusions.receiveShadow = true;
+    scene.add(inclusions);
+
+    // -------------------------------------------------------------------------
+    // Instanced grass tufts
+    // -------------------------------------------------------------------------
+
+    function createGrassGeometry() {
+      const positions = [];
+      const bladeHeight = 0.38;
+      const bladeWidth = 0.042;
+
+      for (let blade = 0; blade < 3; blade++) {
+        const angle = (blade / 3) * Math.PI;
+        const cosine = Math.cos(angle);
+        const sine = Math.sin(angle);
+
+        positions.push(
+          -bladeWidth * cosine,
+          0,
+          -bladeWidth * sine,
+          bladeWidth * cosine,
+          0,
+          bladeWidth * sine,
+          0.045 * cosine,
+          bladeHeight,
+          0.045 * sine
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const grassCount = 850;
+    const grass = new THREE.InstancedMesh(
+      createGrassGeometry(),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 1,
+        side: THREE.DoubleSide
+      }),
+      grassCount
+    );
+
+    const grassPalette = [
+      new THREE.Color(0x5b6c36),
+      new THREE.Color(0x788047),
+      new THREE.Color(0x8d8b50),
+      new THREE.Color(0xa09059)
+    ];
+
+    for (let index = 0; index < grassCount; index++) {
+      const angle = random() * TAU;
+      const radius = 10.5 + Math.sqrt(random()) * 41;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const y = groundHeight(x, z, radius);
+      const scale = 0.55 + random() * 1.05;
+
+      dummy.position.set(x, y, z);
+      dummy.rotation.set(0, random() * TAU, 0);
+      dummy.scale.set(scale, scale, scale);
+      dummy.updateMatrix();
+
+      grass.setMatrixAt(index, dummy.matrix);
+      grass.setColorAt(
+        index,
+        grassPalette[Math.floor(random() * grassPalette.length)]
+      );
+    }
+
+    grass.instanceMatrix.needsUpdate = true;
+    if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
+    grass.receiveShadow = true;
+    scene.add(grass);
+
+    // -------------------------------------------------------------------------
+    // Suspended dust motes
+    // -------------------------------------------------------------------------
+
+    const dustCount = 150;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustBaseY = new Float32Array(dustCount);
+    const dustPhase = new Float32Array(dustCount);
+
+    for (let index = 0; index < dustCount; index++) {
+      const x = (random() - 0.5) * 25;
+      const y = -2.8 + random() * 8.5;
+      const z = (random() - 0.5) * 25;
+
+      dustPositions[index * 3] = x;
+      dustPositions[index * 3 + 1] = y;
+      dustPositions[index * 3 + 2] = z;
+
+      dustBaseY[index] = y;
+      dustPhase[index] = random() * TAU;
+    }
+
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(dustPositions, 3)
+    );
+
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xf0d8a9,
+        size: 0.055,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+    scene.add(dust);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls: orbit, zoom, and pan
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      azimuth: 0.68,
+      targetAzimuth: 0.68,
+      polar: 0.82,
+      targetPolar: 0.82,
+      distance: 24.5,
+      targetDistance: 24.5,
+      target: new THREE.Vector3(0, -1.55, 0),
+      desiredTarget: new THREE.Vector3(0, -1.55, 0)
+    };
+
+    let dragging = false;
+    let panMode = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      panMode = event.shiftKey || event.button === 2;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - lastPointerX;
+      const deltaY = event.clientY - lastPointerY;
+
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+
+      if (panMode) {
+        const panScale = controls.distance * 0.00145;
+        const right = new THREE.Vector3(
+          Math.cos(controls.azimuth),
+          0,
+          -Math.sin(controls.azimuth)
+        );
+        const forward = new THREE.Vector3(
+          -Math.sin(controls.azimuth),
+          0,
+          -Math.cos(controls.azimuth)
+        );
+
+        controls.desiredTarget.addScaledVector(
+          right,
+          -deltaX * panScale
+        );
+        controls.desiredTarget.addScaledVector(
+          forward,
+          deltaY * panScale
+        );
+
+        controls.desiredTarget.x = THREE.MathUtils.clamp(
+          controls.desiredTarget.x,
+          -15,
+          15
+        );
+        controls.desiredTarget.z = THREE.MathUtils.clamp(
+          controls.desiredTarget.z,
+          -15,
+          15
+        );
+        controls.desiredTarget.y = THREE.MathUtils.clamp(
+          controls.desiredTarget.y,
+          -4,
+          2
+        );
+      } else {
+        controls.targetAzimuth -= deltaX * 0.005;
+        controls.targetPolar = THREE.MathUtils.clamp(
+          controls.targetPolar - deltaY * 0.005,
+          0.28,
+          1.46
+        );
+      }
+    });
+
+    function endPointer(event) {
+      dragging = false;
+      panMode = false;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.targetDistance = THREE.MathUtils.clamp(
+          controls.targetDistance * Math.exp(event.deltaY * 0.001),
+          10,
+          46
+        );
+      },
+      { passive: false }
+    );
+
+    function updateCamera(delta) {
+      const damping = 1 - Math.exp(-8 * delta);
+
+      controls.azimuth +=
+        (controls.targetAzimuth - controls.azimuth) * damping;
+      controls.polar +=
+        (controls.targetPolar - controls.polar) * damping;
+      controls.distance +=
+        (controls.targetDistance - controls.distance) * damping;
+      controls.target.lerp(controls.desiredTarget, damping);
+
+      const horizontal = Math.sin(controls.polar) * controls.distance;
+      const vertical = Math.cos(controls.polar) * controls.distance;
+
+      camera.position.set(
+        controls.target.x +
+          horizontal * Math.sin(controls.azimuth),
+        controls.target.y + vertical,
+        controls.target.z +
+          horizontal * Math.cos(controls.azimuth)
+      );
+
+      camera.lookAt(controls.target);
+    }
+
+    // -------------------------------------------------------------------------
+    // Animation and resize
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+
+    renderer.setAnimationLoop(() => {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      updateCamera(delta);
+
+      const positionAttribute = dust.geometry.getAttribute("position");
+
+      for (let index = 0; index < dustCount; index++) {
+        positionAttribute.array[index * 3 + 1] =
+          dustBaseY[index] +
+          Math.sin(elapsed * 0.34 + dustPhase[index]) * 0.22;
+      }
+
+      positionAttribute.needsUpdate = true;
+      dust.rotation.y = elapsed * 0.006;
+
+      renderer.render(scene, camera);
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hide");
+    });
+  </script>
+</body>
+</html>

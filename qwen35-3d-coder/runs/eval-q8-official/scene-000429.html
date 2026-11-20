@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Folded Plate Roof — Glazed Hall</title>
+
+  <style>
+    :root {
+      --ink: #26302d;
+      --muted: #667068;
+      --paper: rgba(246, 244, 237, 0.92);
+      --line: rgba(38, 48, 45, 0.18);
+      --accent: #a65e3f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #d6d3ca;
+      color: var(--ink);
+      font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app canvas {
+      display: block;
+      outline: none;
+      touch-action: none;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 22%),
+        radial-gradient(circle at center, transparent 56%, rgba(45, 48, 43, 0.12) 100%);
+    }
+
+    header {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(23px, 3vw, 42px);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+
+    .subtitle {
+      max-width: 430px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .controls {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      max-width: 390px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      padding: 9px 12px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition:
+        background 160ms ease,
+        color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      background: #fffdf7;
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    button.active {
+      background: var(--ink);
+      color: #f6f4ed;
+    }
+
+    .info {
+      position: fixed;
+      left: 28px;
+      bottom: 24px;
+      z-index: 10;
+      width: min(340px, calc(100vw - 56px));
+      padding: 16px 17px 15px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: var(--paper);
+      box-shadow: 0 12px 35px rgba(38, 43, 38, 0.09);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .info-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .info-title span:last-child {
+      color: var(--accent);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 18px;
+      font-size: 11px;
+    }
+
+    .info-grid span:first-child {
+      color: var(--muted);
+    }
+
+    .info-grid span:last-child {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .section-note {
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .hint {
+      position: fixed;
+      right: 25px;
+      bottom: 25px;
+      z-index: 10;
+      color: rgba(38, 48, 45, 0.62);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      pointer-events: none;
+    }
+
+    #leader-layer,
+    #label-layer {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    #leader-layer {
+      overflow: visible;
+    }
+
+    .leader {
+      stroke: rgba(38, 48, 45, 0.48);
+      stroke-width: 1;
+      stroke-dasharray: 3 4;
+    }
+
+    .leader-dot {
+      fill: var(--accent);
+      stroke: rgba(255, 255, 255, 0.8);
+      stroke-width: 0.8;
+    }
+
+    .label {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 6px 8px 6px 22px;
+      border-left: 2px solid var(--accent);
+      background: rgba(246, 244, 237, 0.9);
+      color: #343d39;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      line-height: 1.2;
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+
+    .label::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 50%;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      transform: translateY(-50%);
+    }
+
+    #labels-hidden {
+      display: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      background: #d6d3ca;
+      color: #59625d;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #loading.out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      header {
+        top: 18px;
+        left: 18px;
+      }
+
+      .subtitle {
+        max-width: 280px;
+        font-size: 11px;
+      }
+
+      .controls {
+        top: auto;
+        right: 14px;
+        bottom: 14px;
+        max-width: 245px;
+      }
+
+      .info {
+        left: 14px;
+        bottom: 14px;
+        width: calc(100vw - 210px);
+        padding: 12px;
+      }
+
+      .info-grid {
+        gap: 5px 12px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .label {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div class="vignette"></div>
+
+  <svg id="leader-layer" aria-hidden="true"></svg>
+  <div id="label-layer" aria-hidden="true"></div>
+
+  <header>
+    <div class="eyebrow">Concrete / Glazing / Structure</div>
+    <h1>Folded Plate<br>Roof Hall</h1>
+    <div class="subtitle">
+      Seven alternating concrete fold faces create a zigzag roof section over
+      a slender column frame and continuous glazed wall.
+    </div>
+  </header>
+
+  <nav class="controls" aria-label="Scene controls">
+    <button data-view="perspective" class="active">Perspective</button>
+    <button data-view="under">Under-view</button>
+    <button data-view="plan">Plan</button>
+    <button id="cutaway">Roof cutaway</button>
+    <button id="labels-button" class="active">Labels</button>
+  </nav>
+
+  <aside class="info">
+    <div class="info-title">
+      <span>Project data</span>
+      <span>7 folds</span>
+    </div>
+
+    <div class="info-grid">
+      <span>Clear span</span><span>15.40 m</span>
+      <span>Face width</span><span>2.20 m</span>
+      <span>Plate thickness</span><span>0.18 m</span>
+      <span>Fold arrangement</span><span>Alternating</span>
+      <span>Supports</span><span>2 edge beams</span>
+      <span>Glazing</span><span>Wall mullions</span>
+    </div>
+
+    <div class="section-note">
+      Down-valley nodes carry recessed drip grooves. Formwork seams continue
+      longitudinally through all seven fold faces.
+    </div>
+  </aside>
+
+  <div class="hint">DRAG TO ORBIT · SHIFT/RIGHT-DRAG TO PAN · SCROLL TO ZOOM</div>
+  <div id="loading">Constructing folded roof…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const app = document.getElementById("app");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional model of a folded plate concrete roof"
+    );
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xd6d3ca);
+    scene.fog = new THREE.Fog(0xd6d3ca, 48, 92);
+
+    const camera = new THREE.PerspectiveCamera(
+      39,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xf3f0e7, 0x696b63, 2.15));
+
+    const sun = new THREE.DirectionalLight(0xfff1d7, 3.15);
+    sun.position.set(-15, 25, 17);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -25;
+    sun.shadow.camera.right = 25;
+    sun.shadow.camera.top = 25;
+    sun.shadow.camera.bottom = -25;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 70;
+    sun.shadow.normalBias = 0.025;
+    sun.shadow.bias = -0.00015;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xb9d5e4, 1.05);
+    fill.position.set(18, 10, -18);
+    scene.add(fill);
+
+    const groundLight = new THREE.DirectionalLight(0xffffff, 0.35);
+    groundLight.position.set(0, 5, 25);
+    scene.add(groundLight);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    function makeConcreteTexture() {
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      let seed = 918273;
+      const random = () => {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+
+      const image = ctx.createImageData(size, size);
+      const data = image.data;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const index = (y * size + x) * 4;
+          const noise = (random() - 0.5) * 25;
+          const broad =
+            Math.sin(x * 0.075) * 3 +
+            Math.sin(y * 0.11) * 2 +
+            Math.sin((x + y) * 0.035) * 2;
+
+          data[index] = 191 + noise + broad;
+          data[index + 1] = 188 + noise + broad;
+          data[index + 2] = 180 + noise + broad;
+          data[index + 3] = 255;
+        }
+      }
+
+      ctx.putImageData(image, 0, 0);
+
+      for (let i = 0; i < 90; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 8 + random() * 45;
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        gradient.addColorStop(0, "rgba(80,76,68,0.025)");
+        gradient.addColorStop(1, "rgba(80,76,68,0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 24; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        ctx.strokeStyle = `rgba(75,72,65,${0.018 + random() * 0.025})`;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + (random() - 0.5) * 45, y + (random() - 0.5) * 110);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 6);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      return texture;
+    }
+
+    const concreteTexture = makeConcreteTexture();
+
+    const concreteMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd7d2c6,
+      map: concreteTexture,
+      bumpMap: concreteTexture,
+      bumpScale: 0.025,
+      roughness: 0.91,
+      metalness: 0
+    });
+
+    const formworkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x77756e,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const grooveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x343633,
+      roughness: 0.88,
+      metalness: 0
+    });
+
+    const steelMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4d5551,
+      roughness: 0.38,
+      metalness: 0.72
+    });
+
+    const darkSteelMaterial = new THREE.MeshStandardMaterial({
+      color: 0x303835,
+      roughness: 0.48,
+      metalness: 0.68
+    });
+
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8db8c5,
+      roughness: 0.08,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0.34,
+      clearcoat: 0.45,
+      clearcoatRoughness: 0.08,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    // -------------------------------------------------------------------------
+    // Ground, plinth and paving
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 120),
+      new THREE.MeshStandardMaterial({
+        color: 0xb9b4aa,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0.012;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const pavingGrid = new THREE.GridHelper(90, 45, 0x777972, 0x9a9991);
+    pavingGrid.position.y = 0.025;
+    pavingGrid.material.transparent = true;
+    pavingGrid.material.opacity = 0.16;
+    scene.add(pavingGrid);
+
+    const plinth = new THREE.Mesh(
+      new THREE.BoxGeometry(16.25, 0.18, 30.8),
+      new THREE.MeshStandardMaterial({
+        color: 0xaaa69b,
+        roughness: 0.95
+      })
+    );
+    plinth.position.y = 0.09;
+    plinth.receiveShadow = true;
+    plinth.castShadow = true;
+    scene.add(plinth);
+
+    // -------------------------------------------------------------------------
+    // Roof geometry
+    //
+    // Seven 2.20 m faces.
+    // Node elevations alternate, producing the zigzag up/down section.
+    // -------------------------------------------------------------------------
+
+    const HALF_SPAN = 7.7;
+    const FACE_WIDTH = 2.2;
+    const ROOF_LENGTH = 30;
+    const PLATE_THICKNESS = 0.18;
+    const END_ELEVATION = 5.55;
+    const RISE = 1.08;
+
+    const nodes = [];
+
+    for (let i = 0; i <= 7; i++) {
+      nodes.push({
+        x: -HALF_SPAN + i * FACE_WIDTH,
+        y: i % 2 === 0 ? END_ELEVATION : END_ELEVATION + RISE
+      });
+    }
+
+    const roofGroup = new THREE.Group();
+    const roofNear = new THREE.Group();
+    const roofFar = new THREE.Group();
+    roofGroup.add(roofNear, roofFar);
+    scene.add(roofGroup);
+
+    function addRoofPanel(nodes, nearSide) {
+      const a = nodes[nodes.length - 1];
+      const b = nodes[nodes.length];
+
+      // Correct array access for the seven individual faces.
+      const p0 = nodes[0];
+      const p1 = nodes[1];
+      const p2 = nodes[2];
+      const p3 = nodes[3];
+      const p4 = nodes[4];
+      const p5 = nodes[5];
+      const p6 = nodes[6];
+      const p7 = nodes[7];
+
+      const segments = [
+        [p0, p1],
+        [p1, p2],
+        [p2, p3],
+        [p3, p4],
+        [p4, p5],
+        [p5, p6],
+        [p6, p7]
+      ];
+
+      segments.forEach(([start, end], index) => {
+        const midX = (start.x + end.x) * 0.5;
+        const midY = (start.y + end.y) * 0.5;
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const length = ROOF_LENGTH;
+        const halfLength = length * 0.5;
+
+        for (const side of [-1, 1]) {
+          const panel = new THREE.Mesh(
+            new THREE.BoxGeometry(
+              FACE_WIDTH - 0.014,
+              PLATE_THICKNESS,
+              halfLength
+            ),
+            concreteMaterial
+          );
+
+          panel.position.set(midX, midY, side * halfLength);
+          panel.rotation.z = angle;
+          panel.castShadow = true;
+          panel.receiveShadow = true;
+
+          if (side > 0) {
+            roofNear.add(panel);
+          } else {
+            roofFar.add(panel);
+          }
+        }
+      });
+    }
+
+    addRoofPanel(nodes, true);
+    addRoofPanel(nodes, false);
+
+    function addNodeDetail(node, type) {
+      const isValley = [1, 3, 5].includes(node.index);
+      const halfLength = ROOF_LENGTH * 0.5;
+
+      for (const side of [-1, 1]) {
+        let y;
+
+        if (type === "form") {
+          y = node.y - 0.10;
+        } else if (type === "shoulder") {
+          y = node.y - 0.104;
+        } else {
+          y = node.y - 0.119;
+        }
+
+        const geometry =
+          type === "groove"
+            ? new THREE.BoxGeometry(0.026, 0.024, halfLength)
+            : new THREE.BoxGeometry(0.044, 0.018, halfLength);
+
+        const mesh = new THREE.Mesh(geometry, type === "groove"
+          ? grooveMaterial
+          : formworkMaterial
+        );
+
+        mesh.position.set(node.x, y, side * halfLength);
+        mesh.receiveShadow = true;
+
+        if (type === "shoulder" && isValley) {
+          const lip = new THREE.Mesh(
+            new THREE.BoxGeometry(0.076, 0.012, halfLength),
+            formworkMaterial
+          );
+          lip.position.set(node.x, node.y - 0.104, side * halfLength);
+          lip.receiveShadow = true;
+          roofNear.add(lip);
+
+          const lip2 = lip.clone();
+          lip2.position.z = -side * halfLength;
+          roofFar.add(lip2);
+        } else {
+          if (side > 0) roofNear.add(mesh);
+          if (side < 0) roofFar.add(mesh);
+        }
+      }
+    }
+
+    nodes.forEach((node, index) => {
+      addNodeDetail(node, "form");
+
+      if (isValleyNode(index)) {
+        addNodeDetail(node, "shoulder");
+        addNodeDetail(node, "groove");
+      }
+    });
+
+    function isValleyNode(index) {
+      return [1, 3, 5].includes(index);
+    }
+
+    // -------------------------------------------------------------------------
+    // Two longitudinal edge beams and slender supporting columns
+    // -------------------------------------------------------------------------
+
+    const edgeBeamY = END_ELEVATION - PLATE_THICKNESS * 0.5 - 0.01;
+
+    for (const side of [-1, 1]) {
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.22, ROOF_LENGTH + 0.35),
+        steelMaterial
+      );
+      beam.position.set(side * HALF_SPAN, edgeBeamY, 0);
+      beam.castShadow = true;
+      beam.receiveShadow = true;
+      scene.add(beam);
+
+      for (const z of [-10, 0, 10]) {
+        const bearing = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.12, 0.68),
+          darkSteelMaterial
+        );
+        bearing.position.set(side * HALF_SPAN, 5.30, z);
+        bearing.castShadow = true;
+        bearing.receiveShadow = true;
+        scene.add(bearing);
+      }
+
+      for (const z of [-12, 0, 12]) {
+        const column = new THREE.Mesh(
+          new THREE.BoxGeometry(0.24, 5.09, 0.24),
+          steelMaterial
+        );
+        column.position.set(side * HALF_SPAN, 2.705, z);
+        column.castShadow = true;
+        column.receiveShadow = true;
+        scene.add(column);
+
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(0.52, 0.12, 0.52),
+          darkSteelMaterial
+        );
+        base.position.set(side * HALF_SPAN, 0.22, z);
+        base.castShadow = true;
+        base.receiveShadow = true;
+        scene.add(base);
+
+        const capital = new THREE.Mesh(
+          new THREE.BoxGeometry(0.42, 0.18, 0.42),
+          steelMaterial
+        );
+        capital.position.set(side * HALF_SPAN, 5.18, z);
+        capital.castShadow = true;
+        capital.receiveShadow = true;
+        scene.add(capital);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Glazed hall and mullions meeting the underside of the fold lines
+    // -------------------------------------------------------------------------
+
+    const hall = new THREE.Group();
+    scene.add(hall);
+
+    const wallTop = 5.34;
+    const glassBottom = 0.18;
+    const glassHeight = wallTop - glassBottom;
+
+    for (const z of [-15.05, 15.05]) {
+      for (let i = 0; i < 7; i++) {
+        const x0 = nodes[i].x;
+        const x1 = nodes[i + 1].x;
+        const midX = (x0 + x1) * 0.5;
+
+        const glass = new THREE.Mesh(
+          new THREE.BoxGeometry(FACE_WIDTH - 0.025, glassHeight, 0.035),
+          glassMaterial
+        );
+        glass.position.set(midX, glassBottom + glassHeight * 0.5, z);
+        glass.renderOrder = 2;
+        hall.add(glass);
+      }
+    }
+
+    // Vertical mullions. At fold lines, their upper end meets the concrete
+    // underside; at intermediate lines they continue to the common wall cap.
+    for (let i = 0; i <= 7; i++) {
+      const node = nodes[i];
+      const isFoldLine = [1, 3, 5].includes(i);
+      const mullionTop = isFoldLine
+        ? node.y - PLATE_THICKNESS * 0.5 - 0.015
+        : wallTop;
+
+      const mullion = new THREE.Mesh(
+        new THREE.BoxGeometry(0.065, mullionTop - glassBottom, 0.065),
+        steelMaterial
+      );
+      mullion.position.set(node.x, (glassBottom + mullionTop) * 0.5, 0);
+      mullion.castShadow = true;
+      mullion.receiveShadow = true;
+      hall.add(mullion);
+    }
+
+    // Mid-bay mullions.
+    for (let i = 0; i < 7; i++) {
+      const x = (nodes[i].x + nodes[i + 1].x) * 0.5;
+      const mullion = new THREE.Mesh(
+        new THREE.BoxGeometry(0.052, wallTop - glassBottom, 0.052),
+        steelMaterial
+      );
+      mullion.position.set(x, (glassBottom + wallTop) * 0.5, 0);
+      mullion.castShadow = true;
+      mullion.receiveShadow = true;
+      hall.add(mullion);
+    }
+
+    // Continuous transom and wall cap.
+    const transom = new THREE.Mesh(
+      new THREE.BoxGeometry(15.4, 0.055, 0.055),
+      steelMaterial
+    );
+    transom.position.set(0, wallTop, 0);
+    transom.castShadow = true;
+    hall.add(transom);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // -------------------------------------------------------------------------
+
+    const views = {
+      perspective: {
+        theta: 0.72,
+        phi: 1.02,
+        radius: 38,
+        target: new THREE.Vector3(0, 2.55, 0)
+      },
+      under: {
+        theta: 0.05,
+        phi: 1.48,
+        radius: 34,
+        target: new THREE.Vector3(0, 3.0, 0)
+      },
+      plan: {
+        theta: 0,
+        phi: 0.10,
+        radius: 39,
+        target: new THREE.Vector3(0, 0.2, 0)
+      }
+    };
+
+    const desired = {
+      theta: views.perspective.theta,
+      phi: views.perspective.phi,
+      radius: views.perspective.radius,
+      target: views.perspective.target.clone()
+    };
+
+    const current = {
+      theta: desired.theta,
+      phi: desired.phi,
+      radius: desired.radius,
+      target: desired.target.clone()
+    };
+
+    const pointers = new Map();
+    const canvas = renderer.domElement;
+    let labelsEnabled = true;
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        current.radius,
+        current.phi,
+        current.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(current.target);
+      camera.lookAt(current.target);
+      camera.updateMatrixWorld();
+    }
+
+    function panCamera(dx, dy) {
+      const right = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrix,
+        0
+      );
+      const up = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrix,
+        1
+      );
+
+      const scale = current.radius * 0.00125;
+      desired.target
+        .addScaledVector(right, -dx * scale)
+        .addScaledVector(up, dy * scale);
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const oldPoints = Array.from(pointers.values());
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - previous.x;
+        const dy = event.clientY - previous.y;
+
+        const panMode =
+          event.shiftKey ||
+          (event.pointerType === "mouse" &&
+            (event.button === 2 || event.buttons === 2));
+
+        if (panMode) {
+          panCamera(dx, dy);
+        } else {
+          desired.theta -= dx * 0.006;
+          desired.phi = THREE.MathUtils.clamp(
+            desired.phi + dy * 0.005,
+            0.08,
+            1.52
+          );
+        }
+      } else if (pointers.size === 2) {
+        const newPoints = Array.from(pointers.values());
+        const oldDistance = THREE.MathUtils.distance(
+          oldPoints[0],
+          oldPoints[1]
+        );
+        const newDistance = THREE.MathUtils.distance(
+          newPoints[0],
+          newPoints[1]
+        );
+
+        if (oldDistance > 0 && newDistance > 0) {
+          desired.radius = THREE.MathUtils.clamp(
+            desired.radius * (oldDistance / newDistance),
+            18,
+            75
+          );
+        }
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          18,
+          75
+        );
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") desired.theta += 0.08;
+      if (event.key === "ArrowRight") desired.theta -= 0.08;
+      if (event.key === "ArrowUp") {
+        desired.phi = THREE.MathUtils.clamp(desired.phi - 0.06, 0.08, 1.52);
+      }
+      if (event.key === "ArrowDown") {
+        desired.phi = THREE.MathUtils.clamp(desired.phi + 0.06, 0.08, 1.52);
+      }
+      if (event.key === "+" || event.key === "=") {
+        desired.radius = Math.max(18, desired.radius * 0.9);
+      }
+      if (event.key === "-") {
+        desired.radius = Math.min(75, desired.radius * 1.1);
+      }
+      if (event.key.toLowerCase() === "r") {
+        setView("perspective");
+      }
+    });
+
+    function setView(name) {
+      const view = views[name];
+      if (!view) return;
+
+      desired.theta = view.theta;
+      desired.phi = view.phi;
+      desired.radius = view.radius;
+      desired.target.copy(view.target);
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === name);
+      });
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setView(button.dataset.view);
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // Roof cutaway
+    // -------------------------------------------------------------------------
+
+    let cutaway = false;
+    const cutawayButton = document.getElementById("cutaway");
+
+    cutawayButton.addEventListener("click", () => {
+      cutaway = !cutaway;
+      roofNear.visible = !cutaway;
+      cutawayButton.classList.toggle("active", cutaway);
+      cutawayButton.textContent = cutaway ? "Show complete roof" : "Roof cutaway";
+    });
+
+    // -------------------------------------------------------------------------
+    // Projected HTML labels
+    // -------------------------------------------------------------------------
+
+    const labelLayer = document.getElementById("label-layer");
+    const leaderLayer = document.getElementById("leader-layer");
+
+    const labelDefinitions = [
+      {
+        text: "Up-ridge fold",
+        color: "#a65e3f",
+        anchor: new THREE.Vector3(-3.3, 5.88, 7.5)
+      },
+      {
+        text: "Down-valley drip groove",
+        color: "#465650",
+        anchor: new THREE.Vector3(-5.5, 5.43, 8.5)
+      },
+      {
+        text: "Exposure formwork line",
+        color: "#667068",
+        anchor: new THREE.Vector3(5.5, 5.87, -7.5)
+      },
+      {
+        text: "Edge beam + column",
+        color: "#343d39",
+        anchor: new THREE.Vector3(7.7, 2.7, 12)
+      }
+    ];
+
+    const labels = labelDefinitions.map((definition) => {
+      const element = document.createElement("div");
+      element.className = "label";
+      element.textContent = definition.text;
+      element.style.borderLeftColor = definition.color;
+      labelLayer.appendChild(element);
+
+      const line = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line"
+      );
+      line.setAttribute("class", "leader");
+      leaderLayer.appendChild(line);
+
+      const dot = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+      );
+      dot.setAttribute("class", "leader-dot");
+      dot.setAttribute("r", "3");
+      leaderLayer.appendChild(dot);
+
+      return {
+        ...definition,
+        element,
+        line,
+        dot,
+        projected: new THREE.Vector3()
+      };
+    });
+
+    function updateLabels() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      labels.forEach((label) => {
+        label.projected.copy(label.anchor).project(camera);
+
+        const visible =
+          labelsEnabled &&
+          label.projected.z > -1 &&
+          label.projected.z < 1;
+
+        if (!visible) {
+          label.element.style.opacity = "0";
+          label.element.style.pointerEvents = "none";
+          label.line.style.display = "none";
+          label.dot.style.display = "none";
+          return;
+        }
+
+        const x = (label.projected.x * 0.5 + 0.5) * width;
+        const y = (-label.projected.y * 0.5 + 0.5) * height;
+
+        label.element.style.opacity = "1";
+        label.element.style.pointerEvents = "none";
+        label.element.style.transform =
+          `translate(${x}px, ${y}px) translate(-50%, -100%)`;
+
+        label.line.style.display = "";
+        label.dot.style.display = "";
+
+        label.line.setAttribute("x1", x);
+        label.line.setAttribute("y1", y);
+        label.line.setAttribute("x2", x + 18);
+        label.line.setAttribute("y2", y);
+
+        label.dot.setAttribute("cx", x + 18);
+        label.dot.setAttribute("cy", y);
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Resize and render loop
+    // -------------------------------------------------------------------------
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    const clock = new THREE.Clock();
+    let firstFrame = true;
+
+    renderer.setAnimationLoop(() => {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const smoothing = 1 - Math.exp(-delta * 8);
+
+      current.theta += (desired.theta - current.theta) * smoothing;
+      current.phi += (desired.phi - current.phi) * smoothing;
+      current.radius += (desired.radius - current.radius) * smoothing;
+      current.target.lerp(desired.target, smoothing);
+
+      updateCamera();
+      updateLabels();
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        loading.classList.add("out");
+        setTimeout(() => loading.remove(), 500);
+      }
+    });
+  </script>
+</body>
+</html>

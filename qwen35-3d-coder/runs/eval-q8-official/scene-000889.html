@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ancient Acropolis District</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --cream: #f3e7cf;
+      --muted: #c8bea7;
+      --gold: #d7ad64;
+      --panel: rgba(24, 27, 25, 0.78);
+      --border: rgba(235, 218, 181, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b9d2d8;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-panel {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      max-width: min(420px, calc(100vw - 48px));
+      padding: 18px 21px;
+      color: var(--cream);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent),
+        var(--panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--gold);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: 0.025em;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .views {
+      position: fixed;
+      left: 24px;
+      bottom: 24px;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: calc(100vw - 48px);
+    }
+
+    .views button {
+      appearance: none;
+      padding: 10px 14px;
+      color: var(--cream);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    .views button:hover,
+    .views button.active {
+      background: rgba(83, 70, 43, 0.9);
+      border-color: rgba(235, 218, 181, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .hint {
+      position: fixed;
+      right: 24px;
+      bottom: 27px;
+      z-index: 10;
+      color: rgba(28, 31, 28, 0.82);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-align: right;
+      text-transform: uppercase;
+      pointer-events: none;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      color: #eee3c8;
+      background: #242a26;
+      transition: opacity 600ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-mark {
+      text-align: center;
+    }
+
+    .loading-mark strong {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: 400;
+    }
+
+    .loading-mark span {
+      color: #c8bea7;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 650px) {
+      .title-panel {
+        top: 14px;
+        left: 14px;
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .views {
+        left: 14px;
+        bottom: 14px;
+        max-width: calc(100vw - 28px);
+      }
+
+      .views button {
+        padding: 9px 11px;
+        font-size: 10px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <section class="title-panel">
+    <div class="eyebrow">Procedural reconstruction</div>
+    <h1>Ancient Acropolis</h1>
+    <div class="subtitle">
+      A sunlit district of a sacred temple, monumental gateway, and colonnaded
+      stoa, surrounded by ancient walls and olive groves.
+    </div>
+  </section>
+
+  <nav class="views" aria-label="Camera views">
+    <button class="active" data-view="overview">Overview</button>
+    <button data-view="temple">Temple</button>
+    <button data-view="gateway">Gateway</button>
+    <button data-view="stoa">Stoa</button>
+  </nav>
+
+  <div class="hint">
+    Drag to orbit · Scroll or pinch to zoom<br>
+    Arrow keys rotate · + / − zoom · R resets
+  </div>
+
+  <div id="loading">
+    <div class="loading-mark">
+      <strong>ACROPOLIS</strong>
+      <span>Raising the district…</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // -------------------------------------------------------------------------
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional ancient acropolis district"
+    );
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9d2d8);
+    scene.fog = new THREE.Fog(0xb9d2d8, 68, 155);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      250
+    );
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xd8eef2,
+      0x6d6249,
+      2.0
+    );
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xffe4ad, 3.6);
+    sun.position.set(-32, 52, 28);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -65;
+    sun.shadow.camera.right = 65;
+    sun.shadow.camera.top = 65;
+    sun.shadow.camera.bottom = -65;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 130;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0x9fc5d6, 0.65);
+    fillLight.position.set(35, 22, -40);
+    scene.add(fillLight);
+
+    // -------------------------------------------------------------------------
+    // Procedural stone texture
+    // -------------------------------------------------------------------------
+
+    function makeStoneTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = "#aaa18a";
+      context.fillRect(0, 0, 512, 512);
+
+      const rowHeight = 64;
+      const blockWidth = 128;
+
+      for (let row = 0; row < 8; row++) {
+        const offset = row % 2 ? -blockWidth / 2 : 0;
+
+        for (let x = -blockWidth; x < 512 + blockWidth; x += blockWidth) {
+          const shade = 157 + Math.floor(Math.random() * 38);
+          const warmth = Math.floor(Math.random() * 12);
+
+          context.fillStyle = `rgb(${shade + warmth}, ${shade + 3}, ${shade - 10})`;
+          context.fillRect(
+            x + offset + 2,
+            row * rowHeight + 2,
+            blockWidth - 4,
+            rowHeight - 4
+          );
+        }
+      }
+
+      for (let i = 0; i < 1800; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const alpha = 0.025 + Math.random() * 0.07;
+
+        context.fillStyle = `rgba(45, 39, 31, ${alpha})`;
+        context.fillRect(x, y, 1 + Math.random() * 3, 1 + Math.random() * 2);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 2);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const stoneTexture = makeStoneTexture();
+
+    const groundTexture = stoneTexture.clone();
+    groundTexture.repeat.set(18, 16);
+    groundTexture.needsUpdate = true;
+
+    const materials = {
+      stone: new THREE.MeshStandardMaterial({
+        color: 0xd6c9ad,
+        map: stoneTexture,
+        roughness: 0.94
+      }),
+      darkStone: new THREE.MeshStandardMaterial({
+        color: 0x817968,
+        map: stoneTexture,
+        roughness: 0.98
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0x9b4932,
+        roughness: 0.88
+      }),
+      roofDark: new THREE.MeshStandardMaterial({
+        color: 0x693026,
+        roughness: 0.95
+      }),
+      path: new THREE.MeshStandardMaterial({
+        color: 0xb8aa8d,
+        roughness: 1
+      }),
+      soil: new THREE.MeshStandardMaterial({
+        color: 0x695b45,
+        roughness: 1
+      }),
+      grass: new THREE.MeshStandardMaterial({
+        color: 0x66704b,
+        roughness: 1
+      }),
+      cypress: new THREE.MeshStandardMaterial({
+        color: 0x263c2d,
+        roughness: 1
+      }),
+      olive: new THREE.MeshStandardMaterial({
+        color: 0x62704a,
+        roughness: 1
+      }),
+      marble: new THREE.MeshStandardMaterial({
+        color: 0xe4dac2,
+        roughness: 0.72
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x211b16,
+        roughness: 0.9
+      }),
+      bronze: new THREE.MeshStandardMaterial({
+        color: 0x806137,
+        metalness: 0.55,
+        roughness: 0.48
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0x8e3028,
+        roughness: 0.9
+      }),
+      fire: new THREE.MeshStandardMaterial({
+        color: 0xff7a19,
+        emissive: 0xff3b00,
+        emissiveIntensity: 2.2,
+        roughness: 0.7
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function box(
+      width,
+      height,
+      depth,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      castShadow = true
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(
+      topRadius,
+      bottomRadius,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      segments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          topRadius,
+          bottomRadius,
+          height,
+          segments
+        ),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeColumn(
+      parent,
+      x,
+      z,
+      height,
+      radius = 0.55,
+      baseHeight = 0.2
+    ) {
+      const group = new THREE.Group();
+      group.position.set(x, baseHeight, z);
+      parent.add(group);
+
+      box(
+        radius * 2.65,
+        0.22,
+        radius * 2.65,
+        materials.darkStone,
+        0,
+        0.11,
+        0,
+        group
+      );
+
+      box(
+        radius * 2.2,
+        0.3,
+        radius * 2.2,
+        materials.stone,
+        0,
+        0.35,
+        0,
+        group
+      );
+
+      const shaftHeight = height - 0.9;
+      const shaft = cylinder(
+        radius * 0.79,
+        radius,
+        shaftHeight,
+        materials.marble,
+        0,
+        0.45 + shaftHeight / 2,
+        0,
+        group,
+        18
+      );
+      shaft.rotation.z = 0;
+
+      cylinder(
+        radius * 1.04,
+        radius * 0.88,
+        0.28,
+        materials.marble,
+        0,
+        height - 0.34,
+        0,
+        group,
+        18
+      );
+
+      box(
+        radius * 2.35,
+        0.24,
+        radius * 2.35,
+        materials.marble,
+        0,
+        height - 0.12,
+        0,
+        group
+      );
+
+      return group;
+    }
+
+    function makeWall(
+      x1,
+      z1,
+      x2,
+      z2,
+      y,
+      height,
+      thickness = 1.2,
+      material = materials.stone
+    ) {
+      const length = Math.hypot(x2 - x1, z2 - z1);
+      const angle = -Math.atan2(z2 - z1, x2 - x1);
+
+      const wall = box(
+        length,
+        height,
+        thickness,
+        material,
+        (x1 + x2) / 2,
+        y,
+        (z1 + z2) / 2,
+        scene,
+        true
+      );
+      wall.rotation.y = angle;
+      return wall;
+    }
+
+    function terrainHeight(x, z) {
+      const elevation = (35 - z) * 0.045;
+      const edgeRise = Math.min(5, Math.abs(x) * 0.035);
+      const noise =
+        Math.sin(x * 0.13) * Math.cos(z * 0.11) * 1.15 +
+        Math.sin((x + z) * 0.08) * 0.75;
+
+      return 0.7 + elevation + edgeRise + noise * 0.24;
+    }
+
+    // -------------------------------------------------------------------------
+    // Terrain and district paths
+    // -------------------------------------------------------------------------
+
+    const terrainGeometry = new THREE.PlaneGeometry(
+      120,
+      100,
+      64,
+      52
+    );
+    terrainGeometry.rotateX(-Math.PI / 2);
+
+    const terrainPositions = terrainGeometry.attributes.position;
+
+    for (let i = 0; i < terrainPositions.count; i++) {
+      const x = terrainPositions.getX(i);
+      const z = terrainPositions.getZ(i);
+      terrainPositions.setY(i, terrainHeight(x, z));
+    }
+
+    terrainGeometry.computeVertexNormals();
+
+    const terrain = new THREE.Mesh(
+      terrainGeometry,
+      new THREE.MeshStandardMaterial({
+        color: 0x81795e,
+        map: groundTexture,
+        roughness: 1
+      })
+    );
+    terrain.receiveShadow = true;
+    scene.add(terrain);
+
+    // Path segments follow the changing elevation of the rocky ground.
+    for (let i = 0; i < 7; i++) {
+      const z = 20 - i * 6;
+      box(
+        2.6,
+        0.08,
+        5.6,
+        materials.path,
+        0,
+        terrainHeight(0, z) + 0.04,
+        z,
+        scene,
+        false
+      );
+    }
+
+    for (let i = 0; i < 5; i++) {
+      const z = 11 - i * 4;
+      box(
+        2.1,
+        0.08,
+        3.8,
+        materials.path,
+        -23,
+        terrainHeight(-23, z) + 0.04,
+        z,
+        scene,
+        false
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Main temple
+    // -------------------------------------------------------------------------
+
+    function makeTemple() {
+      const temple = new THREE.Group();
+      temple.position.set(0, terrainHeight(0, 0), 0);
+      scene.add(temple);
+
+      // Raised platform and processional steps.
+      box(25, 0.5, 17, materials.stone, 0, 0.25, 0, temple);
+      box(12, 0.18, 3, materials.stone, 0, 0.09, 7, temple);
+      box(16, 0.18, 3, materials.stone, 0, 0.27, 5.5, temple);
+      box(20, 0.18, 3, materials.stone, 0, 0.45, 4, temple);
+
+      // Cella and doorway.
+      box(8, 6.5, 8, materials.stone, 0, 3.75, -2, temple);
+      box(2.5, 3.3, 0.14, materials.dark, 0, 2.15, 2.04, temple);
+      box(0.16, 3.3, 0.18, materials.bronze, -1.3, 2.15, 2.14, temple);
+      box(0.16, 3.3, 0.18, materials.bronze, 1.3, 2.15, 2.14, temple);
+
+      // Peristyle columns.
+      const columnPositions = [
+        [-9, 5.7], [-6, 5.7], [-3, 5.7], [0, 5.7],
+        [3, 5.7], [6, 5.7], [9, 5.7],
+        [-9, -6.3], [-6, -6.3], [-3, -6.3], [0, -6.3],
+        [3, -6.3], [6, -6.3], [9, -6.3],
+        [-10.25, -3.5], [-10.25, 0], [-10.25, 3.5],
+        [10.25, -3.5], [10.25, 0], [10.25, 3.5]
+      ];
+
+      for (const [x, z] of columnPositions) {
+        makeColumn(temple, x, z, 8.4, 0.58, 0.55);
+      }
+
+      // Entablature, cornice, and roof supports.
+      box(23.6, 1.1, 16.6, materials.stone, 0, 8.95, 0, temple);
+      box(24.2, 0.65, 17.2, materials.darkStone, 0, 9.82, 0, temple);
+      box(24.7, 0.28, 17.7, materials.stone, 0, 10.15, 0, temple);
+
+      // Gabled roof.
+      const roofAngle = Math.atan2(3.15, 8.3);
+      const roofLength = Math.hypot(3.15, 8.3);
+
+      for (const side of [-1, 1]) {
+        const panel = box(
+          24.2,
+          0.34,
+          roofLength,
+          materials.roof,
+          0,
+          11.75,
+          side * 4.15,
+          temple
+        );
+        panel.rotation.x = -side * roofAngle;
+
+        for (let i = 0; i < 11; i++) {
+          const tile = box(
+            0.11,
+            0.07,
+            roofLength - 0.15,
+            materials.roofDark,
+            0,
+            0.2,
+            -3.8 + i * 0.68,
+            panel,
+            false
+          );
+        }
+      }
+
+      const ridge = cylinder(
+        0.18,
+        0.18,
+        24.5,
+        materials.roofDark,
+        0,
+        13.38,
+        0,
+        temple,
+        12
+      );
+      ridge.rotation.z = Math.PI / 2;
+
+      // Pediments.
+      const pedimentShape = new THREE.Shape();
+      pedimentShape.moveTo(-6.1, 0);
+      pedimentShape.lineTo(6.1, 0);
+      pedimentShape.lineTo(0, 3.25);
+      pedimentShape.closePath();
+
+      const pedimentGeometry = new THREE.ExtrudeGeometry(pedimentShape, {
+        depth: 0.48,
+        bevelEnabled: true,
+        bevelSize: 0.07,
+        bevelThickness: 0.07,
+        bevelSegments: 1
+      });
+
+      const frontPediment = new THREE.Mesh(
+        pedimentGeometry,
+        materials.stone
+      );
+      frontPediment.position.set(0, 10.18, 8.08);
+      frontPediment.castShadow = true;
+      frontPediment.receiveShadow = true;
+      temple.add(frontPediment);
+
+      const backPediment = new THREE.Mesh(
+        pedimentGeometry,
+        materials.stone
+      );
+      backPediment.position.set(0, 10.18, -8.08);
+      backPediment.rotation.y = Math.PI;
+      backPediment.castShadow = true;
+      backPediment.receiveShadow = true;
+      temple.add(backPediment);
+
+      return temple;
+    }
+
+    makeTemple();
+
+    // -------------------------------------------------------------------------
+    // Propylon gateway
+    // -------------------------------------------------------------------------
+
+    function makeGateway() {
+      const gateway = new THREE.Group();
+      gateway.position.set(23, terrainHeight(23, -11), -11);
+      scene.add(gateway);
+
+      box(11, 0.4, 5, materials.stone, 0, 0, 0, gateway);
+
+      const columnPositions = [
+        [-3.6, -1.25],
+        [3.6, -1.25],
+        [-3.6, 1.25],
+        [3.6, 1.25]
+      ];
+
+      for (const [x, z] of columnPositions) {
+        makeColumn(gateway, x, z, 6.2, 0.62, 0.2);
+      }
+
+      box(9.2, 0.9, 1.15, materials.stone, 0, 6.55, 1.25, gateway);
+      box(9.2, 0.9, 1.15, materials.stone, 0, 6.55, -1.25, gateway);
+      box(1.15, 0.9, 3, materials.stone, -4.2, 6.55, 0, gateway);
+      box(1.15, 0.9, 3, materials.stone, 4.2, 6.55, 0, gateway);
+
+      box(10.4, 0.5, 4.4, materials.darkStone, 0, 7.1, 0, gateway);
+      box(9.4, 0.7, 1.25, materials.stone, 0, 7.62, 1.25, gateway);
+      box(9.4, 0.7, 1.25, materials.stone, 0, 7.62, -1.25, gateway);
+
+      // Relief panels.
+      for (const x of [-2.4, 0, 2.4]) {
+        box(
+          1.55,
+          0.75,
+          0.12,
+          materials.darkStone,
+          x,
+          6.62,
+          1.87,
+          gateway
+        );
+        box(
+          0.9,
+          0.42,
+          0.14,
+          materials.bronze,
+          x,
+          6.65,
+          1.96,
+          gateway
+        );
+      }
+
+      return gateway;
+    }
+
+    makeGateway();
+
+    // -------------------------------------------------------------------------
+    // Stoa
+    // -------------------------------------------------------------------------
+
+    function makeStoa() {
+      const stoa = new THREE.Group();
+      stoa.position.set(-23, terrainHeight(-23, -2), -2);
+      scene.add(stoa);
+
+      box(7.5, 0.4, 18, materials.stone, 0, 0, 0, stoa);
+
+      for (const z of [-7, -3.5, 0, 3.5, 7]) {
+        makeColumn(stoa, 0, z, 6.4, 0.55, 0.2);
+      }
+
+      box(7.8, 0.9, 18, materials.stone, 0, 6.75, 0, stoa);
+      box(8.2, 0.28, 18.4, materials.darkStone, 0, 7.25, 0, stoa);
+      box(8.6, 0.55, 19, materials.roof, 0, 7.6, 0, stoa);
+
+      // Rear wall and attic.
+      box(7.2, 5.8, 0.8, materials.stone, 0, 3.1, -8.5, stoa);
+      box(8, 1.2, 1.2, materials.stone, 0, 6.2, -8.5, stoa);
+
+      return stoa;
+    }
+
+    makeStoa();
+
+    // -------------------------------------------------------------------------
+    // Ancient district walls and towers
+    // -------------------------------------------------------------------------
+
+    const backWallY = terrainHeight(-15, -41) + 2.6;
+
+    makeWall(-40, -41, 0, -41, backWallY, 6.2, 1.5);
+    makeWall(0, -41, 40, -41, backWallY, 6.2, 1.5);
+
+    const leftWallY = terrainHeight(-42, -12) + 2.7;
+    makeWall(-42, -41, -42, -15, leftWallY, 6.4, 1.5);
+
+    // Square towers.
+    for (const [x, z] of [
+      [-40, -41],
+      [40, -41],
+      [-42, -15],
+      [42, -15]
+    ]) {
+      const tower = cylinder(
+        1.65,
+        1.9,
+        6.8,
+        materials.stone,
+        x,
+        terrainHeight(x, z) + 3.4,
+        z,
+        scene,
+        12
+      );
+      tower.rotation.y = 0.1;
+
+      cylinder(
+        1.8,
+        1.8,
+        0.35,
+        materials.darkStone,
+        x,
+        terrainHeight(x, z) + 6.85,
+        z,
+        scene,
+        12
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Vegetation
+    // -------------------------------------------------------------------------
+
+    function makeCypress(x, z, scale = 1) {
+      const tree = new THREE.Group();
+      tree.position.set(x, terrainHeight(x, z), z);
+      tree.scale.setScalar(scale);
+      scene.add(tree);
+
+      cylinder(
+        0.16,
+        0.24,
+        2.3,
+        materials.darkStone,
+        0,
+        1.15,
+        0,
+        tree,
+        8
+      );
+
+      const levels = [
+        { y: 1.7, radius: 1.55, height: 5.4 },
+        { y: 3.35, radius: 1.25, height: 4.7 },
+        { y: 4.7, radius: 0.9, height: 3.8 }
+      ];
+
+      for (const level of levels) {
+        const foliage = new THREE.Mesh(
+          new THREE.ConeGeometry(level.radius, level.height, 12),
+          materials.cypress
+        );
+        foliage.position.y = level.y;
+        foliage.castShadow = true;
+        foliage.receiveShadow = true;
+        tree.add(foliage);
+      }
+    }
+
+    function makeOlive(x, z, scale = 1) {
+      const tree = new THREE.Group();
+      tree.position.set(x, terrainHeight(x, z), z);
+      tree.scale.setScalar(scale);
+      scene.add(tree);
+
+      cylinder(
+        0.28,
+        0.43,
+        3.4,
+        materials.darkStone,
+        0,
+        1.7,
+        0,
+        tree,
+        9
+      );
+
+      const foliagePositions = [
+        [-0.9, 3.0, 0.1, 1.45],
+        [0.9, 3.2, 0.2, 1.35],
+        [0, 3.9, -0.2, 1.55],
+        [0.1, 2.7, 0.8, 1.2],
+        [-0.2, 2.5, -0.8, 1.2]
+      ];
+
+      for (const [px, py, pz, radius] of foliagePositions) {
+        const foliage = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(radius, 1),
+          materials.olive
+        );
+        foliage.position.set(px, py, pz);
+        foliage.scale.y = 0.75;
+        foliage.castShadow = true;
+        foliage.receiveShadow = true;
+        tree.add(foliage);
+      }
+    }
+
+    function makeBush(x, z, scale = 1) {
+      const bush = new THREE.Group();
+      bush.position.set(x, terrainHeight(x, z), z);
+      bush.scale.setScalar(scale);
+      scene.add(bush);
+
+      const foliage = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.8, 0),
+        materials.olive
+      );
+      foliage.position.y = 0.55;
+      foliage.scale.set(1.2, 0.75, 1);
+      foliage.castShadow = true;
+      bush.add(foliage);
+    }
+
+    [
+      [-35, -27, 1.2], [-31, -31, 1.0], [-38, -18, 1.15],
+      [-34, -9, 1.0], [-37, 7, 1.2], [-31, 19, 1.0],
+      [-27, 24, 0.85], [33, -24, 1.15], [38, -13, 1.0],
+      [36, 10, 1.2], [31, 23, 0.9], [18, 29, 0.8],
+      [-15, 30, 0.85], [4, 31, 0.75], [-39, 27, 0.9]
+    ].forEach(([x, z, scale]) => makeCypress(x, z, scale));
+
+    [
+      [-38, -7, 1.0], [-30, 15, 1.1], [35, -25, 1.1],
+      [39, 7, 0.9], [-36, 27, 1.0], [18, 29, 1.0]
+    ].forEach(([x, z, scale]) => makeOlive(x, z, scale));
+
+    for (let i = 0; i < 34; i++) {
+      const x = (Math.random() - 0.5) * 80;
+      const z = (Math.random() - 0.5) * 65;
+
+      if (
+        Math.abs(x) < 15 && Math.abs(z) < 14 ||
+        Math.abs(x + 23) < 6 && Math.abs(z + 2) < 11 ||
+        Math.abs(x - 23) < 6 && Math.abs(z + 11) < 4
+      ) {
+        continue;
+      }
+
+      makeBush(x, z, 0.55 + Math.random() * 0.85);
+    }
+
+    // -------------------------------------------------------------------------
+    // Statues, braziers, and small artifacts
+    // -------------------------------------------------------------------------
+
+    function makeStatue(x, z, rotation = 0, scale = 1) {
+      const statue = new THREE.Group();
+      statue.position.set(x, terrainHeight(x, z), z);
+      statue.rotation.y = rotation;
+      statue.scale.setScalar(scale);
+      scene.add(statue);
+
+      box(1.7, 0.55, 1.7, materials.darkStone, 0, 0.28, 0, statue);
+      box(1.35, 0.38, 1.35, materials.stone, 0, 0.68, 0, statue);
+
+      const torso = cylinder(
+        0.32,
+        0.48,
+        1.15,
+        materials.marble,
+        0,
+        1.35,
+        0,
+        statue,
+        10
+      );
+      torso.rotation.z = -0.05;
+
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 12, 10),
+        materials.marble
+      );
+      head.position.set(0, 2.05, 0);
+      head.scale.set(0.88, 1.12, 0.9);
+      head.castShadow = true;
+      statue.add(head);
+
+      const leftArm = cylinder(
+        0.12,
+        0.16,
+        1.15,
+        materials.marble,
+        -0.42,
+        1.35,
+        0,
+        statue,
+        8
+      );
+      leftArm.rotation.z = -0.35;
+
+      const rightArm = cylinder(
+        0.12,
+        0.16,
+        1.15,
+        materials.marble,
+        0.42,
+        1.35,
+        0,
+        statue,
+        8
+      );
+      rightArm.rotation.z = 0.35;
+
+      box(0.16, 1.25, 0.16, materials.marble, 0.5, 0.92, 0, statue);
+    }
+
+    makeStatue(-6.2, 10.2, 0.25, 1.05);
+    makeStatue(6.2, 10.2, -0.25, 0.95);
+    makeStatue(-17.5, 11.5, 0.4, 0.85);
+    makeStatue(18.5, 8.5, -0.35, 0.8);
+
+    function makeBrazier(x, z) {
+      const brazier = new THREE.Group();
+      brazier.position.set(x, terrainHeight(x, z), z);
+      scene.add(brazier);
+
+      cylinder(0.72, 0.32, 0.48, materials.bronze, 0, 1.05, 0, brazier, 10);
+
+      for (const angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+        const leg = box(
+          0.12,
+          0.9,
+          0.12,
+          materials.bronze,
+          Math.cos(angle) * 0.48,
+          0.45,
+          Math.sin(angle) * 0.48,
+          brazier
+        );
+        leg.rotation.z = Math.cos(angle) * 0.12;
+        leg.rotation.x = Math.sin(angle) * 0.12;
+      }
+
+      const fire = new THREE.Mesh(
+        new THREE.ConeGeometry(0.48, 0.85, 8),
+        materials.fire
+      );
+      fire.position.y = 1.48;
+      fire.castShadow = true;
+      brazier.add(fire);
+
+      const light = new THREE.PointLight(0xff641d, 2.2, 8, 2);
+      light.position.y = 1.6;
+      brazier.add(light);
+
+      fires.push({ mesh: fire, light });
+    }
+
+    makeBrazier(10.5, 12.5);
+    makeBrazier(-10.5, 12.5);
+    makeBrazier(28, -5.5);
+
+    // A red ceremonial cloth on the stoa.
+    const banner = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.7, 3.2, 6, 8),
+      materials.red
+    );
+    banner.position.set(3.9, 7.95, 7.7);
+    banner.rotation.y = -0.12;
+    banner.castShadow = true;
+    stoa.add(banner);
+
+    // -------------------------------------------------------------------------
+    // Scattered ruins and stones
+    // -------------------------------------------------------------------------
+
+    const ruinMaterial = new THREE.MeshStandardMaterial({
+      color: 0x918774,
+      roughness: 1
+    });
+
+    for (let i = 0; i < 45; i++) {
+      const x = (Math.random() - 0.5) * 78;
+      const z = (Math.random() - 0.5) * 61;
+
+      if (
+        Math.abs(x) < 14 && Math.abs(z) < 15 ||
+        Math.abs(x + 23) < 6 && Math.abs(z + 2) < 11 ||
+        Math.abs(x - 23) < 6 && Math.abs(z + 11) < 4
+      ) {
+        continue;
+      }
+
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(
+          0.25 + Math.random() * 0.8,
+          0
+        ),
+        ruinMaterial
+      );
+      rock.position.set(
+        x,
+        terrainHeight(x, z) + 0.15,
+        z
+      );
+      rock.scale.set(
+        1 + Math.random(),
+        0.45 + Math.random() * 0.8,
+        1 + Math.random()
+      );
+      rock.rotation.set(
+        Math.random() * 3,
+        Math.random() * 3,
+        Math.random() * 3
+      );
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // -------------------------------------------------------------------------
+    // Custom orbit controls
+    // -------------------------------------------------------------------------
+
+    const orbit = {
+      theta: 0.72,
+      phi: 1.02,
+      radius: 58,
+      target: new THREE.Vector3(0, 4, 0)
+    };
+
+    const views = {
+      overview: {
+        theta: 0.72,
+        phi: 1.02,
+        radius: 58,
+        target: [0, 4, 0]
+      },
+      temple: {
+        theta: 0.48,
+        phi: 1.04,
+        radius: 31,
+        target: [0, 5, 0]
+      },
+      gateway: {
+        theta: 0.92,
+        phi: 1.05,
+        radius: 25,
+        target: [23, 4, -11]
+      },
+      stoa: {
+        theta: -0.72,
+        phi: 1.04,
+        radius: 27,
+        target: [-23, 4, -2]
+      }
+    };
+
+    let cameraGoal = null;
+    const cameraOffset = new THREE.Vector3();
+    const spherical = new THREE.Spherical();
+
+    function applyCamera() {
+      spherical.set(orbit.radius, orbit.phi, orbit.theta);
+      cameraOffset.setFromSpherical(spherical);
+      camera.position.copy(orbit.target).add(cameraOffset);
+      camera.lookAt(orbit.target);
+    }
+
+    function setView(name) {
+      const view = views[name];
+      if (!view) return;
+
+      cameraGoal = {
+        theta: view.theta,
+        phi: view.phi,
+        radius: view.radius,
+        target: new THREE.Vector3(...view.target)
+      };
+
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === name);
+      });
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        setView(button.dataset.view);
+      });
+    });
+
+    const pointers = new Map();
+    let lastX = 0;
+    let lastY = 0;
+    let dragging = false;
+    let pinchDistance = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1) {
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        pinchDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+
+      cameraGoal = null;
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1 && dragging) {
+        const deltaX = event.clientX - lastX;
+        const deltaY = event.clientY - lastY;
+
+        orbit.theta -= deltaX * 0.005;
+        orbit.phi = THREE.MathUtils.clamp(
+          orbit.phi - deltaY * 0.005,
+          0.24,
+          1.43
+        );
+
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        const nextDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+
+        if (pinchDistance > 0 && nextDistance > 0) {
+          orbit.radius = THREE.MathUtils.clamp(
+            orbit.radius * (pinchDistance / nextDistance),
+            15,
+            105
+          );
+        }
+
+        pinchDistance = nextDistance;
+      }
+    });
+
+    function endPointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 0) {
+        dragging = false;
+        pinchDistance = 0;
+      } else {
+        const remaining = [...pointers.values()][0];
+        lastX = remaining.x;
+        lastY = remaining.y;
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("lostpointercapture", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraGoal = null;
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          15,
+          105
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => setView("overview"));
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    window.addEventListener("keydown", (event) => {
+      cameraGoal = null;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          orbit.theta += 0.08;
+          break;
+        case "ArrowRight":
+          orbit.theta -= 0.08;
+          break;
+        case "ArrowUp":
+          orbit.phi = Math.max(0.24, orbit.phi - 0.06);
+          break;
+        case "ArrowDown":
+          orbit.phi = Math.min(1.43, orbit.phi + 0.06);
+          break;
+        case "+":
+        case "=":
+          orbit.radius = Math.max(15, orbit.radius * 0.9);
+          break;
+        case "-":
+          orbit.radius = Math.min(105, orbit.radius * 1.1);
+          break;
+        case "r":
+        case "R":
+          setView("overview");
+          break;
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Resize and animation
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    let firstFrame = true;
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      if (cameraGoal) {
+        const easing = 1 - Math.exp(-delta * 3.4);
+
+        orbit.theta = THREE.MathUtils.lerp(
+          orbit.theta,
+          cameraGoal.theta,
+          easing
+        );
+        orbit.phi = THREE.MathUtils.lerp(
+          orbit.phi,
+          cameraGoal.phi,
+          easing
+        );
+        orbit.radius = THREE.MathUtils.lerp(
+          orbit.radius,
+          cameraGoal.radius,
+          easing
+        );
+        orbit.target.lerp(cameraGoal.target, easing);
+
+        if (
+          Math.abs(orbit.theta - cameraGoal.theta) < 0.001 &&
+          Math.abs(orbit.phi - cameraGoal.phi) < 0.001 &&
+          Math.abs(orbit.radius - cameraGoal.radius) < 0.01 &&
+          orbit.target.distanceTo(cameraGoal.target) < 0.01
+        ) {
+          cameraGoal = null;
+        }
+      }
+
+      for (const item of fires) {
+        const pulse = 1.25 + Math.sin(clock.elapsedTime * 8.5) * 0.25;
+        item.mesh.scale.set(
+          0.9 + pulse * 0.12,
+          pulse,
+          0.9 + pulse * 0.12
+        );
+        item.light.intensity = 1.8 + pulse * 1.2;
+      }
+
+      applyCamera();
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        loading.classList.add("hidden");
+        setTimeout(() => loading.remove(), 700);
+      }
+    }
+
+    applyCamera();
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>

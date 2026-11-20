@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banyan Tree — Aerial Root Study</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 52% 38%, #29382c 0%, #152119 42%, #09100d 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 48%, rgba(2, 7, 5, 0.42) 100%);
+    }
+
+    .panel {
+      position: fixed;
+      top: clamp(24px, 5vw, 64px);
+      left: clamp(24px, 5vw, 72px);
+      width: min(360px, calc(100vw - 48px));
+      color: #e8eadc;
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #aebba5;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 6vw, 72px);
+      font-weight: 400;
+      line-height: 0.92;
+      letter-spacing: -0.045em;
+    }
+
+    h1 span {
+      color: #9fb59a;
+      font-style: italic;
+    }
+
+    .description {
+      max-width: 310px;
+      margin: 22px 0 0;
+      color: rgba(225, 232, 218, 0.68);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .controls {
+      position: fixed;
+      right: clamp(18px, 4vw, 54px);
+      bottom: clamp(18px, 4vw, 42px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(225, 232, 218, 0.62);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    button {
+      border: 1px solid rgba(218, 229, 208, 0.22);
+      border-radius: 999px;
+      padding: 9px 14px;
+      color: #e8eadc;
+      background: rgba(15, 25, 18, 0.48);
+      backdrop-filter: blur(10px);
+      font: inherit;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(39, 55, 40, 0.75);
+      border-color: rgba(218, 229, 208, 0.42);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      color: #b7c4a9;
+      background: #101913;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    @media (max-width: 650px) {
+      .description {
+        display: none;
+      }
+
+      .controls {
+        left: 18px;
+        right: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas
+    id="scene"
+    aria-label="Interactive three-dimensional banyan tree with eight aerial roots and aerial-root pillars"
+  ></canvas>
+
+  <div class="vignette"></div>
+
+  <section class="panel">
+    <p class="eyebrow">Procedural Botany</p>
+    <h1>Banyan<br><span>Aerial-root study</span></h1>
+    <p class="description">
+      A spreading banyan with a massive central trunk, broad buttress roots,
+      and eight descending aerial roots that mature into clustered ground pillars.
+    </p>
+  </section>
+
+  <div class="controls">
+    <span>Drag to orbit · Scroll to zoom</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <div id="loading">Growing the banyan…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const canvas = document.querySelector("#scene");
+    const loading = document.querySelector("#loading");
+    const resetButton = document.querySelector("#reset");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x142018, 0.017);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      120
+    );
+
+    // ---------------------------------------------------------------------
+    // Direct camera controls: no external control modules or addons.
+    // ---------------------------------------------------------------------
+    const orbit = {
+      target: new THREE.Vector3(0, 5.7, 0),
+      radius: 22,
+      theta: 0.72,
+      phi: 1.13
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+
+      camera.position.set(
+        orbit.target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        orbit.target.y + orbit.radius * Math.cos(orbit.phi),
+        orbit.target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+
+      camera.lookAt(orbit.target);
+    }
+
+    function resetCamera() {
+      orbit.target.set(0, 5.7, 0);
+      orbit.radius = 22;
+      orbit.theta = 0.72;
+      orbit.phi = 1.13;
+      updateCamera();
+    }
+
+    updateCamera();
+
+    const pointers = new Map();
+    let previousPinchDistance = 0;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        previousPinchDistance = Math.hypot(a.x - b.x, a.y - b.y);
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const previous = pointers.get(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - previous.x;
+        const dy = event.clientY - previous.y;
+
+        orbit.theta -= dx * 0.005;
+        orbit.phi = THREE.MathUtils.clamp(orbit.phi - dy * 0.005, 0.35, 1.48);
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const distance = Math.hypot(a.x - b.x, a.y - b.y);
+
+        if (previousPinchDistance > 0 && distance > 0) {
+          orbit.radius = THREE.MathUtils.clamp(
+            orbit.radius * (previousPinchDistance / distance),
+            10,
+            38
+          );
+        }
+
+        previousPinchDistance = distance;
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      previousPinchDistance = 0;
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          10,
+          38
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+    resetButton.addEventListener("click", resetCamera);
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+    const hemisphere = new THREE.HemisphereLight(0xb8d2b5, 0x172016, 1.8);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xffe3ad, 4.2);
+    sun.position.set(9, 17, 11);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -15;
+    sun.shadow.camera.right = 15;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const coolFill = new THREE.DirectionalLight(0x8eb7aa, 1.1);
+    coolFill.position.set(-12, 8, -9);
+    scene.add(coolFill);
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+    let randomSeed = 81723;
+
+    function random() {
+      randomSeed |= 0;
+      randomSeed = (randomSeed + 0x6d2b79f5) | 0;
+      let t = Math.imul(randomSeed ^ (randomSeed >>> 15), 1 | randomSeed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+
+    function makeBarkTexture() {
+      const barkCanvas = document.createElement("canvas");
+      barkCanvas.width = 256;
+      barkCanvas.height = 1024;
+      const ctx = barkCanvas.getContext("2d");
+
+      ctx.fillStyle = "#5b4932";
+      ctx.fillRect(0, 0, 256, 1024);
+
+      for (let i = 0; i < 900; i++) {
+        const x = random() * 256;
+        const width = 0.5 + random() * 3.2;
+        const shade = Math.floor(30 + random() * 45);
+        const alpha = 0.08 + random() * 0.28;
+
+        ctx.fillStyle = `rgba(${shade}, ${Math.floor(shade * 0.72)}, ${Math.floor(shade * 0.42)}, ${alpha})`;
+        ctx.fillRect(x, 0, width, 1024);
+      }
+
+      for (let i = 0; i < 34; i++) {
+        const x = random() * 256;
+        const y = random() * 1024;
+        const radius = 7 + random() * 25;
+
+        ctx.strokeStyle = `rgba(24, 18, 12, ${0.12 + random() * 0.28})`;
+        ctx.lineWidth = 1 + random() * 3;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 0.55, radius, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(barkCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 1.5);
+      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      return texture;
+    }
+
+    const barkTexture = makeBarkTexture();
+
+    const barkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x746044,
+      map: barkTexture,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const darkBarkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x493b2c,
+      map: barkTexture,
+      roughness: 1
+    });
+
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.88,
+      metalness: 0,
+      flatShading: true
+    });
+
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x596051,
+      roughness: 1,
+      flatShading: true
+    });
+
+    const mossMaterial = new THREE.MeshStandardMaterial({
+      color: 0x52653a,
+      roughness: 1,
+      flatShading: true
+    });
+
+    // ---------------------------------------------------------------------
+    // Geometry helpers
+    // ---------------------------------------------------------------------
+    function createTaperedTube(
+      points,
+      radiusStart,
+      radiusEnd,
+      material,
+      radialSegments = 8,
+      bulge = 0
+    ) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((point) => point.clone()),
+        false,
+        "catmullrom",
+        0.35
+      );
+
+      const tubularSegments = 100;
+      const frames = curve.computeFrenetFrames(tubularSegments, false);
+      const positions = [];
+      const normals = [];
+      const uvs = [];
+      const indices = [];
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        const center = curve.getPointAt(t);
+        const normal = frames.normals[i];
+        const binormal = frames.binormals[i];
+
+        const radius =
+          THREE.MathUtils.lerp(radiusStart, radiusEnd, t) +
+          Math.sin(Math.PI * t) * bulge;
+
+        for (let j = 0; j <= radialSegments; j++) {
+          const angle = (j / radialSegments) * Math.PI * 2;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+
+          const radialNormal = new THREE.Vector3()
+            .copy(normal)
+            .multiplyScalar(cos)
+            .addScaledVector(binormal, sin)
+            .normalize();
+
+          const vertex = center.clone().addScaledVector(radialNormal, radius);
+          positions.push(vertex.x, vertex.y, vertex.z);
+          normals.push(radialNormal.x, radialNormal.y, radialNormal.z);
+          uvs.push(j / radialSegments, t);
+        }
+      }
+
+      const step = radialSegments + 1;
+
+      for (let i = 0; i < tubularSegments; i++) {
+        for (let j = 0; j < radialSegments; j++) {
+          const a = i * step + j;
+          const b = (i + 1) * step + j;
+          const c = (i + 1) * step + j + 1;
+          const d = i * step + j + 1;
+
+          indices.push(a, d, b, b, d, c);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+      geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeBoundingSphere();
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function horizontalBranch({
+      angle,
+      length,
+      height,
+      radius,
+      material = barkMaterial
+    }) {
+      const radial = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        Math.sin(angle)
+      );
+
+      const start = radial.clone().multiplyScalar(0.72).setY(height);
+      const middle = radial.clone().multiplyScalar(length * 0.54).setY(height + 0.12);
+      const end = radial.clone().multiplyScalar(length).setY(height + 0.18);
+
+      const curve = new THREE.CatmullRomCurve3([
+        start,
+        middle,
+        end
+      ]);
+
+      const branch = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 28, radius, 9, false),
+        material
+      );
+
+      branch.castShadow = true;
+      branch.receiveShadow = true;
+      return { branch, curve, end };
+    }
+
+    // ---------------------------------------------------------------------
+    // Central trunk and heavy buttress roots
+    // ---------------------------------------------------------------------
+    const tree = new THREE.Group();
+    scene.add(tree);
+
+    const trunkCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0.12, 2.4, 0.05),
+      new THREE.Vector3(-0.2, 4.7, -0.08),
+      new THREE.Vector3(0.28, 7.2, 0.12),
+      new THREE.Vector3(-0.16, 9.7, -0.08),
+      new THREE.Vector3(0.08, 12.5, 0.04),
+      new THREE.Vector3(0.02, 14.1, 0)
+    ]);
+
+    const trunk = createTaperedTube(
+      trunkCurve,
+      1.72,
+      0.48,
+      barkMaterial,
+      12,
+      0.08
+    );
+    tree.add(trunk);
+
+    const rootCollar = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 24, 12),
+      darkBarkMaterial
+    );
+    rootCollar.position.set(0, 0.28, 0);
+    rootCollar.scale.set(1.55, 0.34, 1.35);
+    rootCollar.castShadow = true;
+    tree.add(rootCollar);
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + random() * 0.18;
+      const radial = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        Math.sin(angle)
+      );
+
+      const points = [
+        radial.clone().multiplyScalar(0.72).setY(0.5),
+        radial.clone().multiplyScalar(1.35).setY(0.24),
+        radial.clone().multiplyScalar(2.25).setY(0.09),
+        radial.clone().multiplyScalar(3.15).setY(0.055),
+        radial.clone().multiplyScalar(4.05).setY(0.045)
+      ];
+
+      const root = createTaperedTube(
+        points,
+        0.48,
+        0.82,
+        barkMaterial,
+        10,
+        0.08
+      );
+
+      tree.add(root);
+    }
+
+    // ---------------------------------------------------------------------
+    // Eight horizontal branches and eight descending aerial roots
+    // ---------------------------------------------------------------------
+    const branchDefinitions = [
+      { angle: 0.08,  length: 5.1, height: 6.4, radius: 0.43 },
+      { angle: 1.18, length: 6.0, height: 7.5, radius: 0.38 },
+      { angle: 2.30, length: 5.4, height: 8.8, radius: 0.42 },
+      { angle: 3.42, length: 6.3, height: 6.8, radius: 0.39 },
+      { angle: 4.55, length: 5.7, height: 8.4, radius: 0.43 },
+      { angle: 5.67, length: 5.0, height: 7.2, radius: 0.37 },
+      { angle: 6.78, length: 5.8, height: 9.1, radius: 0.41 },
+      { angle: 7.88, length: 4.8, height: 6.0, radius: 0.36 }
+    ];
+
+    const aerialRoots = [];
+
+    branchDefinitions.forEach((definition, index) => {
+      const { angle, length, height, radius } = definition;
+      const branch = horizontalBranch(definition);
+
+      tree.add(branch.branch);
+
+      // A smaller twig gives the horizontal branch a natural, broken silhouette.
+      const twigAngle = angle + (index % 2 === 0 ? 0.36 : -0.36);
+      const twigStart = branch.curve.getPointAt(0.56);
+      const twigEnd = new THREE.Vector3(
+        Math.cos(twigAngle) * (length + 1.15),
+        height + 0.52,
+        Math.sin(twigAngle) * (length + 1.15)
+      );
+
+      const twigCurve = new THREE.CatmullRomCurve3([
+        twigStart,
+        twigStart.clone().lerp(twigEnd, 0.55).setY(height + 0.3),
+        twigEnd
+      ]);
+
+      const twig = new THREE.Mesh(
+        new THREE.TubeGeometry(twigCurve, 18, 0.12, 7, false),
+        barkMaterial
+      );
+      twig.castShadow = true;
+      tree.add(twig);
+
+      // The aerial root begins at the tip of a distinct horizontal branch.
+      // Radial reach and height are deliberately staggered.
+      const rootStart = branch.end.clone();
+      const rootAngle = angle + (random() - 0.5) * 0.22;
+      const radial = new THREE.Vector3(
+        Math.cos(rootAngle),
+        0,
+        Math.sin(rootAngle)
+      );
+
+      const rootPoints = [
+        rootStart.clone(),
+        radial.clone().multiplyScalar(length + 0.42).setY(height - 1.15),
+        radial.clone().multiplyScalar(length + 0.92).setY(height - 2.75),
+        radial.clone().multiplyScalar(length + 1.28).setY(height - 4.55),
+        radial.clone().multiplyScalar(length + 1.53).setY(height - 5.55),
+        radial.clone().multiplyScalar(length + 1.72).setY(0.18)
+      ];
+
+      const aerialRoot = createTaperedTube(
+        rootPoints,
+        0.085,
+        0.43,
+        barkMaterial,
+        9,
+        0.035
+      );
+
+      tree.add(aerialRoot);
+      aerialRoots.push({ angle: rootAngle, end: rootPoints.at(-1) });
+
+      // Three vertical rootlets split at the ground, creating a pillar cluster.
+      const cluster = new THREE.Group();
+      cluster.position.copy(rootPoints.at(-1));
+
+      const mainRootlet = createTaperedTube(
+        [
+          new THREE.Vector3(0, 0.12, 0),
+          new THREE.Vector3(0.05, 0.48, 0.03),
+          new THREE.Vector3(-0.08, 0.95, -0.04),
+          new THREE.Vector3(0.04, 1.42, 0.02)
+        ],
+        0.39,
+        0.66,
+        barkMaterial,
+        10
+      );
+
+      const leftRootlet = createTaperedTube(
+        [
+          new THREE.Vector3(-0.27, 0.1, 0.03),
+          new THREE.Vector3(-0.43, 0.38, 0.08),
+          new THREE.Vector3(-0.52, 0.7, 0.04)
+        ],
+        0.27,
+        0.45,
+        barkMaterial,
+        8
+      );
+
+      const rightRootlet = createTaperedTube(
+        [
+          new THREE.Vector3(0.27, 0.1, -0.03),
+          new THREE.Vector3(0.44, 0.37, -0.08),
+          new THREE.Vector3(0.5, 0.68, -0.04)
+        ],
+        0.27,
+        0.45,
+        barkMaterial,
+        8
+      );
+
+      cluster.add(mainRootlet, leftRootlet, rightRootlet);
+      tree.add(cluster);
+
+      const collar = new THREE.Mesh(
+        new THREE.SphereGeometry(0.55, 16, 10),
+        darkBarkMaterial
+      );
+      collar.position.y = 0.12;
+      collar.scale.set(1, 0.25, 1);
+      collar.castShadow = true;
+      cluster.add(collar);
+    });
+
+    // ---------------------------------------------------------------------
+    // Leaves
+    // ---------------------------------------------------------------------
+    const leafGeometry = new THREE.DodecahedronGeometry(0.28, 0);
+    const leafTransforms = [];
+
+    function addLeaf(position, scale, color) {
+      leafTransforms.push({
+        position,
+        scale,
+        rotation: new THREE.Euler(
+          random() * Math.PI,
+          random() * Math.PI,
+          random() * Math.PI
+        )
+      });
+    }
+
+    branchDefinitions.forEach((definition, branchIndex) => {
+      const { angle, length, height } = definition;
+      const radial = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        Math.sin(angle)
+      );
+      const lateral = new THREE.Vector3(
+        -Math.sin(angle),
+        0,
+        Math.cos(angle)
+      );
+
+      for (let i = 0; i < 8; i++) {
+        const t = 0.18 + random() * 0.76;
+        const point = branch.curve.getPointAt(t);
+
+        const position = point
+          .clone()
+          .addScaledVector(radial, (random() - 0.5) * 0.65)
+          .addScaledVector(lateral, (random() - 0.5) * 0.65);
+
+        position.y += (random() - 0.5) * 0.45;
+
+        const scale = 0.48 + random() * 0.85;
+
+        addLeaf(
+          position,
+          new THREE.Vector3(
+            scale * (0.9 + random() * 0.5),
+            scale * (0.22 + random() * 0.18),
+            scale * (0.9 + random() * 0.5)
+          ),
+          new THREE.Color().setHSL(
+            0.235 + random() * 0.055,
+            0.43 + random() * 0.22,
+            0.25 + random() * 0.13
+          )
+        );
+      }
+
+      // Leaves around the ends of secondary twigs.
+      for (let i = 0; i < 5; i++) {
+        const point = branch.curve.getPointAt(0.72 + random() * 0.22);
+        const position = point
+          .clone()
+          .addScaledVector(radial, (random() - 0.5) * 0.7)
+          .addScaledVector(lateral, (random() - 0.5) * 0.7);
+
+        position.y += 0.25 + random() * 0.35;
+
+        addLeaf(
+          position,
+          new THREE.Vector3(
+            0.55 + random() * 0.55,
+            0.18 + random() * 0.16,
+            0.55 + random() * 0.55
+          ),
+          new THREE.Color().setHSL(
+            0.25 + random() * 0.05,
+            0.48,
+            0.27 + random() * 0.1
+          )
+        );
+      }
+    });
+
+    // Dense upper canopy.
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const radial = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        Math.sin(angle)
+      );
+
+      for (let j = 0; j < 5; j++) {
+        const position = radial
+          .clone()
+          .multiplyScalar((random() - 0.5) * 2.2)
+          .setY(12.1 + random() * 1.7);
+
+        addLeaf(
+          position,
+          new THREE.Vector3(
+            0.75 + random() * 0.75,
+            0.22 + random() * 0.2,
+            0.75 + random() * 0.75
+          ),
+          new THREE.Color().setHSL(
+            0.24 + random() * 0.06,
+            0.48 + random() * 0.2,
+            0.25 + random() * 0.14
+          )
+        );
+      }
+    }
+
+    const leaves = new THREE.InstancedMesh(
+      leafGeometry,
+      leafMaterial,
+      leafTransforms.length
+    );
+
+    const dummy = new THREE.Object3D();
+
+    leafTransforms.forEach((leaf, index) => {
+      dummy.position.copy(leaf.position);
+      dummy.rotation.copy(leaf.rotation);
+      dummy.scale.copy(leaf.scale);
+      dummy.updateMatrix();
+
+      leaves.setMatrixAt(index, dummy.matrix);
+      leaves.setColorAt(index, leaf.color);
+    });
+
+    leaves.instanceMatrix.needsUpdate = true;
+    if (leaves.instanceColor) leaves.instanceColor.needsUpdate = true;
+    leaves.castShadow = true;
+    leaves.receiveShadow = true;
+    tree.add(leaves);
+
+    // ---------------------------------------------------------------------
+    // Ground, stones, moss, and grass
+    // ---------------------------------------------------------------------
+    const groundCanvas = document.createElement("canvas");
+    groundCanvas.width = 512;
+    groundCanvas.height = 512;
+    const groundContext = groundCanvas.getContext("2d");
+
+    groundContext.fillStyle = "#263326";
+    groundContext.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 1800; i++) {
+      const x = random() * 512;
+      const y = random() * 512;
+      const radius = 1 + random() * 7;
+
+      groundContext.fillStyle = random() > 0.5
+        ? `rgba(74, 91, 57, ${0.08 + random() * 0.22})`
+        : `rgba(13, 20, 14, ${0.08 + random() * 0.22})`;
+
+      groundContext.beginPath();
+      groundContext.ellipse(
+        x,
+        y,
+        radius,
+        radius * (0.45 + random() * 0.55),
+        random() * Math.PI,
+        0,
+        Math.PI * 2
+      );
+      groundContext.fill();
+    }
+
+    const groundTexture = new THREE.CanvasTexture(groundCanvas);
+    groundTexture.colorSpace = THREE.SRGBColorSpace;
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(5, 5);
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(22, 128),
+      new THREE.MeshStandardMaterial({
+        color: 0x42513b,
+        map: groundTexture,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const stones = new THREE.InstancedMesh(
+      new THREE.DodecahedronGeometry(0.18, 0),
+      stoneMaterial,
+      48
+    );
+
+    for (let i = 0; i < 48; i++) {
+      const angle = random() * Math.PI * 2;
+      const radius = 4.8 + random() * 12;
+      const size = 0.35 + random() * 1.35;
+
+      dummy.position.set(
+        Math.cos(angle) * radius,
+        size * 0.25,
+        Math.sin(angle) * radius
+      );
+      dummy.rotation.set(random() * 3, random() * 3, random() * 3);
+      dummy.scale.set(
+        size * (0.7 + random() * 0.6),
+        size * (0.45 + random() * 0.4),
+        size * (0.7 + random() * 0.6)
+      );
+      dummy.updateMatrix();
+
+      stones.setMatrixAt(i, dummy.matrix);
+    }
+
+    stones.instanceMatrix.needsUpdate = true;
+    stones.castShadow = true;
+    stones.receiveShadow = true;
+    scene.add(stones);
+
+    // Moss cushions around the base of the aerial-root clusters.
+    aerialRoots.forEach((root, index) => {
+      const cushion = new THREE.Mesh(
+        new THREE.SphereGeometry(0.52, 16, 10),
+        mossMaterial
+      );
+      cushion.position.copy(root.end).setY(0.16);
+      cushion.scale.set(1.25, 0.22, 1.1);
+      cushion.receiveShadow = true;
+      tree.add(cushion);
+    });
+
+    const grass = new THREE.InstancedMesh(
+      new THREE.ConeGeometry(0.045, 0.34, 3),
+      new THREE.MeshStandardMaterial({
+        color: 0x61704a,
+        roughness: 1,
+        flatShading: true
+      }),
+      150
+    );
+
+    for (let i = 0; i < 150; i++) {
+      const angle = random() * Math.PI * 2;
+      const radius = 4.4 + random() * 15;
+
+      dummy.position.set(
+        Math.cos(angle) * radius,
+        0.13,
+        Math.sin(angle) * radius
+      );
+      dummy.rotation.set(0, random() * Math.PI, 0);
+      dummy.scale.set(
+        0.65 + random() * 0.8,
+        0.55 + random() * 1.2,
+        0.65 + random() * 0.8
+      );
+      dummy.updateMatrix();
+
+      grass.setMatrixAt(i, dummy.matrix);
+    }
+
+    grass.instanceMatrix.needsUpdate = true;
+    grass.castShadow = true;
+    grass.receiveShadow = true;
+    scene.add(grass);
+
+    // ---------------------------------------------------------------------
+    // Resize and render loop
+    // ---------------------------------------------------------------------
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", resize);
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+
+      // Very subtle atmospheric movement while preserving the grounded roots.
+      tree.rotation.z = Math.sin(elapsed * 0.48) * 0.0025;
+      tree.rotation.x = Math.cos(elapsed * 0.37) * 0.0015;
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.style.opacity = "0";
+      setTimeout(() => loading.remove(), 550);
+    });
+  </script>
+</body>
+</html>

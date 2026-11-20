@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Tin Toy Robot</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #071319;
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 45%, rgba(0, 0, 0, 0.58) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.12), transparent 28%);
+    }
+
+    .title {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 2;
+      color: #f3f0df;
+      pointer-events: none;
+      text-shadow: 0 0 18px rgba(0, 0, 0, 0.8);
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(22px, 4vw, 46px);
+      letter-spacing: 0.16em;
+      font-weight: 900;
+    }
+
+    .title p {
+      margin: 7px 0 0;
+      color: #65d6c6;
+      font-size: 13px;
+      letter-spacing: 0.25em;
+    }
+
+    .help {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      z-index: 2;
+      transform: translateX(-50%);
+      padding: 9px 14px;
+      border: 1px solid rgba(101, 214, 198, 0.28);
+      border-radius: 999px;
+      background: rgba(5, 19, 24, 0.72);
+      color: #8eb9b7;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    button {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 3;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 211, 75, 0.45);
+      border-radius: 8px;
+      background: rgba(15, 35, 40, 0.8);
+      color: #ffd66b;
+      font: 11px "Courier New", Courier, monospace;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(37, 78, 82, 0.9);
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        top: 18px;
+        left: 18px;
+      }
+
+      .help {
+        bottom: 16px;
+        font-size: 9px;
+      }
+
+      button {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <h1>TIN // ROBOT 07</h1>
+    <p>RETRIEVAL UNIT · AUTO MODE</p>
+  </div>
+
+  <div class="help">DRAG TO ORBIT · SCROLL TO ZOOM · DOUBLE-CLICK TO RESET</div>
+  <button id="resetView" type="button">RESET VIEW</button>
+  <div class="vignette"></div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071319);
+    scene.fog = new THREE.FogExp2(0x071319, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      innerWidth / innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    document.body.appendChild(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0x9dd8dc, 0x15201f, 1.35);
+    scene.add(hemi);
+
+    const key = new THREE.DirectionalLight(0xffe3b0, 3.2);
+    key.position.set(4.5, 7, 5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 20;
+    key.shadow.camera.left = -5;
+    key.shadow.camera.right = 5;
+    key.shadow.camera.top = 6;
+    key.shadow.camera.bottom = -3;
+    key.shadow.bias = -0.0003;
+    scene.add(key);
+
+    const rim = new THREE.DirectionalLight(0x42d9ca, 2.4);
+    rim.position.set(-5, 4, -4);
+    scene.add(rim);
+
+    const fill = new THREE.PointLight(0xff8b42, 18, 8, 2);
+    fill.position.set(3.5, 2.5, 3.5);
+    scene.add(fill);
+
+    const materials = {
+      tin: new THREE.MeshStandardMaterial({
+        color: 0xc7d0cf,
+        metalness: 0.82,
+        roughness: 0.3
+      }),
+      paleTin: new THREE.MeshStandardMaterial({
+        color: 0xe1dcc7,
+        metalness: 0.62,
+        roughness: 0.38
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x17333a,
+        metalness: 0.72,
+        roughness: 0.38
+      }),
+      teal: new THREE.MeshStandardMaterial({
+        color: 0x167f78,
+        metalness: 0.7,
+        roughness: 0.32
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xf28b3b,
+        metalness: 0.58,
+        roughness: 0.3
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xe85043,
+        metalness: 0.5,
+        roughness: 0.34
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xffd05a,
+        metalness: 0.5,
+        roughness: 0.3
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x080d0e,
+        metalness: 0.25,
+        roughness: 0.65
+      })
+    };
+
+    const robot = new THREE.Group();
+    robot.rotation.y = -0.04;
+    scene.add(robot);
+
+    function addBox(parent, size, position, material, detail = 1) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      const edgeMaterial = new THREE.LineBasicMaterial({
+        color: 0x173038,
+        transparent: true,
+        opacity: detail > 0 ? 0.25 : 0
+      });
+
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(mesh.geometry, detail > 0 ? 25 : 0),
+        edgeMaterial
+      );
+      mesh.add(edges);
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      radiusTop,
+      radiusBottom,
+      height,
+      position,
+      material,
+      segments = 24
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          segments
+        ),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeLink(parent, start, end, width, depth, material) {
+      const a = new THREE.Vector3(...start);
+      const b = new THREE.Vector3(...end);
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+
+      const link = addBox(
+        parent,
+        [width, length, depth],
+        [0, 0, 0],
+        material
+      );
+
+      link.position.copy(a).add(b).multiplyScalar(0.5);
+      link.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      return link;
+    }
+
+    // Floor and studio grid.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b1b20,
+        metalness: 0.25,
+        roughness: 0.78
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(24, 48, 0x285057, 0x153038);
+    grid.position.y = 0.008;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.22;
+    scene.add(grid);
+
+    // Main body.
+    addBox(robot, [2.05, 1.65, 0.82], [0, 2.25, 0], materials.tin, 1);
+    addBox(robot, [1.78, 0.12, 0.9], [0, 1.37, 0.02], materials.teal, 1);
+    addBox(robot, [1.78, 0.12, 0.9], [0, 3.13, 0.02], materials.teal, 1);
+
+    // Side panels and rivets.
+    for (const side of [-1, 1]) {
+      addBox(
+        robot,
+        [0.08, 1.05, 0.55],
+        [side * 1.04, 2.25, 0.02],
+        materials.dark,
+        0
+      );
+
+      for (const y of [1.72, 2.78]) {
+        const bolt = addCylinder(
+          robot,
+          0.055,
+          0.055,
+          0.045,
+          [side * 1.095, y, 0.39],
+          materials.yellow,
+          16
+        );
+        bolt.rotation.x = Math.PI / 2;
+      }
+    }
+
+    // Rectangular head.
+    addBox(robot, [1.55, 1.2, 0.78], [0, 3.43, 0], materials.paleTin, 1);
+    addBox(robot, [1.19, 0.88, 0.12], [0, 3.43, 0.43], materials.tin, 1);
+
+    // Head frame details.
+    addBox(robot, [1.62, 0.12, 0.16], [0, 4.04, 0.2], materials.teal, 1);
+    addBox(robot, [1.62, 0.12, 0.16], [0, 2.82, 0.2], materials.teal, 1);
+    addBox(robot, [0.12, 1.22, 0.16], [-0.79, 3.43, 0.2], materials.teal, 1);
+    addBox(robot, [0.12, 1.22, 0.16], [0.79, 3.43, 0.2], materials.teal, 1);
+
+    // Ears.
+    for (const side of [-1, 1]) {
+      addBox(
+        robot,
+        [0.24, 0.88, 0.17],
+        [side * 0.84, 3.43, 0.12],
+        materials.tin,
+        0
+      );
+      addBox(
+        robot,
+        [0.26, 0.12, 0.2],
+        [side * 0.84, 4.02, 0.2],
+        materials.teal,
+        0
+      );
+    }
+
+    // Glowing eyes.
+    const eyeGroups = [];
+    for (const side of [-1, 1]) {
+      const eyeGroup = new THREE.Group();
+      eyeGroup.position.set(side * 0.34, 3.67, 0.545);
+      robot.add(eyeGroup);
+
+      addCylinder(
+        eyeGroup,
+        0.25,
+        0.25,
+        0.1,
+        [0, 0, 0],
+        materials.black,
+        32
+      ).rotation.x = Math.PI / 2;
+
+      addCylinder(
+        eyeGroup,
+        0.175,
+        0.175,
+        0.11,
+        [0, 0, 0.015],
+        materials.orange,
+        32
+      ).rotation.x = Math.PI / 2;
+
+      const glowMaterial = new THREE.MeshStandardMaterial({
+        color: 0xff9a45,
+        emissive: 0xff4d2f,
+        emissiveIntensity: 2.6,
+        metalness: 0.1,
+        roughness: 0.25
+      });
+
+      addCylinder(
+        eyeGroup,
+        0.125,
+        0.125,
+        0.12,
+        [0, 0, 0.055],
+        glowMaterial,
+        32
+      ).rotation.x = Math.PI / 2;
+
+      eyeGroups.push(eyeGroup);
+    }
+
+    // Mouth.
+    addBox(
+      robot,
+      [0.43, 0.035, 0.035],
+      [0, 3.12, 0.515],
+      materials.black,
+      0
+    );
+
+    // Radio antenna.
+    const antenna = new THREE.Group();
+    antenna.position.set(0, 4.11, 0);
+    robot.add(antenna);
+
+    addCylinder(antenna, 0.16, 0.19, 0.16, [0, 0.08, 0], materials.dark, 24);
+    addCylinder(antenna, 0.045, 0.045, 0.64, [0, 0.44, 0], materials.tin, 16);
+    addCylinder(antenna, 0.105, 0.13, 0.17, [0, 0.81, 0], materials.orange, 24);
+    addCylinder(antenna, 0.075, 0.075, 0.13, [0, 0.95, 0], materials.yellow, 20);
+
+    const antennaGlow = new THREE.MeshStandardMaterial({
+      color: 0xffc25a,
+      emissive: 0xff7a20,
+      emissiveIntensity: 2
+    });
+    addCylinder(antenna, 0.09, 0.09, 0.1, [0, 1.04, 0], antennaGlow, 20);
+
+    // Chest panel.
+    addBox(robot, [1.48, 1.16, 0.12], [0, 2.2, 0.465], materials.teal, 1);
+    addBox(robot, [1.55, 0.08, 0.08], [0, 2.78, 0.53], materials.dark, 0);
+    addBox(robot, [1.55, 0.08, 0.08], [0, 1.62, 0.53], materials.dark, 0);
+    addBox(robot, [0.08, 1.16, 0.08], [-0.745, 2.2, 0.53], materials.dark, 0);
+    addBox(robot, [0.08, 1.16, 0.08], [0.745, 2.2, 0.53], materials.dark, 0);
+
+    // Canvas-made identification plate.
+    const labelCanvas = document.createElement("canvas");
+    labelCanvas.width = 512;
+    labelCanvas.height = 160;
+    const labelContext = labelCanvas.getContext("2d");
+    labelContext.clearRect(0, 0, 512, 160);
+    labelContext.fillStyle = "#e8dfc7";
+    labelContext.font = "bold 72px monospace";
+    labelContext.textAlign = "center";
+    labelContext.textBaseline = "middle";
+    labelContext.fillText("T-78", 256, 82);
+
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    labelTexture.colorSpace = THREE.SRGBColorSpace;
+    const labelMaterial = new THREE.MeshBasicMaterial({
+      map: labelTexture,
+      transparent: true,
+      depthWrite: false
+    });
+    const label = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.72, 0.225),
+      labelMaterial
+    );
+    label.position.set(0, 2.94, 0.54);
+    robot.add(label);
+
+    // Chest dials.
+    const dials = [];
+    const dialPositions = [
+      [-0.42, 2.25],
+      [0.02, 2.25],
+      [0.46, 2.25]
+    ];
+
+    dialPositions.forEach(([x, y], index) => {
+      const dialGroup = new THREE.Group();
+      dialGroup.position.set(x, y, 0.54);
+      robot.add(dialGroup);
+
+      addCylinder(
+        dialGroup,
+        0.185,
+        0.185,
+        0.09,
+        [0, 0, 0],
+        materials.dark,
+        28
+      ).rotation.x = Math.PI / 2;
+
+      addCylinder(
+        dialGroup,
+        0.145,
+        0.145,
+        0.105,
+        [0, 0, 0.07],
+        materials.paleTin,
+        28
+      ).rotation.x = Math.PI / 2;
+
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.155, 0.025, 8, 28),
+        index === 1 ? materials.orange : materials.yellow
+      );
+      ring.position.z = 0.13;
+      dialGroup.add(ring);
+
+      for (let tick = 0; tick < 8; tick++) {
+        const angle = (tick / 8) * Math.PI * 2;
+        const tickMesh = addBox(
+          dialGroup,
+          [0.012, 0.045, 0.014],
+          [
+            Math.sin(angle) * 0.115,
+            Math.cos(angle) * 0.115,
+            0.145
+          ],
+          materials.black,
+          0
+        );
+        tickMesh.rotation.z = -angle;
+      }
+
+      const needleGroup = new THREE.Group();
+      needleGroup.position.z = 0.16;
+      dialGroup.add(needleGroup);
+
+      addBox(
+        needleGroup,
+        [0.022, 0.115, 0.018],
+        [0, 0.045, 0],
+        index === 1 ? materials.red : materials.dark,
+        0
+      );
+
+      addCylinder(
+        needleGroup,
+        0.032,
+        0.032,
+        0.025,
+        [0, 0, 0.01],
+        materials.yellow,
+        16
+      );
+
+      dials.push({ group: dialGroup, needle: needleGroup, base: index * 0.7 });
+    });
+
+    // Small chest lights.
+    const chestLights = [];
+    for (const side of [-1, 1]) {
+      const lightMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffb44d,
+        emissive: 0xff7900,
+        emissiveIntensity: 2.2,
+        roughness: 0.25
+      });
+
+      const light = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 18, 12),
+        lightMaterial
+      );
+      light.position.set(side * 0.61, 1.86, 0.56);
+      robot.add(light);
+      chestLights.push(light);
+
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 16, 10),
+        new THREE.MeshBasicMaterial({
+          color: 0xff9c36,
+          transparent: true,
+          opacity: 0.13,
+          depthWrite: false
+        })
+      );
+      halo.position.copy(light.position);
+      halo.scale.z = 0.25;
+      robot.add(halo);
+    }
+
+    // Jointed arms and pincer hands.
+    const arms = [];
+    const pincerFingers = [];
+
+    function buildArm(side) {
+      const arm = new THREE.Group();
+      arm.position.set(side * 1.13, 2.72, 0);
+      robot.add(arm);
+
+      // Shoulder joint.
+      const shoulder = addCylinder(
+        arm,
+        0.235,
+        0.235,
+        0.3,
+        [0, 0, 0],
+        materials.dark,
+        28
+      );
+      shoulder.rotation.z = Math.PI / 2;
+
+      addCylinder(
+        arm,
+        0.15,
+        0.15,
+        0.33,
+        [0, 0, 0],
+        materials.orange,
+        24
+      ).rotation.z = Math.PI / 2;
+
+      const upperEnd = [side * 0.18, -0.69, -0.02];
+      makeLink(arm, [0, 0, 0], upperEnd, 0.3, 0.3, materials.tin, 1);
+
+      const elbow = new THREE.Group();
+      elbow.position.set(...upperEnd);
+      arm.add(elbow);
+
+      const elbowJoint = addCylinder(
+        elbow,
+        0.2,
+        0.2,
+        0.29,
+        [0, 0, 0],
+        materials.dark,
+        24
+      );
+      elbowJoint.rotation.z = Math.PI / 2;
+
+      const forearmEnd = [side * 0.28, -0.59, -0.13];
+      makeLink(
+        elbow,
+        [0, 0, 0],
+        forearmEnd,
+        0.23,
+        0.25,
+        materials.teal,
+        1
+      );
+
+      const wrist = new THREE.Group();
+      wrist.position.set(...forearmEnd);
+      elbow.add(wrist);
+
+      const wristJoint = addCylinder(
+        wrist,
+        0.14,
+        0.14,
+        0.25,
+        [0, 0, 0],
+        materials.dark,
+        20
+      );
+      wristJoint.rotation.z = Math.PI / 2;
+
+      addBox(
+        wrist,
+        [0.34, 0.22, 0.27],
+        [0, -0.03, 0.03],
+        materials.teal,
+        0
+      );
+
+      const fingerData = [];
+      for (const sign of [-1, 1]) {
+        const finger = new THREE.Group();
+        finger.position.set(sign * 0.105, -0.08, sign * 0.13);
+        wrist.add(finger);
+
+        addBox(
+          finger,
+          [0.12, 0.31, 0.15],
+          [0, -0.2, 0],
+          materials.tin,
+          0
+        );
+
+        addBox(
+          finger,
+          [0.145, 0.095, 0.17],
+          [0, -0.37, 0],
+          materials.orange,
+          0
+        );
+
+        pincerFingers.push({ group: finger, sign, baseZ: sign * 0.13 });
+      }
+
+      arms.push({ arm, side });
+    }
+
+    buildArm(-1);
+    buildArm(1);
+
+    // Block feet.
+    for (const side of [-1, 1]) {
+      addBox(
+        robot,
+        [0.48, 0.24, 0.72],
+        [side * 0.94, 0.86, -0.02],
+        materials.dark,
+        0
+      );
+
+      addBox(
+        robot,
+        [1.08, 0.72, 1.08],
+        [side * 0.94, 0.43, 0.02],
+        materials.tin,
+        1
+      );
+
+      addBox(
+        robot,
+        [0.78, 0.34, 1.48],
+        [side * 0.94, 0.19, 0.28],
+        materials.teal,
+        1
+      );
+
+      addBox(
+        robot,
+        [0.88, 0.48, 0.52],
+        [side * 0.94, 0.68, -0.43],
+        materials.teal,
+        1
+      );
+
+      for (const z of [-0.28, 0.82]) {
+        const footBolt = addCylinder(
+          robot,
+          0.045,
+          0.045,
+          0.04,
+          [side * 0.94, 0.81, z],
+          materials.yellow,
+          16
+        );
+        footBolt.rotation.x = Math.PI / 2;
+      }
+    }
+
+    // Small front fasteners.
+    for (const x of [-0.68, 0.68]) {
+      for (const y of [1.72, 2.68]) {
+        const bolt = addCylinder(
+          robot,
+          0.045,
+          0.045,
+          0.035,
+          [x, y, 0.545],
+          materials.yellow,
+          16
+        );
+        bolt.rotation.x = Math.PI / 2;
+      }
+    }
+
+    // Custom orbit controls, implemented without external addons.
+    const target = new THREE.Vector3(0, 2.15, 0);
+    const defaultView = {
+      theta: 0.43,
+      phi: 1.27,
+      radius: 8.2
+    };
+
+    let theta = defaultView.theta;
+    let phi = defaultView.phi;
+    let radius = defaultView.radius;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function updateCamera() {
+      const sinPhi = Math.sin(phi);
+      camera.position.set(
+        target.x + radius * sinPhi * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * sinPhi * Math.cos(theta)
+      );
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      theta = defaultView.theta;
+      phi = defaultView.phi;
+      radius = defaultView.radius;
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      theta -= dx * 0.006;
+      phi = THREE.MathUtils.clamp(phi - dy * 0.005, 0.72, 1.5);
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (event.pointerId !== undefined) {
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        radius = THREE.MathUtils.clamp(
+          radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          12
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    document.getElementById("resetView").addEventListener("click", resetView);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+
+    updateCamera();
+
+    // Animation.
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const time = clock.getElapsedTime();
+
+      // Periodic blinking.
+      const blinkCycle = time % 4.2;
+      let closedAmount = 0;
+      if (blinkCycle < 0.13) {
+        const progress = blinkCycle / 0.13;
+        closedAmount = Math.sin(progress * Math.PI);
+      }
+      eyeGroups.forEach((eye) => {
+        eye.scale.y = 1 - closedAmount * 0.9;
+      });
+
+      // Dial movement.
+      dials.forEach((dial) => {
+        dial.needle.rotation.z = dial.base + time * 1.15;
+      });
+
+      // Gentle chest-light pulse.
+      const pulse = 0.88 + Math.sin(time * 2.2) * 0.12;
+      chestLights.forEach((light) => {
+        light.material.emissiveIntensity = 1.8 * pulse;
+      });
+
+      // Antenna signal pulse.
+      antennaGlow.scale.setScalar(0.95 + Math.sin(time * 3.1) * 0.08);
+
+      // Pincer breathing motion.
+      const pincerOpen = 0.045 + Math.sin(time * 1.35) * 0.025;
+      pincerFingers.forEach(({ group, sign }) => {
+        group.position.z = sign * (0.13 + pincerOpen * 0.38);
+      });
+
+      // Subtle arm idle movement.
+      arms.forEach(({ arm, side }) => {
+        arm.rotation.z = side * Math.sin(time * 0.9) * 0.012;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>

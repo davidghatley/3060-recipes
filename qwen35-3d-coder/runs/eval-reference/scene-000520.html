@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loaded Bogie Roller Test Stand</title>
+
+  <style>
+    :root {
+      --cyan: #55ddff;
+      --green: #64f5a5;
+      --amber: #ffc247;
+      --red: #ff5e5e;
+      --panel: rgba(10, 18, 26, 0.84);
+      --line: rgba(120, 200, 230, 0.18);
+      --text: #eaf7ff;
+      --muted: #89a4b4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080e14;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.035);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 14px;
+    }
+
+    .header {
+      position: absolute;
+      top: 22px;
+      left: 24px;
+      padding: 17px 20px;
+      max-width: 440px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.23em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    h1 {
+      margin: 8px 0 4px;
+      font-size: clamp(19px, 2.2vw, 29px);
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      font-weight: 750;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.025em;
+    }
+
+    .metrics {
+      position: absolute;
+      top: 22px;
+      right: 24px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(112px, 1fr));
+      gap: 8px;
+      width: min(570px, calc(100vw - 48px));
+    }
+
+    .metric {
+      min-height: 72px;
+      padding: 12px 14px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: 7px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .metric-value small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      vertical-align: 1px;
+    }
+
+    .status-dot.paused {
+      background: var(--amber);
+      box-shadow: 0 0 12px var(--amber);
+    }
+
+    .controls {
+      position: absolute;
+      right: 24px;
+      bottom: 24px;
+      width: 304px;
+      padding: 16px;
+      pointer-events: auto;
+    }
+
+    .control-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    #run {
+      min-width: 88px;
+      border: 1px solid rgba(100, 245, 165, 0.35);
+      background: rgba(100, 245, 165, 0.12);
+      color: var(--green);
+    }
+
+    button {
+      border: 1px solid rgba(140, 210, 235, 0.19);
+      border-radius: 8px;
+      padding: 9px 11px;
+      background: rgba(125, 205, 235, 0.065);
+      color: #cfe9f4;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.055em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(85, 221, 255, 0.14);
+      border-color: rgba(85, 221, 255, 0.42);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.active {
+      color: var(--cyan);
+      border-color: rgba(85, 221, 255, 0.5);
+      background: rgba(85, 221, 255, 0.12);
+    }
+
+    .range-row {
+      margin: 0 0 14px;
+    }
+
+    .range-heading {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #speedValue {
+      color: var(--cyan);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      appearance: none;
+      border-radius: 4px;
+      outline: none;
+      background: linear-gradient(
+        90deg,
+        var(--cyan) 0%,
+        var(--cyan) var(--range-progress, 30%),
+        rgba(100, 145, 165, 0.22) var(--range-progress, 30%),
+        rgba(100, 145, 165, 0.22) 100%
+      );
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 14px;
+      height: 14px;
+      appearance: none;
+      border: 2px solid #0b1720;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px rgba(85, 221, 255, 0.7);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #0b1720;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px rgba(85, 221, 255, 0.7);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 7px;
+    }
+
+    .button-row.secondary {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .legend {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      padding: 13px 15px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.75;
+    }
+
+    .legend strong {
+      color: #d8edf6;
+      font-weight: 700;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--cyan);
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .swatch.blue {
+      color: #268dff;
+      background: #268dff;
+    }
+
+    .swatch.amber {
+      color: var(--amber);
+      background: var(--amber);
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      padding: 9px 13px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 45%, #142b3b 0, #080e14 55%);
+      transition: opacity 400ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader {
+      text-align: center;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .loader-ring {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 16px;
+      border: 2px solid rgba(85, 221, 255, 0.15);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 900ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 850px) {
+      .metrics {
+        top: 122px;
+        left: 24px;
+        right: 24px;
+        width: auto;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .header {
+        right: 24px;
+      }
+
+      .metric {
+        min-height: 61px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .header {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        padding: 13px 15px;
+      }
+
+      .metrics {
+        top: 112px;
+        left: 12px;
+        right: 12px;
+      }
+
+      .controls {
+        right: 12px;
+        bottom: 12px;
+        width: min(304px, calc(100vw - 24px));
+      }
+
+      .legend {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader">
+      <div class="loader-ring"></div>
+      Initializing roller test stand
+    </div>
+  </div>
+
+  <div id="hud">
+    <header class="header panel">
+      <div class="eyebrow">Rail Dynamics Laboratory · Bay 04</div>
+      <h1>Loaded Bogie Roller Test Stand</h1>
+      <p class="subtitle">Two-axle bogie · 920 mm wheelsets · 80 kN nominal axle load</p>
+    </header>
+
+    <section class="metrics">
+      <div class="metric panel">
+        <div class="metric-label">Axle load</div>
+        <div class="metric-value">80 <small>kN</small></div>
+      </div>
+
+      <div class="metric panel">
+        <div class="metric-label">Roller speed</div>
+        <div class="metric-value" id="rpmValue">126 <small>rpm</small></div>
+      </div>
+
+      <div class="metric panel">
+        <div class="metric-label">Test mode</div>
+        <div class="metric-value">DYNAMIC</div>
+      </div>
+
+      <div class="metric panel">
+        <div class="metric-label">System</div>
+        <div class="metric-value">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusValue">RUNNING</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls panel">
+      <div class="control-title">
+        <span>Test control</span>
+        <button id="run" type="button">Pause</button>
+      </div>
+
+      <div class="range-row">
+        <div class="range-heading">
+          <span>Drive speed</span>
+          <span id="speedValue">126 rpm</span>
+        </div>
+        <input
+          id="speed"
+          type="range"
+          min="0.2"
+          max="2.4"
+          step="0.05"
+          value="1"
+          aria-label="Roller drive speed"
+        >
+      </div>
+
+      <div class="button-row">
+        <button type="button" data-view="iso" class="active">Iso</button>
+        <button type="button" data-view="front">Front</button>
+        <button type="button" data-view="side">Side</button>
+        <button type="button" data-view="top">Top</button>
+      </div>
+
+      <div class="button-row secondary">
+        <button id="reset" type="button">Reset</button>
+        <button id="labels" type="button" class="active">Labels</button>
+        <button id="fullscreen" type="button">Full Screen</button>
+      </div>
+    </section>
+
+    <section class="legend panel">
+      <div class="legend-item">
+        <span class="swatch"></span>
+        <strong>Instrumentation</strong> and active drive
+      </div>
+      <div class="legend-item">
+        <span class="swatch blue"></span>
+        <strong>Bogie structure</strong> and powered rollers
+      </div>
+      <div class="legend-item">
+        <span class="swatch amber"></span>
+        <strong>80 kN ballast load</strong> retained on bolster
+      </div>
+    </section>
+
+    <div class="hint panel">
+      Drag to orbit · Wheel to zoom · Right-drag to pan · Space to pause
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute("aria-label", "Interactive 3D bogie roller test stand");
+
+    document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1119);
+    scene.fog = new THREE.Fog(0x0a1119, 11, 27);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const hemi = new THREE.HemisphereLight(0xb9dcff, 0x20252b, 1.65);
+    scene.add(hemi);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(-4.5, 8.5, 6.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -7;
+    keyLight.shadow.camera.right = 7;
+    keyLight.shadow.camera.top = 7;
+    keyLight.shadow.camera.bottom = -5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 24;
+    keyLight.shadow.bias = -0.00025;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x5caeff, 2.1);
+    rimLight.position.set(6, 4.5, -5);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xffaa4d, 32, 12, 2);
+    warmLight.position.set(3.5, 3.6, 3.2);
+    scene.add(warmLight);
+
+    // -------------------------------------------------------------------------
+    // Materials and procedural textures
+    // -------------------------------------------------------------------------
+
+    function standardMaterial(color, metalness = 0, roughness = 0.5, extra = {}) {
+      return new THREE.MeshStandardMaterial({
+        color,
+        metalness,
+        roughness,
+        ...extra
+      });
+    }
+
+    function makeStripeTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#f5bd26";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#151b20";
+      for (let x = -80; x < canvas.width + 80; x += 80) {
+        ctx.beginPath();
+        ctx.moveTo(x, 64);
+        ctx.lineTo(x + 34, 64);
+        ctx.lineTo(x + 94, 0);
+        ctx.lineTo(x + 60, 0);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(5, 1);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeLabelTexture(text, accent = "#55ddff") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 160;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(5, 15, 22, 0.88)";
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 4;
+
+      const x = 12;
+      const y = 18;
+      const w = canvas.width - 24;
+      const h = canvas.height - 36;
+      const r = 20;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = accent;
+      ctx.fillRect(34, 45, 8, 68);
+
+      ctx.font = "700 42px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#eaf8ff";
+      ctx.fillText(text, canvas.width / 2 + 12, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeTopDecalTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(8, 16, 22, 0.82)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "#f5bd26";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffc94e";
+      ctx.font = "800 38px system-ui, sans-serif";
+      ctx.fillText("BALLAST LOAD", canvas.width / 2, 95);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 76px system-ui, sans-serif";
+      ctx.fillText("80 kN", canvas.width / 2, 180);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const stripeTexture = makeStripeTexture();
+
+    const materials = {
+      floor: standardMaterial(0x141b21, 0.05, 0.94),
+      wall: standardMaterial(0x101820, 0.18, 0.78),
+      wallRib: standardMaterial(0x1b2832, 0.45, 0.55),
+      base: standardMaterial(0x111920, 0.62, 0.48),
+      deck: standardMaterial(0x263845, 0.65, 0.38),
+      frame: standardMaterial(0x267dbf, 0.62, 0.29),
+      frameDark: standardMaterial(0x155180, 0.68, 0.36),
+      steel: standardMaterial(0xa8b7c0, 0.86, 0.25),
+      darkSteel: standardMaterial(0x35434c, 0.82, 0.31),
+      wheel: standardMaterial(0x30383e, 0.9, 0.25),
+      wheelFace: standardMaterial(0x47545c, 0.82, 0.33),
+      black: standardMaterial(0x11171c, 0.18, 0.72),
+      yellow: standardMaterial(0xf2b92d, 0.35, 0.42),
+      orange: standardMaterial(0xe77724, 0.42, 0.4),
+      red: standardMaterial(0xdb3232, 0.3, 0.36),
+      green: standardMaterial(0x2fd17a, 0.2, 0.35),
+      stripe: standardMaterial(0xffffff, 0.15, 0.55, { map: stripeTexture }),
+      cyan: standardMaterial(0x55ddff, 0.35, 0.28, {
+        emissive: 0x0a6b86,
+        emissiveIntensity: 0.8
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function box(w, h, d, material, x = 0, y = 0, z = 0, parent = scene) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(
+      radius,
+      length,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      parent = scene,
+      axis = "y",
+      segments = 32
+    ) {
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        segments
+      );
+
+      if (axis === "z") geometry.rotateX(Math.PI / 2);
+      if (axis === "x") geometry.rotateZ(Math.PI / 2);
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function beam(a, b, width, depth, material, parent = scene) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const midpoint = start.clone().add(end).multiplyScalar(0.5);
+
+      const mesh = box(
+        width,
+        direction.length(),
+        depth,
+        material,
+        midpoint.x,
+        midpoint.y,
+        midpoint.z,
+        parent
+      );
+
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function torus(radius, tube, material, x, y, z, parent = scene) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tube, 12, 48),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Factory floor and industrial backdrop
+    // -------------------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      materials.floor
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.012;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(30, 60, 0x385467, 0x1b2932);
+    grid.position.y = 0.002;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.45;
+    scene.add(grid);
+
+    box(24, 6.2, 0.25, materials.wall, 0, 3.1, -6.2);
+
+    for (let x = -10; x <= 10; x += 2) {
+      box(0.055, 5.8, 0.08, materials.wallRib, x, 3.0, -6.04);
+    }
+
+    box(24, 0.12, 0.1, materials.wallRib, 0, 1.0, -6.02);
+
+    const wallLightMaterial = new THREE.MeshBasicMaterial({
+      color: 0xb9e9ff
+    });
+
+    for (const x of [-5.5, 0, 5.5]) {
+      box(2.5, 0.08, 0.08, wallLightMaterial, x, 5.25, -6.01);
+    }
+
+    // -------------------------------------------------------------------------
+    // Test stand foundation
+    // -------------------------------------------------------------------------
+
+    const stand = new THREE.Group();
+    scene.add(stand);
+
+    box(5.05, 0.24, 3.9, materials.base, 0, 0.12, 0, stand);
+    box(4.82, 0.10, 3.65, materials.deck, 0, 0.29, 0, stand);
+
+    // Hazard perimeter.
+    box(4.96, 0.09, 0.08, materials.stripe, 0, 0.25, 1.86, stand);
+    box(4.96, 0.09, 0.08, materials.stripe, 0, 0.25, -1.86, stand);
+    box(0.08, 0.09, 3.64, materials.stripe, 2.42, 0.25, 0, stand);
+    box(0.08, 0.09, 3.64, materials.stripe, -2.42, 0.25, 0, stand);
+
+    // Foundation bolts.
+    for (const x of [-2.15, 2.15]) {
+      for (const z of [-1.55, 1.55]) {
+        cylinder(0.07, 0.07, materials.steel, x, 0.38, z, stand, "y", 6);
+      }
+    }
+
+    // Longitudinal machine rails.
+    for (const z of [-1.48, 1.48]) {
+      box(4.25, 0.15, 0.16, materials.darkSteel, 0, 0.41, z, stand);
+    }
+
+    // -------------------------------------------------------------------------
+    // Four independently driven rollers
+    // -------------------------------------------------------------------------
+
+    const rollerRotors = [];
+    const rollerCenterY = 0.64;
+    const wheelCenterY = 1.41;
+    const axlePositions = [-1.0, 1.0];
+    const wheelSides = [-1, 1];
+
+    for (const x of axlePositions) {
+      for (const side of wheelSides) {
+        const assembly = new THREE.Group();
+        assembly.position.set(x, 0, side * 1.04);
+        stand.add(assembly);
+
+        box(0.72, 0.08, 0.78, materials.darkSteel, 0, 0.38, 0, assembly);
+
+        for (const bearingSide of [-1, 1]) {
+          box(
+            0.43,
+            0.25,
+            0.11,
+            materials.frame,
+            0,
+            0.49,
+            bearingSide * 0.235,
+            assembly
+          );
+
+          cylinder(
+            0.145,
+            0.13,
+            materials.darkSteel,
+            0,
+            rollerCenterY,
+            bearingSide * 0.235,
+            assembly,
+            "z",
+            28
+          );
+
+          cylinder(
+            0.075,
+            0.145,
+            materials.steel,
+            0,
+            rollerCenterY,
+            bearingSide * 0.245,
+            assembly,
+            "z",
+            24
+          );
+        }
+
+        const rotor = new THREE.Group();
+        rotor.position.y = rollerCenterY;
+        assembly.add(rotor);
+        rollerRotors.push(rotor);
+
+        cylinder(
+          0.285,
+          0.36,
+          materials.steel,
+          0,
+          0,
+          0,
+          rotor,
+          "z",
+          48
+        );
+
+        cylinder(
+          0.293,
+          0.19,
+          materials.darkSteel,
+          0,
+          0,
+          0,
+          rotor,
+          "z",
+          48
+        );
+
+        for (const capSide of [-1, 1]) {
+          cylinder(
+            0.105,
+            0.055,
+            materials.yellow,
+            0,
+            0,
+            capSide * 0.19,
+            rotor,
+            "z",
+            24
+          );
+        }
+
+        // Outward-facing hydraulic drive motor.
+        cylinder(
+          0.14,
+          0.28,
+          materials.frameDark,
+          0,
+          rollerCenterY,
+          side * 0.40,
+          assembly,
+          "z",
+          28
+        );
+
+        cylinder(
+          0.075,
+          0.12,
+          materials.steel,
+          0,
+          rollerCenterY,
+          side * 0.29,
+          assembly,
+          "z",
+          24
+        );
+
+        box(
+          0.15,
+          0.11,
+          0.19,
+          materials.black,
+          0,
+          rollerCenterY + 0.17,
+          side * 0.42,
+          assembly
+        );
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Bogie group, wheelsets, frame, suspension, and ballast load
+    // -------------------------------------------------------------------------
+
+    const bogie = new THREE.Group();
+    scene.add(bogie);
+
+    const wheelGroups = [];
+
+    for (const x of axlePositions) {
+      const wheelset = new THREE.Group();
+      wheelset.position.set(x, wheelCenterY, 0);
+      bogie.add(wheelGroups.length ? wheelset : wheelset);
+      wheelGroups.push(wheelset);
+
+      // Axle.
+      cylinder(
+        0.095,
+        2.28,
+        materials.darkSteel,
+        0,
+        0,
+        0,
+        wheelset,
+        "z",
+        32
+      );
+
+      for (const side of wheelSides) {
+        const wheelZ = side * 0.92;
+
+        // Wheel tread.
+        cylinder(
+          0.455,
+          0.22,
+          materials.wheel,
+          0,
+          0,
+          wheelZ,
+          wheelset,
+          "z",
+          64
+        );
+
+        // Inner flange.
+        cylinder(
+          0.505,
+          0.055,
+          materials.wheel,
+          0,
+          0,
+          wheelZ - side * 0.135,
+          wheelset,
+          "z",
+          64
+        );
+
+        // Outer wheel face.
+        cylinder(
+          0.365,
+          0.038,
+          materials.wheelFace,
+          0,
+          0,
+          wheelZ + side * 0.123,
+          wheelset,
+          "z",
+          48
+        );
+
+        // Hub.
+        cylinder(
+          0.145,
+          0.29,
+          materials.darkSteel,
+          0,
+          0,
+          wheelZ,
+          wheelset,
+          "z",
+          40
+        );
+
+        // Hub fasteners.
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          cylinder(
+            0.024,
+            0.025,
+            i % 2 === 0 ? materials.yellow : materials.steel,
+            Math.cos(angle) * 0.225,
+            Math.sin(angle) * 0.225,
+            wheelZ + side * 0.15,
+            wheelset,
+            "z",
+            12
+          );
+        }
+
+        // Bright timing mark makes rotation easy to see.
+        box(
+          0.095,
+          0.026,
+          0.024,
+          materials.cyan,
+          0.29,
+          0,
+          wheelZ + side * 0.153,
+          wheelset
+        );
+      }
+    }
+
+    // Side frames.
+    for (const side of wheelSides) {
+      const z = side * 1.18;
+
+      beam([-1.46, 1.51, z], [-0.52, 1.67, z], 0.18, 0.16, materials.frame, bogie);
+      beam([0.52, 1.67, z], [1.46, 1.51, z], 0.18, 0.16, materials.frame, bogie);
+      beam([-1.42, 1.23, z], [-0.67, 1.34, z], 0.18, 0.16, materials.frame, bogie);
+      beam([0.67, 1.34, z], [1.42, 1.23, z], 0.18, 0.16, materials.frame, bogie);
+      beam([-1.36, 1.28, z], [-0.33, 1.65, z], 0.14, 0.14, materials.frameDark, bogie);
+      beam([1.36, 1.28, z], [0.33, 1.65, z], 0.14, 0.14, materials.frameDark, bogie);
+
+      // Axle bearing boxes.
+      for (const x of axlePositions) {
+        box(0.39, 0.35, 0.29, materials.frameDark, x, wheelCenterY, z, bogie);
+        box(0.43, 0.08, 0.34, materials.steel, x, wheelCenterY + 0.19, z, bogie);
+        cylinder(0.095, 0.34, materials.steel, x, wheelCenterY, z, bogie, "z", 28);
+      }
+    }
+
+    // Center bolster and transom.
+    box(0.58, 0.24, 2.52, materials.frameDark, 0, 1.66, 0, bogie);
+    box(0.45, 0.18, 1.46, materials.frame, 0, 1.54, 0, bogie);
+
+    // Center pivot.
+    cylinder(0.28, 0.24, materials.darkSteel, 0, 1.87, 0, bogie, "y", 40);
+    cylinder(0.34, 0.07, materials.steel, 0, 2.01, 0, bogie, "y", 40);
+
+    // Secondary coil springs.
+    function makeCoilSpring(x, z, baseY, height, radius, parent) {
+      const points = [];
+
+      for (let i = 0; i <= 100; i++) {
+        const t = i / 100;
+        const angle = t * Math.PI * 2 * 9;
+        points.push(
+          new THREE.Vector3(
+            Math.cos(angle) * radius,
+            t * height,
+            Math.sin(angle) * radius
+          )
+        );
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 120, 0.028, 7, false),
+        materials.darkSteel
+      );
+
+      mesh.position.set(x, baseY, z);
+      mesh.castShadow = true;
+      parent.add(mesh);
+    }
+
+    for (const x of [-0.31, 0.31]) {
+      for (const z of [-1.16, 1.16]) {
+        cylinder(0.225, 0.055, materials.steel, x, 1.63, z, bogie, "y", 32);
+        makeCoilSpring(x, z, 1.67, 0.37, 0.16, bogie);
+        cylinder(0.225, 0.055, materials.steel, x, 2.06, z, bogie, "y", 32);
+      }
+    }
+
+    // Loading tray.
+    box(1.28, 0.12, 1.06, materials.yellow, 0, 2.12, 0, bogie);
+    box(1.36, 0.035, 1.14, materials.darkSteel, 0, 2.045, 0, bogie);
+
+    // Ballast weight stack.
+    const plateMaterials = [
+      materials.darkSteel,
+      materials.orange,
+      materials.steel,
+      materials.yellow,
+      materials.darkSteel
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const y = 2.25 + i * 0.14;
+
+      box(1.12, 0.14, 0.88, plateMaterials[i], 0, y, 0, bogie);
+
+      for (const edgeX of [-0.565, 0.565]) {
+        box(
+          0.045,
+          0.145,
+          0.88,
+          materials.stripe,
+          edgeX,
+          y,
+          0,
+          bogie
+        );
+      }
+
+      for (const boltX of [-0.43, 0.43]) {
+        for (const boltZ of [-0.32, 0.32]) {
+          cylinder(
+            0.035,
+            0.025,
+            materials.steel,
+            boltX,
+            y + 0.082,
+            boltZ,
+            bogie,
+            "y",
+            12
+          );
+        }
+      }
+    }
+
+    // Top cap and lifting eye.
+    box(0.82, 0.16, 0.62, materials.yellow, 0, 3.0, 0, bogie);
+    cylinder(0.055, 0.16, materials.steel, 0, 3.14, 0, bogie, "y", 20);
+    torus(0.145, 0.032, materials.steel, 0, 3.25, 0, bogie);
+
+    const topDecal = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.74, 0.25),
+      new THREE.MeshBasicMaterial({
+        map: makeTopDecalTexture(),
+        transparent: true,
+        depthWrite: false
+      })
+    );
+
+    topDecal.rotation.x = -Math.PI / 2;
+    topDecal.position.set(0, 3.083, 0);
+    bogie.add(topDecal);
+
+    // -------------------------------------------------------------------------
+    // Rear safety rail
+    // -------------------------------------------------------------------------
+
+    for (const x of [-2.32, 2.32]) {
+      cylinder(0.045, 1.18, materials.yellow, x, 0.64, -1.68, stand, "y", 20);
+      cylinder(0.14, 0.07, materials.darkSteel, x, 0.39, -1.68, stand, "y", 24);
+    }
+
+    cylinder(
+      0.04,
+      4.64,
+      materials.yellow,
+      0,
+      1.13,
+      -1.68,
+      stand,
+      "x",
+      20
+    );
+
+    cylinder(
+      0.032,
+      4.64,
+      materials.darkSteel,
+      0,
+      0.67,
+      -1.68,
+      stand,
+      "x",
+    18
+    );
+
+    // -------------------------------------------------------------------------
+    // Control cabinet and live instrument display
+    // -------------------------------------------------------------------------
+
+    const cabinet = new THREE.Group();
+    cabinet.position.set(-2.92, 0, 1.24);
+    scene.add(cabinet);
+
+    box(1.05, 0.14, 0.79, materials.darkSteel, 0, 0.12, 0, cabinet);
+    box(0.98, 1.72, 0.67, materials.deck, 0, 1.04, 0, cabinet);
+    box(0.88, 1.56, 0.035, materials.base, 0, 1.04, 0.355, cabinet);
+
+    box(0.72, 0.43, 0.04, materials.steel, 0, 1.47, 0.39, cabinet);
+
+    const screenCanvas = document.createElement("canvas");
+    screenCanvas.width = 512;
+    screenCanvas.height = 256;
+    const screenContext = screenCanvas.getContext("2d");
+
+    const screenTexture = new THREE.CanvasTexture(screenCanvas);
+    screenTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const screen = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.64, 0.34),
+      new THREE.MeshBasicMaterial({ map: screenTexture })
+    );
+
+    screen.position.set(0, 1.47, 0.415);
+    cabinet.add(screen);
+
+    // Control switches.
+    for (let i = 0; i < 3; i++) {
+      cylinder(
+        0.045,
+        0.055,
+        i === 0 ? materials.green : materials.yellow,
+        -0.23 + i * 0.23,
+        1.05,
+        0.40,
+        cabinet,
+        "z",
+        20
+      );
+    }
+
+    // Emergency stop.
+    cylinder(0.085, 0.08, materials.red, 0.22, 0.73, 0.42, cabinet, "z", 28);
+    cylinder(0.13, 0.025, materials.yellow, 0.22, 0.73, 0.375, cabinet, "z", 28);
+
+    // Cabinet handle.
+    box(0.04, 0.25, 0.07, materials.steel, 0.34, 1.08, 0.41, cabinet);
+
+    // Status beacon.
+    const beaconMaterial = standardMaterial(0x42e888, 0.15, 0.3, {
+      emissive: 0x1a9c52,
+      emissiveIntensity: 1.5
+    });
+
+    cylinder(0.075, 0.11, beaconMaterial, -0.32, 1.98, 0, cabinet, "y", 24);
+    cylinder(0.09, 0.035, materials.darkSteel, -0.32, 1.91, 0, cabinet, "y", 24);
+
+    // Hydraulic hoses.
+    function makeHose(points, radius = 0.043) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((p) => new THREE.Vector3(...p))
+      );
+
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 40, radius, 8, false),
+        materials.black
+      );
+
+      mesh.castShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    makeHose([
+      [-2.58, 0.42, 1.45],
+      [-2.15, 0.38, 1.67],
+      [-1.65, 0.38, 1.53],
+      [-1.16, 0.39, 1.32]
+    ]);
+
+    makeHose([
+      [-2.78, 0.52, 1.43],
+      [-2.35, 0.44, 1.76],
+      [-1.79, 0.41, 1.67],
+      [-1.29, 0.42, 1.37]
+    ], 0.035);
+
+    // -------------------------------------------------------------------------
+    // Scene labels
+    // -------------------------------------------------------------------------
+
+    const labelGroup = new THREE.Group();
+    scene.add(labelGroup);
+
+    function addLabel(text, position, accent = "#55ddff", scale = 2.15) {
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: makeLabelTexture(text, accent),
+          transparent: true,
+          depthTest: false,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.copy(position);
+      sprite.scale.set(scale, scale * 0.208, 1);
+      sprite.renderOrder = 20;
+      labelGroup.add(sprite);
+      return sprite;
+    }
+
+    addLabel("LOADED BOGIE · 80 kN", new THREE.Vector3(0, 3.68, 0), "#55ddff", 2.4);
+    addLabel("POWERED ROLLER BED", new THREE.Vector3(0, 0.34, 2.15), "#ffc247", 2.05);
+    addLabel("HYDRAULIC CONTROL", new THREE.Vector3(-2.92, 2.27, 1.24), "#64f5a5", 1.85);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls: orbit, pan, zoom, touch pinch
+    // -------------------------------------------------------------------------
+
+    class CameraController {
+      constructor(camera, domElement) {
+        this.camera = camera;
+        this.domElement = domElement;
+
+        this.target = new THREE.Vector3(0, 1.32, 0);
+        this.goalTarget = this.target.clone();
+
+        this.spherical = new THREE.Spherical(8.8, 1.18, 0.69);
+        this.goal = this.spherical.clone();
+
+        this.pointers = new Map();
+        this.mode = "rotate";
+        this.lastPinchDistance = 0;
+
+        this.onPointerDown = this.onPointerDown.bind(this);
+        this.onPointerMove = this.onPointerMove.bind(this);
+        this.onPointerUp = this.onPointerUp.bind(this);
+        this.onWheel = this.onWheel.bind(this);
+        this.onContextMenu = (event) => event.preventDefault();
+
+        domElement.addEventListener("pointerdown", this.onPointerDown);
+        domElement.addEventListener("pointermove", this.onPointerMove);
+        domElement.addEventListener("pointerup", this.onPointerUp);
+        domElement.addEventListener("pointercancel", this.onPointerUp);
+        domElement.addEventListener("wheel", this.onWheel, { passive: false });
+        domElement.addEventListener("contextmenu", this.onContextMenu);
+      }
+
+      setView(name) {
+        const views = {
+          iso: {
+            position: new THREE.Vector3(6.2, 4.6, 6.9),
+            target: new THREE.Vector3(0, 1.32, 0)
+          },
+          front: {
+            position: new THREE.Vector3(0, 3.25, 9.2),
+            target: new THREE.Vector3(0, 1.42, 0)
+          },
+          side: {
+            position: new THREE.Vector3(8.8, 3.25, 0.05),
+            target: new THREE.Vector3(0, 1.42, 0)
+          },
+          top: {
+            position: new THREE.Vector3(0, 9.0, 0.08),
+            target: new THREE.Vector3(0, 1.12, 0)
+          }
+        };
+
+        const view = views[name];
+        if (!view) return;
+
+        const offset = view.position.clone().sub(view.target);
+        const spherical = new THREE.Spherical().setFromVector3(offset);
+
+        this.goal.radius = THREE.MathUtils.clamp(spherical.radius, 3.8, 14);
+        this.goal.phi = THREE.MathUtils.clamp(spherical.phi, 0.08, 1.48);
+        this.goal.theta = spherical.theta;
+        this.goalTarget.copy(view.target);
+      }
+
+      onPointerDown(event) {
+        this.domElement.setPointerCapture(event.pointerId);
+
+        this.pointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY
+        });
+
+        if (this.pointers.size === 1) {
+          this.mode =
+            event.button === 2 || event.shiftKey ? "pan" : "rotate";
+        } else if (this.pointers.size === 2) {
+          this.mode = "pinch";
+          this.lastPinchDistance = this.getPinchDistance();
+        }
+      }
+
+      onPointerMove(event) {
+        const previous = this.pointers.get(event.pointerId);
+        if (!previous) return;
+
+        const dx = event.clientX - previous.x;
+        const dy = event.clientY - previous.y;
+
+        previous.x = event.clientX;
+        previous.y = event.clientY;
+
+        if (this.mode === "rotate" && this.pointers.size === 1) {
+          this.goal.theta -= dx * 0.0052;
+          this.goal.phi = THREE.MathUtils.clamp(
+            this.goal.phi - dy * 0.0048,
+            0.08,
+            1.48
+          );
+        } else if (this.mode === "pan" && this.pointers.size === 1) {
+          this.pan(dx, dy);
+        } else if (this.mode === "pinch" && this.pointers.size >= 2) {
+          const distance = this.getPinchDistance();
+
+          if (this.lastPinchDistance > 0 && distance > 0) {
+            this.goal.radius = THREE.MathUtils.clamp(
+              this.goal.radius * (this.lastPinchDistance / distance),
+              3.8,
+              14
+            );
+          }
+
+          this.lastPinchDistance = distance;
+        }
+      }
+
+      onPointerUp(event) {
+        this.pointers.delete(event.pointerId);
+
+        if (this.pointers.size === 0) {
+          this.mode = "rotate";
+        } else if (this.pointers.size === 1) {
+          this.mode = "rotate";
+          this.lastPinchDistance = 0;
+        }
+      }
+
+      onWheel(event) {
+        event.preventDefault();
+        this.goal.radius = THREE.MathUtils.clamp(
+          this.goal.radius * Math.exp(event.deltaY * 0.001),
+          3.8,
+          14
+        );
+      }
+
+      pan(dx, dy) {
+        const forward = new THREE.Vector3();
+        this.camera.getWorldDirection(forward);
+
+        const right = new THREE.Vector3()
+          .crossVectors(forward, this.camera.up)
+          .normalize();
+
+        const scale = this.goal.radius * 0.00135;
+
+        this.goalTarget.addScaledVector(right, -dx * scale);
+        this.goalTarget.addScaledVector(this.camera.up, dy * scale);
+
+        this.goalTarget.x = THREE.MathUtils.clamp(this.goalTarget.x, -3.2, 3.2);
+        this.goalTarget.y = THREE.MathUtils.clamp(this.goalTarget.y, 0.35, 2.8);
+        this.goalTarget.z = THREE.MathUtils.clamp(this.goalTarget.z, -2.6, 2.6);
+      }
+
+      getPinchDistance() {
+        const points = [...this.pointers.values()];
+        if (points.length < 2) return 0;
+
+        return Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+
+      update() {
+        const damping = 0.12;
+
+        this.spherical.radius +=
+          (this.goal.radius - this.spherical.radius) * damping;
+        this.spherical.phi +=
+          (this.goal.phi - this.spherical.phi) * damping;
+        this.spherical.theta +=
+          (this.goal.theta - this.spherical.theta) * damping;
+
+        this.target.lerp(this.goalTarget, damping);
+
+        const offset = new THREE.Vector3().setFromSpherical(this.spherical);
+        this.camera.position.copy(this.target).add(offset);
+        this.camera.lookAt(this.target);
+      }
+    }
+
+    const cameraController = new CameraController(camera, renderer.domElement);
+    cameraController.update();
+
+    // -------------------------------------------------------------------------
+    // UI and animation state
+    // -------------------------------------------------------------------------
+
+    const runButton = document.getElementById("run");
+    const speedInput = document.getElementById("speed");
+    const speedValue = document.getElementById("speedValue");
+    const rpmValue = document.getElementById("rpmValue");
+    const statusValue = document.getElementById("statusValue");
+    const statusDot = document.getElementById("statusDot");
+
+    let running = true;
+    let speed = 1;
+    let rollerAngle = 0;
+    let wheelAngle = 0;
+
+    function updateRangeProgress() {
+      const min = Number(speedInput.min);
+      const max = Number(speedInput.max);
+      const value = Number(speedInput.value);
+      const progress = ((value - min) / (max - min)) * 100;
+      speedInput.style.setProperty("--range-progress", `${progress}%`);
+    }
+
+    function updateUI() {
+      const rpm = running ? Math.round(speed * 126) : 0;
+
+      speedValue.textContent = `${rpm} rpm`;
+      rpmValue.innerHTML = `${rpm} <small>rpm</small>`;
+
+      runButton.textContent = running ? "Pause" : "Run";
+      runButton.classList.toggle("active", !running);
+
+      statusValue.textContent = running ? "RUNNING" : "PAUSED";
+      statusDot.classList.toggle("paused", !running);
+
+      beaconMaterial.color.set(running ? 0x42e888 : 0xffb02e);
+      beaconMaterial.emissive.set(running ? 0x1a9c52 : 0x9b5b00);
+
+      updateRangeProgress();
+      updateScreen();
+    }
+
+    function toggleRunning() {
+      running = !running;
+      updateUI();
+    }
+
+    runButton.addEventListener("click", toggleRunning);
+
+    speedInput.addEventListener("input", () => {
+      speed = Number(speedInput.value);
+      updateUI();
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      rollerAngle = 0;
+      wheelAngle = 0;
+
+      for (const rotor of rollerRotors) rotor.rotation.z = 0;
+      for (const wheelset of wheelGroups) wheelset.rotation.z = 0;
+    });
+
+    const labelsButton = document.getElementById("labels");
+
+    labelsButton.addEventListener("click", () => {
+      labelGroup.visible = !labelGroup.visible;
+      labelsButton.classList.toggle("active", labelGroup.visible);
+    });
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        cameraController.setView(button.dataset.view);
+
+        document.querySelectorAll("[data-view]").forEach((other) => {
+          other.classList.toggle("active", other === button);
+        });
+      });
+    });
+
+    document.getElementById("fullscreen").addEventListener("click", async () => {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen?.();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.target instanceof HTMLInputElement) return;
+
+      if (event.code === "Space") {
+        event.preventDefault();
+        toggleRunning();
+      }
+
+      if (event.key.toLowerCase() === "r") {
+        rollerAngle = 0;
+        wheelAngle = 0;
+      }
+
+      if (event.key.toLowerCase() === "l") {
+        labelsButton.click();
+      }
+
+      const views = {
+        "1": "iso",
+        "2": "front",
+        "3": "side",
+        "4": "top"
+      };
+
+      if (views[event.key]) {
+        document.querySelector(`[data-view="${views[event.key]}"]`).click();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Instrument display
+    // -------------------------------------------------------------------------
+
+    function updateScreen() {
+      const ctx = screenContext;
+      const rpm = running ? Math.round(speed * 126) : 0;
+
+      ctx.fillStyle = "#06151b";
+      ctx.fillRect(0, 0, 512, 256);
+
+      ctx.strokeStyle = "#1f5968";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(5, 5, 502, 246);
+
+      ctx.fillStyle = "#54ddff";
+      ctx.font = "700 23px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("BOGIE DYNAMICS / BAY 04", 24, 38);
+
+      ctx.fillStyle = running ? "#64f5a5" : "#ffc247";
+      ctx.font = "800 48px system-ui, sans-serif";
+      ctx.fillText(running ? "ACTIVE TEST" : "PAUSED", 24, 96);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 34px system-ui, sans-serif";
+      ctx.fillText(`${rpm} RPM`, 24, 150);
+
+      ctx.fillStyle = "#87a9b9";
+      ctx.font = "600 20px system-ui, sans-serif";
+      ctx.fillText("AXLE LOAD 80 kN  •  2 AXLES", 24, 190);
+
+      ctx.fillStyle = "#102b34";
+      ctx.fillRect(24, 214, 464, 14);
+
+      ctx.fillStyle = running ? "#55ddff" : "#ffc247";
+      ctx.fillRect(24, 214, 464 * Math.min(speed / 2.4, 1), 14);
+
+      screenTexture.needsUpdate = true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Render loop
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let screenTimer = 0;
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      if (running) {
+        const driveRate = speed * 13.2;
+        rollerAngle += delta * driveRate;
+        wheelAngle += delta * driveRate * (0.285 / 0.455);
+      }
+
+      for (const rotor of rollerRotors) {
+        rotor.rotation.z = rollerAngle;
+      }
+
+      for (const wheelset of wheelGroups) {
+        wheelset.rotation.z = wheelAngle;
+      }
+
+      // Very small frame vibration under load.
+      bogie.position.y = running
+        ? Math.sin(elapsed * 36) * 0.0022 * Math.min(speed, 1.4)
+        : 0;
+
+      cameraController.update();
+
+      screenTimer += delta;
+      if (screenTimer > 0.1) {
+        screenTimer = 0;
+        updateScreen();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateUI();
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 450);
+    });
+  </script>
+</body>
+</html>

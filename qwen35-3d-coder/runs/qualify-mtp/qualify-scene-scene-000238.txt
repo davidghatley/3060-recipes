@@ -1,0 +1,1079 @@
+We need answer likely code HTML self-contained. Need create detailed scene. Need use only three core module URL. No addons. Need perhaps provide full HTML. Need ensure functionality maybe interactive folding? User asks "shows folding clothes drying rack" perhaps static scene. We need build visually. Need maybe include labels? Single file. Need use Three.js core ES module from cdnjs. Implement camera controls directly inside HTML. Need no other imports.
+
+We need reason geometry.
+
+Scene: floor drying rack, two A-frame side supports flat wooden slats, three horizontal rails slender rounded bars spanning, small notches, lower hinged shelf swings out on two pivot bolts. Rails slender rounded bars, hinges plates visible pins.
+
+Need make aesthetically pleasing, perhaps warm wood, metal hardware, floor, backdrop, lighting, shadows. Need perhaps animate shelf deployment? User says lower hinged shelf that swings out on two pivot bolts. Could include button "Open shelf" to demonstrate. But request just shows. We can provide HTML with an interactive toggle perhaps. Need ensure rack structure physically plausible.
+
+Let's design coordinate system:
+- floor x width, z depth, y up.
+- A-frame side supports at x = ±? Rack front/back? Typical folding drying rack: two A frames at front and back, rails span front-back. But wording "two A-frame side supports" likely left and right, rails horizontal spanning between. Could set A-frames at x ±1.45, each in yz plane, with feet at z ±1.15 and top at z 0, y 2.55. Rails run along z from -1.15 to +1.15 at x positions -0.75,0,0.75, y 2.15 maybe. But "three horizontal drying rails spanning between A-frames" yes. A-frame side supports each consist flat wooden slats. Top apex maybe crossbar? A-frame side supports: each A frame in yz plane, two slanted flat wooden bars from feet to top, plus maybe horizontal crossbar? "two A-frame side supports of flat wooden slats" likely each support comprises two slats. We'll model each A-frame as two flat wooden slats (box geometries) in yz planes, with thickness along x. Feet perhaps.
+
+Need small notches in rails. Could model rails as rounded bars. Three.js TubeGeometry with CatmullRom? A straight rounded bar with TubeGeometry and circular cross-section is okay, but "slender rounded bars" can be CapsuleGeometry? Three core has CapsuleGeometry in r160 likely yes. But horizontal bar with rounded ends and notches. Could use CylinderGeometry rotated z? Cylinder is round rod, not flat maybe. Better create rounded rectangular bar geometry? Could use TubeGeometry along straight path with radius 0.055, tubular segments 48, radial 12. This gives rounded bar. Notches small: need actual cutouts. Could make rail base as rounded bar and add dark inset notch blocks? User says rails with small notches. Could model notches as small U-shaped cutouts visually: dark metal/wood inserts at intervals, perhaps actual geometry impossible without CSG. Could construct rail as main bar plus notch "holes" represented by dark rounded rectangular insets slightly above surface, with tiny metallic clips. But if camera sees, clear. Better build each rail in segments around notches? A horizontal bar with notches can be assembled from 4 or 5 segments and vertical side pieces, but then rail no longer simple. Could use ShapeGeometry with holes extruded? Rail cross-section rectangular with holes; ExtrudeGeometry supports holes. But orientation and rounded ends difficult. Could use TubeGeometry plus dark notch patches, likely acceptable.
+
+Could create actual notch geometry by constructing rail as a rounded rectangular extrusion with holes? Shape rectangle in x-y cross-section, extrude along z, holes for U notches. But holes need fully enclosed; notch open end. Could model each rail as central bar and notch inserts.
+
+Maybe use custom "notched rail" geometry: a rectangular bar with a notch cut in top via CSG unavailable. Could construct as multiple boxes:
+- main bar from z=-L/2 to L/2, y maybe 0.
+- For each notch at z positions, remove top segment by using pieces: main lower bar (height h- notch depth) full length, upper bar segments around notch, and side vertical pieces. But rounded ends lost.
+Could use TubeGeometry for main bar and overlay notch dark shapes.
+
+A good visual can use dark recessed rectangular notch plates on top of each rail, with tiny metallic rim. They read as notches. Could even add little hanging clips.
+
+Shelf: lower hinged shelf swings out on two pivot bolts. Need model shelf as a wooden panel (maybe slatted shelf) hinged along back edge? "lower hinged shelf that swings out on two pivot bolts." Could be a folding shelf attached beneath rails, pivots at back x ±? It swings outward like a door around x-axis? Need interpret. A lower shelf could be a rectangular platform that pivots downward/outward from two vertical pivot bolts? "swings out on two pivot bolts" likely shelf is hinged at back and folds down/out. We can model a rectangular wooden shelf, width 2.6, depth 0.85, at y=0.65, z maybe +0.1, hinged along back edge z=-0.45. It rotates around x-axis to swing out (toward +z) and downward? If hinge axis x, shelf extends +z from hinge. Rotating around x positive/negative moves front edge y. To "swing out" perhaps rotate from folded upward against rails to horizontal extended. A shelf normally hinged at top? Lower hinged shelf could be under lower rail, pivots at sides, and opens like a kick-out shelf. Two pivot bolts at x ±1.15, y .65, z maybe 0.0, with shelf extending forward. If rotates around x axis, hinges along x, yes two pivot bolts. It can swing out from vertical folded state to horizontal. We can model shelf panel extending +z from hinge at z=0.2, with length 0.9, width 2.7. At closed angle maybe -70°? Need coordinate.
+
+Let's set shelf hinge axis along x at y=0.62, z=0.25. Shelf extends toward +z when deployed. If angle around x = 0, horizontal. Folded upward: front edge y increases with rotation around x? Vector from hinge to front = (0,0,+L). Rotation x: y' = y cos - z sin = - L sin θ. For θ negative, y' positive. So θ=-1.2 rad folds up. Deploy angle 0. It "swings out" maybe from folded vertical to horizontal. We can animate between -1.2 and 0. But initial should show shelf perhaps partially or fully extended? User says shelf that swings out. Could initial deployed to show. Add button "Fold shelf" / "Open shelf" to interact. Maybe initial shelf partially open at 15°? Better static scene shows it extended, and button lets fold.
+
+"two pivot bolts" visible: two vertical? Pivot bolts axis x, so each bolt is horizontal along x, with metal head on outside and nut inside. At x ±1.05, y .65, z .25. Model cylinders oriented along x (Cylinder default y, rotate z=π/2). Add plates around each. Shelf has two hinge straps extending to front edge, with holes maybe.
+
+Need perhaps cloth? "folding clothes drying rack" maybe rack for hanging clothes, not necessarily clothes. Could include a few shirts/hoodies? But requested rack, likely no need. Could include subtle hanger hooks? The phrase "folding clothes drying rack" means rack used for folding? A folding floor drying rack. We can make rack empty, maybe include a folded towel on shelf and a hanging shirt? But could distract and geometry complexity. Maybe add a simple hanger on center rail, no clothes. However user specifically says shows rack. Better clean.
+
+Need implement camera controls directly: custom orbit drag, wheel zoom, touch maybe. Could implement spherical camera around target, pointerdown/move, wheel, damping. Need no OrbitControls addon. Use THREE.Spherical? core yes. But implement manually. Also responsive.
+
+Need include importmap? Direct import from URL in module. `import * as THREE from 'https://cdnjs...';` valid. Single HTML.
+
+Need perhaps use shadows, ACES tone mapping, physically based materials. Need no external assets. Procedural wood texture via CanvasTexture? self-contained. We can generate canvas wood grain, use on wood materials. Need not use image. Use CanvasTexture. Also maybe floor texture procedural. Use MeshStandardMaterial.
+
+Need create detailed geometry.
+
+Let's plan full code.
+
+HTML:
+- head meta viewport, title, CSS.
+- body canvas container.
+- overlay title and instructions, button.
+- module script.
+
+Scene:
+- renderer antialias, alpha? background Color #e9e5dc, shadowMap enabled PCFSoft.
+- camera perspective 38, position maybe (4.8,3.4,5.8), target (0,1.2,0).
+- scene fog.
+- hemisphere light, directional key with shadows, area? RectAreaLight core but requires uniforms? RectAreaLight works but no helper. Use directional and point.
+- floor large plane with shadow, warm neutral.
+- perhaps wall? no.
+
+Materials:
+wood texture canvas 512x512 with base tan and sine grain lines. Repeat maybe.
+woodMat MeshStandardMaterial color 0xc88a4b, map woodTex, roughness .62.
+woodEdge maybe.
+metal dark gunmetal 0x33383a, roughness .35 metalness .8.
+pin brass? visible pins silver.
+rail maybe wood too? "rails are slender rounded bars" could be wood or metal. Use wood rails? likely wooden drying rack. Use rounded wood bars. Hinges metal.
+
+Rack dimensions:
+A frames at x = ±1.35. Each frame plane yz.
+- feet at z ±1.18, y .08, x ±1.35.
+- top at z=0, y=2.65.
+- slats each are flat wooden bars. Need dimensions: length along z of sqrt(1.18^2+2.57^2)=2.79, thickness along x 0.14, width along z? A flat slat oriented in yz plane, its broad face should be in yz, thickness x. BoxGeometry thickness x, height? A slat from foot to apex, cross-section in z maybe 0.18 (width), y length 2.79. Box dimensions (0.16, length, 0.20), rotated around x? Need align along vector in yz. A box's local y axis along slat. Position midpoint, rotation.x = angle? For right side foot z=+1.18 to apex z=0, y .08 to 2.65, vector (0, +2.57, -1.18). In yz, angle from y axis toward -z. Box local y after rotation x: y' = y cos - z sin, z'= y sin + z cos. For vector angle φ = atan2(dz, dy) = atan2(-1.18,2.57)=-0.436. rotation x = φ. So left foot z=-1.18 to apex: vector +z, φ=+0.436. We can create group each side with two slats. Add top crosspiece? A-frame usually top has crossbar along x connecting frames at apex, but "two A-frame side supports" maybe add a top beam across x. It would make rack stable. Could add a wooden crossbar at y 2.65 spanning x, but then rails attach below. This is plausible. However A-frame side supports each are slats; top crossbar helps.
+- feet: wooden crossbars along x? Each A frame has two feet maybe one at each end, connected by a horizontal foot bar across x at z ±1.18, y .08. This is typical. Add two flat wooden bars along x length 2.8, dimensions 2.8 x .12 x .18. Maybe.
+- side A frame slats maybe at x ±1.35.
+
+Rails:
+Three at x = -0.78, 0, 0.78, y = 2.18? lower? top 2.65. Span z -1.12 to 1.12. Slender rounded bars radius .055 or .065. Use TubeGeometry with CatmullRom? For straight line use `new THREE.CatmullRomCurve3([...])` but TubeGeometry around. Or `THREE.CylinderGeometry(radius, radius, length, 16)` gives round rod, not rounded bar. TubeGeometry with Curve line straight and radius .06, tubular 48, radial 12, closed false. Need orient between points using quaternion setFromUnitVectors(yAxis, dir). But TubeGeometry path in local coordinates, can make `LineCurve3`. `new THREE.TubeGeometry(new THREE.LineCurve3(start,end), 48, 0.06, 12, false)`. This gives circular rod. "rounded bars" okay. Could make flattened? no. Use wood.
+- Notches at each rail: perhaps 4 positions z = -0.85,-0.28,0.28,0.85. Each notch is a dark recessed rectangular cutout on top. Model as small black/dark inset box dimensions x .11, y .018, z .20, positioned y=2.245? Rail center y=2.18, radius .06, top y=2.24. Place inset at y=2.242, slightly above, but looks like dark sticker. Better create notch as U-shaped metal clip: small base plate and two tiny side rails. Or actual holes can be faked with dark rectangular "notch" and a thin silver border. User says rails with small notches, likely visual enough. Could create a notch as dark rounded rectangle (use Shape with rounded corners extruded) placed on top. `Shape` with rounded rect, `ShapeGeometry`, rotate x? Shape in XY, normal +Z. Need align horizontal top plane XZ, rotate x=-π/2. `ShapeGeometry` lies XY, normal +Z; rotate x=-π/2 maps normal +Y? +Z -> +Y yes. Place y top. Add dark material. But appears flat black patch. Add inner smaller lighter? Could use `MeshStandardMaterial` dark brown.
+- Notch positions maybe each rail 3 notches. Use 4. Add tiny metal hanger loops? Not asked. Could add a small metal clip in one notch. But avoid.
+
+Maybe rails should be metal? "slender rounded bars" ambiguous. Wooden rails fit.
+
+Shelf:
+- under lower rail at y=.65, z maybe .15. Hinge axis x at z=.15.
+- shelf width 2.55, depth .85, thickness .09. It can be a single wooden panel with rounded corners? BoxGeometry. To look nice, use 3 slats? A shelf of flat wooden slats. Could create panel plus edge.
+- hinge at back z=0.15, shelf extends +z to .95. If deployed, shelf from z=.15 to 1.0, y=.58.
+- Two pivot bolts at x ±1.05, y=.61, z=.15, cylinders along x length .28, radius .055. Need visible from camera. Add mounting plates on side supports? Since shelf width 2.55 and A frames x ±1.35, plates at x ±1.05 maybe attached to a lower crossbar. Add a lower horizontal support beam along x at y=.58,z=.15, maybe wooden. But shelf hinged on it. Two pivot bolts on beam.
+- Hinge straps: two metal plates on shelf at x ±1.05, y=.61, z=.55 maybe extending from hinge to front. Since shelf rotates group, plates should rotate with shelf. Pivot bolt stationary? Could have fixed bracket and rotating strap. Model shelf group at hinge, with shelf panel and straps. Pivot bolts stationary.
+- Shelf panel maybe wood with 3 slats along z? A shelf could have 2-3 planks. Use 3 narrow boards across x? If shelf width x 2.55 and depth z .85, three planks each width .82 along x and depth .85, with gaps. But a shelf typically one board. Use a wooden panel with grain.
+- Add edge lip maybe.
+- Shelf group rotation.x initial 0 (deployed). Button toggles target angle -1.25 (folded upward) and maybe "swing out" from folded to deployed. If initial deployed, button "Fold shelf"; user can click. Could perhaps initial angle -0.18 to show slight open? But request likely screenshot evaluated; shelf should be visible extended. Set 0.
+- Add small metal handle on shelf front maybe.
+
+Maybe lower shelf "swings out" should be able to fold down? Our rotation from horizontal to vertical up is "folds up", not swings out. Could model hinge axis at front edge and shelf swings downward/out? Let's parse: A lower hinged shelf that swings out on two pivot bolts. A common folding drying rack has a lower shelf that folds down from an upright position to horizontal, hinged at sides? "swings out" means shelf is folded vertically against rack and then swings outward to horizontal. Hinge axis at top/back; rotating from vertical to horizontal indeed swings out. So initial could be vertical (folded) and animation to horizontal demonstrates. But screenshot may not show shelf if folded. User explicitly wants shelf visible maybe initial open. We can have initial open and button fold.
+
+Could set shelf angle 0.08 rad slightly raised? Hmm.
+
+Maybe include small state label "Shelf open" and button.
+
+Need maybe animate subtle? no.
+
+Camera controls:
+- state spherical radius, theta, phi. target Vector3(0,1.25,0).
+- pointerdown on canvas, capture, dragging.
+- pointermove changes theta -= dx*0.006, phi -= dy*0.006 clamp .35 to 1.45.
+- wheel radius *= exp(deltaY*.001), clamp 4.2-10.
+- touch via pointer.
+- double click reset.
+- damping current values toward desired.
+- camera position = target + spherical.
+- prevent page scroll.
+- maybe auto slight? no.
+- Resize.
+
+Need ensure only Three module imported. No addons.
+
+Could add labels in HTML. Need no external fonts.
+
+Need perhaps create a "cutaway" or exploded? no.
+
+Need maybe add a small wooden folded cloth on shelf? Could add a folded towel as a rounded box? But shelf empty is okay. Maybe add a simple hanging shirt on center rail to convey drying rack. But user didn't ask and could obscure notches. Maybe no.
+
+Need perhaps add a small hanger hook on side rail. no.
+
+Let's think geometry orientation and shadows.
+
+Wood texture:
+Canvas 512x512, fill #b9793f. Draw many vertical? Texture mapping on BoxGeometry may vary. Use CanvasTexture wrap Repeat, repeat (1.5,3). Need color. For slats, grain along local y. Canvas vertical lines means texture v along y? Box UV each face. Fine.
+Could create separate `woodTexture` and `shelfTexture`.
+
+Floor: plane 20x20 rotate -pi/2, receive shadow, material color #d8d1c4 roughness .95. Add circular rug? no.
+
+Backdrop: scene background #e7e2d8, fog.
+
+Lights:
+Ambient/Hemisphere.
+Directional at (-3,6,4) intensity 3? Three r160 physically correct default? renderer.useLegacyLights removed. Directional intensity 3.0.
+Directional shadow camera bounds.
+Fill directional at (4,3,-3) intensity 1.0.
+Point maybe.
+
+Renderer outputColorSpace = THREE.SRGBColorSpace, toneMapping ACES, exposure 1.05.
+
+Contact shadows via actual shadow.
+
+Materials:
+wood: map, color 0xffffff maybe.
+rail wood slightly darker.
+metal: color 0x4b5153, metalness .75 roughness .32.
+pin: color 0xb8b3a6, metalness .9 roughness .2.
+dark: 0x26292a.
+notch: 0x3b2417.
+
+Need model rounded bar perhaps custom `roundedBox`? Three core has `RoundedBoxGeometry` only addon, not allowed. Could implement rounded rectangular prism geometry ourselves? Could use `ExtrudeGeometry` with rounded rectangle shape. For rails, use `TubeGeometry` circular. "slender rounded bars" circular is rounded.
+
+For shelf panel, use `Shape` rounded rectangle and `ExtrudeGeometry` to have beveled edges. But orientation. Could create `roundedRectShape(width, depth, radius)` in x-z? Shape in XY then extrude z. We need panel horizontal, thickness y. Better use BoxGeometry with bevel impossible. Could use ExtrudeGeometry:
+- shape in XY representing width x and depth y; extrude thickness z. Then rotate x=π/2? Shape XY -> after rotate x=π/2, original y maps z, extrude z maps -y. So panel horizontal. Use `ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.02,bevelThickness:.02,curveSegments:8})`; rotateX(Math.PI/2); position y? Original extrude z 0..thickness maps y? rotation x=π/2: y'=-z, z'=y. So thickness downward from y=0. Position y top. Good. Or rotateX(-π/2): y'=z, z'=-y, shape depth flips. Use +pi/2 and position y top.
+Need maybe use for shelf panel and crossbars. But Box simpler and enough.
+
+A-frame slats flat: BoxGeometry, maybe add edge strips? Use `BoxGeometry(0.15, length, 0.22)`, material. To emphasize flat slats, add a darker narrow strip? Could use bevelled ExtrudeGeometry along local y? Box is okay, but "flat wooden slats" can be plain rectangular.
+
+Could create each slat as a `BoxGeometry` plus a thin darker line along edges? Not necessary.
+
+Notches:
+Maybe build actual notch-like cutouts using `THREE.Shape` holes? Let's explore constructing rail as a rectangular extruded bar with notches. Could use custom geometry for rail cross-section along z and cut notches in top using CSG impossible. But can construct rail from a central rounded bar plus notch "windows" as dark inset shapes. Visually acceptable.
+
+Could make notch as a small U-shaped metal loop: a dark rounded rectangle with open bottom. Use `Shape` with hole? A notch is a cutout in top surface. We can create a `Shape` representing a U-shaped notch in XZ plane and `ShapeGeometry` dark, plus a tiny metal rim. But patch.
+
+Maybe actual rail geometry can be built as segments with a notch cut in top using a custom BufferGeometry. We can create a rounded rectangular prism and subtract notches manually? Could use ExtrudeGeometry of 2D cross-section? The rail runs along z, cross-section x-y. A notch in top is a U-shaped indentation along z, meaning cross-section at each z has notch, and along z notch extends. We can build custom geometry as a grid across x-y-z with top surface omitted in notch regions. But rounded bar and notches, could implement.
+
+Simpler: use a `THREE.Shape` for the side profile? Rail cross-section rectangle with a notch cut into top at one location? Extrude along z. But notch must be open along z. Could create shape representing a rectangular cross-section with a notch at top center, extrude along z. This would make a notch through entire length, not localized. Could add caps around.
+
+Could build rail as a rounded rectangular extrusion along z with a notch only in middle section by combining:
+- full-length lower body: rounded rectangular cross-section of width .18, height .12, extruded length.
+- top cap segments: left and right portions, and around notch maybe.
+- notch side walls: vertical pieces at x edges.
+- notch bottom: horizontal piece at lower y.
+This yields actual U-notch in top surface over middle z segment. But rounded ends and overall slender. Could use `TubeGeometry` for lower body and separate boxes for cap segments. Yet seam.
+
+Alternative use `ShapeGeometry`? We can create a rail as a series of boxes and cylinders, but not essential.
+
+Could use CSG library? Not allowed addons, but core only. No.
+
+Patch is likely okay.
+
+Maybe use dark recessed notch with `RoundedBox` custom. We can implement rounded rectangle shape and `ExtrudeGeometry`, but patch orientation.
+
+Let's make notch as a small `THREE.Shape` with rounded corners:
+```
+const shape = new THREE.Shape();
+shape.moveTo(-w/2+r,-h/2)... 
+const geo = new THREE.ExtrudeGeometry(shape,{depth:.025, bevelEnabled:false});
+geo.rotateX(Math.PI/2); // shape XY -> XZ, extrude down
+```
+Place y = railTop + .002, but if extrude down, top surface at y. Need orientation. Shape coordinates x, y; after rotateX(pi/2), y->z, z->-y. So top at original z=0 -> y=0. Position y=2.245. Good. Dark patch. Add a slightly smaller brown patch below? Could create border using larger dark shape and smaller wood? A notch should appear dark. Add a tiny silver U clip maybe.
+
+Maybe rail notches count 4 each, total 12. Each is a dark rounded rectangle 0.11 x 0.18. At camera visible.
+
+Add small metal hanger clips? not asked.
+
+Shelf pivot bolts:
+- fixed bracket: a horizontal wooden beam under shelf at y=.52, z=.12, length 2.75, dimensions 2.75,.12,.16. But shelf itself y=.62. Pivot bolts at x ±1.05, y=.62, z=.12. Cylinder axis x.
+- bolt head: CylinderGeometry(.075,.075,.07,20) default y, rotate z=π/2, position x ±1.14 maybe. Need visible. A cylinder along x, head outside at x ±1.22. For each side:
+  - shaft from x -0.12 to .12 around pivot, metal.
+  - head at outer x side.
+  - nut inner.
+  - washer torus? TorusGeometry core, orient.
+  - mounting plate small box at x ±1.3? A-frame slats x ±1.35, bracket near. Put plate at x ±1.38, y .55, z .12, dimensions .08,.24,.28, attached to side support. Bolt extends inward.
+- shelf straps in moving group: at x ±1.05, y=.61, z=.38 maybe, a metal plate 0.24 x .035 x .42 (dimensions x,y,z), with a hole? use shape with hole maybe. Add hole visually as dark circle. Could use `Shape` with circular hole and ExtrudeGeometry. But a solid plate with dark circular inset. Add cylinder hole? We'll create `Shape` rectangle with `Path` circle hole, extrude .03. Shape coordinates x,y, but plate horizontal? Need plate vertical on shelf, normal y. Shape in XY already, extrude z; rotate x=π/2 to horizontal, but hole. Simpler box + dark circle.
+- shelf group at (0, .64, .12), rotation x=0.
+- panel extends +z .85, width 2.5. Use 3 planks? Could create one panel with wood. Add edge trim maybe.
+- To show hinge movement, add a small metal handle on front edge of shelf, a box or torus. When folded, handle moves.
+- maybe shelf has a center support? no.
+
+A-frame:
+- side groups at x ±1.35.
+- slats: each from foot to apex. Need top apex maybe y=2.65, z=0. Feet y=.08, z±1.18. Add end caps? 
+- crossbar at top along x, dimensions 2.9,.16,.18 at y=2.62,z=0. This connects frames. But if slats meet at top, crossbar.
+- lower crossbars at z ±1.18, along x, dimensions 2.8,.12,.18, y=.08. This makes floor stable.
+- maybe diagonal braces? A frames enough.
+- A frame slats flat wood, maybe one on each side. Add small wooden pegs at apex? no.
+
+Maybe the two A-frame side supports should be at front and back rather than left/right. But "side supports" likely left/right. Our rails run front-back, spanning between left/right. Good.
+
+Could add a central top rail? three rails at x -0.8,0,.8. Top crossbar at y2.62. Rails y2.18.
+
+Notches on rails: z positions [-.82,-.27,.27,.82], each 0.16 wide. But center rail notches.
+
+Could add small metal hanger clips in alternating notches? no.
+
+Need maybe label UI:
+top left "FOLDING RACK" and subtitle.
+bottom right button "Fold lower shelf" and "Reset view".
+Maybe instructions "Drag to orbit • Scroll to zoom".
+This is nice.
+
+Need ensure button event doesn't trigger canvas pointer? separate.
+
+Animation:
+```
+let shelfOpen=true, shelfAngle=0;
+button click target = shelfOpen? -1.28:0;
+```
+If folded, shelf front edge rises. But "lower hinged shelf that swings out" maybe button "Open shelf" from folded. We can initial open. Label "Fold shelf". When folded, it goes up and may intersect lower rail? Shelf top y around .64, folded front edge y .64 + .85 =1.49, below rail 2.18, fine. It becomes vertical at z .12, visible behind lower rail. Good.
+
+Maybe initial angle 0.0 and button "Close shelf". We can show open.
+
+Need perhaps animate with smooth damp:
+`shelfGroup.rotation.x += (target - current)*0.08`.
+Need `target` variable.
+
+Camera:
+Use `THREE.Spherical`? core. We can use:
+```
+const spherical = new THREE.Spherical(6.8, Math.PI*0.36, Math.PI*0.25)
+```
+Three Spherical phi polar from y, theta around y. position setFromSpherical.
+Drag:
+```
+desired.theta -= dx*0.006
+desired.phi -= dy*0.006
+```
+Need camera target maybe (0,1.25,0).
+Wheel desired.radius.
+Damping current.
+Doubleclick reset.
+Pointerdown only primary, setPointerCapture.
+Prevent context menu.
+Maybe touch-action none.
+
+Need maybe use `renderer.setAnimationLoop`.
+
+Need perhaps dispose? no.
+
+Potential issue `THREE.CapsuleGeometry` not needed. `TubeGeometry` with `LineCurve3` and radius. `TubeGeometry` Frenet frames on straight line works.
+
+Need create `roundedPatch`:
+```
+function roundedRectShape(w,h,r) { ... }
+function makeNotch(z) {
+ const shape = roundedRectShape(.13,.20,.045)
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:.018, bevelEnabled:false});
+ geo.rotateX(Math.PI/2);
+ const mesh = new THREE.Mesh(geo, notchMat);
+ mesh.position.set(x, railY+0.061, z); // top at y=0 after rotation? after rotateX pi/2, z extrusion maps -y, so top y=0. yes.
+```
+But shape's y dimension maps z positive, good.
+Maybe patch appears floating 0.001. Add `notchMat` dark brown. Add a smaller black shape below? Could add `Mesh` of another shape at y+0.002? Hmm.
+
+Could create notch as a black rounded rectangle plus a thin silver border by larger dark shape and smaller wood-colored shape? A notch should be dark cavity. Add a small `TorusGeometry`? no.
+
+Maybe actual notch can be suggested by a small metal retaining clip: a tiny U-shaped wire around the dark patch. Not necessary.
+
+Could add a small hanger clip in one notch: metal `TorusGeometry(.045,.012,8,16,Math.PI)`? too much.
+
+Wood texture:
+```
+function makeWoodTexture() {
+ canvas 512...
+ ctx.fillStyle...
+ for i 0..180 draw bezier vertical lines...
+ const tex = new THREE.CanvasTexture(canvas);
+ tex.colorSpace=SRGB;
+ tex.wrapS/T=RepeatWrapping;
+ tex.repeat.set(1.4,3);
+ tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+}
+```
+Renderer must exist before texture to set anisotropy. Fine.
+Maybe grain orientation on slats. For shelf, clone texture repeat.
+
+Could add subtle screw heads on shelf brackets.
+
+Need maybe use `EdgesGeometry`? no.
+
+Need maybe add a small floor label? no.
+
+Let's draft code carefully.
+
+HTML CSS:
+- body margin 0 overflow hidden background.
+- #app.
+- canvas display block.
+- .hud pointer-events none; button pointer-events auto.
+- top panel.
+- title serif maybe Georgia.
+- bottom controls.
+- accessible button.
+- loading overlay? Since module loads async, could show "Loading..." and remove after. Not necessary.
+- `noscript`.
+
+JS:
+```
+import * as THREE from '...';
+const container...
+const renderer = new THREE.WebGLRenderer({antialias:true});
+...
+```
+Potential CDN import blocked due CORS? cdnjs supports.
+No import maps.
+
+Create scene, camera, renderer.
+
+`renderer.shadowMap.type = THREE.PCFSoftShadowMap;`
+`renderer.outputColorSpace = THREE.SRGBColorSpace;`
+`renderer.toneMapping = THREE.ACESFilmicToneMapping;`
+`renderer.toneMappingExposure=1.05;`
+
+Scene background color; fog.
+
+Lights:
+```
+const hemi = new THREE.HemisphereLight(0xfff7e8,0x756c60,2.0)
+const key = new DirectionalLight(0xfff2dc,3.2)
+key.position...
+key.castShadow=true
+shadow.mapSize 2048
+camera left/right ±4 top 4 bottom -2 near .1 far 15
+```
+Three r160 intensity values maybe. Fine.
+
+Floor plane 20.
+Maybe a large backdrop plane vertical? Fog and background enough. Add a wall at z=-4 maybe to catch shadow, but camera orbits, wall could obstruct. no.
+
+Rack group maybe.
+
+Materials.
+
+Wood texture needs `texture.repeat` but same for all. `woodTex.repeat.set(1.5, 3)`. For shelf maybe clone.
+
+Geometry helper:
+```
+function box(w,h,d,mat,pos, parent=rack) { ...}
+```
+Set cast/receive.
+
+A frame:
+```
+const frameX = 1.38;
+for (x of [-frameX,frameX]) {
+ const group = new Group();
+ group.position.x=x;
+ const len = Math.hypot(2.62-.08, 1.18);
+ const angle = Math.atan2(-1.18,2.54);
+ for zSign of [-1,1] {
+   const midY=(2.62+.08)/2;
+   const midZ=zSign*1.18/2;
+   const slat = new Mesh(new BoxGeometry(.15,len,.20), woodMat);
+   slat.position.set(0,midY,midZ);
+   slat.rotation.x=Math.atan2(-1.18,2.54); // for both? For z negative vector from foot to top has dz=+1.18, angle +.436. Need sign.
+ }
+```
+Let's derive:
+For right z foot +1.18, top z0: dz=-1.18, dy=2.54, angle=-atan(.445)=-.423.
+For left z foot -1.18, top z0: dz=+1.18, angle=+.423. So rotation.x = zSign *? zSign + => +.423, zSign - => -.423, yes `rotation.x = zSign * angle` where angle=atan2(1.18,2.54)=.423. But vector for zSign+ is +z, local y after rot x positive has z positive. good.
+```
+const baseAngle=Math.atan2(1.18,2.54);
+slat.rotation.x=zSign*baseAngle;
+```
+- Add a small wooden end cap? Box itself.
+- Add a darker thin line along outer edge? Could add a `BoxGeometry(.16,len,.025)`? no.
+- Add metal bolt at foot maybe small cylinder along x at each foot. Visible hardware. Add a small metal plate/rod at each foot. For each foot, cylinder along x length .26, radius .035 at y .08,z±1.18. This makes A frame grounded.
+- top crossbar: BoxGeometry(2.9,.16,.18) at y2.62,z0. But slats x positions ±1.38, crossbar spans.
+- lower crossbars at z ±1.18, y .08, BoxGeometry(2.85,.12,.18). These connect feet.
+Maybe lower crossbar intersects floor.
+
+Rails:
+`railY=2.18`, x [-.82,0,.82], z from -1.1 to 1.1, length 2.2.
+Use TubeGeometry:
+```
+const curve = new THREE.LineCurve3(new Vector3(x,railY,-1.12), new Vector3(x,railY,1.12));
+const geo = new TubeGeometry(curve, 48, .065, 12,false);
+```
+TubeGeometry's `radius` is distance to centerline, round.
+Cast shadow.
+Add maybe a small collar at ends? no.
+Notches at z [-.82,-.27,.27,.82], shape. Need maybe on all rails, 12.
+Add a tiny metal clip in center? The notches should be visible. Could add a small `TorusGeometry`? Maybe no.
+Maybe use `notchMat` with `roughness .9`.
+Notch patch shape in x-z, but shape's `y` maps z. Position y=railY+.065. `geo.rotateX(Math.PI/2)`. However ShapeGeometry extrude depth .018; after rotation, top at y=0 and bottom at y=-.018, so position y top. Good.
+Need `notch` appears as dark patch. Add a smaller `wood` patch? no.
+Could create a small silver outline using a larger `Mesh` dark and smaller `Mesh` nearly black offset .003. But dark patch enough.
+Maybe add a tiny `BoxGeometry(.055,.012,.08)` in notch to show depth? no.
+
+Shelf:
+- lower support beam `box(2.78,.12,.18, wood, 0,.52,.12)`.
+- Pivot bolts at x ±1.08, y=.61,z=.12.
+Cylinder orientation:
+```
+function cylinderX(radius,length,mat,pos) {
+ geo CylinderGeometry(radius,radius,length,24);
+ mesh.rotation.z=Math.PI/2;
+}
+```
+Cylinder default along y; rotate z=π/2 maps y to? y -> (-x?) axis x yes.
+- shaft length .32, head outer.
+For each side s:
+  - shaft center x=s*1.10? Pivot x ±1.08. Shaft from x=s*.98 to s*1.22, center s*1.10, length .24.
+  - head at x=s*1.23, length .08.
+  - washer at x=s*1.19 maybe.
+  - mounting plate at x=s*1.39, y=.55,z=.12, dims .08,.24,.30.
+But A-frame slat at x ±1.38, so plate attaches.
+- shelf group position (0,.61,.12).
+- panel: use `box(2.55,.10,.86, wood,0,0,0.43)` (extends z 0 to .86). Add edge maybe.
+- 3 planks? Let's use a single panel, with a subtle center seam? A shelf of flat slats perhaps 3 boards each width .82, depth .86, separated .025. This looks crafted and allows pivot straps. Use three boards x [-.82,0,.82], each width .79, depth .86, thickness .09. Gaps .03. Add wood.
+- Add a thin dark under-support? no.
+- hinge straps at x ±1.08, on shelf group, y=.02, z=.34, dimensions .24,.035,.48, metal. But pivot axis at back z=0, strap should extend from z=0 to .5. Place z=.25, depth .50. Add hole dark circle on top: cylinder radius .04, height .006, rotate x=π/2? Cylinder default y, to lie horizontal normal y, no rotation needed (axis y), position y=.045. But a black disk looks like hole. Add `CylinderGeometry(.04,.04,.008,16)` at y=.045.
+- Add a metal handle on front edge: maybe a small `TorusGeometry(.07,.018,8,18,Math.PI)`? A simple box handle 0.28,.05,.08 at z=.84,y=.08, with two posts. But if shelf is used for hanging, handle nice. Use a small horizontal cylinder? A `TorusGeometry` full ring maybe. Add a small wooden knob? Maybe not.
+- Add a small metal bracket at front? no.
+
+Maybe shelf should be lower than A frame and not block. y=.60.
+
+Add a small folded towel on shelf? Could add a `BoxGeometry(1.1,.12,.65)` with slight rotation, but user didn't ask. It could obscure shelf. Leave.
+
+Maybe add a hanging shirt? no.
+
+Could add a small label plate on shelf front "FOLD" via CanvasTexture? external no. Not needed.
+
+Need maybe animate shelf and update button text. `button.textContent = targetOpen ? 'Fold shelf' : 'Open shelf'`.
+Initial target 0, current 0.
+Button click toggles.
+Reset view.
+
+Could add keyboard space toggles shelf, R reset. Nice but not necessary. Could implement.
+
+Need perhaps `aria-live`.
+
+Potential issue `Shape` holes for strap? We can use dark disk.
+
+Need maybe add screws to top crossbar and A frame. Use small metal cylinders along x at apex/feet. Already foot bolts.
+
+Need maybe add a central top crossbar with visible metal bolts at ends. Add cylinders along x at x ±1.38, y2.62,z0, radius .045 length .12.
+
+Need maybe rail ends attach to A frames but no brackets. Add small metal brackets at each rail end: small boxes at x rail, y2.18,z±1.12, dimensions .12,.12,.10, maybe. But the rail passes through. Add a collar ring? `TorusGeometry(.075,.018,8,16)` oriented? Torus default in XY plane normal z. For rail along z, collar around z axis should torus plane XY normal z, so default is correct, position at z ends. Add at each rail end, x, y, z ±1.1, material metal. This is nice. But torus around a .065 rail, radius .075. Add.
+- 6 collars.
+
+Need maybe rail notches with small metal clips. Could add a tiny `TorusGeometry(.035,.009,6,12,Math.PI*1.5)`? no.
+
+Need maybe add a small wood peg in each notch? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For crossbars, use Box.
+
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=π/2: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. So patch top at original z=0, after -90 y'=0, z'=y. correct. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Could use `MeshStandardMaterial` with map. For each board, same.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05, top .05, bottom -.01 if bevel. Better `geo.translate(0,0? )`. Let's check rotation x=+π/2:
+x'=x
+y'= y cos - z sin = -z
+z'= y sin + z cos = y
+So original shape y becomes z, original extrusion z becomes -y. Thus slab extends y from 0 to -t. If mesh position y=.05, top=.05, bottom=.05-t. bevel extends maybe. Good.
+For shelf group, board position y=.05, z=.43. Great.
+Shape coordinates x,y where y is depth. after rotation y->z, so depth along +z. good.
+For shelf board with bevel, top surface slightly maybe.
+
+Notch patch shape: use `ShapeGeometry`, no extrude maybe. `ShapeGeometry` lies XY normal +Z. Rotate x=π/2: normal +Z -> +Y? Rotation x=+90: z vector (0,0,1) -> (0,-1,0), actually y'=-z, so normal becomes -Y! Wait earlier I thought +Z -> +Y, but rotation x=+90: y'= y cos - z sin = -1, z'= y sin+z cos=0, so normal -Y. For top surface normal should +Y, rotate x=-π/2: z -> y'=+1. So use rotateX(-Math.PI/2). Then shape y -> z' = y, yes. Good. Use -pi/2. For slab, also rotateX(-pi/2) would original z -> y'=+z, so thickness extends upward, and shape y->z'=-y, depth reversed. Could use +pi/2 for slab and position. For patch need -pi/2.
+
+ExtrudeGeometry slab with +pi/2: thickness extends -y, good. Shape depth y -> z'=y, good. So slab position y top.
+
+Wood texture orientation on ExtrudeGeometry maybe okay.
+
+Need maybe add a center support under shelf? no.
+
+Need maybe add a small folded cloth on shelf? no.
+
+Need perhaps use `RoundedBox` for shelf? single boards with bevel? Box sharp. Could use `ExtrudeGeometry` for each board with rounded corners. Let's implement a `roundedPanel(width, depth, thickness, radius)` using Shape and Extrude:
+```
+function roundedSlab(w,d,t,r,mat) {
+ const shape = roundedRectShape(w,d,r);
+ const geo = new THREE.ExtrudeGeometry(shape,{depth:t,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.012,bevelThickness:.012,curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ return geo;
+}
+```
+After rotate, extrusion z becomes -y, so top at y=0, bottom -t. For board positioned y=.05,
+=====CONTENT=====

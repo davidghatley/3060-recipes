@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brittle Star on a Barrel Sponge</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 35%, #173f3c 0%, #0a2021 42%, #040d0e 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .caption {
+      position: fixed;
+      top: 26px;
+      left: 30px;
+      z-index: 2;
+      color: #e3eee5;
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
+    }
+
+    .caption h1 {
+      margin: 0 0 5px;
+      font-size: clamp(22px, 3vw, 38px);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .caption p {
+      margin: 0;
+      color: rgba(213, 235, 222, 0.72);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      position: fixed;
+      right: 24px;
+      bottom: 20px;
+      z-index: 2;
+      padding: 9px 13px;
+      border: 1px solid rgba(196, 226, 207, 0.15);
+      border-radius: 999px;
+      color: rgba(220, 239, 226, 0.68);
+      background: rgba(5, 18, 19, 0.5);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.45) 100%);
+    }
+
+    @media (max-width: 600px) {
+      .caption {
+        top: 18px;
+        left: 20px;
+      }
+
+      .hint {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+
+  <div class="caption">
+    <h1>Brittle Star</h1>
+    <p>Draped over a barrel sponge</p>
+  </div>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+  <div class="vignette"></div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x07191a, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional brittle star draped over a barrel sponge"
+    );
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xb7dfd2, 0x17231f, 1.65));
+
+    const keyLight = new THREE.DirectionalLight(0xffe2b5, 3.2);
+    keyLight.position.set(4.5, 8, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -6;
+    keyLight.shadow.camera.right = 6;
+    keyLight.shadow.camera.top = 7;
+    keyLight.shadow.camera.bottom = -4;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 22;
+    keyLight.shadow.bias = -0.00035;
+    keyLight.shadow.normalBias = 0.025;
+    keyLight.shadow.camera.updateProjectionMatrix();
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x70c9c5, 1.35);
+    fillLight.position.set(-5, 4, -4);
+    scene.add(fillLight);
+
+    const warmLight = new THREE.PointLight(0xffc982, 16, 12, 2);
+    warmLight.position.set(2.5, 5.5, 2.5);
+    scene.add(warmLight);
+
+    const rimLight = new THREE.PointLight(0x75d7d0, 18, 10, 2);
+    rimLight.position.set(-3, 3.5, -3);
+    scene.add(rimLight);
+
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x071516,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.025;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Procedural sponge textures
+    function createSpongeTextures() {
+      const size = 512;
+      const colorCanvas = document.createElement("canvas");
+      const bumpCanvas = document.createElement("canvas");
+      colorCanvas.width = colorCanvas.height = size;
+      bumpCanvas.width = bumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const bumpContext = bumpCanvas.getContext("2d");
+
+      colorContext.fillStyle = "#c5a16a";
+      colorContext.fillRect(0, 0, size, size);
+      bumpContext.fillStyle = "#777777";
+      bumpContext.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 1800; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const radius = 0.6 + Math.random() * 6.5;
+        const rotation = Math.random() * Math.PI;
+
+        colorContext.save();
+        colorContext.translate(x, y);
+        colorContext.rotate(rotation);
+        colorContext.beginPath();
+        colorContext.ellipse(0, 0, radius, radius * 1.7, 0, 0, Math.PI * 2);
+        colorContext.fillStyle = `rgba(73, 45, 24, ${0.08 + Math.random() * 0.15})`;
+        colorContext.fill();
+        colorContext.fillStyle = "rgba(255, 232, 184, 0.16)";
+        colorContext.fillRect(-radius * 0.8, -radius * 1.5, radius * 1.6, 0.8);
+        colorContext.restore();
+
+        bumpContext.save();
+        bumpContext.translate(x, y);
+        bumpContext.rotate(rotation);
+        bumpContext.beginPath();
+        bumpContext.ellipse(0, 0, radius, radius * 1.7, 0, 0, Math.PI * 2);
+        bumpContext.fillStyle = "rgba(35, 35, 35, 0.48)";
+        bumpContext.fill();
+        bumpContext.strokeStyle = "rgba(115, 115, 115, 0.38)";
+        bumpContext.lineWidth = 1;
+        bumpContext.stroke();
+        bumpContext.restore();
+      }
+
+      const colorTexture = new THREE.CanvasTexture(colorCanvas);
+      colorTexture.colorSpace = THREE.SRGBColorSpace;
+      colorTexture.wrapS = colorTexture.wrapT = THREE.RepeatWrapping;
+      colorTexture.repeat.set(2.6, 1.5);
+      colorTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+      bumpTexture.wrapS = bumpTexture.wrapT = THREE.RepeatWrapping;
+      bumpTexture.repeat.copy(colorTexture.repeat);
+      bumpTexture.anisotropy = colorTexture.anisotropy;
+
+      return { colorTexture, bumpTexture };
+    }
+
+    const { colorTexture, bumpTexture } = createSpongeTextures();
+
+    // Barrel-shaped sponge
+    const spongeProfile = [
+      new THREE.Vector2(0.0, 0.0),
+      new THREE.Vector2(1.35, 0.0),
+      new THREE.Vector2(1.65, 0.2),
+      new THREE.Vector2(1.9, 0.55),
+      new THREE.Vector2(2.02, 1.0),
+      new THREE.Vector2(2.08, 1.55),
+      new THREE.Vector2(2.05, 2.05),
+      new THREE.Vector2(1.95, 2.45),
+      new THREE.Vector2(1.75, 2.75),
+      new THREE.Vector2(1.45, 2.95),
+      new THREE.Vector2(0.0, 2.95)
+    ];
+
+    const spongeGeometry = new THREE.LatheGeometry(spongeProfile, 96);
+    const spongePositions = spongeGeometry.attributes.position;
+
+    for (let i = 0; i < spongePositions.count; i++) {
+      const x = spongePositions.getX(i);
+      const y = spongePositions.getY(i);
+      const z = spongePositions.getZ(i);
+      const angle = Math.atan2(z, x);
+
+      const irregularity =
+        1 +
+        0.012 * Math.sin(angle * 5 + y * 0.8) +
+        0.007 * Math.sin(angle * 11 - y * 1.3);
+
+      spongePositions.setXYZ(
+        i,
+        x * irregularity,
+        y,
+        z * irregularity
+      );
+    }
+
+    spongeGeometry.computeVertexNormals();
+
+    const spongeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: colorTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.085,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const sponge = new THREE.Mesh(spongeGeometry, spongeMaterial);
+    sponge.position.y = 1.45;
+    sponge.castShadow = true;
+    sponge.receiveShadow = true;
+    scene.add(sponge);
+
+    // Rolled sponge rim
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(2.0, 0.18, 18, 112),
+      new THREE.MeshStandardMaterial({
+        color: 0xd5b77c,
+        map: colorTexture,
+        bumpMap: bumpTexture,
+        bumpScale: 0.045,
+        roughness: 0.9
+      })
+    );
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 4.48;
+    rim.castShadow = true;
+    rim.receiveShadow = true;
+    scene.add(rim);
+
+    // Small irregular central disc
+    function createDiscGeometry() {
+      const segments = 72;
+      const rings = 12;
+      const vertices = [0, 0, 0];
+      const indices = [];
+
+      for (let ring = 1; ring <= rings; ring++) {
+        const fraction = ring / rings;
+
+        for (let segment = 0; segment < segments; segment++) {
+          const angle = (segment / segments) * Math.PI * 2;
+          const irregularity =
+            1 +
+            0.035 * Math.sin(angle * 7 + ring * 1.4) +
+            0.018 * Math.sin(angle * 13 - ring * 1.1);
+
+          const radius = 0.72 * fraction * irregularity;
+
+          vertices.push(
+            Math.cos(angle) * radius,
+            -0.15 * (1 - fraction * fraction) +
+              0.008 * Math.sin(angle * 5 + ring) * fraction * fraction,
+            Math.sin(angle) * radius
+          );
+        }
+      }
+
+      for (let segment = 0; segment < segments; segment++) {
+        const next = (segment + 1) % segments;
+        indices.push(0, 1 + next, 1 + segment);
+      }
+
+      for (let ring = 1; ring < rings; ring++) {
+        const innerStart = 1 + (ring - 1) * segments;
+        const outerStart = 1 + ring * segments;
+
+        for (let segment = 0; segment < segments; segment++) {
+          const next = (segment + 1) % segments;
+          const a = innerStart + segment;
+          const b = innerStart + next;
+          const c = outerStart + segment;
+          const d = outerStart + next;
+
+          indices.push(a, b, c, a, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const brittleStar = new THREE.Group();
+    scene.add(brittleStar);
+
+    const discMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe7efdf,
+      roughness: 0.43,
+      metalness: 0,
+      transmission: 0.08,
+      thickness: 0.25,
+      transparent: true,
+      opacity: 0.96,
+      clearcoat: 0.18,
+      clearcoatRoughness: 0.5,
+      side: THREE.DoubleSide
+    });
+
+    const disc = new THREE.Mesh(createDiscGeometry(), discMaterial);
+    disc.position.y = 4.78;
+    disc.castShadow = true;
+    disc.receiveShadow = true;
+    brittleStar.add(disc);
+
+    // Jointed, tapering arms
+    const armMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe4eedd,
+      roughness: 0.46,
+      metalness: 0,
+      transmission: 0.07,
+      thickness: 0.2,
+      transparent: true,
+      opacity: 0.96,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.55,
+      side: THREE.DoubleSide
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf1f5e8,
+      roughness: 0.38,
+      metalness: 0
+    });
+
+    const unitSphere = new THREE.SphereGeometry(1, 18, 12);
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function createArm(angle, lengthScale, phase) {
+      const controlPoints = [
+        { radius: 0.38, y: 4.68 },
+        { radius: 0.9, y: 4.65 },
+        { radius: 1.4, y: 4.45 },
+        { radius: 1.85, y: 4.05 },
+        { radius: 2.15, y: 3.35 },
+        { radius: 2.35, y: 2.55 },
+        { radius: 2.25, y: 1.85 },
+        { radius: 1.9, y: 1.3 },
+        { radius: 1.2, y: 1.05 },
+        { radius: 0.65, y: 1.25 }
+      ];
+
+      const points = controlPoints.map((point, index) => {
+        const t = index / (controlPoints.length - 1);
+        const radial = point.radius * lengthScale;
+        const y =
+          4.68 +
+          (point.y - 4.68) * lengthScale +
+          Math.sin(t * 5 + phase) * 0.12 * t;
+
+        return new THREE.Vector3(
+          Math.cos(angle) * radial,
+          y,
+          Math.sin(angle) * radial
+        );
+      });
+
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "catmullrom",
+        0.35
+      );
+
+      const segmentCount = 10;
+      const startRadius = 0.145;
+      const endRadius = 0.032;
+
+      for (let i = 0; i < segmentCount; i++) {
+        const t = i / (segmentCount - 1);
+        const pointA = curve.getPoint(t);
+        const pointB = curve.getPoint((i + 1) / segmentCount);
+
+        const direction = new THREE.Vector3().subVectors(pointB, pointA);
+        const length = direction.length();
+        direction.normalize();
+
+        const startRadiusValue = THREE.MathUtils.lerp(
+          startRadius,
+          endRadius,
+          Math.pow(t, 0.82)
+        );
+        const endRadiusValue = THREE.MathUtils.lerp(
+          startRadius * 0.84,
+          endRadius,
+          Math.pow(t, 0.82)
+        );
+
+        const geometry = new THREE.CylinderGeometry(
+          endRadiusValue,
+          startRadiusValue,
+          length,
+          14,
+          1,
+          false
+        );
+
+        const segment = new THREE.Mesh(geometry, armMaterial);
+        segment.position.copy(pointA).add(pointB).multiplyScalar(0.5);
+        segment.quaternion.setFromUnitVectors(up, direction);
+        segment.castShadow = true;
+        segment.receiveShadow = true;
+        brittleStar.add(segment);
+      }
+
+      // Visible flexible joints between the long segments
+      for (let i = 1; i < segmentCount; i++) {
+        const t = i / segmentCount;
+        const point = curve.getPoint(t);
+        const jointRadius = THREE.MathUtils.lerp(0.115, 0.052, t);
+
+        const joint = new THREE.Mesh(unitSphere, jointMaterial);
+        joint.position.copy(point);
+        joint.scale.setScalar(jointRadius);
+        joint.castShadow = true;
+        brittleStar.add(joint);
+      }
+    }
+
+    // Five arms radiating at different angles and lengths
+    const arms = [
+      { angle: 0.35, length: 1.08, phase: 0.2 },
+      { angle: 1.25, length: 0.94, phase: 1.1 },
+      { angle: 2.35, length: 1.02, phase: 2.0 },
+      { angle: 3.45, length: 0.88, phase: 2.9 },
+      { angle: 4.55, length: 0.96, phase: 3.8 }
+    ];
+
+    arms.forEach((arm) => createArm(arm.angle, arm.length, arm.phase));
+
+    // Camera controls implemented directly without addons
+    const target = new THREE.Vector3(0, 2.25, 0);
+    let radius = 10.2;
+    let theta = 0.88;
+    let phi = 1.17;
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function updateCamera() {
+      const sinPhi = Math.sin(phi);
+
+      camera.position.set(
+        target.x + radius * sinPhi * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * sinPhi * Math.cos(theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    function resetCamera() {
+      radius = 10.2;
+      theta = 0.88;
+      phi = 1.17;
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      theta -= deltaX * 0.006;
+      phi = THREE.MathUtils.clamp(phi - deltaY * 0.005, 0.45, 1.45);
+      updateCamera();
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event.pointerId !== undefined) {
+        if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+          renderer.domElement.releasePointerCapture(event.pointerId);
+        }
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", stopDragging);
+    renderer.domElement.addEventListener("pointercancel", stopDragging);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        radius = THREE.MathUtils.clamp(
+          radius + event.deltaY * 0.008,
+          6.2,
+          15
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+    updateCamera();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+
+    renderer.setAnimationLoop(() => {
+      const elapsed = clock.getElapsedTime();
+
+      // Very subtle living-motion sway
+      brittleStar.rotation.z = Math.sin(elapsed * 0.48) * 0.008;
+      brittleStar.rotation.x = Math.cos(elapsed * 0.37) * 0.006;
+      brittleStar.position.y = Math.sin(elapsed * 0.65) * 0.004;
+
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
+```

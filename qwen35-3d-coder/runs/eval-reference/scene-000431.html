@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cold-Frame Vent Bank</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 52% 35%, #e8f0ed 0%, #c7d5d2 48%, #9eadaa 100%);
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      z-index: 2;
+      pointer-events: none;
+      color: #18302d;
+      text-shadow: 0 1px 12px rgba(255, 255, 255, 0.65);
+    }
+
+    .title-panel {
+      top: 24px;
+      left: 28px;
+      max-width: 390px;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+      opacity: 0.67;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 3.4vw, 43px);
+      font-weight: 680;
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      max-width: 330px;
+      font-size: 13px;
+      line-height: 1.45;
+      opacity: 0.73;
+    }
+
+    .controls {
+      left: 50%;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      border-radius: 13px;
+      background: rgba(241, 247, 244, 0.67);
+      box-shadow: 0 12px 35px rgba(32, 54, 50, 0.14);
+      backdrop-filter: blur(13px);
+      transform: translateX(-50%);
+      pointer-events: auto;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 14px;
+      color: #f5fbf8;
+      background: #24463f;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      background: #315a50;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      color: #27413c;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    #status {
+      min-width: 68px;
+      padding: 0 5px;
+      color: #38514c;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-align: center;
+    }
+
+    .hint {
+      right: 24px;
+      bottom: 27px;
+      max-width: 235px;
+      font-size: 11px;
+      line-height: 1.55;
+      text-align: right;
+      opacity: 0.68;
+    }
+
+    @media (max-width: 720px) {
+      .title-panel {
+        top: 18px;
+        left: 18px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .controls {
+        bottom: 16px;
+        width: calc(100% - 32px);
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div class="hud title-panel">
+    <div class="eyebrow">Mechanical Garden Series</div>
+    <h1>Cold-Frame<br>Vent Bank</h1>
+    <p class="subtitle">
+      Three glazed, back-hinged sashes driven by a common crank shaft and
+      three pinions engaging curved rack segments.
+    </p>
+  </div>
+
+  <div class="hud controls">
+    <button id="drive" type="button">OPEN VENTS</button>
+    <button id="reset" class="secondary" type="button">RESET VIEW</button>
+    <div id="status">CLOSED</div>
+  </div>
+
+  <div class="hud hint">
+    Drag to orbit · Wheel to zoom<br>
+    Right-drag to pan · Space to drive
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const canvas = document.querySelector("#scene");
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xc3d0cd, 15, 34);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.08,
+      80
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xe9f5f3, 0x52675d, 2.0);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff5dd, 3.25);
+    sun.position.set(-6, 11, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -11;
+    sun.shadow.camera.right = 11;
+    sun.shadow.camera.top = 10;
+    sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 30;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xaacdd7, 1.0);
+    fill.position.set(8, 5, -7);
+    scene.add(fill);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(42, 42),
+      new THREE.MeshStandardMaterial({
+        color: 0x8f9e98,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.025;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      mortar: new THREE.MeshStandardMaterial({
+        color: 0x71675e,
+        roughness: 0.95
+      }),
+      brick: [
+        new THREE.MeshStandardMaterial({ color: 0x9a5945, roughness: 0.88 }),
+        new THREE.MeshStandardMaterial({ color: 0xad6650, roughness: 0.9 }),
+        new THREE.MeshStandardMaterial({ color: 0x874a3c, roughness: 0.91 }),
+        new THREE.MeshStandardMaterial({ color: 0xb47156, roughness: 0.86 })
+      ],
+      frame: new THREE.MeshStandardMaterial({
+        color: 0x3c514c,
+        metalness: 0.58,
+        roughness: 0.38
+      }),
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x202d2b,
+        metalness: 0.82,
+        roughness: 0.28
+      }),
+      brass: new THREE.MeshStandardMaterial({
+        color: 0xb38a48,
+        metalness: 0.8,
+        roughness: 0.31
+      }),
+      pinionSteel: new THREE.MeshStandardMaterial({
+        color: 0x8c7550,
+        metalness: 0.78,
+        roughness: 0.3
+      }),
+      glass: new THREE.MeshPhysicalMaterial({
+        color: 0xa7d9df,
+        metalness: 0,
+        roughness: 0.12,
+        transmission: 0.18,
+        thickness: 0.035,
+        ior: 1.45,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      }),
+      soil: new THREE.MeshStandardMaterial({
+        color: 0x30261e,
+        roughness: 1
+      }),
+      tray: new THREE.MeshStandardMaterial({
+        color: 0x5a5a4e,
+        roughness: 0.85
+      }),
+      stem: new THREE.MeshStandardMaterial({
+        color: 0x527b3e,
+        roughness: 0.85
+      }),
+      leaf: new THREE.MeshStandardMaterial({
+        color: 0x668f4b,
+        roughness: 0.78
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function box(w, h, d, material, parent, x = 0, y = 0, z = 0) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinder(
+      radius,
+      length,
+      material,
+      parent,
+      x = 0,
+      y = 0,
+      z = 0,
+      axis = "y",
+      segments = 24
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, segments),
+        material
+      );
+      mesh.position.set(x, y, z);
+
+      if (axis === "x") mesh.rotation.z = Math.PI / 2;
+      if (axis === "z") mesh.rotation.x = Math.PI / 2;
+
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    const yAxis = new THREE.Vector3(0, 1, 0);
+
+    function positionRod(mesh, a, b) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+      const midpoint = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+
+      mesh.position.copy(midpoint);
+      mesh.scale.set(1, Math.max(length, 0.0001), 1);
+      mesh.quaternion.setFromUnitVectors(yAxis, direction.normalize());
+    }
+
+    // -------------------------------------------------------------------------
+    // Low brick base
+    // -------------------------------------------------------------------------
+
+    const base = new THREE.Group();
+    scene.add(base);
+
+    box(8.42, 0.36, 2.70, materials.mortar, base, 0, 0.18, 0);
+
+    const frontBrickCount = 10;
+    const frontBrickWidth = 0.79;
+    const frontStart = -(frontBrickCount - 1) * frontBrickWidth * 0.5;
+
+    for (let row = 0; row < 2; row++) {
+      for (let i = 0; i < frontBrickCount; i++) {
+        const material = materials.brick[(i + row * 2) % materials.brick.length];
+        box(
+          frontBrickWidth - 0.035,
+          0.165,
+          0.16,
+          material,
+          base,
+          frontStart + i * frontBrickWidth,
+          0.087 + row * 0.172,
+          1.365
+        );
+      }
+    }
+
+    for (const side of [-1, 1]) {
+      for (let row = 0; row < 2; row++) {
+        for (let i = 0; i < 5; i++) {
+          const material = materials.brick[(i + row + 2) % materials.brick.length];
+          box(
+            0.16,
+            0.165,
+            0.49,
+            material,
+            base,
+            side * 4.215,
+            0.087 + row * 0.172,
+            -1.06 + i * 0.53
+          );
+        }
+      }
+    }
+
+    box(8.56, 0.10, 2.82, materials.brick[1], base, 0, 0.405, 0);
+
+    // -------------------------------------------------------------------------
+    // Cold-frame sashes
+    // -------------------------------------------------------------------------
+
+    const bayCenters = [-2.68, 0, 2.68];
+    const sashWidth = 2.42;
+    const sashLength = 2.28;
+    const hingeY = 0.76;
+    const hingeZ = -1.08;
+
+    const sashGroups = [];
+    const sideStays = [];
+
+    function makeCurvedRack(sash) {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, -0.055, sashLength - 0.38),
+        new THREE.Vector3(0, -0.125, sashLength - 0.24),
+        new THREE.Vector3(0, -0.225, sashLength - 0.08),
+        new THREE.Vector3(0, -0.285, sashLength + 0.025)
+      ]);
+
+      const rack = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 48, 0.044, 10, false),
+        materials.darkMetal
+      );
+      rack.castShadow = true;
+      sash.add(rack);
+
+      // Individual teeth make the rack-and-pinion engagement readable.
+      for (let i = 0; i < 12; i++) {
+        const t = 0.22 + (i / 11) * 0.78;
+        const point = curve.getPoint(t);
+        const tangent = curve.getTangent(t).normalize();
+        const normal = new THREE.Vector3(0, tangent.z, -tangent.y).normalize();
+
+        const tooth = new THREE.Mesh(
+          new THREE.BoxGeometry(0.15, 0.105, 0.065),
+          materials.brass
+        );
+
+        tooth.position.copy(point).addScaledVector(normal, 0.045);
+        tooth.rotation.x = Math.atan2(tangent.z, tangent.y);
+        tooth.castShadow = true;
+        sash.add(tooth);
+      }
+
+      // Bracket attaching the rack to the front rail of the sash.
+      box(0.18, 0.12, 0.23, materials.frame, sash, 0, -0.035, sashLength - 0.29);
+    }
+
+    function makeSeedling(parent, x, z, size = 1) {
+      const stem = cylinder(
+        0.011,
+        0.16 * size,
+        materials.stem,
+        parent,
+        x,
+        0.57,
+        z,
+        "y",
+        7
+      );
+
+      const leafGeometry = new THREE.SphereGeometry(1, 8, 6);
+
+      for (const side of [-1, 1]) {
+        const leaf = new THREE.Mesh(leafGeometry, materials.leaf);
+        leaf.position.set(x + side * 0.047 * size, 0.64 * size, z);
+        leaf.scale.set(0.095 * size, 0.018 * size, 0.042 * size);
+        leaf.rotation.y = side * 0.45;
+        leaf.rotation.z = side * 0.2;
+        leaf.castShadow = true;
+        parent.add(leaf);
+      }
+    }
+
+    function makeSideStay(sash, bayX) {
+      const sideX = sashWidth * 0.5;
+      const fixedPoint = new THREE.Vector3(bayX + sideX, 0.49, -0.20);
+      const localMovingPoint = new THREE.Vector3(sideX, -0.035, 1.46);
+
+      const fixedPivot = cylinder(
+        0.075,
+        0.19,
+        materials.darkMetal,
+        scene,
+        fixedPoint.x,
+        fixedPoint.y,
+        fixedPoint.z,
+        "x",
+        18
+      );
+
+      const movingPivot = cylinder(
+        0.065,
+        0.16,
+        materials.brass,
+        sash,
+        localMovingPoint.x,
+        localMovingPoint.y,
+        localMovingPoint.z,
+        "x",
+        18
+      );
+
+      const outer = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.043, 0.043, 1, 14),
+        materials.frame
+      );
+      const inner = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.023, 0.023, 1, 12),
+        materials.brass
+      );
+
+      outer.castShadow = true;
+      inner.castShadow = true;
+      scene.add(outer, inner);
+
+      sideStays.push({
+        fixedPoint,
+        localMovingPoint,
+        outer,
+        inner,
+        movingPivot
+      });
+    }
+
+    for (let bay = 0; bay < bayCenters.length; bay++) {
+      const bayX = bayCenters[bay];
+      const sash = new THREE.Group();
+      sash.position.set(bayX, hingeY, hingeZ);
+      sash.userData.bay = bay;
+      scene.add(sash);
+      sashGroups.push(sash);
+
+      // Soil and seedlings beneath the glazing.
+      box(2.18, 0.08, 1.96, materials.soil, scene, bayX, 0.485, 0.05);
+      box(2.28, 0.09, 2.06, materials.tray, scene, bayX, 0.475, 0.05);
+
+      for (let i = 0; i < 7; i++) {
+        const px = bayX - 0.86 + (i % 4) * 0.56;
+        const pz = -0.58 + Math.floor(i / 4) * 0.83;
+        makeSeedling(scene, px, pz, 0.8 + (i % 3) * 0.08);
+      }
+
+      // Perimeter frame.
+      box(
+        0.105, 0.115, sashLength,
+        materials.frame, sash,
+        -sashWidth * 0.5, 0, sashLength * 0.5
+      );
+      box(
+        0.105, 0.115, sashLength,
+        materials.frame, sash,
+        sashWidth * 0.5, 0, sashLength * 0.5
+      );
+      box(
+        sashWidth, 0.115, 0.105,
+        materials.frame, sash,
+        0, 0, 0.045
+      );
+      box(
+        sashWidth, 0.115, 0.105,
+        materials.frame, sash,
+        0, 0, sashLength - 0.045
+      );
+
+      // Central longitudinal rail.
+      box(
+        0.058, 0.095, sashLength,
+        materials.frame, sash,
+        0, 0.007, sashLength * 0.5
+      );
+
+      const rowBoundaries = [0.10, 0.82, 1.54, sashLength - 0.10];
+
+      for (let row = 0; row < 3; row++) {
+        const z0 = rowBoundaries[row];
+        const z1 = rowBoundaries[row + 1];
+        const paneLength = z1 - z0 - 0.08;
+
+        for (const side of [-1, 1]) {
+          const pane = box(
+            1.105,
+            0.026,
+            paneLength,
+            materials.glass,
+            sash,
+            side * 0.605,
+            0.018,
+            (z0 + z1) * 0.5
+          );
+          pane.castShadow = false;
+          pane.receiveShadow = false;
+        }
+      }
+
+      // Cross rails divide the glazing into six panes.
+      for (const z of [0.82, 1.54]) {
+        box(
+          sashWidth - 0.12,
+          0.10,
+          0.065,
+          materials.frame,
+          sash,
+          0,
+          0,
+          z
+        );
+      }
+
+      // Back-edge hinges.
+      for (const x of [-0.78, 0.78]) {
+        cylinder(
+          0.075,
+          0.30,
+          materials.brass,
+          sash,
+          x,
+          0,
+          0,
+          "x",
+          20
+        );
+      }
+
+      // Front handle.
+      box(
+        0.34, 0.08, 0.10,
+        materials.darkMetal,
+        sash,
+        0.52,
+        0.10,
+        sashLength - 0.08
+      );
+
+      makeCurvedRack(sash);
+      makeSideStay(sash, bayX);
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared crank shaft, three pinions, bearings, and crank
+    // -------------------------------------------------------------------------
+
+    const shaftGroup = new THREE.Group();
+    shaftGroup.position.set(0, 0.58, 1.48);
+    scene.add(shaftGroup);
+
+    cylinder(
+      0.055,
+      9.15,
+      materials.darkMetal,
+      shaftGroup,
+      -0.08,
+      0,
+      0,
+      "x",
+      24
+    );
+
+    function makePinion(x) {
+      const pinion = new THREE.Group();
+      pinion.position.x = x;
+      shaftGroup.add(pinion);
+
+      cylinder(
+        0.205,
+        0.16,
+        materials.pinionSteel,
+        pinion,
+        0,
+        0,
+        0,
+        "x",
+        36
+      );
+
+      cylinder(
+        0.083,
+        0.23,
+        materials.darkMetal,
+        pinion,
+        0,
+        0,
+        0,
+        "x",
+        24
+      );
+
+      const toothCount = 14;
+
+      for (let i = 0; i < toothCount; i++) {
+        const angle = (i / toothCount) * Math.PI * 2;
+        const tooth = new THREE.Mesh(
+          new THREE.BoxGeometry(0.185, 0.085, 0.075),
+          materials.brass
+        );
+
+        tooth.position.set(
+          0,
+          Math.cos(angle) * 0.218,
+          Math.sin(angle) * 0.218
+        );
+        tooth.rotation.x = angle;
+        tooth.castShadow = true;
+        pinion.add(tooth);
+      }
+
+      // A small face detail makes the rotation easy to see.
+      box(
+        0.205,
+        0.025,
+        0.055,
+        materials.darkMetal,
+        pinion,
+        0,
+        0.115,
+        0
+      );
+    }
+
+    for (const x of bayCenters) makePinion(x);
+
+    // Fixed bearing supports.
+    for (const x of [-4.12, 4.12]) {
+      box(
+        0.24,
+        0.28,
+        0.34,
+        materials.frame,
+        scene,
+        x,
+        0.545,
+        1.48
+      );
+      cylinder(
+        0.12,
+        0.30,
+        materials.brass,
+        scene,
+        x,
+        0.58,
+        1.48,
+        "x",
+        24
+      );
+    }
+
+    // Crank arm and wooden/knurled grip.
+    box(
+      0.12,
+      0.76,
+      0.12,
+      materials.darkMetal,
+      shaftGroup,
+      -4.62,
+      0.36,
+      0
+    );
+
+    cylinder(
+      0.095,
+      0.12,
+      materials.brass,
+      shaftGroup,
+      -4.62,
+      0,
+      0,
+      "x",
+      24
+    );
+
+    cylinder(
+      0.085,
+      0.43,
+      materials.brass,
+      shaftGroup,
+      -4.83,
+      0.72,
+      0,
+      "x",
+      24
+    );
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, zoom, and pan
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      target: new THREE.Vector3(0, 0.76, 0.06),
+      radius: 12.3,
+      theta: -0.64,
+      phi: 0.98
+    };
+
+    const defaultCamera = {
+      target: cameraState.target.clone(),
+      radius: cameraState.radius,
+      theta: cameraState.theta,
+      phi: cameraState.phi
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(cameraState.phi);
+
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * sinPhi * Math.cos(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z +
+          cameraState.radius * sinPhi * Math.sin(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+    }
+
+    function resetCamera() {
+      cameraState.target.copy(defaultCamera.target);
+      cameraState.radius = defaultCamera.radius;
+      cameraState.theta = defaultCamera.theta;
+      cameraState.phi = defaultCamera.phi;
+      updateCamera();
+    }
+
+    let dragging = false;
+    let dragButton = 0;
+    let previousX = 0;
+    let previousY = 0;
+
+    canvas.addEventListener("contextmenu", event => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", event => {
+      dragging = true;
+      dragButton = event.button;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", event => {
+      if (!dragging) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      if (dragButton === 2 || event.shiftKey) {
+        camera.updateMatrixWorld();
+
+        const right = new THREE.Vector3()
+          .setFromMatrixColumn(camera.matrix, 0);
+        const up = new THREE.Vector3()
+          .setFromMatrixColumn(camera.matrix, 1);
+
+        const scale = cameraState.radius / window.innerHeight;
+        cameraState.target.addScaledVector(right, -dx * scale);
+        cameraState.target.addScaledVector(up, dy * scale);
+      } else {
+        cameraState.theta -= dx * 0.0058;
+        cameraState.phi -= dy * 0.0048;
+        cameraState.phi = THREE.MathUtils.clamp(
+          cameraState.phi,
+          0.20,
+          Math.PI * 0.485
+        );
+      }
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+
+    canvas.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        cameraState.radius *= Math.exp(event.deltaY * 0.001);
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius,
+          5.2,
+          23
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    // -------------------------------------------------------------------------
+    // Drive controls and animation
+    // -------------------------------------------------------------------------
+
+    const driveButton = document.querySelector("#drive");
+    const resetButton = document.querySelector("#reset");
+    const statusDisplay = document.querySelector("#status");
+
+    let targetOpen = 0;
+    let travel = 0;
+
+    function toggleDrive() {
+      targetOpen = targetOpen > 0.5 ? 0 : 1;
+      driveButton.textContent = targetOpen > 0.5 ? "CLOSE VENTS" : "OPEN VENTS";
+    }
+
+    driveButton.addEventListener("click", toggleDrive);
+    resetButton.addEventListener("click", resetCamera);
+
+    window.addEventListener("keydown", event => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        toggleDrive();
+      }
+
+      if (event.code === "KeyR") {
+        resetCamera();
+      }
+    });
+
+    function updateSideStays() {
+      for (const stay of sideStays) {
+        const movingPoint = stay.sash
+          ? stay.sash.localToWorld(stay.localMovingPoint.clone())
+          : stay.localMovingPoint.clone();
+
+        const direction = new THREE.Vector3()
+          .subVectors(movingPoint, stay.fixedPoint)
+          .normalize();
+
+        const outerEnd = stay.fixedPoint.clone()
+          .addScaledVector(direction, 0.60);
+
+        const innerStart = stay.fixedPoint.clone()
+          .addScaledVector(direction, 0.42);
+
+        positionRod(stay.outer, stay.fixedPoint, outerEnd);
+        positionRod(stay.inner, innerStart, movingPoint);
+      }
+    }
+
+    // Link each stay to its owning sash.
+    for (let i = 0; i < sideStays.length; i++) {
+      sideStays[i].sash = sashGroups[i];
+    }
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.05);
+
+      if (targetOpen > 0.5) {
+        travel = Math.min(1, travel + dt / 4.1);
+      } else {
+        travel = Math.max(0, travel - dt / 4.1);
+      }
+
+      const easedTravel = travel * travel * (3 - 2 * travel);
+      const openingAngle = easedTravel * 0.46;
+
+      for (const sash of sashGroups) {
+        // Negative X rotation lifts the front edge while the back edge stays fixed.
+        sash.rotation.x = -openingAngle;
+        sash.updateMatrixWorld(true);
+      }
+
+      // The common shaft turns several revolutions as the three sashes open.
+      shaftGroup.rotation.x = -easedTravel * Math.PI * 5.2;
+
+      updateSideStays();
+
+      if (travel <= 0.001) {
+        statusDisplay.textContent = "CLOSED";
+      } else if (travel >= 0.999) {
+        statusDisplay.textContent = "OPEN";
+      } else {
+        statusDisplay.textContent = targetOpen > 0.5 ? "OPENING" : "CLOSING";
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+    });
+
+    updateCamera();
+    updateSideStays();
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amsterdam Canal Lifting Bridge</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b8d7df;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      color: #f6f1e7;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    #title {
+      top: 24px;
+      left: 26px;
+    }
+
+    #title .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 8px;
+      color: #f3c86a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    #title .eyebrow::before {
+      width: 24px;
+      height: 2px;
+      content: "";
+      background: #f3c86a;
+      box-shadow: 0 0 8px rgba(243, 200, 106, 0.5);
+    }
+
+    #title h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+
+    #title p {
+      max-width: 350px;
+      margin: 12px 0 0;
+      color: rgba(246, 241, 231, 0.8);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    #controls {
+      right: 24px;
+      bottom: 24px;
+      display: flex;
+      gap: 9px;
+      pointer-events: auto;
+    }
+
+    button {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: #fffaf0;
+      background: rgba(18, 31, 37, 0.72);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      font: 700 10px/1 ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(44, 68, 77, 0.88);
+      transform: translateY(-1px);
+    }
+
+    #hint {
+      left: 26px;
+      bottom: 27px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    #status {
+      position: fixed;
+      z-index: 10;
+      top: 26px;
+      right: 26px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: #fffaf0;
+      background: rgba(18, 31, 37, 0.58);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+      backdrop-filter: blur(12px);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    #status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #83d4a1;
+      box-shadow: 0 0 9px #83d4a1;
+    }
+
+    @media (max-width: 650px) {
+      #title p,
+      #hint {
+        display: none;
+      }
+
+      #title {
+        top: 18px;
+        left: 18px;
+      }
+
+      #status {
+        top: 18px;
+        right: 18px;
+      }
+
+      #controls {
+        right: 18px;
+        bottom: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="title" class="panel">
+    <div class="eyebrow">Brug 17 · Amsterdam</div>
+    <h1>Canal Bascule</h1>
+    <p>
+      A double timber-decked bascule bridge with exposed iron balance beams,
+      tie rods, and counterweights descending through the masonry pits.
+    </p>
+  </div>
+
+  <div id="status">
+    <span id="status-dot"></span>
+    <span id="status-text">Bridge closed</span>
+  </div>
+
+  <div id="hint" class="panel">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <div id="controls">
+    <button id="pause">Pause motion</button>
+    <button id="reset">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9d8e1);
+    scene.fog = new THREE.Fog(0xb9d8e1, 32, 78);
+
+    const camera = new THREE.PerspectiveCamera(
+      44,
+      innerWidth / innerHeight,
+      0.1,
+      150
+    );
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    document.body.prepend(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xcbe8f1, 0x635848, 2.0);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xffe4b5, 3.1);
+    sun.position.set(-18, 28, 16);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -30;
+    sun.shadow.camera.right = 30;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 80;
+    sun.shadow.bias = -0.00025;
+    sun.shadow.normalBias = 0.035;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9fc9d8, 0.75);
+    fill.position.set(16, 9, -18);
+    scene.add(fill);
+
+    // ------------------------------------------------------------
+    // Materials and geometry helpers
+    // ------------------------------------------------------------
+
+    const mat = {
+      stone: new THREE.MeshStandardMaterial({
+        color: 0x777b73,
+        roughness: 0.94,
+        metalness: 0.02
+      }),
+      stoneDark: new THREE.MeshStandardMaterial({
+        color: 0x555b57,
+        roughness: 0.98
+      }),
+      stoneWarm: new THREE.MeshStandardMaterial({
+        color: 0x8a8171,
+        roughness: 0.96
+      }),
+      earth: new THREE.MeshStandardMaterial({
+        color: 0x6b725a,
+        roughness: 1
+      }),
+      road: new THREE.MeshStandardMaterial({
+        color: 0x303b3d,
+        roughness: 0.93
+      }),
+      roadEdge: new THREE.MeshStandardMaterial({
+        color: 0xc9c5b5,
+        roughness: 0.87
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x8b5d36,
+        roughness: 0.87
+      }),
+      woodLight: new THREE.MeshStandardMaterial({
+        color: 0xa77747,
+        roughness: 0.88
+      }),
+      woodDark: new THREE.MeshStandardMaterial({
+        color: 0x63452e,
+        roughness: 0.9
+      }),
+      iron: new THREE.MeshStandardMaterial({
+        color: 0x202a2d,
+        roughness: 0.53,
+        metalness: 0.76
+      }),
+      ironRust: new THREE.MeshStandardMaterial({
+        color: 0x5d3f31,
+        roughness: 0.69,
+        metalness: 0.62
+      }),
+      brass: new THREE.MeshStandardMaterial({
+        color: 0xbc9554,
+        roughness: 0.4,
+        metalness: 0.7
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xe8e2d2,
+        roughness: 0.78
+      }),
+      leaf: new THREE.MeshStandardMaterial({
+        color: 0x426d3b,
+        roughness: 0.96
+      }),
+      trunk: new THREE.MeshStandardMaterial({
+        color: 0x594636,
+        roughness: 1
+      }),
+      lamp: new THREE.MeshStandardMaterial({
+        color: 0xffe2a0,
+        emissive: 0xffad45,
+        emissiveIntensity: 1.2,
+        roughness: 0.45
+      })
+    };
+
+    function box(parent, material, size, position, cast = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinderBetween(parent, material, a, b, radius = 0.05) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 1, 10),
+        material
+      );
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.scale.y = length;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function randomBetween(a, b) {
+      return a + Math.random() * (b - a);
+    }
+
+    // ------------------------------------------------------------
+    // Canal, banks, and pit recesses
+    // ------------------------------------------------------------
+
+    box(
+      scene,
+      new THREE.MeshStandardMaterial({ color: 0x53604a, roughness: 1 }),
+      [90, 1.2, 90],
+      [0, -3.55, 0],
+      false
+    );
+
+    const waterUniforms = {
+      time: { value: 0 }
+    };
+
+    const waterMaterial = new THREE.ShaderMaterial({
+      uniforms: waterUniforms,
+      vertexShader: `
+        uniform float time;
+        varying vec2 vUv;
+        varying float vWave;
+
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          float waveA = sin(p.z * 0.73 + time * 1.15) * 0.045;
+          float waveB = sin(p.x * 1.85 - p.z * 0.18 - time * 0.72) * 0.025;
+          float waveC = sin((p.x + p.z) * 0.51 + time * 0.46) * 0.018;
+          p.y += waveA + waveB + waveC;
+          vWave = waveA + waveB + waveC;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        varying vec2 vUv;
+        varying float vWave;
+
+        void main() {
+          vec3 deep = vec3(0.055, 0.22, 0.27);
+          vec3 light = vec3(0.12, 0.39, 0.43);
+          float bands = sin(vUv.y * 430.0 + sin(vUv.x * 45.0) * 2.0 + time * 0.5);
+          float glint = smoothstep(0.91, 1.0, bands) * 0.08;
+          vec3 color = mix(deep, light, 0.34 + vWave * 1.4);
+          color += glint;
+          gl_FragColor = vec4(color, 0.94);
+        }
+      `,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+
+    const waterGeometry = new THREE.PlaneGeometry(10.8, 90, 42, 180);
+    waterGeometry.rotateX(-Math.PI / 2);
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.position.y = -0.02;
+    water.receiveShadow = true;
+    scene.add(water);
+
+    // Banks are assembled around a rectangular void for each counterweight pit.
+    function makeBank(side) {
+      const bank = new THREE.Group();
+      scene.add(bank);
+
+      const xMin = 5.6;
+      const xMax = 31;
+      const pitOuter = 8.8;
+      const roadHalf = 3.6;
+
+      // Side strips of land, leaving the pit open.
+      for (const zSign of [-1, 1]) {
+        const zStart = roadHalf;
+        const zEnd = 43;
+        box(
+          bank,
+          mat.earth,
+          [xMax - xMin, 3.2, zEnd - zStart],
+          [
+            side * (xMin + xMax) * 0.5,
+            -1.45,
+            zSign * (zStart + zEnd) * 0.5
+          ],
+          false
+        );
+      }
+
+      // Land behind the pit.
+      box(
+        bank,
+        mat.earth,
+        [xMax - pitOuter, 3.2, roadHalf * 2],
+        [
+          side * (pitOuter + xMax) * 0.5,
+          -1.45,
+          0
+        ],
+        false
+      );
+
+      // Retaining wall behind the pit and along the back side of the road.
+      box(
+        bank,
+        mat.stoneDark,
+        [pitOuter - 5.7, 2.7, 0.28],
+        [side * ((pitOuter + 5.7) * 0.5), -0.8, -3.45]
+      );
+
+      box(
+        bank,
+        mat.stone,
+        [xMax - 5.7, 2.1, 0.3],
+        [side * ((xMax + 5.7) * 0.5), 0.85, -3.45]
+      );
+
+      // Front retaining wall is intentionally interrupted to reveal the pit.
+      box(
+        bank,
+        mat.stone,
+        [xMax - pitOuter, 2.1, 0.3],
+        [side * ((xMax + pitOuter) * 0.5), 0.85, 3.45]
+      );
+
+      // Pit floor.
+      box(
+        bank,
+        mat.stoneDark,
+        [pitOuter - 5.55, 0.35, 6.7],
+        [side * ((pitOuter + 5.55) * 0.5), -2.55, 0]
+      );
+
+      // Pit wall visible through the open side.
+      box(
+        bank,
+        mat.stoneWarm,
+        [0.24, 2.6, 6.7],
+        [side * (pitOuter - 0.1), -0.85, 0]
+      );
+
+      // Small stone courses on the exposed inner face.
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 4; col++) {
+          const tone = (row + col) % 3 === 0 ? mat.stoneWarm : mat.stone;
+          box(
+            bank,
+            tone,
+            [0.36, 0.47, 1.55],
+            [
+              side * (5.67 + col * 0.75),
+              -0.35 + row * 0.5,
+              3.17
+            ]
+          );
+        }
+      }
+    }
+
+    makeBank(-1);
+    makeBank(1);
+
+    // Canal revetment walls outside the bridge opening.
+    for (const side of [-1, 1]) {
+      for (const z of [-24, -13, 13, 24]) {
+        for (let row = 0; row < 3; row++) {
+          const material = row % 2 ? mat.stoneWarm : mat.stone;
+          box(
+            scene,
+            material,
+            [0.65, 0.56, 8.5],
+            [side * 5.53, -0.75 + row * 0.57, z]
+          );
+        }
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Masonry hinge piers
+    // ------------------------------------------------------------
+
+    function makePier(side) {
+      const pier = new THREE.Group();
+      scene.add(pier);
+
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 7; col++) {
+          const material = (row + col) % 3 === 0 ? mat.stoneWarm : mat.stone;
+          const z = -3.3 + col * 1.1;
+          box(
+            pier,
+            material,
+            [1.28, 0.51, 1.04],
+            [side * 5.2, -0.48 + row * 0.53, z]
+          );
+        }
+      }
+
+      // Projecting capstones below the hinge.
+      for (const z of [-2.85, -1.75, -0.65, 0.45, 1.55, 2.65]) {
+        box(
+          pier,
+          mat.stoneDark,
+          [1.55, 0.28, 1.03],
+          [side * 5.2, 2.15, z]
+        );
+      }
+    }
+
+    makePier(-1);
+    makePier(1);
+
+    // ------------------------------------------------------------
+    // Fixed approaches, with open steel-grate inspection panels
+    // over the counterweight pits
+    // ------------------------------------------------------------
+
+    function makeApproach(side) {
+      const approach = new THREE.Group();
+      scene.add(approach);
+
+      const innerStart = 5.72;
+      const innerEnd = 8.85;
+      const outerEnd = 31;
+      const roadTop = 2.12;
+
+      // Road strips beside the open inspection area.
+      for (const z of [-2.75, 2.75]) {
+        box(
+          approach,
+          mat.road,
+          [innerEnd - innerStart, 0.35, 1.5],
+          [
+            side * (innerStart + innerEnd) * 0.5,
+            roadTop - 0.175,
+            z
+          ]
+        );
+      }
+
+      // Outer solid roadway.
+      box(
+        approach,
+        mat.road,
+        [outerEnd - innerEnd, 0.35, 7],
+        [
+          side * (outerEnd + innerEnd) * 0.5,
+          roadTop - 0.175,
+          0
+        ]
+      );
+
+      // Iron grating over the pit. The counterweight remains visible below it.
+      for (let i = 0; i < 13; i++) {
+        const z = -1.8 + i * 0.3;
+        box(
+          approach,
+          mat.iron,
+          [innerEnd - innerStart, 0.09, 0.075],
+          [
+            side * (innerStart + innerEnd) * 0.5,
+            roadTop - 0.02,
+            z
+          ]
+        );
+      }
+
+      // Road edge paint.
+      for (const z of [-3.12, 3.12]) {
+        box(
+          approach,
+          mat.roadEdge,
+          [outerEnd - innerStart, 0.025, 0.075],
+          [
+            side * (outerEnd + innerStart) * 0.5,
+            roadTop + 0.025,
+            z
+          ],
+          false
+        );
+      }
+
+      // Dashed center line.
+      for (let x = 10; x < 29; x += 2.5) {
+        box(
+          approach,
+          mat.roadEdge,
+          [1.25, 0.025, 0.075],
+          [side * x, roadTop + 0.027, 0],
+          false
+        );
+      }
+    }
+
+    makeApproach(-1);
+    makeApproach(1);
+
+    // ------------------------------------------------------------
+    // Double bascule leaves
+    // ------------------------------------------------------------
+
+    const leaves = [];
+
+    function makeLeaf(side) {
+      const leaf = new THREE.Group();
+      leaf.position.set(side * 5.2, 1.9, 0);
+      scene.add(leaf);
+
+      // d points from the hinge toward the center of the canal.
+      const d = -side;
+
+      // Timber deck planks.
+      for (let i = 0; i < 23; i++) {
+        const x = d * (0.12 + i * 0.225);
+        const material = i % 4 === 0 ? mat.woodLight : (i % 7 === 0 ? mat.woodDark : mat.wood);
+        box(leaf, material, [0.215, 0.18, 6.0], [x, 0.07, 0]);
+      }
+
+      // Heavy longitudinal deck girders.
+      for (const z of [-2.43, 2.43]) {
+        box(leaf, mat.woodDark, [5.2, 0.34, 0.3], [d * 2.6, -0.19, z]);
+      }
+
+      // Cross beams beneath the timber.
+      for (let i = 0; i < 5; i++) {
+        box(
+          leaf,
+          mat.woodDark,
+          [0.18, 0.3, 5.95],
+          [d * (0.45 + i * 1.08), -0.23, 0]
+        );
+      }
+
+      // Iron railings.
+      for (const z of [-3.0, 3.0]) {
+        for (let i = 0; i < 7; i++) {
+          box(
+            leaf,
+            mat.iron,
+            [0.085, 1.03, 0.085],
+            [d * (0.12 + i * 0.84), 0.64, z]
+          );
+        }
+        box(
+          leaf,
+          mat.iron,
+          [5.15, 0.12, 0.12],
+          [d * 2.56, 1.08, z]
+        );
+      }
+
+      // Central seam marker on each leaf.
+      box(
+        leaf,
+        mat.iron,
+        [0.16, 0.035, 5.9],
+        [d * 5.1, 0.17, 0]
+      );
+
+      // Exposed iron balance beams along both flanks.
+      for (const z of [-3.25, 3.25]) {
+        box(
+          leaf,
+          mat.iron,
+          [8.12, 0.19, 0.2],
+          [d * 1.05, 0.25, z]
+        );
+
+        // Long diagonal tie rods.
+        cylinderBetween(
+          leaf,
+          mat.iron,
+          [d * 4.52, 0.39, z],
+          [-d * 2.65, -0.92, z],
+          0.065
+        );
+
+        cylinderBetween(
+          leaf,
+          mat.ironRust,
+          [d * 0.28, 0.32, z],
+          [-d * 2.65, -1.24, z],
+          0.055
+        );
+
+        // Vertical hangers connecting the balance beam to the weight.
+        cylinderBetween(
+          leaf,
+          mat.iron,
+          [-d * 2.65, 0.29, z * 0.29],
+          [-d * 2.65, -0.72, z * 0.29],
+          0.07
+        );
+      }
+
+      // Counterweight box.
+      const weightX = -d * 2.65;
+      box(
+        leaf,
+        mat.ironRust,
+        [1.12, 1.16, 2.25],
+        [weightX, -1.28, 0]
+      );
+
+      // Iron bands and lifting eyes on the counterweight.
+      for (const z of [-0.76, 0.76]) {
+        box(
+          leaf,
+          mat.iron,
+          [1.2, 0.13, 0.14],
+          [weightX, -1.28, z]
+        );
+      }
+      for (const z of [-0.85, 0.85]) {
+        const eye = new THREE.Mesh(
+          new THREE.TorusGeometry(0.16, 0.045, 8, 18),
+          mat.iron
+        );
+        eye.position.set(weightX, -0.59, z);
+        leaf.add(eye);
+      }
+
+      // Hinge pin running across the roadway.
+      const hinge = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.25, 6.55, 24),
+        mat.iron
+      );
+      hinge.rotation.x = Math.PI / 2;
+      hinge.castShadow = true;
+      leaf.add(hinge);
+
+      // Brass hinge collars.
+      for (const z of [-3.05, -1.52, 0, 1.52, 3.05]) {
+        const collar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.32, 0.32, 0.2, 24),
+          mat.brass
+        );
+        collar.rotation.x = Math.PI / 2;
+        collar.position.z = z;
+        leaf.add(collar);
+      }
+
+      leaves.push({ group: leaf, direction: d });
+    }
+
+    makeLeaf(-1);
+    makeLeaf(1);
+
+    // ------------------------------------------------------------
+    // Dutch canal houses
+    // ------------------------------------------------------------
+
+    const brickMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0x873e31, roughness: 0.93 }),
+      new THREE.MeshStandardMaterial({ color: 0x9b533a, roughness: 0.94 }),
+      new THREE.MeshStandardMaterial({ color: 0x754238, roughness: 0.95 }),
+      new THREE.MeshStandardMaterial({ color: 0xa76b46, roughness: 0.92 }),
+      new THREE.MeshStandardMaterial({ color: 0x735c4d, roughness: 0.95 })
+    ];
+
+    const roofMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0x343a3b, roughness: 0.86 }),
+      new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 0.89 }),
+      new THREE.MeshStandardMaterial({ color: 0x2d4447, roughness: 0.84 })
+    ];
+
+    const windowMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffd28f,
+      emissive: 0xff9a3e,
+      emissiveIntensity: 0.65,
+      roughness: 0.34
+    });
+
+    function roofGeometry() {
+      const positions = [];
+      const indices = [];
+
+      function slope(zA, zB, reverse) {
+        const base = positions.length / 3;
+        positions.push(
+          -2.12, 0, zA,
+           2.12, 0, zA,
+           2.12, 1.55, 0,
+          -2.12, 1.55, 0
+        );
+        if (reverse) {
+          indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+        } else {
+          indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+        }
+      }
+
+      slope(-1.92, 0, false);
+      slope(0, 1.92, true);
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function gableGeometry() {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute([
+          -2.13, 0, -1.9,
+          -2.13, 0,  1.9,
+          -2.13, 1.55, 0
+        ], 3)
+      );
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function makeHouse(side, z, index) {
+      const house = new THREE.Group();
+      house.position.set(side * (10.7 + randomBetween(-0.25, 0.3)), 0.16, z);
+      house.rotation.y = side > 0 ? 0 : Math.PI;
+      scene.add(house);
+
+      const height = randomBetween(6.2, 8.2);
+      const width = randomBetween(3.25, 4.0);
+      const depth = randomBetween(4.0, 4.7);
+      const brick = brickMaterials[index % brickMaterials.length];
+
+      box(house, brick, [depth, height, width], [0, height * 0.5, 0]);
+
+      const roof = new THREE.Mesh(roofGeometry(), roofMaterials[index % roofMaterials.length]);
+      roof.position.y = height;
+      roof.castShadow = true;
+      roof.receiveShadow = true;
+      house.add(roof);
+
+      const gable = new THREE.Mesh(gableGeometry(), brick);
+      gable.castShadow = true;
+      house.add(gable);
+
+      // Front windows, arranged in narrow vertical rows.
+      const floors = Math.max(2, Math.floor(height / 1.75));
+      for (let floor = 0; floor < floors; floor++) {
+        const y = 1.15 + floor * 1.72;
+        for (const wz of [-width * 0.29, width * 0.29]) {
+          box(
+            house,
+            mat.woodDark,
+            [0.08, 1.08, 0.78],
+            [-depth * 0.5 - 0.055, y, wz]
+          );
+          box(
+            house,
+            windowMaterial,
+            [0.035, 0.88, 0.61],
+            [-depth * 0.5 - 0.11, y, wz]
+          );
+          box(
+            house,
+            mat.white,
+            [0.05, 0.055, 0.64],
+            [-depth * 0.5 - 0.14, y, wz]
+          );
+        }
+      }
+
+      // Ground-floor doorway and lintel.
+      box(
+        house,
+        mat.woodDark,
+        [0.1, 1.85, 0.74],
+        [-depth * 0.5 - 0.08, 0.95, 0]
+      );
+      box(
+        house,
+        mat.white,
+        [0.13, 0.12, 0.88],
+        [-depth * 0.5 - 0.12, 1.9, 0]
+      );
+
+      // Horizontal brick bands.
+      for (let y = 2.0; y < height - 0.4; y += 1.72) {
+        box(
+          house,
+          mat.stoneWarm,
+          [0.06, 0.08, width + 0.03],
+          [-depth * 0.5 - 0.035, y, 0]
+        );
+      }
+
+      // Chimney.
+      box(
+        house,
+        brick,
+        [0.55, 1.1, 0.6],
+        [depth * 0.22, height + 1.15, -width * 0.17]
+      );
+    }
+
+    const houseZ = [-25, -20, -15, -10.5, 10.5, 15, 20, 25];
+    for (const side of [-1, 1]) {
+      houseZ.forEach((z, i) => makeHouse(side, z, i + (side > 0 ? 2 : 0)));
+    }
+
+    // ------------------------------------------------------------
+    // Trees, lamps, and canal-side details
+    // ------------------------------------------------------------
+
+    function makeTree(x, z, scale = 1) {
+      const tree = new THREE.Group();
+      tree.position.set(x, 0.15, z);
+      tree.scale.setScalar(scale);
+      scene.add(tree);
+
+      cylinderBetween(
+        tree,
+        mat.trunk,
+        [0, 0, 0],
+        [0.12, 3.4, 0],
+        0.18
+      );
+
+      const crown = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.35, 2),
+        mat.leaf
+      );
+      crown.position.set(0.1, 3.6, 0);
+      crown.scale.set(1, 1.2, 0.92);
+      crown.castShadow = true;
+      tree.add(crown);
+    }
+
+    makeTree(-8.8, -7.2, 1.1);
+    makeTree(8.9, 7.3, 1.0);
+    makeTree(-9.1, 7.6, 0.86);
+    makeTree(9.0, -7.4, 0.92);
+
+    function makeLamp(x, z) {
+      const lamp = new THREE.Group();
+      lamp.position.set(x, 0.15, z);
+      scene.add(lamp);
+
+      cylinderBetween(lamp, mat.iron, [0, 0, 0], [0, 3.2, 0], 0.065);
+      box(lamp, mat.iron, [0.42, 0.55, 0.42], [0, 3.35, 0]);
+      box(lamp, mat.lamp, [0.31, 0.39, 0.31], [0, 3.35, 0]);
+      box(lamp, mat.iron, [0.52, 0.08, 0.52], [0, 3.66, 0]);
+    }
+
+    makeLamp(-8.7, -5.8);
+    makeLamp(8.7, 5.9);
+    makeLamp(-8.7, 12);
+    makeLamp(8.7, -12);
+
+    // Mooring bollards along the canal edge.
+    for (const side of [-1, 1]) {
+      for (const z of [-8, -5.7, 5.7, 8]) {
+        const bollard = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.13, 0.19, 0.48, 12),
+          mat.iron
+        );
+        bollard.position.set(side * 5.1, 0.42, z);
+        bollard.castShadow = true;
+        scene.add(bollard);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Small boat between the abutments
+    // ------------------------------------------------------------
+
+    function createHullGeometry() {
+      const outline = [
+        [-0.72, -2.05],
+        [ 0.72, -2.05],
+        [ 0.84,  0.75],
+        [ 0.55,  1.75],
+        [ 0.00,  2.55],
+        [-0.55,  1.75],
+        [-0.84,  0.75]
+      ];
+
+      const positions = [];
+      const indices = [];
+      const n = outline.length;
+
+      for (const [x, z] of outline) {
+        positions.push(x, 0.32, z);
+      }
+      for (const [x, z] of outline) {
+        positions.push(x * 0.64, -0.3, z * 0.93);
+      }
+
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        indices.push(i, j, n + j, i, n + j, n + i);
+      }
+
+      for (let i = 1; i < n - 1; i++) {
+        indices.push(n, n + i + 1, n + i);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const boat = new THREE.Group();
+    boat.position.set(-0.15, 0.08, 2.65);
+    scene.add(boat);
+
+    const hullMaterial = new THREE.MeshStandardMaterial({
+      color: 0x173b43,
+      roughness: 0.56,
+      metalness: 0.18
+    });
+
+    const hull = new THREE.Mesh(createHullGeometry(), hullMaterial);
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    boat.add(hull);
+
+    box(boat, mat.woodLight, [1.25, 0.13, 3.35], [0, 0.35, -0.2]);
+    box(boat, mat.white, [1.18, 1.0, 1.6], [0, 0.86, -0.45]);
+    box(
+      boat,
+      new THREE.MeshStandardMaterial({
+        color: 0x8e3f31,
+        roughness: 0.72
+      }),
+      [1.42, 0.13, 1.9],
+      [0, 1.42, -0.45]
+    );
+
+    for (const side of [-1, 1]) {
+      box(
+        boat,
+        windowMaterial,
+        [0.035, 0.48, 0.58],
+        [side * 0.61, 1.01, -0.48]
+      );
+    }
+
+    box(boat, mat.woodDark, [1.0, 0.1, 0.42], [0, 0.48, 1.15]);
+    cylinderBetween(boat, mat.iron, [0, 0.4, 0.2], [0, 2.25, 0.2], 0.035);
+    cylinderBetween(
+      boat,
+      mat.white,
+      [0, 2.18, 0.2],
+      [0.66, 1.95, 0.2],
+      0.025
+    );
+
+    // ------------------------------------------------------------
+    // Custom orbit camera controls
+    // ------------------------------------------------------------
+
+    const orbit = {
+      target: new THREE.Vector3(0, 1.6, 0),
+      radius: 28,
+      theta: 0.67,
+      phi: 1.08,
+      dragging: false,
+      lastX: 0,
+      lastY: 0
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+      camera.position.set(
+        orbit.target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        orbit.target.y + orbit.radius * Math.cos(orbit.phi),
+        orbit.target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+      camera.lookAt(orbit.target);
+    }
+
+    function resetCamera() {
+      orbit.radius = 28;
+      orbit.theta = 0.67;
+      orbit.phi = 1.08;
+      orbit.target.set(0, 1.6, 0);
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      orbit.dragging = true;
+      orbit.lastX = event.clientX;
+      orbit.lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!orbit.dragging) return;
+
+      const dx = event.clientX - orbit.lastX;
+      const dy = event.clientY - orbit.lastY;
+      orbit.lastX = event.clientX;
+      orbit.lastY = event.clientY;
+
+      orbit.theta -= dx * 0.005;
+      orbit.phi = THREE.MathUtils.clamp(orbit.phi + dy * 0.004, 0.38, 1.38);
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      orbit.dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          13,
+          52
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    const pauseButton = document.getElementById("pause");
+    const resetButton = document.getElementById("reset");
+    const statusText = document.getElementById("status-text");
+    const statusDot = document.getElementById("status-dot");
+
+    let paused = false;
+    let bridgeTime = 0;
+    let previousTime = performance.now();
+
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume motion" : "Pause motion";
+    });
+
+    resetButton.addEventListener("click", resetCamera);
+
+    function smootherStep(value) {
+      const x = THREE.MathUtils.clamp(value, 0, 1);
+      return x * x * x * (x * (x * 6 - 15) + 10);
+    }
+
+    function bridgeAngleAt(time) {
+      const t = time % 24;
+
+      if (t < 3.0) return 0;
+      if (t < 9.0) return smootherStep((t - 3.0) / 6.0) * THREE.MathUtils.degToRad(58);
+      if (t < 14.0) return THREE.MathUtils.degToRad(58);
+      if (t < 20.0) {
+        return (
+          (1 - smootherStep((t - 14.0) / 6.0)) *
+          THREE.MathUtils.degToRad(58)
+        );
+      }
+      return 0;
+    }
+
+    function bridgeStatusAt(time) {
+      const t = time % 24;
+      if (t < 3 || t >= 20) return "Bridge closed";
+      if (t < 9) return "Bridge opening";
+      if (t < 14) return "Bridge raised";
+      return "Bridge closing";
+    }
+
+    updateCamera();
+
+    renderer.setAnimationLoop((now) => {
+      const dt = Math.min((now - previousTime) / 1000, 0.05);
+      previousTime = now;
+
+      if (!paused) {
+        bridgeTime += dt;
+      }
+
+      const angle = bridgeAngleAt(bridgeTime);
+
+      for (const leaf of leaves) {
+        leaf.group.rotation.z = leaf.direction * angle;
+      }
+
+      waterUniforms.time.value = now * 0.001;
+
+      // Gentle bobbing and roll of the moored boat.
+      boat.position.y = 0.08 + Math.sin(now * 0.00135) * 0.035;
+      boat.rotation.z = Math.sin(now * 0.00083) * 0.012;
+      boat.rotation.x = Math.sin(now * 0.00105 + 0.8) * 0.008;
+      boat.rotation.y = Math.sin(now * 0.00031) * 0.025;
+
+      const status = bridgeStatusAt(bridgeTime);
+      if (statusText.textContent !== status) {
+        statusText.textContent = status;
+      }
+
+      const statusColor =
+        status === "Bridge raised" ? "#f3c86a" :
+        status === "Bridge closed" ? "#83d4a1" : "#77b9d2";
+
+      statusDot.style.background = statusColor;
+      statusDot.style.boxShadow = `0 0 9px ${statusColor}`;
+
+      renderer.render(scene, camera);
+    });
+
+    addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

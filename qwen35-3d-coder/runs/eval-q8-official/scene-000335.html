@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buoy Tender — Working Deck</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0b2635;
+    }
+
+    #viewport {
+      position: fixed;
+      inset: 0;
+    }
+
+    #viewport canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #viewport canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 45%, rgba(2, 18, 27, 0.34) 100%),
+        linear-gradient(180deg, rgba(4, 25, 37, 0.18), transparent 25%);
+    }
+
+    .header {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      z-index: 5;
+      pointer-events: none;
+      color: #eefaff;
+      text-shadow: 0 2px 18px rgba(0, 20, 30, 0.5);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 7px;
+      color: #8de1e8;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 24px;
+      height: 2px;
+      content: "";
+      background: #75e2e8;
+      box-shadow: 0 0 12px rgba(117, 226, 232, 0.6);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 42px);
+      font-weight: 760;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: rgba(231, 247, 252, 0.72);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .status-panel {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 5;
+      width: 220px;
+      padding: 16px 17px;
+      border: 1px solid rgba(166, 232, 239, 0.18);
+      border-radius: 14px;
+      background: rgba(7, 31, 43, 0.68);
+      box-shadow: 0 14px 40px rgba(0, 20, 30, 0.2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .status-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      color: #dffaff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #66f0b0;
+      box-shadow: 0 0 10px #66f0b0;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-top: 1px solid rgba(180, 232, 239, 0.1);
+      color: rgba(225, 244, 249, 0.68);
+      font-size: 11px;
+    }
+
+    .status-row strong {
+      color: #8de1e8;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 5;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 14px;
+      border: 1px solid rgba(166, 232, 239, 0.16);
+      border-radius: 999px;
+      background: rgba(7, 31, 43, 0.65);
+      color: rgba(231, 247, 252, 0.72);
+      font-size: 11px;
+      white-space: nowrap;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .controls span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key {
+      min-width: 22px;
+      padding: 4px 6px;
+      border: 1px solid rgba(190, 235, 241, 0.22);
+      border-radius: 5px;
+      color: #d9f4f7;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 9px;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 12px;
+      border: 1px solid rgba(132, 226, 235, 0.25);
+      border-radius: 999px;
+      color: #e8fbff;
+      background: rgba(63, 173, 187, 0.2);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(84, 199, 211, 0.34);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 700px) {
+      .header {
+        top: 17px;
+        left: 17px;
+      }
+
+      .status-panel {
+        top: auto;
+        right: 14px;
+        bottom: 68px;
+        width: 190px;
+        padding: 12px 14px;
+      }
+
+      .status-row {
+        padding: 5px 0;
+      }
+
+      .controls {
+        bottom: 14px;
+        width: calc(100% - 28px);
+        justify-content: center;
+        gap: 9px;
+        padding: 9px 11px;
+      }
+
+      .controls .desktop-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="viewport" aria-label="Interactive 3D buoy tender scene"></div>
+  <div class="vignette"></div>
+
+  <header class="header">
+    <div class="eyebrow">Marine Operations</div>
+    <h1>Buoy Tender T-07</h1>
+    <div class="subtitle">Stern crane station · active buoy recovery</div>
+  </header>
+
+  <aside class="status-panel">
+    <div class="status-title">
+      <span>Operation status</span>
+      <span class="live-dot"></span>
+    </div>
+    <div class="status-row">
+      <span>Crane</span>
+      <strong>Online</strong>
+    </div>
+    <div class="status-row">
+      <span>Target buoy</span>
+      <strong>B-14</strong>
+    </div>
+    <div class="status-row">
+      <span>Sea state</span>
+      <strong>0.4 m</strong>
+    </div>
+    <div class="status-row">
+      <span>Wind</span>
+      <strong>12 kn</strong>
+    </div>
+  </aside>
+
+  <div class="controls">
+    <span><b class="key">DRAG</b> Orbit</span>
+    <span><b class="key">WHEEL</b> Zoom</span>
+    <span class="desktop-hint"><b class="key">RIGHT</b> Pan</span>
+    <button id="reset-view" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera
+    // -------------------------------------------------------------------------
+
+    const viewport = document.getElementById("viewport");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute("aria-label", "Three.js buoy tender scene");
+    viewport.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x8dc8d9);
+    scene.fog = new THREE.FogExp2(0x8dc8d9, 0.017);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 1.65, -0.7);
+    const spherical = new THREE.Spherical(15.5, 1.14, 0.72);
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(0xd9f4ff, 0x24464d, 2.1);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff1d3, 3.2);
+    sun.position.set(-9, 15, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 50;
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x8bd9eb, 0.8);
+    fill.position.set(10, 7, -12);
+    scene.add(fill);
+
+    // -------------------------------------------------------------------------
+    // Materials and geometry helpers
+    // -------------------------------------------------------------------------
+
+    const material = (color, roughness = 0.6, metalness = 0.05) =>
+      new THREE.MeshStandardMaterial({ color, roughness, metalness });
+
+    const M = {
+      hull: new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.43,
+        metalness: 0.18,
+        flatShading: true
+      }),
+      deckTop: new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.9,
+        metalness: 0.02
+      }),
+      deckEdge: material(0x82785f, 0.88),
+      orange: material(0xf28a2b, 0.48, 0.22),
+      orangeDark: material(0xb95718, 0.55, 0.2),
+      darkMetal: material(0x263840, 0.42, 0.68),
+      steel: material(0x9ba9ad, 0.3, 0.8),
+      black: material(0x10191d, 0.68, 0.25),
+      rubber: material(0x172126, 0.95),
+      white: material(0xe8eef0, 0.55, 0.08),
+      yellow: material(0xf5c82e, 0.46, 0.12),
+      red: material(0xb93530, 0.5, 0.12),
+      green: material(0x36b978, 0.45, 0.1),
+      blue: material(0x176787, 0.55, 0.25),
+      wood: material(0x806044, 0.9),
+      screen: new THREE.MeshStandardMaterial({
+        color: 0x0b3440,
+        emissive: 0x0b7890,
+        emissiveIntensity: 0.65,
+        roughness: 0.25
+      }),
+      lampWhite: new THREE.MeshStandardMaterial({
+        color: 0xfff4c2,
+        emissive: 0xffe58a,
+        emissiveIntensity: 2.2
+      }),
+      lampRed: new THREE.MeshStandardMaterial({
+        color: 0xff3535,
+        emissive: 0xff1616,
+        emissiveIntensity: 2.4
+      }),
+      lampGreen: new THREE.MeshStandardMaterial({
+        color: 0x43ff9a,
+        emissive: 0x16d965,
+        emissiveIntensity: 2.4
+      })
+    };
+
+    const boat = new THREE.Group();
+    boat.position.y = 0.12;
+    scene.add(boat);
+
+    function addBox(parent, size, position, mat, castShadow = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        mat
+      );
+      mesh.position.set(...position);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      parent,
+      topRadius,
+      bottomRadius,
+      height,
+      position,
+      mat,
+      radialSegments = 16
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          topRadius,
+          bottomRadius,
+          height,
+          radialSegments
+        ),
+        mat
+      );
+      mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addSphere(parent, radius, position, mat, widthSegments = 20) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, widthSegments, 14),
+        mat
+      );
+      mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    function setBeam(mesh, a, b) {
+      const start = a.isVector3 ? a : new THREE.Vector3(...a);
+      const end = b.isVector3 ? b : new THREE.Vector3(...b);
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.scale.set(1, length, 1);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+    }
+
+    function makeBeam(parent, a, b, radius, mat) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 1, 10),
+        mat
+      );
+      setBeam(mesh, a, b);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function makeTorus(
+      parent,
+      radius,
+      tube,
+      position,
+      mat,
+      rotation = [0, 0, 0],
+      segments = 32
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tube, 8, segments),
+        mat
+      );
+      mesh.position.set(...position);
+      mesh.rotation.set(...rotation);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Procedural non-slip deck texture
+    // -------------------------------------------------------------------------
+
+    function createDeckTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#b4aa8e";
+      ctx.fillRect(0, 0, 512, 512);
+
+      let seed = 731;
+      const random = () => {
+        seed = (seed * 16807) % 2147483647;
+        return (seed - 1) / 2147483646;
+      };
+
+      for (let x = 0; x < 512; x += 64) {
+        ctx.fillStyle = `rgba(73, 66, 51, ${0.08 + random() * 0.12})`;
+        ctx.fillRect(x, 0, 3, 512);
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.fillRect(x + 4, 0, 2, 512);
+      }
+
+      for (let i = 0; i < 900; i++) {
+        const x = random() * 512;
+        const y = random() * 512;
+        const alpha = 0.025 + random() * 0.05;
+        ctx.fillStyle = `rgba(25,35,35,${alpha})`;
+        ctx.fillRect(x, y, 1 + random() * 2, 1);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      return texture;
+    }
+
+    M.deckTop.map = createDeckTexture();
+    M.deckTop.map.repeat.set(2.2, 1.5);
+
+    // -------------------------------------------------------------------------
+    // Hull
+    // -------------------------------------------------------------------------
+
+    const sections = [
+      { z: -5.20, width: 0.18, top: 0.36, bottom: -1.05 },
+      { z: -4.85, width: 1.18, top: 0.52, bottom: -0.98 },
+      { z: -3.55, width: 2.15, top: 0.61, bottom: -0.82 },
+      { z: -1.15, width: 2.55, top: 0.64, bottom: -0.66 },
+      { z: 1.35, width: 2.62, top: 0.62, bottom: -0.56 },
+      { z: 3.35, width: 2.22, top: 0.51, bottom: -0.38 },
+      { z: 4.85, width: 1.35, top: 0.31, bottom: -0.12 },
+      { z: 6.05, width: 0.42, top: 0.16, bottom: 0.00 },
+      { z: 6.90, width: 0.04, top: 0.10, bottom: 0.00 }
+    ];
+
+    const hullPositions = [];
+    const hullColors = [];
+    const hullIndices = [];
+
+    const navy = new THREE.Color(0x183d50);
+    const darkRed = new THREE.Color(0x672625);
+    const red = new THREE.Color(0x9e342a);
+
+    for (const section of sections) {
+      hullPositions.push(
+        0, section.bottom, section.z,
+        -section.width, section.top, section.z,
+        section.width, section.top, section.z
+      );
+    }
+
+    const color = new THREE.Color();
+
+    for (const section of sections) {
+      if (section.bottom < -0.35) {
+        color.copy(red);
+      } else if (section.bottom < 0.15) {
+        color.copy(darkRed).lerp(red, 0.5);
+      } else {
+        color.copy(navy);
+      }
+
+      hullColors.push(
+        color.r, color.g, color.b,
+        color.r, color.g, color.b,
+        color.r, color.g, color.b
+      );
+    }
+
+    for (let i = 0; i < sections.length - 1; i++) {
+      const a = i * 3;
+      const b = (i + 1) * 3;
+
+      const portBottom = a;
+      const portTop = a + 1;
+      const starboardTop = a + 2;
+      const nextPortBottom = b;
+      const nextPortTop = b + 1;
+      const nextStarboardTop = b + 2;
+
+      hullIndices.push(
+        portBottom, nextPortBottom, portTop,
+        portTop, nextPortBottom, nextPortTop,
+
+        starboardTop, portTop, nextStarboardTop,
+        portTop, nextStarboardTop, nextPortTop
+      );
+    }
+
+    const hullGeometry = new THREE.BufferGeometry();
+    hullGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(hullPositions, 3)
+    );
+    hullGeometry.setAttribute(
+      "color",
+      new THREE.Float32BufferAttribute(hullColors, 3)
+    );
+    hullGeometry.setIndex(hullIndices);
+    hullGeometry.computeVertexNormals();
+
+    const hull = new THREE.Mesh(hullGeometry, M.hull);
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    boat.add(hull);
+
+    // White rubbing strakes along both sides.
+    for (const side of [-1, 1]) {
+      const points = sections.map((section) => {
+        const width = section.width - 0.035;
+        return new THREE.Vector3(
+          side * width,
+          0.24,
+          section.z
+        );
+      });
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const rail = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 70, 0.055, 7, false),
+        M.white
+      );
+      rail.castShadow = true;
+      boat.add(rail);
+    }
+
+    // Main working deck.
+    const deckShape = new THREE.Shape();
+    deckShape.moveTo(-0.18, -5.20);
+    deckShape.lineTo(-1.10, -4.95);
+    deckShape.lineTo(-2.05, -3.70);
+    deckShape.lineTo(-2.45, -1.20);
+    deckShape.lineTo(-2.55, 1.20);
+    deckShape.lineTo(-2.40, 3.20);
+    deckShape.lineTo(-1.75, 4.80);
+    deckShape.lineTo(-0.65, 5.85);
+    deckShape.lineTo(0.65, 5.85);
+    deckShape.lineTo(1.75, 4.80);
+    deckShape.lineTo(2.40, 3.20);
+    deckShape.lineTo(2.55, 1.20);
+    deckShape.lineTo(2.45, -1.20);
+    deckShape.lineTo(2.05, -3.70);
+    deckShape.lineTo(1.10, -4.95);
+    deckShape.closePath();
+
+    const deckGeometry = new THREE.ExtrudeGeometry(deckShape, {
+      depth: 0.14,
+      bevelEnabled: true,
+      bevelSize: 0.035,
+      bevelThickness: 0.035,
+      bevelSegments: 2,
+      steps: 1
+    });
+
+    deckGeometry.rotateX(Math.PI / 2);
+
+    const deck = new THREE.Mesh(deckGeometry, [M.deckTop, M.deckEdge]);
+    deck.position.y = 0.72;
+    deck.castShadow = true;
+    deck.receiveShadow = true;
+    boat.add(deck);
+
+    // Raised stern work platform.
+    addBox(boat, [4.25, 0.12, 2.25], [0, 0.78, -3.85], M.darkMetal);
+    addBox(boat, [4.35, 0.08, 0.10], [0, 0.86, -4.98], M.orangeDark);
+
+    // -------------------------------------------------------------------------
+    // Railings
+    // -------------------------------------------------------------------------
+
+    function addRail(a, b, baseY = 0.84) {
+      const topY = baseY + 0.62;
+      const midY = baseY + 0.31;
+
+      makeBeam(boat, [a[0], topY, a[2]], [b[0], topY, b[2]], 0.035, M.steel);
+      makeBeam(boat, [a[0], midY, a[2]], [b[0], midY, b[2]], 0.025, M.steel);
+
+      const length = Math.hypot(b[0] - a[0], b[2] - a[2]);
+      const postCount = Math.max(1, Math.ceil(length / 1.15));
+
+      for (let i = 0; i <= postCount; i++) {
+        const t = i / postCount;
+        const x = THREE.MathUtils.lerp(a[0], b[0], t);
+        const z = THREE.MathUtils.lerp(a[2], b[2], t);
+        makeBeam(boat, [x, baseY, z], [x, topY, z], 0.032, M.steel);
+      }
+    }
+
+    const railPoints = [
+      [-2.43, -4.65],
+      [-2.43, -2.80],
+      [-2.43, 0.00],
+      [-2.35, 2.35],
+      [-1.75, 4.65]
+    ];
+
+    const starboardPoints = railPoints.map((p) => [p[1], p[0]]);
+
+    for (const points of [railPoints, starboardPoints]) {
+      for (let i = 0; i < points.length - 1; i++) {
+        addRail(points[i], points[i + 1]);
+      }
+    }
+
+    addRail([-1.95, -4.72], [1.95, -4.72]);
+    addRail([-2.43, -4.65], [-1.95, -4.72]);
+    addRail([2.43, -4.65], [1.95, -4.72]);
+
+    // -------------------------------------------------------------------------
+    // Hull lettering
+    // -------------------------------------------------------------------------
+
+    function createHullSign() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#e5eef0";
+      ctx.font = "800 92px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("BOUY TENDER", 512, 112);
+      ctx.fillStyle = "#8de1e8";
+      ctx.font = "700 35px Arial, sans-serif";
+      ctx.fillText("T-07  •  CREW 04", 512, 177);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sign = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.45, 0.61),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        })
+      );
+
+      sign.position.set(-2.558, 0.16, -0.35);
+      sign.rotation.y = -Math.PI / 2;
+      boat.add(sign);
+    }
+
+    createHullSign();
+
+    // -------------------------------------------------------------------------
+    // Stern crane
+    // -------------------------------------------------------------------------
+
+    const crane = new THREE.Group();
+    boat.add(crane);
+
+    addCylinder(crane, 0.62, 0.72, 0.72, [0, 1.05, -3.55], M.darkMetal);
+    addCylinder(crane, 0.68, 0.68, 0.13, [0, 1.48, -3.55], M.orange);
+
+    makeBeam(crane, [-1.15, 1.38, -3.55], [0, 3.20, -3.55], 0.105, M.orange);
+    makeBeam(crane, [1.15, 1.38, -3.55], [0, 3.20, -3.55], 0.105, M.orange);
+    makeBeam(crane, [-0.78, 2.10, -3.55], [0.78, 2.10, -3.55], 0.075, M.orangeDark);
+
+    const boomPivot = new THREE.Vector3(0, 3.20, -3.55);
+    const boomTip = new THREE.Vector3(0, 5.85, -6.15);
+
+    makeBeam(crane, [boomPivot.x - 0.22, boomPivot.y, boomPivot.z], boomTip, 0.095, M.orange);
+    makeBeam(crane, [boomPivot.x + 0.22, boomPivot.y, boomPivot.z], boomTip, 0.095, M.orange);
+    makeBeam(crane, boomPivot, [0, 4.18, -1.62], 0.105, M.orangeDark);
+
+    addBox(crane, [0.72, 0.38, 0.58], [0, 3.82, -1.72], M.darkMetal);
+    addBox(crane, [0.78, 0.12, 0.65], [0, 3.98, -1.72], M.orange);
+
+    // Hydraulic ram.
+    makeBeam(
+      crane,
+      [0, 2.52, -3.28],
+      [0, 4.12, -4.38],
+      0.075,
+      M.steel
+    );
+    makeBeam(
+      crane,
+      [0, 3.42, -3.92],
+      [0, 4.48, -4.95],
+      0.038,
+      M.darkMetal
+    );
+    addSphere(crane, 0.13, [0, 2.52, -3.28], M.darkMetal);
+
+    // Boom tip and sheave.
+    addBox(crane, [0.58, 0.30, 0.42], [0, 5.78, -6.15], M.darkMetal);
+    makeTorus(
+      crane,
+      0.23,
+      0.065,
+      [0, 5.62, -6.15],
+      M.steel,
+      [0, Math.PI / 2, 0],
+      24
+    );
+
+    // Hoist cable.
+    const hoistCable = makeBeam(
+      crane,
+      [0, 5.58, -6.15],
+      [0, 2.15, -6.15],
+      0.022,
+      M.black
+    );
+
+    addBox(crane, [0.36, 0.46, 0.32], [0, 2.15, -6.15], M.darkMetal);
+    makeTorus(
+      crane,
+      0.12,
+      0.035,
+      [0, 2.02, -6.15],
+      M.steel,
+      [0, Math.PI / 2, 0],
+      20
+    );
+
+    // -------------------------------------------------------------------------
+    // Working buoy
+    // -------------------------------------------------------------------------
+
+    const buoy = new THREE.Group();
+    buoy.position.set(0, 1.08, -6.15);
+    boat.add(buoy);
+
+    addSphere(buoy, 0.46, [0, 0, 0], M.yellow, 28);
+
+    for (const y of [-0.13, 0, 0.13]) {
+      makeTorus(
+        buoy,
+        0.465,
+        0.075,
+        [0, y, 0],
+        M.black,
+        [Math.PI / 2, 0, 0],
+        32
+      );
+    }
+
+    addCylinder(buoy, 0.02, 0.43, 0.52, [0, 0.58, 0], M.yellow, 24);
+    addCylinder(buoy, 0.48, 0.34, 0.22, [0, -0.34, 0], M.darkMetal, 24);
+
+    // Small buoy flag.
+    const flagPole = addCylinder(
+      buoy,
+      0.018,
+      0.018,
+      0.58,
+      [0.52, 0.98, 0],
+      M.steel,
+      8
+    );
+
+    const flagGeometry = new THREE.BufferGeometry();
+    flagGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute([
+        0.52, 1.27, 0,
+        0.86, 1.47, 0,
+        0.52, 1.72, 0
+      ], 3)
+    );
+    flagGeometry.computeVertexNormals();
+
+    const flag = new THREE.Mesh(
+      flagGeometry,
+      new THREE.MeshStandardMaterial({
+        color: 0xf06a35,
+        side: THREE.DoubleSide,
+        roughness: 0.8
+      })
+    );
+    buoy.add(flag);
+
+    // Expanding ripple around the buoy.
+    const ripple = makeTorus(
+      scene,
+      0.72,
+      0.015,
+      [0, 0.055, -6.15],
+      new THREE.MeshBasicMaterial({
+        color: 0xc8f4f7,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false
+      }),
+      [Math.PI / 2, 0, 0],
+      64
+    );
+    ripple.castShadow = false;
+
+    // -------------------------------------------------------------------------
+    // Console, steering wheel, winch, tool chest, and storage
+    // -------------------------------------------------------------------------
+
+    const consoleGroup = new THREE.Group();
+    consoleGroup.position.set(1.55, 0, -1.18);
+    boat.add(consoleGroup);
+
+    addBox(consoleGroup, [1.20, 1.08, 1.08], [0, 1.35, 0], M.blue);
+    addBox(consoleGroup, [1.28, 0.12, 1.16], [0, 1.95, 0], M.darkMetal);
+
+    addBox(consoleGroup, [0.92, 0.52, 0.07], [0, 1.58, 0.58], M.screen);
+    addBox(consoleGroup, [1.02, 0.12, 0.18], [0, 1.20, 0.62], M.black);
+
+    // Steering wheel.
+    const wheel = makeTorus(
+      consoleGroup,
+      0.34,
+      0.055,
+      [0, 1.48, 0.92],
+      M.black,
+      [0, 0, 0],
+      28
+    );
+
+    for (let i = 0; i < 3; i++) {
+      const spoke = makeBeam(
+        consoleGroup,
+        [0, 1.48, 0.92],
+        [
+          Math.cos((i * Math.PI * 2) / 3) * 0.34,
+          1.48 + Math.sin((i * Math.PI * 2) / 3) * 0.34,
+          0.92
+        ],
+        0.025,
+        M.steel
+      );
+      spoke.castShadow = false;
+    }
+
+    addCylinder(consoleGroup, 0.10, 0.10, 0.12, [0, 1.98, 0], M.darkMetal);
+
+    // Deck winch.
+    const winch = new THREE.Group();
+    winch.position.set(-1.55, 0.84, -2.48);
+    boat.add(winch);
+
+    addBox(winch, [1.15, 0.12, 0.72], [0, 0.06, 0], M.darkMetal);
+    addCylinder(winch, 0.28, 0.28, 0.78, [0, 0.25, 0], M.orange, 24);
+    addCylinder(winch, 0.34, 0.34, 0.09, [-0.43, 0.25, 0], M.darkMetal, 24);
+    addCylinder(winch, 0.34, 0.34, 0.09, [0.43, 0.25, 0], M.darkMetal, 24);
+
+    // Tool chest.
+    addBox(boat, [1.05, 0.72, 0.72], [-1.55, 1.20, 0.25], M.orangeDark);
+    addBox(boat, [1.12, 0.08, 0.79], [-1.55, 1.58, 0.25], M.darkMetal);
+    addBox(boat, [0.48, 0.055, 0.05], [-1.55, 1.30, 0.62], M.steel);
+    addBox(boat, [0.30, 0.04, 0.04], [-1.55, 1.30, 0.66], M.black);
+
+    // Crates and equipment.
+    addBox(boat, [0.85, 0.62, 0.78], [1.25, 1.13, 2.00], M.wood);
+    addBox(boat, [0.90, 0.08, 0.83], [1.25, 1.47, 2.00], M.darkMetal);
+    addBox(boat, [0.62, 0.42, 0.58], [-0.15, 1.03, 3.55], M.blue);
+
+    // Rope coil.
+    makeTorus(
+      boat,
+      0.34,
+      0.055,
+      [-1.45, 0.89, 0.85],
+      M.wood,
+      [Math.PI / 2, 0, 0],
+      36
+    );
+
+    // Life ring on the stern.
+    makeTorus(
+      boat,
+      0.40,
+      0.11,
+      [1.88, 1.25, -4.62],
+      M.orange,
+      [0, 0, 0],
+      36
+    );
+
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      addBox(
+        boat,
+        [0.08, 0.22, 0.13],
+        [
+          1.88 + Math.cos(angle) * 0.405,
+          1.25 + Math.sin(angle) * 0.405,
+          -4.62
+        ],
+        M.white
+      );
+    }
+
+    // Bench.
+    addBox(boat, [1.35, 0.12, 0.48], [-0.15, 1.02, 4.35], M.wood);
+    addBox(boat, [1.35, 0.42, 0.10], [-0.15, 1.25, 4.60], M.wood);
+    makeBeam(boat, [-0.75, 0.82, 4.18], [-0.75, 1.02, 4.35], 0.055, M.darkMetal);
+    makeBeam(boat, [0.45, 0.82, 4.18], [0.45, 1.02, 4.35], 0.055, M.darkMetal);
+
+    // Bollards and cleats.
+    for (const x of [-1.75, 1.75]) {
+      addCylinder(boat, 0.10, 0.14, 0.38, [x, 1.02, 4.95], M.darkMetal, 12);
+      addCylinder(boat, 0.20, 0.10, 0.10, [x, 1.23, 4.95], M.darkMetal, 12);
+    }
+
+    for (const x of [-1.85, 1.85]) {
+      addBox(boat, [0.48, 0.10, 0.12], [x, 0.91, -4.43], M.steel);
+      makeTorus(
+        boat,
+        0.12,
+        0.035,
+        [x, 0.97, -4.43],
+        M.steel,
+        [Math.PI / 2, 0, 0],
+        20
+      );
+    }
+
+    // Navigation lights.
+    addSphere(boat, 0.12, [-0.55, 1.02, 5.82], M.lampRed, 16);
+    addSphere(boat, 0.12, [0.55, 1.02, 5.82], M.lampGreen, 16);
+    addSphere(boat, 0.11, [0, 0.82, -4.80], M.lampWhite, 16);
+
+    // Exhaust and radar.
+    addCylinder(boat, 0.16, 0.20, 1.35, [-1.78, 1.30, -3.72], M.darkMetal, 14);
+    addCylinder(boat, 0.24, 0.24, 0.12, [-1.78, 2.02, -3.72], M.black, 14);
+
+    addCylinder(boat, 0.035, 0.035, 0.75, [0, 2.10, -1.20], M.steel, 8);
+    addBox(boat, [1.15, 0.18, 0.30], [0, 2.42, -1.20], M.white);
+
+    // Bow antenna.
+    makeBeam(boat, [0, 0.72, 5.95], [0, 2.20, 5.95], 0.025, M.steel);
+    makeBeam(boat, [-0.55, 1.92, 5.95], [0.55, 1.92, 5.95], 0.018, M.steel);
+
+    // Fenders.
+    for (const side of [-1, 1]) {
+      for (const z of [-3.8, -1.2, 1.4, 3.8]) {
+        const x = side * 2.46;
+        addCylinder(
+          boat,
+          0.16,
+          0.16,
+          0.42,
+          [x, 0.13, z],
+          M.rubber,
+          12
+        ).rotation.z = Math.PI / 2;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Water
+    // -------------------------------------------------------------------------
+
+    const waterGeometry = new THREE.PlaneGeometry(120, 120, 110, 110);
+    waterGeometry.rotateX(-Math.PI / 2);
+
+    const waterPosition = waterGeometry.attributes.position;
+    const waterBase = new Float32Array(waterPosition.count * 2);
+
+    for (let i = 0; i < waterPosition.count; i++) {
+      waterBase[i] = waterPosition.getX(i);
+      waterBase[i + 1] = waterPosition.getZ(i);
+    }
+
+    const waterMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x167d95,
+      metalness: 0.16,
+      roughness: 0.27,
+      transparent: true,
+      opacity: 0.94,
+      clearcoat: 1,
+      clearcoatRoughness: 0.2
+    });
+
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.receiveShadow = true;
+    scene.add(water);
+
+    // Soft wake trails behind the stern.
+    const wakeMaterial = new THREE.MeshBasicMaterial({
+      color: 0xd9f4f5,
+      transparent: true,
+      opacity: 0.17,
+      depthWrite: false
+    });
+
+    for (const points of [
+      [
+        [-2.75, 0.055, -5.45],
+        [-3.35, 0.055, -6.75],
+        [-3.10, 0.055, -8.10],
+        [-2.25, 0.055, -9.20]
+      ],
+      [
+        [2.75, 0.055, -5.45],
+        [3.35, 0.055, -6.75],
+        [3.10, 0.055, -8.10],
+        [2.25, 0.055, -9.20]
+      ]
+    ]) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((p) => new THREE.Vector3(...p))
+      );
+      const wake = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 56, 0.075, 6, false),
+        wakeMaterial
+      );
+      scene.add(wake);
+    }
+
+    // Distant navigation marker.
+    const distantBuoy = new THREE.Group();
+    distantBuoy.position.set(11.5, 0, -14.5);
+    scene.add(distantBuoy);
+
+    addCylinder(distantBuoy, 0.34, 0.48, 0.65, [0, 0.32, 0], M.red, 16);
+    addCylinder(distantBuoy, 0.12, 0.16, 1.25, [0, 1.42, 0], M.white, 12);
+    addSphere(distantBuoy, 0.16, [0, 2.10, 0], M.lampWhite, 16);
+
+    // Low-poly distant island.
+    const island = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(4.8, 0),
+      material(0x315c56, 0.95)
+    );
+    island.position.set(-15, -0.4, -21);
+    island.scale.set(1.4, 0.65, 1);
+    island.receiveShadow = true;
+    scene.add(island);
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, pan, wheel zoom, and touch pinch
+    // -------------------------------------------------------------------------
+
+    const pointers = new Map();
+    let dragMode = "orbit";
+    let lastX = 0;
+    let lastY = 0;
+    let lastPinchDistance = 0;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", (event) => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragMode = event.button === 2 || event.shiftKey ? "pan" : "orbit";
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        dragMode = "pinch";
+        const values = [...pointers.values()];
+        lastPinchDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+
+        if (dragMode === "orbit") {
+          spherical.theta -= dx * 0.006;
+          spherical.phi = THREE.MathUtils.clamp(
+            spherical.phi - dy * 0.005,
+            0.24,
+            1.48
+          );
+        } else if (dragMode === "pan") {
+          const right = new THREE.Vector3();
+          const up = new THREE.Vector3();
+          camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+          const panScale = spherical.radius * 0.00125;
+          cameraTarget.addScaledVector(right, -dx * panScale);
+          cameraTarget.addScaledVector(up, dy * panScale);
+        }
+      } else if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (lastPinchDistance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (lastPinchDistance / distance),
+            7,
+            29
+          );
+        }
+
+        lastPinchDistance = distance;
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        lastX = remaining.x;
+        lastY = remaining.y;
+        dragMode = "orbit";
+      } else if (pointers.size === 0) {
+        dragMode = "orbit";
+        lastPinchDistance = 0;
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          7,
+          29
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    document.getElementById("reset-view").addEventListener("click", () => {
+      cameraTarget.set(0, 1.65, -0.7);
+      spherical.set(15.5, 1.14, 0.72);
+      updateCamera();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") {
+        cameraTarget.set(0, 1.65, -0.7);
+        spherical.set(15.5, 1.14, 0.72);
+        updateCamera();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const hookBottom = new THREE.Vector3(0, 2.02, -6.15);
+    const buoyTop = new THREE.Vector3();
+
+    renderer.setAnimationLoop(() => {
+      const time = clock.getElapsedTime();
+
+      // Animated water surface.
+      for (let i = 0; i < waterPosition.count; i++) {
+        const x = waterBase[i];
+        const z = waterBase[i + 1];
+        const y =
+          Math.sin(x * 0.32 + time * 0.72) * 0.08 +
+          Math.cos(z * 0.26 - time * 0.91) * 0.06 +
+          Math.sin((x + z) * 0.16 + time * 0.45) * 0.045;
+
+        waterPosition.setY(i, y);
+      }
+      waterPosition.needsUpdate = true;
+
+      // Buoy bobbing and flag movement.
+      buoy.position.y = 1.08 + Math.sin(time * 1.35) * 0.075;
+      buoy.rotation.z = Math.sin(time * 0.88) * 0.035;
+      buoy.rotation.x = Math.cos(time * 0.71) * 0.025;
+
+      buoyTop.set(0, buoy.position.y + 0.72, -6.15);
+      setBeam(hoistCable, hookBottom, buoyTop);
+
+      flag.rotation.y = Math.sin(time * 2.1) * 0.28;
+
+      ripple.scale.setScalar(1 + (time * 0.22) % 0.7);
+      ripple.material.opacity = 0.35 * (1 - (time * 0.22) % 0.7);
+
+      renderer.render(scene, camera);
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

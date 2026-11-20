@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drag-Link Four-Bar Mechanism</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(14, 21, 30, 0.82);
+      --border: rgba(166, 196, 220, 0.18);
+      --text: #e8f1f7;
+      --muted: #91a5b5;
+      --red: #ff6858;
+      --blue: #4ba3ff;
+      --cyan: #50d5ca;
+      --gold: #f4c45d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0a1017;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    #title-panel {
+      top: 22px;
+      left: 22px;
+      width: min(420px, calc(100vw - 44px));
+      padding: 18px 20px;
+      border-radius: 15px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--cyan);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.5vw, 29px);
+      font-weight: 650;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 13px;
+    }
+
+    .fact {
+      padding: 5px 8px;
+      border: 1px solid rgba(166, 196, 220, 0.13);
+      border-radius: 999px;
+      color: #b9cad6;
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    #controls {
+      right: 22px;
+      bottom: 22px;
+      width: 270px;
+      padding: 15px;
+      border-radius: 14px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      min-width: 76px;
+      padding: 9px 12px;
+      border: 1px solid rgba(166, 196, 220, 0.2);
+      border-radius: 9px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.055);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(80, 213, 202, 0.55);
+      background: rgba(80, 213, 202, 0.09);
+    }
+
+    .speed {
+      flex: 1;
+      min-width: 70px;
+      accent-color: var(--cyan);
+    }
+
+    .help {
+      margin: 11px 2px 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    #legend {
+      left: 22px;
+      bottom: 22px;
+      padding: 13px 15px;
+      border-radius: 13px;
+    }
+
+    .legend-title {
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 7px;
+      color: #c4d1db;
+      font-size: 11px;
+    }
+
+    .swatch {
+      width: 21px;
+      height: 5px;
+      border-radius: 999px;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .swatch.red {
+      color: var(--red);
+      background: var(--red);
+    }
+
+    .swatch.blue {
+      color: var(--blue);
+      background: var(--blue);
+    }
+
+    .swatch.cyan {
+      color: var(--cyan);
+      background: var(--cyan);
+    }
+
+    .swatch.gold {
+      color: var(--gold);
+      background: var(--gold);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: #0a1017;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 300ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      #title-panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 14px 16px;
+      }
+
+      .facts {
+        display: none;
+      }
+
+      #controls {
+        right: 12px;
+        bottom: 12px;
+        width: 235px;
+      }
+
+      #legend {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="scene"></canvas>
+
+  <section id="title-panel" class="panel">
+    <div class="eyebrow">Kinematic Study / Four-Bar Assembly</div>
+    <h1>Drag-Link Four-Bar</h1>
+    <p class="subtitle">
+      An open-frame mechanism with unequal crank and rocker links,
+      a raised coupler, three fixed pivot posts, travel slots, and adjustable
+      end stops.
+    </p>
+
+    <div class="facts">
+      <span class="fact">3 ground pivots</span>
+      <span class="fact">raised coupler</span>
+      <span class="fact">anodized aluminum</span>
+      <span class="fact">steel shoulder pins</span>
+    </div>
+  </section>
+
+  <section id="legend" class="panel">
+    <div class="legend-title">Component Key</div>
+    <div class="legend-item">
+      <span class="swatch red"></span>
+      Short crank
+    </div>
+    <div class="legend-item">
+      <span class="swatch blue"></span>
+      Long coupler
+    </div>
+    <div class="legend-item">
+      <span class="swatch cyan"></span>
+      Drag link / rocker
+    </div>
+    <div class="legend-item">
+      <span class="swatch gold"></span>
+      Auxiliary ground post
+    </div>
+  </section>
+
+  <section id="controls" class="panel">
+    <div class="control-row">
+      <button id="pause">Pause</button>
+      <label for="speed" style="font-size:10px;color:var(--muted)">
+        SPEED
+      </label>
+      <input
+        id="speed"
+        class="speed"
+        type="range"
+        min="0.15"
+        max="1.8"
+        step="0.05"
+        value="0.8"
+      />
+      <button id="reset">View</button>
+    </div>
+    <p class="help">
+      Drag to orbit · Wheel to zoom · Double-click to reset view<br />
+      Space: pause/resume · R: reset camera
+    </p>
+  </section>
+
+  <div id="loading">Building mechanism…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const canvas = document.querySelector("#scene");
+    const loading = document.querySelector("#loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1017);
+    scene.fog = new THREE.Fog(0x0a1017, 14, 28);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    // A simple procedural studio environment, generated with a canvas.
+    // This avoids any external HDR or Three.js addon dependency.
+    function createStudioEnvironment() {
+      const envCanvas = document.createElement("canvas");
+      envCanvas.width = 1024;
+      envCanvas.height = 512;
+
+      const ctx = envCanvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+
+      gradient.addColorStop(0, "#71899e");
+      gradient.addColorStop(0.32, "#304355");
+      gradient.addColorStop(0.58, "#121b25");
+      gradient.addColorStop(1, "#05080c");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = "#e8f5ff";
+      ctx.fillRect(120, 50, 48, 250);
+      ctx.fillRect(430, 20, 90, 280);
+      ctx.fillRect(780, 70, 55, 220);
+      ctx.globalAlpha = 1;
+
+      const texture = new THREE.CanvasTexture(envCanvas);
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+
+      return texture;
+    }
+
+    scene.environment = createStudioEnvironment();
+    if ("environmentIntensity" in scene) {
+      scene.environmentIntensity = 0.8;
+    }
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      base: new THREE.MeshPhysicalMaterial({
+        color: 0x303b47,
+        metalness: 0.72,
+        roughness: 0.34,
+        clearcoat: 0.18,
+        clearcoatRoughness: 0.35,
+        envMapIntensity: 0.95
+      }),
+      baseEdge: new THREE.MeshStandardMaterial({
+        color: 0x586979,
+        metalness: 0.8,
+        roughness: 0.3
+      }),
+      steel: new THREE.MeshPhysicalMaterial({
+        color: 0xc7d0d8,
+        metalness: 0.95,
+        roughness: 0.18,
+        clearcoat: 0.2,
+        envMapIntensity: 1.25
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x17212b,
+        metalness: 0.78,
+        roughness: 0.31
+      }),
+      slot: new THREE.MeshStandardMaterial({
+        color: 0x070b0f,
+        metalness: 0.45,
+        roughness: 0.46
+      }),
+      crank: new THREE.MeshPhysicalMaterial({
+        color: 0xe95343,
+        metalness: 0.76,
+        roughness: 0.27,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.25
+      }),
+      coupler: new THREE.MeshPhysicalMaterial({
+        color: 0x287cc8,
+        metalness: 0.77,
+        roughness: 0.25,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.22
+      }),
+      rocker: new THREE.MeshPhysicalMaterial({
+        color: 0x299f98,
+        metalness: 0.78,
+        roughness: 0.27,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.24
+      }),
+      redAccent: new THREE.MeshStandardMaterial({
+        color: 0xff6858,
+        metalness: 0.72,
+        roughness: 0.25
+      }),
+      cyanAccent: new THREE.MeshStandardMaterial({
+        color: 0x50d5ca,
+        metalness: 0.72,
+        roughness: 0.25
+      }),
+      goldAccent: new THREE.MeshStandardMaterial({
+        color: 0xf4c45d,
+        metalness: 0.72,
+        roughness: 0.25
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xe8f3fa,
+        metalness: 0.25,
+        roughness: 0.45
+      }),
+      floor: new THREE.MeshStandardMaterial({
+        color: 0x0c1219,
+        metalness: 0.1,
+        roughness: 0.83
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(
+      new THREE.HemisphereLight(0xc5e2f5, 0x18202a, 1.45)
+    );
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(-4.5, 9, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -8;
+    keyLight.shadow.camera.right = 8;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 24;
+    keyLight.shadow.bias = -0.00035;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x77cfff, 1.8);
+    rimLight.position.set(6, 4.5, -5);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xffb76a, 35, 15, 2);
+    warmLight.position.set(-5, 3.8, 4);
+    scene.add(warmLight);
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function roundedRectPath(width, height, radius, centerX = 0, centerY = 0) {
+      const path = new THREE.Shape();
+      const x = centerX - width / 2;
+      const y = centerY - height / 2;
+
+      path.moveTo(x + radius, y);
+      path.lineTo(x + width - radius, y);
+      path.quadraticCurveTo(x + width, y, x + width, y + radius);
+      path.lineTo(x + width, y + height - radius);
+      path.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - radius,
+        y + height
+      );
+      path.lineTo(x + radius, y + height);
+      path.quadraticCurveTo(x, y + height, x, y + height - radius);
+      path.lineTo(x, y + radius);
+      path.quadraticCurveTo(x, y, x + radius, y);
+      path.closePath();
+
+      return path;
+    }
+
+    function addBox(
+      width,
+      height,
+      depth,
+      x,
+      y,
+      z,
+      material,
+      castShadow = true,
+      receiveShadow = true
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = receiveShadow;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function addCylinder(
+      radius,
+      height,
+      x,
+      y,
+      z,
+      material,
+      radialSegments = 32,
+      castShadow = true
+    ) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          height,
+          radialSegments
+        ),
+        material
+      );
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function beamBetweenXZ(
+      x1,
+      z1,
+      x2,
+      z2,
+      width,
+      height,
+      y,
+      material
+    ) {
+      const dx = x2 - x1;
+      const dz = z2 - z1;
+      const length = Math.hypot(dx, dz);
+      const angle = Math.atan2(dz, dx);
+
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(length, height, width),
+        material
+      );
+      mesh.position.set((x1 + x2) / 2, y, (z1 + z2) / 2);
+      mesh.rotation.y = -angle;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function addScrew(x, z, y = 0.365, radius = 0.065) {
+      addCylinder(radius, 0.035, x, y, z, materials.steel, 20);
+      addBox(
+        radius * 1.15,
+        0.012,
+        radius * 0.18,
+        x,
+        y + 0.022,
+        z,
+        materials.slot,
+        false,
+        false
+      );
+    }
+
+    function createTag(text, accent = "#d8e5ee", compact = false) {
+      const tagCanvas = document.createElement("canvas");
+      tagCanvas.width = compact ? 160 : 640;
+      tagCanvas.height = 112;
+
+      const ctx = tagCanvas.getContext("2d");
+      ctx.clearRect(0, 0, tagCanvas.width, tagCanvas.height);
+
+      const r = 24;
+      const x = 4;
+      const y = 4;
+      const w = tagCanvas.width - 8;
+      const h = tagCanvas.height - 8;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      ctx.fillStyle = "rgba(7, 13, 19, 0.84)";
+      ctx.fill();
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = compact ? 4 : 3;
+      ctx.stroke();
+
+      ctx.fillStyle = "#edf6fb";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = `${compact ? 700 : 650} ${compact ? 58 : 39}px system-ui`;
+      ctx.fillText(text, tagCanvas.width / 2, tagCanvas.height / 2 + 2);
+
+      const texture = new THREE.CanvasTexture(tagCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.needsUpdate = true;
+
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false
+      });
+
+      const sprite = new THREE.Sprite(material);
+      sprite.renderOrder = 20;
+
+      const desiredWidth = compact ? 0.36 : 1.55;
+      sprite.scale.set(
+        desiredWidth,
+        desiredWidth * (tagCanvas.height / tagCanvas.width),
+        1
+      );
+
+      return sprite;
+    }
+
+    // -------------------------------------------------------------------------
+    // Floor and open-frame baseplate
+    // -------------------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(50, 50),
+      materials.floor
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.012;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(26, 52, 0x31404e, 0x1b2732);
+    grid.position.y = 0.002;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.16;
+    scene.add(grid);
+
+    const plateShape = roundedRectPath(9, 6.6, 0.34, 0, 0);
+    const openingShape = roundedRectPath(6.2, 4.05, 0.24, 0, -0.3);
+    plateShape.holes.push(openingShape);
+
+    const plateGeometry = new THREE.ExtrudeGeometry(plateShape, {
+      depth: 0.28,
+      bevelEnabled: true,
+      bevelSegments: 3,
+      bevelSize: 0.065,
+      bevelThickness: 0.045,
+      curveSegments: 12
+    });
+    plateGeometry.rotateX(-Math.PI / 2);
+
+    const plate = new THREE.Mesh(plateGeometry, materials.base);
+    plate.position.y = 0.025;
+    plate.castShadow = true;
+    plate.receiveShadow = true;
+    scene.add(plate);
+
+    const plateEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(plateGeometry, 24),
+      new THREE.LineBasicMaterial({
+        color: 0x748796,
+        transparent: true,
+        opacity: 0.45
+      })
+    );
+    plateEdges.position.copy(plate.position);
+    scene.add(plateEdges);
+
+    // Fixed ground cross member joining the two main ground pivots.
+    addBox(
+      6.25,
+      0.14,
+      0.48,
+      0,
+      0.37,
+      -0.2,
+      materials.darkSteel
+    );
+
+    // Structural diagonal brace from the auxiliary post G to pivot D.
+    beamBetweenXZ(
+      0,
+      -2.35,
+      1.9,
+      -0.2,
+      0.18,
+      0.12,
+      0.43,
+      materials.darkSteel
+    );
+
+    // Mounting hardware.
+    [
+      [-4.0, -2.85],
+      [4.0, -2.85],
+      [-4.0, 2.85],
+      [4.0, 2.85],
+      [-3.45, -2.25],
+      [3.45, -2.25],
+      [-3.45, 2.15],
+      [3.45, 2.15]
+    ].forEach(([x, z]) => addScrew(x, z));
+
+    // -------------------------------------------------------------------------
+    // Four-bar geometry and closure
+    // -------------------------------------------------------------------------
+
+    const A = new THREE.Vector2(-1.9, -0.2); // crank ground pivot
+    const D = new THREE.Vector2(1.9, -0.2);  // rocker ground pivot
+    const G = new THREE.Vector2(0, -2.35);   // auxiliary ground pivot
+
+    const CRANK_LENGTH = 0.85;
+    const COUPLER_LENGTH = 3.25;
+    const ROCKER_LENGTH = 2.15;
+
+    const THETA_MIN = THREE.MathUtils.degToRad(25);
+    const THETA_MAX = THREE.MathUtils.degToRad(150);
+    const THETA_MID = (THETA_MIN + THETA_MAX) / 2;
+    const THETA_AMP = (THETA_MAX - THETA_MIN) / 2;
+
+    const LINK_LOW = 1.22;
+    const LINK_HIGH = 1.58;
+
+    function solveFourBar(theta) {
+      const bx = A.x + CRANK_LENGTH * Math.cos(theta);
+      const bz = A.y + CRANK_LENGTH * Math.sin(theta);
+
+      const dx = D.x - bx;
+      const dz = D.y - bz;
+      const distance = Math.hypot(dx, dz);
+
+      const along =
+        (COUPLER_LENGTH * COUPLER_LENGTH -
+          ROCKER_LENGTH * ROCKER_LENGTH +
+          distance * distance) /
+        (2 * distance);
+
+      const height = Math.sqrt(
+        Math.max(
+          0,
+          COUPLER_LENGTH * COUPLER_LENGTH - along * along
+        )
+      );
+
+      const ux = dx / distance;
+      const uz = dz / distance;
+
+      const px = bx + along * ux;
+      const pz = bz + along * uz;
+
+      // Upper/open assembly branch.
+      const cx = px - height * uz;
+      const cz = pz + height * ux;
+
+      let rockerAngle = Math.atan2(cz - D.y, cx - D.x);
+      if (rockerAngle < 0) rockerAngle += Math.PI * 2;
+
+      return {
+        B: new THREE.Vector2(bx, bz),
+        C: new THREE.Vector2(cx, cz),
+        rockerAngle
+      };
+    }
+
+    const minSolution = solveFourBar(THETA_MIN);
+    const maxSolution = solveFourBar(THETA_MAX);
+
+    const rockerArcStart =
+      Math.min(minSolution.rockerAngle, maxSolution.rockerAngle) -
+      THREE.MathUtils.degToRad(1.3);
+    const rockerArcEnd =
+      Math.max(minSolution.rockerAngle, maxSolution.rockerAngle) +
+      THREE.MathUtils.degToRad(1.3);
+
+    // -------------------------------------------------------------------------
+    // Slotted arc rails, index marks and travel trace
+    // -------------------------------------------------------------------------
+
+    function annularBand(
+      centerX,
+      centerZ,
+      radius,
+      width,
+      startAngle,
+      endAngle,
+      y,
+      material,
+      segments = 96
+    ) {
+      const positions = [];
+      const indices = [];
+      const innerRadius = radius - width / 2;
+      const outerRadius = radius + width / 2;
+
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const angle = THREE.MathUtils.lerp(startAngle, endAngle, t);
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+
+        positions.push(
+          centerX + c * outerRadius,
+          y,
+          centerZ + s * outerRadius,
+          centerX + c * innerRadius,
+          y,
+          centerZ + s * innerRadius
+        );
+
+        if (i < segments) {
+          const a = i * 2;
+          const b = a + 1;
+          const c = a + 2;
+          const d = a + 3;
+
+          indices.push(a, b, c, b, d, c);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function arcLine(
+      centerX,
+      centerZ,
+      radius,
+      startAngle,
+      endAngle,
+      y,
+      color = 0x7e9bac,
+      opacity = 0.8
+    ) {
+      const points = [];
+      const segments = 96;
+
+      for (let i = 0; i <= segments; i++) {
+        const angle = THREE.MathUtils.lerp(
+          startAngle,
+          endAngle,
+          i / segments
+        );
+
+        points.push(
+          new THREE.Vector3(
+            centerX + Math.cos(angle) * radius,
+            y,
+            centerZ + Math.sin(angle) * radius
+          )
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity
+        })
+      );
+      scene.add(line);
+      return line;
+    }
+
+    function addArcTick(
+      centerX,
+      centerZ,
+      radius,
+      angle,
+      length = 0.18,
+      width = 0.025,
+      y = 0.505
+    ) {
+      const tick = new THREE.Mesh(
+        new THREE.BoxGeometry(length, 0.018, width),
+        materials.white
+      );
+
+      tick.position.set(
+        centerX + Math.cos(angle) * radius,
+        y,
+        centerZ + Math.sin(angle) * radius
+      );
+      tick.rotation.y = -angle;
+      scene.add(tick);
+    }
+
+    const crankArcRadius = 1.25;
+    const rockerArcRadius = 1.32;
+
+    // Crank travel arc.
+    annularBand(
+      A.x,
+      A.y,
+      crankArcRadius,
+      0.3,
+      THETA_MIN,
+      THETA_MAX,
+      0.477,
+      materials.darkSteel
+    );
+    annularBand(
+      A.x,
+      A.y,
+      crankArcRadius,
+      0.115,
+      THETA_MIN,
+      THETA_MAX,
+      0.492,
+      materials.slot
+    );
+    arcLine(
+      A.x,
+      A.y,
+      crankArcRadius - 0.15,
+      THETA_MIN,
+      THETA_MAX,
+      0.503
+    );
+    arcLine(
+      A.x,
+      A.y,
+      crankArcRadius + 0.15,
+      THETA_MIN,
+      THETA_MAX,
+      0.503
+    );
+
+    for (
+      let angle = THREE.MathUtils.degToRad(20);
+      angle <= THREE.MathUtils.degToRad(160);
+      angle += THREE.MathUtils.degToRad(10)
+    ) {
+      addArcTick(A.x, A.y, crankArcRadius, angle);
+    }
+
+    // Rocker travel arc.
+    annularBand(
+      D.x,
+      D.y,
+      rockerArcRadius,
+      0.3,
+      rockerArcStart,
+      rockerArcEnd,
+      0.477,
+      materials.darkSteel
+    );
+    annularBand(
+      D.x,
+      D.y,
+      rockerArcRadius,
+      0.115,
+      rockerArcStart,
+      rockerArcEnd,
+      0.492,
+      materials.slot
+    );
+    arcLine(
+      D.x,
+      D.y,
+      rockerArcRadius - 0.15,
+      rockerArcStart,
+      rockerArcEnd,
+      0.503
+    );
+    arcLine(
+      D.x,
+      D.y,
+      rockerArcRadius + 0.15,
+      rockerArcStart,
+      rockerArcEnd,
+      0.503
+    );
+
+    const rockerTickCount = 12;
+    for (let i = 0; i <= rockerTickCount; i++) {
+      const angle = THREE.MathUtils.lerp(
+        rockerArcStart,
+        rockerArcEnd,
+        i / rockerTickCount
+      );
+      addArcTick(D.x, D.y, rockerArcRadius, angle, 0.16, 0.022);
+    }
+
+    // Fasteners on the arc rails.
+    [
+      [A.x, A.y, crankArcRadius, THETA_MIN],
+      [A.x, A.y, crankArcRadius, THETA_MAX],
+      [D.x, D.y, rockerArcRadius, rockerArcStart],
+      [D.x, D.y, rockerArcRadius, rockerArcEnd]
+    ].forEach(([x, z, r, angle]) => {
+      addScrew(
+        x + Math.cos(angle) * (r + 0.22),
+        z + Math.sin(angle) * (r + 0.22),
+        0.49,
+        0.045
+      );
+    });
+
+    // Dashed path traced by the moving rocker pin.
+    const tracePoints = [];
+    for (let i = 0; i <= 120; i++) {
+      const theta = THREE.MathUtils.lerp(
+        THETA_MIN,
+        THETA_MAX,
+        i / 120
+      );
+      const solution = solveFourBar(theta);
+
+      tracePoints.push(
+        new THREE.Vector3(solution.C.x, 0.515, solution.C.y)
+      );
+    }
+
+    const trace = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(tracePoints),
+      new THREE.LineDashedMaterial({
+        color: 0x62d7cf,
+        dashSize: 0.12,
+        gapSize: 0.08,
+        transparent: true,
+        opacity: 0.4
+      })
+    );
+    trace.computeLineDistances();
+    scene.add(trace);
+
+    // -------------------------------------------------------------------------
+    // Ground posts
+    // -------------------------------------------------------------------------
+
+    function makeGroundPost(position, accentMaterial, withPivot = true) {
+      addCylinder(
+        0.29,
+        0.075,
+        position.x,
+        0.397,
+        position.y,
+        materials.darkSteel
+      );
+
+      addCylinder(
+        0.145,
+        0.61,
+        position.x,
+        0.72,
+        position.y,
+        materials.steel
+      );
+
+      addCylinder(
+        0.19,
+        0.105,
+        position.x,
+        1.0,
+        position.y,
+        accentMaterial
+      );
+
+      if (withPivot) {
+        addCylinder(
+          0.095,
+          0.43,
+          position.x,
+          1.205,
+          position.y,
+          materials.steel
+        );
+
+        addCylinder(
+          0.145,
+          0.075,
+          position.x,
+          1.445,
+          position.y,
+          materials.steel,
+          6
+        );
+      } else {
+        addCylinder(
+          0.17,
+          0.085,
+          position.x,
+          1.06,
+          position.y,
+          accentMaterial
+        );
+      }
+    }
+
+    makeGroundPost(A, materials.redAccent, true);
+    makeGroundPost(D, materials.cyanAccent, true);
+    makeGroundPost(G, materials.goldAccent, false);
+
+    // Small fixed index pointer above the auxiliary ground pivot.
+    beamBetweenXZ(
+      G.x,
+      G.y,
+      G.x,
+      G.y + 0.48,
+      0.09,
+      0.07,
+      1.12,
+      materials.goldAccent
+    );
+
+    // -------------------------------------------------------------------------
+    // Link construction
+    // -------------------------------------------------------------------------
+
+    function makeLink(length, width, thickness, material, accentMaterial) {
+      const group = new THREE.Group();
+
+      const bodyLength = Math.max(0.08, length - width);
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(bodyLength, thickness, width),
+        material
+      );
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+
+      const endOffset = bodyLength / 2;
+
+      [-endOffset, endOffset].forEach((x) => {
+        const end = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            width / 2,
+            width / 2,
+            thickness,
+            40
+          ),
+          material
+        );
+        end.position.x = x;
+        end.castShadow = true;
+        end.receiveShadow = true;
+        group.add(end);
+
+        const inset = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            width * 0.25,
+            width * 0.25,
+            0.012,
+            30
+          ),
+          accentMaterial
+        );
+        inset.position.set(x, thickness / 2 + 0.008, 0);
+        group.add(inset);
+      });
+
+      const stripe = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          Math.max(0.08, length - width * 1.35),
+          0.014,
+          width * 0.22
+        ),
+        accentMaterial
+      );
+      stripe.position.y = thickness / 2 + 0.009;
+      group.add(stripe);
+
+      return group;
+    }
+
+    const crankLink = makeLink(
+      CRANK_LENGTH,
+      0.43,
+      0.22,
+      materials.crank,
+      materials.redAccent
+    );
+
+    const couplerLink = makeLink(
+      COUPLER_LENGTH,
+      0.5,
+      0.18,
+      materials.coupler,
+      new THREE.MeshStandardMaterial({
+        color: 0x8fc9ff,
+        metalness: 0.7,
+        roughness: 0.3
+      })
+    );
+
+    const rockerLink = makeLink(
+      ROCKER_LENGTH,
+      0.48,
+      0.22,
+      materials.rocker,
+      materials.cyanAccent
+    );
+
+    scene.add(crankLink, couplerLink, rockerLink);
+
+    // Rocker stop roller, rigidly attached to the moving rocker.
+    const stopRoller = addCylinder(
+      0.085,
+      0.31,
+      0,
+      0,
+      0,
+      materials.steel,
+      28
+    );
+    stopRoller.position.x = 0.72;
+    rockerLink.add(stopRoller);
+
+    // Fixed mechanical stop lugs at both ends of rocker travel.
+    function makeStopLug(angle) {
+      const radius = 0.72;
+      const x = D.x + Math.cos(angle) * radius;
+      const z = D.y + Math.sin(angle) * radius;
+
+      addCylinder(
+        0.038,
+        0.66,
+        x,
+        0.79,
+        z,
+        materials.steel,
+        18
+      );
+
+      addCylinder(
+        0.115,
+        0.29,
+        x,
+        LINK_LOW,
+        z,
+        materials.redAccent,
+        28
+      );
+
+      addCylinder(
+        0.085,
+        0.025,
+        x,
+        LINK_LOW + 0.16,
+        z,
+        materials.steel,
+        24
+      );
+    }
+
+    makeStopLug(rockerArcStart);
+    makeStopLug(rockerArcEnd);
+
+    // -------------------------------------------------------------------------
+    // Moving shoulder pins
+    // -------------------------------------------------------------------------
+
+    function makeShoulderPin() {
+      const group = new THREE.Group();
+
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.088, 0.088, 0.72, 28),
+        materials.steel
+      );
+      pin.position.y = 0.11;
+      pin.castShadow = true;
+      group.add(pin);
+
+      [0.02, 0.32, 0.56].forEach((y, index) => {
+        const collar = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            index === 1 ? 0.135 : 0.12,
+            index === 1 ? 0.135 : 0.12,
+            0.055,
+            32
+          ),
+          index === 1 ? materials.goldAccent : materials.steel
+        );
+        collar.position.y = y;
+        collar.castShadow = true;
+        group.add(collar);
+      });
+
+      const nut = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.145, 0.145, 0.08, 6),
+        materials.steel
+      );
+      nut.position.y = 0.67;
+      nut.castShadow = true;
+      group.add(nut);
+
+      return group;
+    }
+
+    const pinB = makeShoulderPin();
+    const pinC = makeShoulderPin();
+    scene.add(pinB, pinC);
+
+    // -------------------------------------------------------------------------
+    // Labels
+    // -------------------------------------------------------------------------
+
+    const labelA = createTag("A", "#ff6858", true);
+    const labelB = createTag("B", "#d8e5ee", true);
+    const labelC = createTag("C", "#d8e5ee", true);
+    const labelD = createTag("D", "#50d5ca", true);
+    const labelG = createTag("G", "#f4c45d", true);
+
+    scene.add(labelA, labelB, labelC, labelD, labelG);
+
+    labelA.position.set(A.x, 1.78, A.y);
+    labelD.position.set(D.x, 1.78, D.y);
+    labelG.position.set(G.x, 1.52, G.y);
+
+    const crankTag = createTag("SHORT CRANK", "#ff6858");
+    crankTag.position.set(0, 0.43, 0);
+    crankLink.add(crankTag);
+
+    const couplerTag = createTag("LONG COUPLER", "#72b6ff");
+    couplerTag.position.set(0, 0.42, 0);
+    couplerLink.add(couplerTag);
+
+    const rockerTag = createTag("DRAG LINK / ROCKER", "#64e2d8");
+    rockerTag.position.set(0, 0.43, 0);
+    rockerLink.add(rockerTag);
+
+    const groundTag = createTag("FIXED GROUND", "#a7bac7");
+    groundTag.position.set(-0.75, 0.66, -0.2);
+    scene.add(groundTag);
+
+    const stopTag = createTag("ROCKER STOP", "#ff6858");
+    const stopAngle = rockerArcEnd;
+    const stopX = D.x + Math.cos(stopAngle) * 0.72;
+    const stopZ = D.y + Math.sin(stopAngle) * 0.72;
+    stopTag.position.set(stopX + 0.52, 1.68, stopZ + 0.25);
+    scene.add(stopTag);
+
+    const stopLeader = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(stopX, 1.56, stopZ),
+        new THREE.Vector3(
+          stopTag.position.x - 0.2,
+          1.56,
+          stopTag.position.z - 0.04
+        )
+      ]),
+      new THREE.LineBasicMaterial({
+        color: 0xff6858,
+        transparent: true,
+        opacity: 0.7
+      })
+    );
+    scene.add(stopLeader);
+
+    const crankEndTag = createTag("25°", "#ff6858");
+    crankEndTag.scale.multiplyScalar(0.64);
+    crankEndTag.position.set(
+      A.x + Math.cos(THETA_MIN) * 1.6,
+      0.61,
+      A.y + Math.sin(THETA_MIN) * 1.6
+    );
+    scene.add(crankEndTag);
+
+    const crankFarTag = createTag("150°", "#ff6858");
+    crankFarTag.scale.multiplyScalar(0.64);
+    crankFarTag.position.set(
+      A.x + Math.cos(THETA_MAX) * 1.6,
+      0.61,
+      A.y + Math.sin(THETA_MAX) * 1.6
+    );
+    scene.add(crankFarTag);
+
+    // -------------------------------------------------------------------------
+    // Link placement
+    // -------------------------------------------------------------------------
+
+    function placeLink(link, point1, point2, y) {
+      const midpointX = (point1.x + point2.x) / 2;
+      const midpointZ = (point1.y + point2.y) / 2;
+      const angle = Math.atan2(
+        point2.y - point1.y,
+        point2.x - point1.x
+      );
+
+      link.position.set(midpointX, y, midpointZ);
+      link.rotation.y = -angle;
+    }
+
+    let currentSolution = solveFourBar(THETA_MID);
+
+    function updateMechanism(theta) {
+      currentSolution = solveFourBar(theta);
+
+      const B = currentSolution.B;
+      const C = currentSolution.C;
+
+      placeLink(crankLink, A, B, LINK_LOW);
+      placeLink(couplerLink, B, C, LINK_HIGH);
+      placeLink(rockerLink, D, C, LINK_LOW);
+
+      pinB.position.set(B.x, 1.03, B.y);
+      pinC.position.set(C.x, 1.03, C.y);
+
+      labelB.position.set(B.x, 1.91, B.y);
+      labelC.position.set(C.x, 1.91, C.y);
+    }
+
+    // -------------------------------------------------------------------------
+    // Custom orbit controls — no camera-control addons
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      yaw: -0.72,
+      pitch: 0.61,
+      radius: 11.6,
+      target: new THREE.Vector3(0, 0.74, 0.2)
+    };
+
+    function updateCamera() {
+      const cp = Math.cos(cameraState.pitch);
+      const sp = Math.sin(cameraState.pitch);
+
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * Math.sin(cameraState.yaw) * cp,
+        cameraState.target.y + cameraState.radius * sp,
+        cameraState.target.z +
+          cameraState.radius * Math.cos(cameraState.yaw) * cp
+      );
+
+      camera.lookAt(cameraState.target);
+    }
+
+    function resetCamera() {
+      cameraState.yaw = -0.72;
+      cameraState.pitch = 0.61;
+      cameraState.radius = 11.6;
+      cameraState.target.set(0, 0.74, 0.2);
+      updateCamera();
+    }
+
+    let pointerDown = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      pointerDown = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointerDown) return;
+
+      const dx = event.clientX - pointerX;
+      const dy = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      cameraState.yaw -= dx * 0.005;
+      cameraState.pitch = THREE.MathUtils.clamp(
+        cameraState.pitch + dy * 0.004,
+        0.22,
+        1.38
+      );
+
+      updateCamera();
+    });
+
+    function endPointer(event) {
+      pointerDown = false;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          6.4,
+          19
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    // -------------------------------------------------------------------------
+    // UI
+    // -------------------------------------------------------------------------
+
+    let playing = true;
+    let speed = 0.8;
+    let animationTime = 0;
+
+    const pauseButton = document.querySelector("#pause");
+    const speedSlider = document.querySelector("#speed");
+    const resetButton = document.querySelector("#reset");
+
+    function togglePause() {
+      playing = !playing;
+      pauseButton.textContent = playing ? "Pause" : "Play";
+    }
+
+    pauseButton.addEventListener("click", togglePause);
+    resetButton.addEventListener("click", resetCamera);
+
+    speedSlider.addEventListener("input", () => {
+      speed = Number(speedSlider.value);
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        togglePause();
+      }
+
+      if (event.key.toLowerCase() === "r") {
+        resetCamera();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Resize and animation
+    // -------------------------------------------------------------------------
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+    }
+
+    window.addEventListener("resize", resize);
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      if (playing) {
+        animationTime += delta * speed;
+      }
+
+      const theta =
+        THETA_MID + THETA_AMP * Math.sin(animationTime * 0.78);
+
+      updateMechanism(theta);
+      updateCamera();
+
+      renderer.render(scene, camera);
+    }
+
+    resetCamera();
+    updateMechanism(THETA_MID);
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 350);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fibonacci Phyllotaxis — Ceramic Disc</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #343735;
+      --muted: #747873;
+      --paper: #e9e3d8;
+      --teal: #4e7d86;
+      --clay: #b47759;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 52% 38%, #f4efe6 0%, #e9e3d8 55%, #d9d2c6 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+      outline: none;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: clamp(22px, 4vw, 54px);
+      left: clamp(22px, 4vw, 58px);
+      width: min(340px, calc(100vw - 44px));
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 13px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 5vw, 68px);
+      font-weight: 400;
+      line-height: 0.92;
+      letter-spacing: -0.055em;
+    }
+
+    .description {
+      max-width: 285px;
+      margin: 20px 0 0;
+      color: #666b66;
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 7px 10px 6px;
+      border: 1px solid rgba(70, 77, 72, 0.14);
+      border-radius: 999px;
+      background: rgba(248, 244, 236, 0.48);
+      color: #656a65;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .legend {
+      position: fixed;
+      bottom: clamp(20px, 3.5vw, 42px);
+      left: clamp(22px, 4vw, 58px);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #6a6e69;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .swatch {
+      width: 25px;
+      height: 2px;
+      background: var(--teal);
+      box-shadow: 0 0 5px rgba(78, 125, 134, 0.25);
+    }
+
+    .swatch.clay {
+      background: var(--clay);
+      box-shadow: 0 0 5px rgba(180, 119, 89, 0.25);
+    }
+
+    .hint {
+      position: fixed;
+      right: clamp(22px, 4vw, 58px);
+      bottom: clamp(22px, 3.5vw, 44px);
+      color: #858780;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      pointer-events: none;
+      user-select: none;
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 140px rgba(76, 66, 51, 0.09);
+    }
+
+    @media (max-width: 700px) {
+      .title-card {
+        top: 22px;
+      }
+
+      .description {
+        display: none;
+      }
+
+      .metrics {
+        margin-top: 13px;
+      }
+
+      .legend {
+        gap: 12px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="scene" aria-label="Interactive three-dimensional Fibonacci phyllotaxis scene"></main>
+
+  <section class="title-card">
+    <div class="eyebrow">Botanical Geometry / Study 01</div>
+    <h1>Fibonacci<br />Phyllotaxis</h1>
+    <p class="description">
+      Three hundred tapered ceramic florets follow the golden angle across a
+      shallow dome. Their dimensions recede toward the edge while every floret
+      leans away from the surface.
+    </p>
+    <div class="metrics">
+      <div class="metric">300 florets</div>
+      <div class="metric">137.507° angle</div>
+      <div class="metric">13 / 21 families</div>
+    </div>
+  </section>
+
+  <div class="legend" aria-hidden="true">
+    <div class="legend-item"><span class="swatch"></span>13 clockwise</div>
+    <div class="legend-item"><span class="swatch clay"></span>21 counterclockwise</div>
+  </div>
+
+  <div class="hint" aria-hidden="true">
+    Drag to orbit · Scroll to zoom<br />
+    G toggles guides · R resets view
+  </div>
+
+  <div class="vignette"></div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Scene constants
+    // -------------------------------------------------------------------------
+
+    const FLORET_COUNT = 300;
+    const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+    const DOME_RADIUS = 5.3;
+    const DOME_HEIGHT = 0.9;
+
+    const sceneHost = document.getElementById("scene");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.04;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0xe9e3d8, 0);
+
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Fibonacci phyllotaxis ceramic disc. Drag to orbit and use the mouse wheel to zoom."
+    );
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe9e3d8);
+    scene.fog = new THREE.Fog(0xe9e3d8, 16, 32);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls, implemented without external addons
+    // -------------------------------------------------------------------------
+
+    const view = {
+      theta: 0.68,
+      phi: 0.92,
+      radius: 14.4
+    };
+
+    const desiredView = {
+      theta: view.theta,
+      phi: view.phi,
+      radius: view.radius
+    };
+
+    const cameraTarget = new THREE.Vector3(0, 0.28, 0);
+    let dragging = false;
+    let previousPointerX = 0;
+    let previousPointerY = 0;
+
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+    function resetCamera() {
+      desiredView.theta = 0.68;
+      desiredView.phi = 0.92;
+      desiredView.radius = 14.4;
+    }
+
+    function updateCamera(delta) {
+      const smoothing = 1 - Math.exp(-9 * delta);
+
+      view.theta += (desiredView.theta - view.theta) * smoothing;
+      view.phi += (desiredView.phi - view.phi) * smoothing;
+      view.radius += (desiredView.radius - view.radius) * smoothing;
+
+      const sinPhi = Math.sin(view.phi);
+
+      camera.position.set(
+        cameraTarget.x + view.radius * sinPhi * Math.cos(view.theta),
+        cameraTarget.y + view.radius * Math.cos(view.phi),
+        cameraTarget.z + view.radius * sinPhi * Math.sin(view.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousPointerX = event.clientX;
+      previousPointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousPointerX;
+      const deltaY = event.clientY - previousPointerY;
+
+      previousPointerX = event.clientX;
+      previousPointerY = event.clientY;
+
+      desiredView.theta -= deltaX * 0.0055;
+      desiredView.phi = clamp(
+        desiredView.phi - deltaY * 0.0045,
+        0.2,
+        1.4
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desiredView.radius = clamp(
+          desiredView.radius * Math.exp(event.deltaY * 0.001),
+          7.3,
+          24
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    renderer.domElement.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") desiredView.theta += 0.08;
+      if (event.key === "ArrowRight") desiredView.theta -= 0.08;
+      if (event.key === "ArrowUp") desiredView.phi = clamp(desiredView.phi - 0.06, 0.2, 1.4);
+      if (event.key === "ArrowDown") desiredView.phi = clamp(desiredView.phi + 0.06, 0.2, 1.4);
+      if (event.key === "+" || event.key === "=") desiredView.radius = clamp(desiredView.radius - 0.5, 7.3, 24);
+      if (event.key === "-") desiredView.radius = clamp(desiredView.radius + 0.5, 7.3, 24);
+      if (event.key.toLowerCase() === "r") resetCamera();
+    });
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xfff7e9, 0x68757c, 2.15));
+
+    const keyLight = new THREE.DirectionalLight(0xfff1d9, 3.3);
+    keyLight.position.set(5.5, 10, 6.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -8;
+    keyLight.shadow.camera.right = 8;
+    keyLight.shadow.camera.top = 8;
+    keyLight.shadow.camera.bottom = -8;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 30;
+    keyLight.shadow.bias = -0.00025;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xaecbd2, 1.15);
+    fillLight.position.set(-7, 5, -4);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.PointLight(0xffd4ad, 22, 24, 2);
+    rimLight.position.set(1, 6, -7);
+    scene.add(rimLight);
+
+    // -------------------------------------------------------------------------
+    // Shallow dome and ceramic base
+    // -------------------------------------------------------------------------
+
+    function domeHeight(radius) {
+      const normalized = radius / DOME_RADIUS;
+      return DOME_HEIGHT * Math.sqrt(Math.max(0, 1 - normalized * normalized));
+    }
+
+    function domeNormal(x, z, target = new THREE.Vector3()) {
+      const radiusSquared = x * x + z * z;
+      const denominator = Math.sqrt(
+        Math.max(0.00001, 1 - radiusSquared / (DOME_RADIUS * DOME_RADIUS))
+      );
+
+      return target
+        .set(
+          (DOME_HEIGHT * x) /
+            (DOME_RADIUS * DOME_RADIUS * denominator),
+          1,
+          (DOME_HEIGHT * z) /
+            (DOME_RADIUS * DOME_RADIUS * denominator)
+        )
+        .normalize();
+    }
+
+    function createDomeGeometry() {
+      const radialSegments = 42;
+      const angularSegments = 192;
+      const positions = [0, DOME_HEIGHT, 0];
+      const uvs = [0.5, 0.5];
+      const indices = [];
+      const ringStarts = [];
+
+      for (let ring = 1; ring <= radialSegments; ring++) {
+        const radius = (DOME_RADIUS * ring) / radialSegments;
+        const y = domeHeight(radius);
+        ringStarts.push(positions.length / 3);
+
+        for (let segment = 0; segment <= angularSegments; segment++) {
+          const angle = (segment / angularSegments) * Math.PI * 2;
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
+
+          positions.push(x, y, z);
+          uvs.push(x / (DOME_RADIUS * 2) + 0.5, z / (DOME_RADIUS * 2) + 0.5);
+        }
+      }
+
+      for (let segment = 0; segment < angularSegments; segment++) {
+        indices.push(0, ringStarts[0] + segment + 1, ringStarts[0] + segment);
+      }
+
+      for (let ring = 0; ring < radialSegments - 1; ring++) {
+        const innerStart = ringStarts[ring];
+        const outerStart = ringStarts[ring + 1];
+
+        for (let segment = 0; segment < angularSegments; segment++) {
+          const inner = innerStart + segment;
+          const innerNext = innerStart + segment + 1;
+          const outer = outerStart + segment;
+          const outerNext = outerStart + segment + 1;
+
+          indices.push(inner, outerNext, outer);
+          indices.push(inner, innerNext, outerNext);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const dome = new THREE.Mesh(
+      createDomeGeometry(),
+      new THREE.MeshStandardMaterial({
+        color: 0xd8cdbd,
+        roughness: 0.76,
+        metalness: 0.02
+      })
+    );
+
+    dome.receiveShadow = true;
+    scene.add(dome);
+
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        DOME_RADIUS + 0.015,
+        DOME_RADIUS + 0.015,
+        0.16,
+        160
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xb8aa98,
+        roughness: 0.82
+      })
+    );
+
+    base.position.y = -0.08;
+    base.castShadow = true;
+    base.receiveShadow = true;
+    scene.add(base);
+
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(DOME_RADIUS + 0.015, 0.035, 10, 180),
+      new THREE.MeshStandardMaterial({
+        color: 0xeee4d5,
+        roughness: 0.48
+      })
+    );
+
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = -0.005;
+    rim.castShadow = true;
+    scene.add(rim);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(100, 100),
+      new THREE.MeshStandardMaterial({
+        color: 0xe4ddd1,
+        roughness: 0.94
+      })
+    );
+
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.18;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // -------------------------------------------------------------------------
+    // Tapered, subtly fluted ceramic floret geometry
+    // Local +Y is the floret's growth and outward-facing direction.
+    // -------------------------------------------------------------------------
+
+    function createFloretGeometry() {
+      const profile = [
+        { y: 0.0, radius: 0.18 },
+        { y: 0.1, radius: 0.29 },
+        { y: 0.36, radius: 0.5 },
+        { y: 0.68, radius: 0.43 },
+        { y: 0.88, radius: 0.32 },
+        { y: 1.0, radius: 0.3 }
+      ];
+
+      const radialSegments = 18;
+      const lobeCount = 7;
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+
+      profile.forEach((ring, ringIndex) => {
+        for (let segment = 0; segment <= radialSegments; segment++) {
+          const angle = (segment / radialSegments) * Math.PI * 2;
+          const flute =
+            1 +
+            0.045 *
+              Math.cos(lobeCount * angle + ringIndex * 0.14) *
+              Math.sin(Math.PI * ((ringIndex + 0.5) / profile.length));
+
+          const radius = ring.radius * flute;
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
+
+          positions.push(x, ring.y, z);
+          uvs.push(segment / radialSegments, ringIndex / (profile.length - 1));
+        }
+      });
+
+      for (let ring = 0; ring < profile.length - 1; ring++) {
+        const lower = ring * (radialSegments + 1);
+        const upper = (ring + 1) * (radialSegments + 1);
+
+        for (let segment = 0; segment < radialSegments; segment++) {
+          const a = lower + segment;
+          const b = lower + segment + 1;
+          const c = upper + segment;
+          const d = upper + segment + 1;
+
+          indices.push(a, d, b);
+          indices.push(a, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const ceramicMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      roughness: 0.26,
+      metalness: 0,
+      clearcoat: 0.72,
+      clearcoatRoughness: 0.2,
+      sheen: 0.12,
+      sheenColor: new THREE.Color(0xf2d7c5),
+      side: THREE.DoubleSide
+    });
+
+    const throatMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3a2822,
+      roughness: 0.48,
+      metalness: 0
+    });
+
+    const florets = new THREE.InstancedMesh(
+      createFloretGeometry(),
+      ceramicMaterial,
+      FLORET_COUNT
+    );
+
+    const throats = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.285, 0.235, 0.055, 14),
+      throatMaterial,
+      FLORET_COUNT
+    );
+
+    florets.castShadow = true;
+    florets.receiveShadow = true;
+    throats.castShadow = false;
+    scene.add(florets, throats);
+
+    const palette = [
+      new THREE.Color(0xf0e4d2),
+      new THREE.Color(0xe7c9b9),
+      new THREE.Color(0xc9d2c1),
+      new THREE.Color(0xe0b789),
+      new THREE.Color(0xe8ddd0)
+    ];
+
+    const points = [];
+    const baseMatrices = [];
+    const up = new THREE.Vector3(0, 1, 0);
+    const normal = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const surfacePosition = new THREE.Vector3();
+    const placement = new THREE.Object3D();
+
+    for (let i = 0; i < FLORET_COUNT; i++) {
+      // The square-root radial spacing gives equal-area growth in a phyllotaxis.
+      const u = (i + 0.5) / FLORET_COUNT;
+      const radius = DOME_RADIUS * Math.sqrt(u) * 0.965;
+      const angle = i * GOLDEN_ANGLE + 0.32;
+
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const y = domeHeight(radius);
+
+      surfacePosition.set(x, y, z);
+      domeNormal(x, z, normal);
+
+      const recession = Math.pow(1 - u, 0.68);
+      const floretHeight = 0.18 + 0.48 * recession;
+      const floretDiameter = 0.105 + 0.1 * recession;
+
+      placement.position.copy(surfacePosition).addScaledVector(normal, 0.006);
+      quaternion.setFromUnitVectors(up, normal);
+      placement.quaternion.copy(quaternion);
+      placement.scale.set(floretDiameter, floretHeight, floretDiameter);
+      placement.updateMatrix();
+
+      const baseMatrix = placement.matrix.clone();
+      baseMatrices.push(baseMatrix);
+      florets.setMatrixAt(i, baseMatrix);
+
+      // Recessed dark throat, positioned slightly below the ceramic lip.
+      const throatMatrix = baseMatrix.clone().multiply(
+        new THREE.Matrix4().makeTranslation(0, 0.96, 0)
+      );
+      throats.setMatrixAt(i, throatMatrix);
+
+      // Subtle glaze variation, deterministic from the floret index.
+      const colorIndex =
+        (Math.floor(i * 0.61803398875) + (i % 3)) % palette.length;
+      const color = palette[colorIndex].clone();
+      color.offsetHSL(
+        0.003 * Math.sin(i * 0.7),
+        0.018 * Math.sin(i * 0.31),
+        0.012 * Math.cos(i * 0.43)
+      );
+      florets.setColorAt(i, color);
+
+      points.push({
+        base: surfacePosition.clone(),
+        guide: surfacePosition.clone().addScaledVector(normal, 0.033)
+      });
+    }
+
+    florets.instanceMatrix.needsUpdate = true;
+    throats.instanceMatrix.needsUpdate = true;
+    if (florets.instanceColor) florets.instanceColor.needsUpdate = true;
+
+    // -------------------------------------------------------------------------
+    // Fibonacci parastichy guides
+    //
+    // Advancing 13 indices rotates clockwise by 13 × 137.507° modulo 360°.
+    // Advancing 21 indices rotates counterclockwise by 21 × 137.507°.
+    // The resulting 13 and 21 strands reveal the two visible spiral families.
+    // -------------------------------------------------------------------------
+
+    const familyGroup = new THREE.Group();
+    scene.add(familyGroup);
+
+    function buildFamily(step, material) {
+      for (let start = 0; start < step; start++) {
+        const positions = [];
+
+        for (let index = start; index < FLORET_COUNT; index += step) {
+          const point = points[index].guide;
+          positions.push(point.x, point.y, point.z);
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(positions, 3)
+        );
+
+        const line = new THREE.Line(geometry, material);
+        line.frustumCulled = false;
+        familyGroup.add(line);
+      }
+    }
+
+    const clockwiseMaterial = new THREE.LineBasicMaterial({
+      color: 0x4e7d86,
+      transparent: true,
+      opacity: 0.34,
+      depthWrite: false
+    });
+
+    const counterclockwiseMaterial = new THREE.LineBasicMaterial({
+      color: 0xb47759,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false
+    });
+
+    buildFamily(13, clockwiseMaterial);
+    buildFamily(21, counterclockwiseMaterial);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "g") {
+        familyGroup.visible = !familyGroup.visible;
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Resize and render loop
+    // -------------------------------------------------------------------------
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+    }
+
+    window.addEventListener("resize", resize);
+
+    const clock = new THREE.Clock();
+
+    renderer.setAnimationLoop(() => {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      updateCamera(delta);
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ancient Acropolis District</title>
+
+  <style>
+    :root {
+      --ink: #f6f0e4;
+      --muted: rgba(246, 240, 228, 0.68);
+      --panel: rgba(25, 30, 33, 0.74);
+      --line: rgba(255, 255, 255, 0.14);
+      --gold: #e5bd72;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #a7cbd7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #app canvas {
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #app canvas:active {
+      cursor: grabbing;
+    }
+
+    .panel {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      width: min(360px, calc(100vw - 48px));
+      padding: 22px;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(18px) saturate(125%);
+      -webkit-backdrop-filter: blur(18px) saturate(125%);
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--gold);
+      font-size: 0.69rem;
+      font-weight: 750;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.75rem, 4vw, 2.35rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .description {
+      margin: 13px 0 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .divider {
+      height: 1px;
+      margin: 17px 0;
+      background: var(--line);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      font: inherit;
+      font-size: 0.74rem;
+      font-weight: 650;
+      cursor: pointer;
+      transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    button.active {
+      color: #201d17;
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .instructions {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+
+    .hotspot {
+      position: fixed;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 180ms ease;
+      white-space: nowrap;
+    }
+
+    .hotspot.visible {
+      opacity: 1;
+    }
+
+    .hotspot .dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border: 2px solid #fff4d6;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 5px rgba(229, 189, 114, 0.17);
+    }
+
+    .hotspot .label {
+      padding: 6px 9px;
+      color: #fff8e9;
+      background: rgba(30, 32, 31, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      font-size: 0.65rem;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .footer {
+      position: fixed;
+      right: 22px;
+      bottom: 20px;
+      z-index: 8;
+      padding: 8px 12px;
+      color: rgba(255, 255, 255, 0.78);
+      background: rgba(20, 25, 27, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      color: #f4ead7;
+      background: #536d74;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 16px;
+      }
+
+      .description {
+        display: none;
+      }
+
+      .divider {
+        margin: 12px 0;
+      }
+
+      .footer {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        text-align: center;
+      }
+
+      .hotspot .label {
+        font-size: 0.57rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <section class="panel">
+    <div class="eyebrow">Interactive architectural reconstruction</div>
+    <h1>Acropolis of Athena</h1>
+    <p class="description">
+      Explore a sunlit ancient district featuring a Doric temple, monumental
+      gateway, and long colonnaded stoa overlooking the surrounding landscape.
+    </p>
+
+    <div class="controls">
+      <button id="reset">Reset view</button>
+      <button data-mood="morning" class="active">Morning</button>
+      <button data-mood="dusk">Dusk</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="controls">
+      <button id="tour">Start tour</button>
+      <button id="overview">Overview</button>
+      <button id="templeView">Temple</button>
+    </div>
+
+    <p class="instructions">
+      Drag to orbit · Shift/right-drag to pan · Scroll or pinch to zoom
+    </p>
+  </section>
+
+  <div class="hotspot" data-anchor="temple">
+    <span class="dot"></span><span class="label">Temple of Athena</span>
+  </div>
+
+  <div class="hotspot" data-anchor="gateway">
+    <span class="dot"></span><span class="label">Sacred Gateway</span>
+  </div>
+
+  <div class="hotspot" data-anchor="stoa">
+    <span class="dot"></span><span class="label">Northern Stoa</span>
+  </div>
+
+  <div class="footer">Drag to explore the ancient acropolis</div>
+  <div id="loading">Raising the ancient city…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera
+    // -------------------------------------------------------------------------
+
+    const app = document.querySelector("#app");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xa8cedd);
+    scene.fog = new THREE.FogExp2(0xa8cedd, 0.0092);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      240
+    );
+
+    const hemisphere = new THREE.HemisphereLight(0xd7efff, 0x6a5940, 1.65);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xffe4b5, 3.25);
+    sun.position.set(-18, 29, 16);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -32;
+    sun.shadow.camera.right = 32;
+    sun.shadow.camera.top = 32;
+    sun.shadow.camera.bottom = -32;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 90;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0xa8c9e8, 0.6);
+    fillLight.position.set(22, 12, -22);
+    scene.add(fillLight);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      marble: new THREE.MeshStandardMaterial({
+        color: 0xe1d2b4,
+        roughness: 0.83,
+        metalness: 0.02
+      }),
+      paleStone: new THREE.MeshStandardMaterial({
+        color: 0xcdbb98,
+        roughness: 0.9
+      }),
+      warmStone: new THREE.MeshStandardMaterial({
+        color: 0xbda57d,
+        roughness: 0.92
+      }),
+      darkStone: new THREE.MeshStandardMaterial({
+        color: 0x8e7a60,
+        roughness: 0.95
+      }),
+      platform: new THREE.MeshStandardMaterial({
+        color: 0xb9a781,
+        roughness: 0.94
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0xa65d42,
+        roughness: 0.83
+      }),
+      roofDark: new THREE.MeshStandardMaterial({
+        color: 0x804934,
+        roughness: 0.88
+      }),
+      painted: new THREE.MeshStandardMaterial({
+        color: 0x8b3e32,
+        roughness: 0.76
+      }),
+      darkWood: new THREE.MeshStandardMaterial({
+        color: 0x493326,
+        roughness: 0.85
+      }),
+      bronze: new THREE.MeshStandardMaterial({
+        color: 0x6f6841,
+        roughness: 0.46,
+        metalness: 0.55
+      }),
+      path: new THREE.MeshStandardMaterial({
+        color: 0xc7b18b,
+        roughness: 1
+      }),
+      earth: new THREE.MeshStandardMaterial({
+        color: 0x807d55,
+        roughness: 1
+      }),
+      rock: new THREE.MeshStandardMaterial({
+        color: 0x81765f,
+        roughness: 1,
+        flatShading: true
+      }),
+      foliage: new THREE.MeshStandardMaterial({
+        color: 0x5d6b48,
+        roughness: 1,
+        flatShading: true
+      }),
+      foliageLight: new THREE.MeshStandardMaterial({
+        color: 0x73805a,
+        roughness: 1,
+        flatShading: true
+      }),
+      trunk: new THREE.MeshStandardMaterial({
+        color: 0x62513b,
+        roughness: 1
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x272522,
+        roughness: 0.8
+      }),
+      cloud: new THREE.MeshStandardMaterial({
+        color: 0xf5f2e8,
+        roughness: 1,
+        transparent: true,
+        opacity: 0.72,
+        depthWrite: false
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addMesh(geometry, material, x, y, z, parent = scene) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function box(w, h, d, x, y, z, material, parent = scene) {
+      return addMesh(
+        new THREE.BoxGeometry(w, h, d),
+        material,
+        x,
+        y,
+        z,
+        parent
+      );
+    }
+
+    function cylinder(
+      topRadius,
+      bottomRadius,
+      height,
+      segments,
+      x,
+      y,
+      z,
+      material,
+      parent = scene
+    ) {
+      return addMesh(
+        new THREE.CylinderGeometry(
+          topRadius,
+          bottomRadius,
+          height,
+          segments
+        ),
+        material,
+        x,
+        y,
+        z,
+        parent
+      );
+    }
+
+    function makeColumn(x, z, height, parent, material = materials.marble) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      parent.add(group);
+
+      box(0.98, 0.18, 0.98, 0, 0.09, 0, material, group);
+
+      const shaftHeight = height - 0.48;
+
+      cylinder(
+        0.36,
+        0.44,
+        shaftHeight,
+        16,
+        0,
+        0.2 + shaftHeight / 2,
+        0,
+        material,
+        group
+      );
+
+      cylinder(
+        0.52,
+        0.38,
+        0.23,
+        16,
+        0,
+        height - 0.3,
+        0,
+        material,
+        group
+      );
+
+      box(
+        1.04,
+        0.16,
+        1.04,
+        0,
+        height - 0.08,
+        0,
+        material,
+        group
+      );
+
+      return group;
+    }
+
+    function makeGable(parent, z, facing = 1) {
+      const shape = new THREE.Shape();
+      shape.moveTo(-5.9, 0);
+      shape.lineTo(0, 2.35);
+      shape.lineTo(5.9, 0);
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 0.24,
+        bevelEnabled: false
+      });
+
+      const gable = addMesh(
+        geometry,
+        materials.marble,
+        0,
+        6.18,
+        z,
+        parent
+      );
+
+      const innerShape = new THREE.Shape();
+      innerShape.moveTo(-5.25, 0);
+      innerShape.lineTo(0, 1.78);
+      innerShape.lineTo(5.25, 0);
+      innerShape.closePath();
+
+      const innerGeometry = new THREE.ExtrudeGeometry(innerShape, {
+        depth: 0.06,
+        bevelEnabled: false
+      });
+
+      addMesh(
+        innerGeometry,
+        materials.painted,
+        0,
+        6.26,
+        z + facing * 0.25,
+        parent
+      );
+    }
+
+    function makeStatue(x, z, rotation = 0, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      group.rotation.y = rotation;
+      group.scale.setScalar(scale);
+      scene.add(group);
+
+      box(1.18, 0.72, 1.18, 0, 0.36, 0, materials.paleStone, group);
+      box(1.0, 0.16, 1.0, 0, 0.79, 0, materials.marble, group);
+
+      cylinder(
+        0.22,
+        0.36,
+        1.25,
+        10,
+        0,
+        1.47,
+        0,
+        materials.marble,
+        group
+      );
+
+      addMesh(
+        new THREE.SphereGeometry(0.22, 12, 8),
+        materials.marble,
+        0,
+        2.23,
+        0,
+        group
+      );
+
+      const armGeometry = new THREE.CylinderGeometry(0.08, 0.1, 0.82, 8);
+      const leftArm = addMesh(
+        armGeometry,
+        materials.marble,
+        -0.3,
+        1.57,
+        0,
+        group
+      );
+      leftArm.rotation.z = -0.4;
+
+      const rightArm = addMesh(
+        armGeometry,
+        materials.marble,
+        0.3,
+        1.57,
+        0,
+        group
+      );
+      rightArm.rotation.z = 0.4;
+    }
+
+    const fires = [];
+
+    function makeBrazier(x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      scene.add(group);
+
+      cylinder(0.32, 0.43, 0.22, 10, 0, 0.11, 0, materials.bronze, group);
+      cylinder(0.08, 0.1, 1.05, 8, 0, 0.69, 0, materials.bronze, group);
+      cylinder(0.34, 0.2, 0.26, 12, 0, 1.28, 0, materials.bronze, group);
+
+      const flameMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff9a35,
+        transparent: true,
+        opacity: 0.92
+      });
+
+      const flame = addMesh(
+        new THREE.ConeGeometry(0.21, 0.72, 8),
+        flameMaterial,
+        0,
+        1.75,
+        0,
+        group
+      );
+      flame.castShadow = false;
+
+      const innerFlame = addMesh(
+        new THREE.ConeGeometry(0.1, 0.43, 7),
+        new THREE.MeshBasicMaterial({ color: 0xffe49a }),
+        0,
+        1.62,
+        0,
+        group
+      );
+      innerFlame.castShadow = false;
+
+      const light = new THREE.PointLight(0xff923d, 1.5, 5, 2);
+      light.position.set(0, 1.8, 0);
+      group.add(light);
+
+      fires.push({ flame, innerFlame, light, phase: Math.random() * 10 });
+    }
+
+    function makeOliveTree(x, z, size = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, 0.05, z);
+      group.scale.setScalar(size);
+      scene.add(group);
+
+      cylinder(
+        0.18,
+        0.3,
+        2.3,
+        7,
+        0,
+        1.15,
+        0,
+        materials.trunk,
+        group
+      );
+
+      const crownGeometry = new THREE.DodecahedronGeometry(1, 1);
+      const crown = addMesh(
+        crownGeometry,
+        materials.foliage,
+        0,
+        2.75,
+        0,
+        group
+      );
+      crown.scale.set(1.25, 0.82, 1.05);
+
+      const crown2 = addMesh(
+        new THREE.DodecahedronGeometry(0.78, 1),
+        materials.foliageLight,
+        0.68,
+        2.55,
+        0.15,
+        group
+      );
+      crown2.scale.set(1.2, 0.8, 1.05);
+    }
+
+    // -------------------------------------------------------------------------
+    // Terrain and distant landscape
+    // -------------------------------------------------------------------------
+
+    const terrainGeometry = new THREE.PlaneGeometry(180, 180, 60, 60);
+    const terrainPositions = terrainGeometry.attributes.position;
+
+    for (let i = 0; i < terrainPositions.count; i++) {
+      const x = terrainPositions.getX(i);
+      const y = terrainPositions.getY(i);
+      const noise =
+        Math.sin(x * 0.085) * 0.45 +
+        Math.cos(y * 0.07) * 0.35 +
+        Math.sin((x + y) * 0.035) * 0.55;
+
+      terrainPositions.setZ(i, noise);
+    }
+
+    terrainGeometry.computeVertexNormals();
+    terrainGeometry.rotateX(-Math.PI / 2);
+
+    const terrain = addMesh(
+      terrainGeometry,
+      materials.earth,
+      0,
+      -2.18,
+      0
+    );
+    terrain.castShadow = false;
+
+    const plateau = addMesh(
+      new THREE.CylinderGeometry(17.5, 19.3, 2.25, 64),
+      materials.rock,
+      0,
+      -1.08,
+      0
+    );
+
+    const plateauTop = addMesh(
+      new THREE.CircleGeometry(17.48, 64),
+      materials.platform,
+      0,
+      0.055,
+      0
+    );
+    plateauTop.rotation.x = -Math.PI / 2;
+    plateauTop.castShadow = false;
+
+    function addHill(x, z, sx, sy, sz, color) {
+      const hill = addMesh(
+        new THREE.DodecahedronGeometry(1, 1),
+        new THREE.MeshStandardMaterial({
+          color,
+          roughness: 1,
+          flatShading: true
+        }),
+        x,
+        -3.2,
+        z
+      );
+      hill.scale.set(sx, sy, sz);
+      hill.castShadow = false;
+    }
+
+    addHill(-42, -45, 18, 11, 15, 0x747965);
+    addHill(-20, -58, 16, 13, 12, 0x69705e);
+    addHill(12, -61, 22, 14, 14, 0x707660);
+    addHill(43, -48, 19, 12, 16, 0x646d5c);
+    addHill(58, -16, 17, 9, 14, 0x757962);
+    addHill(-57, -8, 18, 10, 14, 0x6c735e);
+    addHill(-47, 33, 16, 9, 13, 0x777b62);
+    addHill(40, 38, 18, 10, 14, 0x747861);
+
+    // Clouds
+    for (let i = 0; i < 11; i++) {
+      const cloud = new THREE.Group();
+      const angle = (i / 11) * Math.PI * 2;
+      const radius = 48 + Math.random() * 28;
+      cloud.position.set(
+        Math.cos(angle) * radius,
+        23 + Math.random() * 10,
+        Math.sin(angle) * radius
+      );
+      scene.add(cloud);
+
+      for (let j = 0; j < 4; j++) {
+        const puff = addMesh(
+          new THREE.SphereGeometry(1, 10, 7),
+          materials.cloud,
+          j * 1.35,
+          Math.sin(j * 1.8) * 0.35,
+          Math.cos(j * 2.1) * 0.4,
+          cloud
+        );
+        puff.scale.set(1.7 + Math.random(), 0.65, 1.0 + Math.random());
+        puff.castShadow = false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Paths
+    // -------------------------------------------------------------------------
+
+    function makePath(x1, z1, x2, z2, width = 2.2) {
+      const length = Math.hypot(x2 - x1, z2 - z1);
+      const path = box(
+        length,
+        0.09,
+        width,
+        (x1 + x2) / 2,
+        0.105,
+        (z1 + z2) / 2,
+        materials.path
+      );
+      path.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
+      path.castShadow = false;
+      return path;
+    }
+
+    makePath(5.5, 9.2, 5.5, 2.2, 2.7);
+    makePath(5.5, 4.2, -4.8, 1.6, 2.2);
+    makePath(3.6, 2.0, 7.5, -4.8, 1.8);
+    makePath(-4.8, 1.6, -4.8, 0.2, 2.3);
+
+    // -------------------------------------------------------------------------
+    // Temple of Athena
+    // -------------------------------------------------------------------------
+
+    const temple = new THREE.Group();
+    temple.position.set(-5, 0.08, -4);
+    scene.add(temple);
+
+    // Three stepped foundations
+    box(13.6, 0.58, 9.0, 0, 0.29, 0, materials.paleStone, temple);
+    box(12.9, 0.38, 8.35, 0, 0.77, 0, materials.marble, temple);
+    box(12.2, 0.38, 7.75, 0, 1.15, 0, materials.marble, temple);
+
+    // Cella and porch
+    box(7.9, 3.65, 4.7, 0, 3.17, -0.32, materials.warmStone, temple);
+    box(8.05, 0.24, 4.86, 0, 5.08, -0.32, materials.marble, temple);
+    box(2.0, 2.72, 0.12, 0, 2.72, 2.08, materials.darkWood, temple);
+    box(1.65, 2.55, 0.08, 0, 2.67, 2.16, materials.painted, temple);
+
+    // Columns: front and rear
+    const templeColumnXs = [-5.0, -3.0, -1.0, 1.0, 3.0, 5.0];
+
+    for (const x of templeColumnXs) {
+      makeColumn(x, 3.1, 4.3, temple);
+      makeColumn(x, -3.1, 4.3, temple);
+    }
+
+    // Side colonnades
+    for (const z of [-2.15, -0.72, 0.72, 2.15]) {
+      makeColumn(-5.48, z, 4.3, temple);
+      makeColumn(5.48, z, 4.3, temple);
+    }
+
+    // Entablature
+    box(12.0, 0.38, 7.15, 0, 5.72, 0, materials.marble, temple);
+    box(12.25, 0.38, 7.35, 0, 6.04, 0, materials.marble, temple);
+    box(12.5, 0.18, 7.5, 0, 6.30, 0, materials.paleStone, temple);
+
+    // Triglyph accents
+    for (let x = -5.5; x <= 5.5; x += 1) {
+      box(0.22, 0.31, 0.10, x, 5.74, 3.60, materials.darkWood, temple);
+      box(0.22, 0.31, 0.10, x, 5.74, -3.60, materials.darkWood, temple);
+    }
+
+    for (let z = -2.8; z <= 2.8; z += 1) {
+      box(0.10, 0.31, 0.22, 6.02, 5.74, z, materials.darkWood, temple);
+      box(0.10, 0.31, 0.22, -6.02, 5.74, z, materials.darkWood, temple);
+    }
+
+    // Pitched roof
+    const roofAngle = Math.atan2(2.05, 1.76);
+    const roofLength = Math.hypot(2.05, 1.76);
+
+    const frontRoof = box(
+      12.35,
+      0.34,
+      roofLength,
+      0,
+      7.31,
+      1.76,
+      materials.roof,
+      temple
+    );
+    frontRoof.rotation.x = roofAngle;
+
+    const backRoof = box(
+      12.35,
+      0.34,
+      roofLength,
+      0,
+      7.31,
+      -1.76,
+      materials.roofDark,
+      temple
+    );
+    backRoof.rotation.x = -roofAngle;
+
+    // Roof tile ribs
+    for (let x = -5.85; x <= 5.85; x += 0.58) {
+      const ribFront = box(
+        0.055,
+        0.08,
+        roofLength - 0.12,
+        x,
+        7.51,
+        1.76,
+        materials.roofDark,
+        temple
+      );
+      ribFront.rotation.x = roofAngle;
+
+      const ribBack = box(
+        0.055,
+        0.08,
+        roofLength - 0.12,
+        x,
+        7.51,
+        -1.76,
+        materials.roofDark,
+        temple
+      );
+      ribBack.rotation.x = -roofAngle;
+    }
+
+    makeGable(temple, 3.44, 1);
+    makeGable(temple, -3.68, -1);
+
+    // -------------------------------------------------------------------------
+    // Sacred gateway / propylaea
+    // -------------------------------------------------------------------------
+
+    const gateway = new THREE.Group();
+    gateway.position.set(5.5, 0.08, 5.8);
+    gateway.rotation.y = -0.06;
+    scene.add(gateway);
+
+    box(11.4, 0.42, 6.2, 0, 0.21, 0, materials.paleStone, gateway);
+    box(10.7, 0.34, 5.6, 0, 0.59, 0, materials.marble, gateway);
+    box(10.0, 0.18, 5.0, 0, 0.85, 0, materials.warmStone, gateway);
+
+    // Side walls and central portal
+    box(2.15, 4.25, 3.5, -3.55, 3.0, -0.2, materials.warmStone, gateway);
+    box(2.15, 4.25, 3.5, 3.55, 3.0, -0.2, materials.warmStone, gateway);
+    box(4.3, 0.55, 3.8, 0, 5.02, 0, materials.marble, gateway);
+
+    // Entrance columns
+    for (const x of [-4.35, -2.65, 2.65, 4.35]) {
+      const col = makeColumn(x, 1.9, 4.6, gateway);
+      col.position.y = 0.94;
+    }
+
+    for (const x of [-4.35, -2.65, 2.65, 4.35]) {
+      const col = makeColumn(x, -1.9, 4.6, gateway);
+      col.position.y = 0.94;
+    }
+
+    // Architraves
+    box(10.5, 0.48, 1.25, 0, 5.78, 1.65, materials.marble, gateway);
+    box(10.5, 0.48, 1.25, 0, 5.78, -1.65, materials.marble, gateway);
+    box(1.15, 0.48, 4.2, -4.75, 5.78, 0, materials.marble, gateway);
+    box(1.15, 0.48, 4.2, 4.75, 5.78, 0, materials.marble, gateway);
+
+    // Flat roof slab and parapet
+    box(11.0, 0.28, 5.8, 0, 6.18, 0, materials.paleStone, gateway);
+    box(11.3, 0.36, 0.48, 0, 6.48, 2.7, materials.marble, gateway);
+    box(11.3, 0.36, 0.48, 0, 6.48, -2.7, materials.marble, gateway);
+
+    // Painted inset panels
+    box(1.55, 2.75, 0.08, -3.55, 3.1, 1.59, materials.painted, gateway);
+    box(1.55, 2.75, 0.08, 3.55, 3.1, 1.59, materials.painted, gateway);
+    box(1.55, 2.75, 0.08, -3.55, 3.1, -1.99, materials.painted, gateway);
+    box(1.55, 2.75, 0.08, 3.55, 3.1, -1.99, materials.painted, gateway);
+
+    // -------------------------------------------------------------------------
+    // Northern stoa
+    // -------------------------------------------------------------------------
+
+    const stoa = new THREE.Group();
+    stoa.position.set(7.5, 0.08, -7);
+    scene.add(stoa);
+
+    box(18.5, 0.34, 5.8, 0, 0.17, 0, materials.paleStone, stoa);
+    box(18.0, 0.18, 5.35, 0, 0.43, 0, materials.marble, stoa);
+
+    // Back wall
+    box(17.6, 4.05, 0.62, 0, 2.5, -2.05, materials.warmStone, stoa);
+    box(17.9, 0.3, 0.84, 0, 4.65, -2.05, materials.marble, stoa);
+
+    // Alternating painted wall panels
+    for (let x = -7.8; x <= 7.8; x += 1.6) {
+      box(1.12, 2.15, 0.07, x, 2.58, -1.70, materials.painted, stoa);
+    }
+
+    // Front colonnade
+    for (let x = -8.0; x <= 8.0; x += 2) {
+      makeColumn(x, 1.72, 4.12, stoa);
+    }
+
+    // End columns
+    makeColumn(-8.0, -0.35, 4.12, stoa);
+    makeColumn(8.0, -0.35, 4.12, stoa);
+
+    box(17.8, 0.45, 1.05, 0, 4.75, 1.58, materials.marble, stoa);
+    box(17.9, 0.26, 1.2, 0, 5.05, 1.58, materials.paleStone, stoa);
+
+    // Lean-to roof
+    const stoaRoof = box(
+      18.5,
+      0.3,
+      5.9,
+      0,
+      5.29,
+      -0.05,
+      materials.roof,
+      stoa
+    );
+    stoaRoof.rotation.x = -0.12;
+
+    // Roof battens
+    for (let x = -8.8; x <= 8.8; x += 0.72) {
+      const batten = box(
+        0.055,
+        0.09,
+        5.65,
+        x,
+        5.48,
+        -0.05,
+        materials.roofDark,
+        stoa
+      );
+      batten.rotation.x = -0.12;
+    }
+
+    // Interior benches
+    box(13.8, 0.28, 0.72, 0, 0.68, -0.95, materials.paleStone, stoa);
+    for (const x of [-5, 0, 5]) {
+      box(0.6, 0.48, 0.65, x, 0.43, -0.95, materials.darkStone, stoa);
+    }
+
+    // -------------------------------------------------------------------------
+    // Perimeter walls, statues, trees, braziers
+    // -------------------------------------------------------------------------
+
+    // Northern retaining wall
+    for (let x = -13; x <= 13; x += 1.8) {
+      const block = box(
+        1.68,
+        1.2 + Math.random() * 0.35,
+        0.75,
+        x,
+        0.62,
+        -12.4,
+        materials.paleStone
+      );
+        block.rotation.y = (Math.random() - 0.5) * 0.025;
+    }
+
+    // Side wall fragments
+    for (let z = -10; z <= 6; z += 1.8) {
+      box(
+        0.78,
+        1.05 + Math.random() * 0.3,
+        1.65,
+        -14.2,
+        0.55,
+        z,
+        materials.paleStone
+      );
+    }
+
+    makeStatue(1.2, 3.2, -0.4, 1.05);
+    makeStatue(10.0, 1.2, 0.4, 1.05);
+    makeStatue(0.2, -3.1, 0.3, 0.9);
+    makeStatue(14.2, -4.5, -0.4, 0.92);
+
+    makeBrazier(2.9, 4.0);
+    makeBrazier(8.0, 3.7);
+    makeBrazier(-1.7, 1.4);
+    makeBrazier(5.4, -4.0);
+
+    makeOliveTree(-13.0, -5.5, 1.05);
+    makeOliveTree(-12.0, 4.0, 0.9);
+    makeOliveTree(-7.0, 10.7, 0.78);
+    makeOliveTree(11.8, 8.2, 0.9);
+    makeOliveTree(15.0, 2.0, 0.85);
+    makeOliveTree(1.8, -11.3, 0.9);
+    makeOliveTree(-9.8, -10.3, 0.72);
+
+    // -------------------------------------------------------------------------
+    // Stars for dusk mode
+    // -------------------------------------------------------------------------
+
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = [];
+
+    for (let i = 0; i < 420; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 75 + Math.random() * 45;
+      const y = 20 + Math.random() * 65;
+
+      starPositions.push(
+        Math.cos(angle) * radius,
+        y,
+        Math.sin(angle) * radius
+      );
+    }
+
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const starMaterial = new THREE.PointsMaterial({
+      color: 0xfff1d6,
+      size: 0.28,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false
+    });
+
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // -------------------------------------------------------------------------
+
+    const orbit = {
+      target: new THREE.Vector3(0, 2.1, -0.8),
+      radius: 39,
+      theta: 0.68,
+      phi: 1.05
+    };
+
+    let touring = false;
+    const pointers = new Map();
+    let previousPinchDistance = 0;
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+
+      camera.position.set(
+        orbit.target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        orbit.target.y + orbit.radius * Math.cos(orbit.phi),
+        orbit.target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+
+      camera.lookAt(orbit.target);
+    }
+
+    function panCamera(dx, dy) {
+      const scale = orbit.radius * 0.00135;
+      const right = new THREE.Vector3(
+        Math.cos(orbit.theta),
+        0,
+        -Math.sin(orbit.theta)
+      );
+      const forward = new THREE.Vector3(
+        Math.sin(orbit.theta),
+        0,
+        Math.cos(orbit.theta)
+      );
+
+      orbit.target.addScaledVector(right, -dx * scale);
+      orbit.target.addScaledVector(forward, dy * scale);
+
+      orbit.target.x = THREE.MathUtils.clamp(orbit.target.x, -18, 18);
+      orbit.target.z = THREE.MathUtils.clamp(orbit.target.z, -18, 18);
+      orbit.target.y = THREE.MathUtils.clamp(orbit.target.y, 0.8, 5.5);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+        button: event.button
+      });
+
+      if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        previousPinchDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      const pointer = pointers.get(event.pointerId);
+      if (!pointer) return;
+
+      const dx = event.clientX - pointer.x;
+      const dy = event.clientY - pointer.y;
+
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (pointers.size >= 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (previousPinchDistance > 0 && distance > 0) {
+          orbit.radius = THREE.MathUtils.clamp(
+            orbit.radius * (previousPinchDistance / distance),
+            11,
+            78
+          );
+        }
+
+        previousPinchDistance = distance;
+      } else if (
+        event.pointerType === "mouse" &&
+        (event.buttons === 2 || event.shiftKey)
+      ) {
+        panCamera(dx, dy);
+      } else {
+        orbit.theta -= dx * 0.006;
+        orbit.phi = THREE.MathUtils.clamp(
+          orbit.phi - dy * 0.005,
+          0.24,
+          1.46
+        );
+      }
+
+      updateCamera();
+    });
+
+    function removePointer(event) {
+      pointers.delete(event.pointerId);
+      previousPinchDistance = 0;
+    }
+
+    renderer.domElement.addEventListener("pointerup", removePointer);
+    renderer.domElement.addEventListener("pointercancel", removePointer);
+    renderer.domElement.addEventListener("lostpointercapture", removePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          11,
+          78
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    // -------------------------------------------------------------------------
+    // UI actions
+    // -------------------------------------------------------------------------
+
+    function setView({ target, radius, theta, phi }) {
+      if (target) orbit.target.copy(target);
+      if (radius !== undefined) orbit.radius = radius;
+      if (theta !== undefined) orbit.theta = theta;
+      if (phi !== undefined) orbit.phi = phi;
+      updateCamera();
+    }
+
+    const defaultView = {
+      target: new THREE.Vector3(0, 2.1, -0.8),
+      radius: 39,
+      theta: 0.68,
+      phi: 1.05
+    };
+
+    document.querySelector("#reset").addEventListener("click", () => {
+      touring = false;
+      document.querySelector("#tour").textContent = "Start tour";
+      document.querySelector("#tour").classList.remove("active");
+      setView(defaultView);
+    });
+
+    document.querySelector("#overview").addEventListener("click", () => {
+      touring = false;
+      document.querySelector("#tour").textContent = "Start tour";
+      document.querySelector("#tour").classList.remove("active");
+      setView({
+        target: new THREE.Vector3(1.0, 1.7, -1.2),
+        radius: 48,
+        theta: 0.72,
+        phi: 0.94
+      });
+    });
+
+    document.querySelector("#templeView").addEventListener("click", () => {
+      touring = false;
+      document.querySelector("#tour").textContent = "Start tour";
+      document.querySelector("#tour").classList.remove("active");
+      setView({
+        target: new THREE.Vector3(-5, 3.2, -3.6),
+        radius: 22,
+        theta: 0.8,
+        phi: 1.1
+      });
+    });
+
+    document.querySelector("#tour").addEventListener("click", (event) => {
+      touring = !touring;
+      event.currentTarget.textContent = touring ? "Stop tour" : "Start tour";
+      event.currentTarget.classList.toggle("active", touring);
+
+      if (touring) {
+        orbit.radius = 43;
+        orbit.phi = 1.0;
+        updateCamera();
+      }
+    });
+
+    function applyMood(mood) {
+      const morning = mood === "morning";
+
+      if (morning) {
+        scene.background.set(0xa8cedd);
+        scene.fog.color.set(0xa8cedd);
+        scene.fog.density = 0.0092;
+        sun.color.set(0xffe4b5);
+        sun.intensity = 3.25;
+        sun.position.set(-18, 29, 16);
+        hemisphere.color.set(0xd7efff);
+        hemisphere.groundColor.set(0x6a5940);
+        hemisphere.intensity = 1.65;
+        fillLight.intensity = 0.6;
+        renderer.toneMappingExposure = 1.08;
+        starMaterial.opacity = 0;
+      } else {
+        scene.background.set(0x4c4c67);
+        scene.fog.color.set(0x4c4c67);
+        scene.fog.density = 0.0105;
+        sun.color.set(0xff8d55);
+        sun.intensity = 2.2;
+        sun.position.set(-24, 15, 10);
+        hemisphere.color.set(0x8da1c7);
+        hemisphere.groundColor.set(0x3c302f);
+        hemisphere.intensity = 1.05;
+        fillLight.intensity = 0.28;
+        renderer.toneMappingExposure = 0.95;
+        starMaterial.opacity = 0.9;
+      }
+
+      document.querySelectorAll("[data-mood]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mood === mood);
+      });
+    }
+
+    document.querySelectorAll("[data-mood]").forEach((button) => {
+      button.addEventListener("click", () => applyMood(button.dataset.mood));
+    });
+
+    // -------------------------------------------------------------------------
+    // Scene labels
+    // -------------------------------------------------------------------------
+
+    const anchors = {
+      temple: new THREE.Vector3(-5, 8.8, -4),
+      gateway: new THREE.Vector3(5.5, 6.9, 5.8),
+      stoa: new THREE.Vector3(7.5, 5.8, -7)
+    };
+
+    const hotspotElements = [...document.querySelectorAll(".hotspot")].map(
+      (element) => ({
+        element,
+        position: anchors[element.dataset.anchor]
+      })
+    );
+
+    const projected = new THREE.Vector3();
+
+    function updateHotspots() {
+      for (const hotspot of hotspotElements) {
+        projected.copy(hotspot.position).project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.2 &&
+          Math.abs(projected.y) < 1.2;
+
+        hotspot.element.classList.toggle("visible", visible);
+
+        if (visible) {
+          const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+          hotspot.element.style.left = `${x}px`;
+          hotspot.element.style.top = `${y}px`;
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Resize and animation
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const elapsed = clock.getElapsedTime();
+
+      if (touring) {
+        orbit.theta += 0.0028;
+        updateCamera();
+      }
+
+      for (const fire of fires) {
+        const flicker =
+          0.88 +
+          Math.sin(elapsed * 9 + fire.phase) * 0.09 +
+          Math.sin(elapsed * 14.2 + fire.phase * 2) * 0.05;
+
+        fire.flame.scale.set(0.9 + flicker * 0.13, flicker, 0.9 + flicker * 0.12);
+        fire.innerFlame.scale.y = 0.9 + flicker * 0.16;
+        fire.light.intensity = 1.2 + flicker * 0.6;
+      }
+
+      stars.rotation.y = elapsed * 0.002;
+      updateHotspots();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    updateCamera();
+    animate();
+
+    requestAnimationFrame(() => {
+      document.querySelector("#loading").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

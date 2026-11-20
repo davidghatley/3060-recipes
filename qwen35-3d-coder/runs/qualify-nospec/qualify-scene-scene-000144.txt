@@ -1,0 +1,1635 @@
+We need provide code likely single HTML. Need satisfy exact. Need use only three core ES module CDN. Implement camera controls directly. Need perhaps polished scene, labels? User asks create file. We should output complete HTML. Need ensure no addons. Use import from URL. Ground-mounted PV module adjustable struts, rails, four struts above pair concrete footings. Need visual correctness.
+
+Need think geometry and camera. Single module rectangular, thin silver border, dark blue cell grid, junction box back. Two rails and four adjustable struts. Pair footings. Ground-mounted. Adjustable struts perhaps telescoping with threaded rods/knobs. Rails connect module to struts. Need maybe module frame dark silver, cells. Back junction box.
+
+Need self-contained HTML with CSS and JS. Three module only. Need camera controls direct: orbit via pointer, wheel zoom, right drag pan maybe touch. Lighting, shadows, sky, ground, concrete footings. Use procedural textures for cells? We can use CanvasTexture to make dark blue cell grid. Since "single self-contained HTML" external CDN only. Use no images.
+
+Need perhaps module dimensions ~3.4 x 2.2, thickness .12, tilted 30 degrees. Coordinate setup. Need ensure struts physically support.
+
+Let's design coordinate system:
+Ground y=0.
+Module center at y=4.4, z=0 perhaps. Module local coordinate x width, y height, z thickness. Need orient tilted around X? A panel's local plane XY, normal +Z. To tilt toward camera maybe rotate X? Three rotation x: local y maps y cos, z sin? For normal +Z, rotation X positive maps z to y negative? Rotation matrix x: y'= y cos - z sin, z'= y sin + z cos. normal +Z -> (0,-sin,cos), so points downward for positive. Use -18° to normal upward (toward +y). Module center y maybe 3.7, z=0. Then top/front edge? Camera at (7,5,9) looking at (0,3,0). Normal +Z tilted up, yes.
+
+Module group:
+panel group at (0,3.75,0), rotation.x = -0.32 rad.
+Local panel plane in XY, z depth. Frame BoxGeometry(width+0.18, height+0.18, 0.14) at z=0.
+Cell plane BoxGeometry(width-0.12, height-0.12, .025) at z=.085 maybe. Need grid texture.
+Border frame: silver outer box and dark inner? Could use frame as full silver box then cell plane on front z=.081, border visible around. But if cell plane covers interior, good. Thin silver border. Use MeshStandardMaterial metalness .8 roughness .28. Add maybe four slim rails around? "thin silver border" one box enough. Cell plane texture with grid. Need orientation of texture. Canvas 1024x640, blue background, grid lines and cell outlines. Could use canvas texture. It should show dark blue cell grid. Add subtle grid. Maybe panel cells are individual rectangles. Canvas texture.
+
+Junction box on back: local z=-0.18, dimensions .55 x .42 x .18, dark gray/black, at maybe x=0.8 y=0, z=-.18. Add lid seam, screws, cables? User only asks junction box. Add conduit down back to ground? Could add black cable from box to a conduit? But "single module" okay. Junction box on back visible from camera? Camera at +z sees front, so back not visible. Could position camera at (6,4.5,8) sees front. Junction box on back perhaps partially visible due tilt? Back is -z, camera positive z won't see. Yet model has it. Could add camera preset side maybe. Maybe camera initial at (6.8,4.8,8.8) sees front and right edge, not back. To show junction box on back, perhaps camera at (-7,4.7,8) still front. Could have camera at (7,5,-9) sees back but then cells front not visible. Requirement visual panel cells and junction box maybe can orbit. Could initial angle show side enough? Since panel is tilted, back not visible. We can include a secondary "Junction box" maybe on rear side extending beyond panel edge so visible from side? But physically should be on back. User can orbit. We can add camera controls and buttons Front / Service (back) maybe. The request just shows. Better initial view perhaps camera at (7.5,5.5,9.5) and junction box on back not visible. Could still model. Need not screenshot.
+
+Maybe use a slightly offset rear junction box at x=1.05, y=-0.1, z=-0.28, and side angle camera at x=7 means can see rear-right if box extends beyond right edge? But back at z=-.25 and x=1.05, camera x=7, z=9, line to box intersects front? x ratio. Panel right edge x=1.7, box x=1.05, so no. Could place at x=1.45 beyond right edge, but junction boxes usually within. Could add a small service view button.
+
+Rails: two rails along width? "held at a tilt by two rails and four adjustable struts" Typically PV module supported by two side rails, each rail supported by two adjustable legs/struts. So two longitudinal rails at z +/- maybe 0.65 local, each extends width 4.1. Four struts: two per rail, at x +/-1.55. Struts from footings to rail positions. Need adjustable struts above footings. Footings pair at x +/-1.8 maybe, z=0. Each footing supports one strut? "four adjustable struts above a pair of concrete footings" Could be two footings each with two adjustable struts? Wording: two rails and four adjustable struts above a pair of concrete footings. Maybe each rail has two struts, and each strut anchored to one of pair footings? Pair footings could each support two struts (one at each rail), but then four struts above pair footings? Actually two footings x positions, each has two struts (front/back) =4. Rails each span and are supported at front/back by struts, so each rail has two struts. Each footing supports one front and one back strut. This is logical. So footings at x +/-1.65, z=0. Each footing has two vertical legs/struts, one to front rail z=+0.68 and one to rear rail z=-0.68. Four struts total. Adjustable telescoping struts with lower fixed tube and upper sliding tube, threaded rod, knob. Rails at y determined by module center and local z positions transformed. Need compute world positions.
+
+Module center C=(0,3.7,0), rotation.x=-0.32. Local rail positions z=±0.62, y maybe 0.05. World:
+y = C.y + localY*cos - localZ*sin? RotX: y'= y cos - z sin. sin=-.315, so y'= y*.951 - z*(-.315)= y*.951 + z*.315. z'= y*sin + z*cos = -y*.315 + z*.951.
+For z=+0.65, y=0.02 => y=3.719, z=.628. For z=-.65 => y=3.506, z=-.628. Rails slopes in z, horizontal.
+
+Strut top attaches rail at x ±1.55, z rail world. Bottom footing at x same, z maybe ±0.35? Pair footings at x ±1.65, z=0. Maybe each footing supports struts to front and back rails with angled struts. Lower anchors at z ±0.38, y .25. Top at z ±.63, y 3.5/3.72. So rear struts nearly vertical, front struts lean. Could be adjustable. But "four adjustable struts above a pair of concrete footings" perhaps two struts per footing, yes.
+
+Rails: two long aluminum rails along x, at z ±0.65 local, y=0.05 local. BoxGeometry(4.25,.11,.12) in module group, so rotate with panel. But struts attach to rail world positions. Need rail group as child of panel group, and world transform via localToWorld. Use scene.updateMatrixWorld. The rails should be in panel group. Four struts scene-level, top at transformed local rail points x ±1.55, local y=0.05, z ±0.68. bottom at footing positions.
+
+Could simplify use world computed.
+
+Strut geometry:
+- base plate on footing at y .24.
+- lower tube from base to 55% top, cylinder/box oriented along vector. Need helper cylinderBetween(a,b,r,mat) with CylinderGeometry and quaternion setFromUnitVectors(Y, dir).
+- upper tube from lerp .48 to 1, slightly different radius.
+- threaded rod: maybe cylinder from .65 to .95 plus helical thread? We can create helix curve tube? Three core has TubeGeometry, CatmullRomCurve3. But only core. Could create a helix around upper rod from bottom to top. Need 4 struts. Thread visual. Use TubeGeometry(new HelixCurve? custom Curve). We can define class HelixCurve extends THREE.Curve? In JS, subclass THREE.Curve. getPoint(t) returns base + radial*cos turns, vertical. But TubeGeometry with custom curve. Need perhaps no issue. Or use many small torus rings? 12 torus per strut expensive but okay. Better helix tube.
+- top knob: cylinder and wing? Adjustable strut usually threaded rod with knob. Add dark knob at top, maybe cylinder.
+- lower fixed tube silver, upper dark or silver. Use steel.
+- base collar.
+
+Footings: pair concrete blocks, maybe 0.8x0.35x0.8 at x ±1.7, y .175, z=0. Maybe beveled? BoxGeometry only. Could use ExtrudeGeometry with Shape for chamfered rectangle, but self-contained core. Implement create footing with Box plus top cap? Concrete footings rectangular. Add subtle texture via canvas? Could use CanvasTexture noise. Need no external assets. We can create concrete texture canvas. Ground plane.
+
+Environment:
+- scene background light blue/gray, fog.
+- renderer antialias, shadows, ACES tone mapping, sRGB.
+- Perspective camera.
+- HemisphereLight, DirectionalLight with shadows, fill.
+- ground large PlaneGeometry, material roughness.
+- maybe grid? no.
+- concrete footings.
+
+Camera controls:
+Implement pointer drag orbit, wheel zoom, right/middle pan, touch one drag orbit, two pinch maybe. Since user asked no explicit controls but developer says implement camera controls directly. We can provide orbit/pan/zoom. Need not use OrbitControls.
+State spherical around target. On pointerdown, capture; pointermove if drag: if shift/right -> pan; else orbit. Wheel adjust radius. Touch support pointer events and track two pointers pinch.
+Could also add UI buttons: "Front", "Service", "Reset", maybe "Auto rotate". But no need. Yet polished.
+
+Need ensure module frame and cells. We can create panel with group. Add cells texture. Could also add subtle silver grid lines? Canvas texture. Need orientation. Create canvas 1024x640, fill #071b39, random cell variation, grid 16 columns x 10 rows. Draw each cell with slight variation and outlines. Texture anisotropy. Use CanvasTexture. Since texture is on BoxGeometry, all faces same; front and back both show grid. Better use PlaneGeometry for front at z=.081 with material map, and separate back maybe. But frame box and cell plane. Use PlaneGeometry, MeshStandardMaterial side DoubleSide perhaps. It will show on back too, but junction box covers. For proper back, use plain dark plane. Use texture on front only. Plane is in XY, normal +Z. Good.
+
+Frame: BoxGeometry W+0.2,H+0.2,.14, material silver. Cell plane at z=.076. Slight gap. Add maybe frame edge strips? Full box border. Add back frame? The full box itself.
+Add corner bolts/screws to frame: 4 small cylinders oriented along z. Cylinder default y, rotate x=PI/2 to align z. Place at corners. Front z=.10, back z=-.10. Junction box back at z=-.22, maybe x=.75, y=-.05. Add lid and screws. Cable from box down back to ground maybe black cable curve. But could clutter. Add cable conduit from box to ground at rear. Use CatmullRomCurve3 and TubeGeometry. Since back is hidden initial, okay.
+
+Rails: two BoxGeometry(4.15, .10, .12) at local y=.05 z ±.68, material aluminum. Add mounting holes? small dark circles on rail maybe. But struts attach. Add clamp blocks at strut x positions around rail. Since rail child of panel group, clamps can be children too. But world attachment computed from local. Add clamp boxes at x ±1.55, local y .05, z ±.68, dimensions .26,.22,.22, child panel group. Then world top = localToWorld(new Vector3(x,.05,z)). Great.
+
+Strut bottom at footing top y=.32, x ±1.65, z maybe ±.35. Top world. Need align. For rear top z=-.63, bottom z=-.38, front top z=.63 bottom z=.38. So each footings supports two struts. But x footings ±1.65 and top x ±1.55, close.
+
+Maybe panel width 3.8, rails length 4.25. Footings x ±1.75. Good.
+
+Need adjust struts maybe visible "adjustable" with threaded upper section and knob. We can add scale marks on lower tube? Use small rings.
+
+Need maybe label in HTML overlay title and instruction. Single file. Use CSS.
+
+Potential issue CDN import CORS okay. Use `<script type="module"> import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';`.
+
+Need maybe no other imports.
+
+Let's formulate code. Need ensure geometry helper orientation. cylinderBetween:
+const dir = b-a; length; geom CylinderGeometry(radius,radius,length,16); mesh.position midpoint; mesh.quaternion.setFromUnitVectors(new Vector3(0,1,0), dir.normalize()).
+For rectangular strut maybe cylinder is okay. "struts" can be round. Use lower tube radius .075, upper .055. Add collar.
+Thread helix:
+class HelixCurve extends THREE.Curve {
+ constructor(radius,height,turns){...}
+ getPoint(t,target=new THREE.Vector3()){ const a=t*turns*2PI; return target.set(this.x0 + Math.cos(a)*this.radius, this.y0+t*this.height, this.z0+Math.sin(a)*this.radius);}
+}
+But base orientation: vertical y. x0 maybe top x - radius? The rod center line x constant. A helix around vertical y: x = x0 + cos(a)*r, z = z0+sin(a)*r. Good.
+TubeGeometry(curve, 120, .012, 6, false). Material dark steel. Place around upper rod from y .58 to .93. But cylinder between points already. Could just helix around line. Top knob at top.
+Need strut group at world? Easier create in scene with coordinates.
+function createStrut(top, bottom):
+group maybe positions local world.
+base = bottom + y .05.
+lowerTop = bottom + (lowerTopFraction) dir.
+cylinderBetween(base, lowerTop, .075)
+upper bottom = lowerTop - .03? upper from lerp(.52) to top.
+cylinderBetween(upperStart, top, .055)
+thread from upperStart to maybe top-.1.
+knob at top.
+Add base plate box at bottom y+.03 and anchor bolt.
+Add sleeve collar at lowerTop maybe sphere/cylinder.
+Add adjustment knob: vertical cylinder .12 radius .10 at top, plus horizontal? A black cylinder with ridges. Use CylinderGeometry(.12,.12,.12,16) and 3 small cylinders? Could be a wing knob, box.
+Maybe top attaches rail with a small vertical connector.
+
+Need rail world top exact. Panel group transform. `panelGroup.updateWorldMatrix(true,false); const top = panelGroup.localToWorld(local.clone())`. Since panelGroup position and rotation. `localToWorld` updates matrix. Good.
+
+But panelGroup is at center and rotation. The module is above. Need maybe panel center y=3.75. Ground to panel ~3.5.
+
+Footing dimensions .85 x .35 x .9. Pair at x ±1.8, z=0. Maybe top y=.35. bottom strut base y=.36.
+
+Strut top:
+panel center (0,3.8,0), rot -0.30.
+local y=.05, z=.68: y=3.8 + .0475 + .211 = 4.059, z=-.015+.647=.632.
+local z=-.68: y=3.8+.0475-.211=3.636, z=-.015-.647=-.662.
+So rails slope in world y due tilt. Struts bottom y=.36. Rear length 3.27, front 3.7. Adjustable.
+
+Maybe panel center should 3.65 to not too high. Use 3.65. top front 3.90, rear 3.44. Fine.
+
+Panel cells texture. Need maybe reflectivity. MeshPhysicalMaterial? Three core supports. Use MeshStandardMaterial with map, roughness .28, metalness .05. Add clearcoat? MeshPhysicalMaterial clearcoat .55, clearcoatRoughness .2, but core. Use `new THREE.MeshPhysicalMaterial({map, color:0xffffff, roughness:.26, metalness:.05, clearcoat:.55, clearcoatRoughness:.2})`. Fine.
+
+Concrete texture: canvas 256 noise. Could use `CanvasTexture`, wrap repeat. But BoxGeometry UV repeats. Create random noise. Need deterministic maybe Math.random okay. `ctx.fillStyle`; fillRect. Add speckles. Material map. Could use bumpMap same texture? color grayscale not ideal. Just map.
+
+Ground: large plane, maybe shadow. Add circular/rectangular paved area? Ground plane 30.
+
+Add a subtle grid? no.
+
+Maybe add base plate bolts.
+
+Junction box:
+- body Box .52,.42,.18 at (0.78,-.05,-.20) in panel group.
+- lid Box .56,.04,.20 at y=.20? Body centered y=-.03, lid top y=.20. But box extends z.
+- screws 4 small cylinders along z on lid/front? Place z=-.31 (back side). Camera front won't see. Could also on side.
+- cable: from box lower back to ground. Points world? create in scene, from (0.78,3.49,-.32) to (1.05,3.35,-.75) to (1.45,1.2,-1.1) to (1.55,.4,-1.1). But cable should not intersect ground. Use TubeGeometry radius .025 black. Maybe conduit. It shows back.
+- label small white? no.
+
+Panel front cells and border. Add maybe front label at lower left with "PV-01" using canvas texture? Could add a small white label plane with text, but user didn't ask. Maybe not.
+
+Add module support rails visible beneath. Rails are children and silver.
+
+Need camera initial view to show panel and struts. `camera.position.set(7.2,5.2,8.5)`, target (0,2.3,0). This sees front and right. Panel normal tilted upward toward +z, camera +z good. Junction box back hidden. Could initial camera at (7.3,5.1,9.0). Maybe service view button shows back. Add UI with three buttons: Perspective, Front, Service. "Service" camera at (-6,3.2,-8) target (0,2.7,0) to see back and cells edge? Back junction visible. Need direct camera animation. Could implement camera tween to preset. But controls state spherical. Easier function setCameraPreset with desired pos/target, animate over 1 sec. User can interact cancels.
+
+Need maybe panel front cells readable. Initial camera distance 11, panel 4x2.5. Good.
+
+Lighting: sun at (-5,9,7), shadow map 2048, camera bounds. Hemisphere.
+
+Renderer set pixel ratio min(2). Resize.
+
+Camera controls:
+state target Vector3(0,2.4,0), spherical radius, phi, theta. `spherical.setFromVector3(camera.position-target)`.
+On pointer:
+- store pointer positions in Map.
+- for one pointer, dragging. `pointerdown` if button 2 or shift => pan mode.
+- pointermove: if one and mode orbit: delta; theta -= dx*0.006; phi -= dy*0.006 clamp .18, PI/2.02 maybe don't go below ground. For pan, compute camera right/up and target shift. Need direct.
+- wheel preventDefault radius *= exp(deltaY*.001), clamp 4,20.
+- touch: pointer events. If 2 pointers, pinch: track distance, radius. Also midpoint orbit? implement.
+Need avoid context menu.
+Potential pointer capture.
+
+Preset animation: store from camera and target, to. In animate, lerp camera pos and target, then update spherical? Controls state maybe not needed until user input. We can just set camera pos target and recompute spherical after. But orbit state can get stale. Better camera preset sets `desired` and in animation update camera. For controls, maintain spherical and target, update camera each frame. Preset computes spherical from to position and target, then animate spherical values and target. On user pointer, cancel tween.
+Simpler:
+`let cameraTween = null;`
+`setView(pos,target)` computes spherical from pos-target, `cameraTween={start: performance.now(), fromS: spherical.clone(), toS: new Spherical().setFromVector3(toPos-target), fromTarget:target.clone(), toTarget:...}`.
+In animate, if tween: t; ease; spherical.copy(...); target.lerp; camera.position.copy(target).add(new Vector3().setFromSpherical(spherical)); lookAt.
+On pointerdown cameraTween=null.
+`updateCamera()` each frame from spherical.
+Need `Spherical` phi measured from positive y. Clamp phi .18 to 1.48 (not below). theta any.
+Pan: use right vector from camera matrix column 0, up column 1. `right.setFromMatrixColumn(camera.matrix,0)`, up column1. amount = radius * dy*0.001 etc. target add right*(-dx*factor)+up*(dy*factor). Need camera matrix updated.
+
+Touch pinch: pointer map. On pointermove if 2 pointers, calculate distance, compare lastPinch; radius. Also midpoint movement maybe orbit not necessary.
+Pointer event `e.pointerType` etc.
+
+UI:
+Top-left panel title "GROUND-MOUNTED PV" and subtitle. Bottom-left instructions. Top-right view buttons.
+Maybe no external fonts. CSS system.
+
+Need include accessibility.
+
+Need maybe loading overlay? module load quick. Add `<div id=loading>Building scene…</div>` and remove after first render. If import fails, stays. Fine.
+
+Could provide code only. The user asked create, likely answer with HTML. We can say save as index.html. Need no markdown? Usually code block.
+
+Let's ensure no import addons. Good.
+
+Potential issue `THREE.Curve` subclass in module okay.
+Potential issue `renderer.outputColorSpace = THREE.SRGBColorSpace` in r160 yes.
+`THREE.ACESFilmicToneMapping`.
+`shadowMap.type = THREE.PCFSoftShadowMap`.
+`CanvasTexture.colorSpace = THREE.SRGBColorSpace`.
+
+Texture cell grid:
+Canvas 1024x640. Fill. Number columns 16 rows 10. Cell width 64, height40, gap6. Draw fill random. Grid major lines. Add busbars vertical maybe 3 lines per cell. Use `ctx.strokeStyle`.
+Need front plane dimensions 3.62 x 2.22. Texture aspect 1024/640=1.6, panel 3.6/2.2=1.636, close.
+Use `texture.anisotropy = renderer.capabilities.getMaxAnisotropy()` after renderer created. Good.
+
+Frame dimensions 3.8 x2.4. Cell plane 3.62x2.22.
+Add frame maybe box material. To make border "thin", outer 3.82x2.42 and cell 3.62x2.22, border .1 each. Good.
+Add back dark plate maybe box 3.55x2.15x.04 at z=-.09.
+Junction box on back.
+
+Module group rotation x=-0.32. Need front normal points up. RotX(-.32) normal +Z -> y=sin? Matrix: y'= y cos - z sin. z=1, sin=-.315 => y'=+.315. yes up.
+Panel local y top maps z negative? RotX: z'= y sin + z cos = y*(-.315)+.951, so top edge z negative (back), bottom edge z positive (front). Tilted panel top farther back, bottom front. Normal up/front. Good.
+
+Rails at local z ±.70. World front rail z .65, rear -.65. Good.
+
+Footing pair and struts. Base plates at x ±1.72, z ±.38. Each footing block centered z=0, dimensions .9 x .35 x 1.0, so base plates on top. Four struts bottom positions:
+front: x -1.72/+1.72, z=.38
+rear: x -1.72/+1.72, z=-.38.
+Top x ±1.55 maybe.
+The rails length 4.25, supports at ±1.65.
+
+Strut top attaches to rail at x ±1.62, local y=.08, z ±.70. Need panel group localToWorld. `panelGroup.localToWorld(new THREE.Vector3(supportX, 0.08, railZ))`.
+Need `panelGroup.updateMatrixWorld(true);` before.
+For each railZ and x.
+Strut top y ~3.9 or3.45.
+Bottom y=.36.
+Strut direction.
+
+Maybe "four adjustable struts" count visually: 4 groups. Good.
+
+Add rail clamp blocks at x ±1.62 and z rail, child panel. The top world local y .08 but clamp center local y .05. Use support local y=.06. top = localToWorld. The strut top should be at local y=.13 maybe rail top. Rail box center .06, height .11, top .115. So top local y=.12. Use .12. Then world.
+Strut connects to rail underside? top at rail top. Fine.
+
+Need maybe front/rear labels on struts? no.
+
+Adjustment mechanism:
+- lower fixed tube from base collar to 58%.
+- upper telescoping from 48% to top.
+- thread helix from 58% to 92%.
+- top nut/knob.
+This is recognizable.
+Use `cylinderBetween` with geometry each call, many geometries but fine.
+For thread, helix around vertical line but strut is angled. Our helix class only vertical y. Could orient group. Create helix in local y and then group align y to dir. Better:
+`const threadGroup = new THREE.Group(); threadGroup.position.copy(lowerTop); threadGroup.quaternion.setFromUnitVectors(Y, dir);`
+Inside, helix from y=0 to height, x radius. Tube. Then group at lowerTop, orientation.
+But upper cylinder from lowerTop to top. Thread from lowerTop to point 35% along. group height = length*.42, quaternion aligns Y to dir. Good.
+`HelixCurve` x0=0,z0=0.
+TubeGeometry.
+Knob at top maybe group.
+Base plate.
+Add collars as spheres? Use cylinder discs perpendicular to strut. `cylinderBetween` small segment around lowerTop and upperStart.
+Thread material dark.
+Top knob: cylinder vertical world, but strut angled slightly, okay. Use group align? top knob should be along strut. Could create knob group at top, quaternion align Y to dir, cylinder local y. Add horizontal wing perhaps local x.
+Maybe enough.
+
+Need create concrete footing with top cap? One box. Add a darker base shadow.
+
+Ground grid? Add a `GridHelper` maybe gives technical look but not necessary. Could add subtle grid at y=.006, size 20 divisions 40, opacity .12. But ground is scene and grid might distract. Maybe add `GridHelper(20,40,0x8c9297,0xb8bcbf)` at y=.006, material transparent opacity .16. It is core. This shows ground. Yet concrete footings. Fine.
+
+Maybe add a small service conduit. Good.
+
+Need use `scene.add` etc.
+
+Let's draft code carefully.
+
+HTML:
+`<canvas id="scene"></canvas>` renderer uses canvas.
+`<div class="hud">...`
+`<div class="views">...
+`<div id=loading>...`
+CSS responsive.
+
+JS:
+import.
+const canvas, renderer.
+`renderer.setSize(innerWidth, innerHeight);`
+`renderer.shadowMap.enabled=true`.
+`renderer.domElement` same canvas.
+Scene.
+Materials.
+
+Texture functions.
+
+Ground plane rotate -PI/2.
+
+Footing:
+function addFooting(x,z) {
+ const group...
+ const block = Mesh(BoxGeometry(.9,.34,1.0), concreteMat); position y=.17
+ bevel? Box. Add top pad BoxGeometry(1.05,.08,1.12) y=.35? Then base plate y=.41. But footings pair. If top pad, block top .34, pad center .36 h .08 top .40. base plate center .43. Strut bottom .44.
+Maybe dimensions.
+Use `createFooting(x)`:
+block center y=.18 (h .36)
+cap center y=.37 (h .08)
+base plate center y=.45 (h .06)
+strut bottom y=.48.
+This makes pair.
+
+Panel center 3.65. top front 3.9, so struts long.
+
+Add module:
+`const panel = new THREE.Group(); panel.position.set(0,3.65,0); panel.rotation.x=-0.32; scene.add(panel);`
+frame.
+Cell plane.
+Back plate.
+Border maybe frame material.
+Screws.
+Junction.
+Cable.
+
+Need `makeScrew(parent, x,y,z, axis='z')`: CylinderGeometry(.035,.035,.025,12), default along y. For front axis z, rotate x=PI/2 (y axis -> z? RotX +90 maps y to z yes). For back axis -z, rotate x=-PI/2. Place.
+Frame screws at corners local z=.105 and back z=-.105. But back junction may overlap not corners.
+
+Cell plane front at z=.081. Frame extends z ±.07, cell plane at .076. Good.
+Back plate at z=-.085, thickness .035.
+Junction body z=-.20, thickness .18 extends -0.29 to -.11, attached.
+Lid at z=-.205 maybe.
+Cable starts at world back.
+
+Cable curve points:
+new Vector3(.78,3.48,-.31) (body lower back world panel local y=-.24? Panel transform y=3.65-.239-.07=-3.959? Wait local y=-.24 => world y=3.65 + (-.24*.951) + (-.20? z no) =3.429. Hmm body center local y=-.05, lower local y=-.27 => world y=3.65-.257=3.393, z=-.084. So start (0.78,3.39,-.30). Then (1.0,3.30,-.65), (1.3,2.4,-.95), (1.45,.55,-1.0), (1.55,.12,-.85). This hangs. Use black tube radius .025.
+Maybe cable should connect to ground box. Fine.
+
+Rail material.
+`const railGeometry = new BoxGeometry(4.28,.12,.13);`
+At local y=.05, z ±.70.
+Clamp blocks at x ±1.62, y=.05, z ±.70, geometry .28,.24,.24.
+Maybe clamp block is child and top world local y .17? Strut top local y=.16. Use .16.
+
+Strut top computed.
+
+Need maybe rails are "two rails" and visible under panel. yes.
+
+Maybe add a small module ID label on front lower left using CanvasTexture. Not needed.
+
+Camera:
+`const target = new THREE.Vector3(0,2.35,0); let spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(target));`
+Initial camera pos (7.4,5.4,9.2) target (0,2.4,0). radius 12.8. Panel fits.
+`updateCamera` set position target + vector from spherical.
+Need camera lookAt.
+
+View presets:
+front pos (0,4.8,10.5) target (0,2.6,0)
+service pos (-6.8,3.6,-8.8) target (0,2.7,0)
+isometric pos (7.4,5.4,9.2)
+Button data.
+`setView` uses `new THREE.Spherical().setFromVector3`.
+Tween.
+
+Controls:
+pointer state:
+`const pointers = new Map(); let dragMode='orbit'; let lastX...`
+For touch, pointers map.
+On pointerdown:
+canvas.setPointerCapture(e.pointerId); pointers.set(id,{x:e.clientX,y:e.clientY});
+if pointers.size===1: dragMode = (e.button===2||e.shiftKey)?'pan':'orbit'; last...
+if size===2: pinchDistance=...; dragMode='pinch';
+On move:
+if !pointers.has return.
+old=pointers.get; update.
+if size===1:
+dx = e.clientX-lastX, dy...
+if mode orbit: spherical.theta -= dx*0.006; spherical.phi = clamp(spherical.phi - dy*0.005,...)
+pan: panCamera(dx,dy)
+last.
+if size===2:
+distance; if lastPinch >0 radius *= lastPinch/dist; clamp; lastPinch=dist.
+Maybe midpoint orbit omitted.
+Pointerup delete, if remaining 1 reset last to remaining.
+Wheel.
+`canvas.addEventListener('contextmenu', e=>e.preventDefault())`.
+
+Pan factor: `const panScale = spherical.radius * 0.0015; right...; target.addScaledVector(right,-dx*panScale).addScaledVector(up,dy*panScale);`
+Need camera matrix current. `camera.updateMatrixWorld()`.
+Clamp target y .5 to 5 maybe, x ±4 z±3.
+
+Tween and controls conflict: pointerdown sets null.
+
+Auto rotate? no.
+
+Animation:
+`const clock = new THREE.Clock();`
+`function animate(){ requestAnimationFrame; const dt=Math.min(clock.getDelta(),.05); if(tween)...; updateCamera(); renderer.render; }`
+Set initial camera before.
+Loading remove after first render maybe `requestAnimationFrame(()=>loading.classList.add('hidden'))`.
+
+Resize.
+
+Need perhaps `window.addEventListener('keydown')` arrow keys? Could add accessibility: arrow keys orbit, +/- zoom, R reset. Good.
+
+Maybe "single self-contained HTML" external Three CDN is allowed. No other assets.
+
+Need ensure no use `MathUtils.clamp` maybe core.
+
+Potential issue `TubeGeometry` with custom Curve and `closed=false`. Good.
+`HelixCurve` `getPoint` target optional. `super()`? Class extends THREE.Curve and implement getPoint. Constructor no need.
+`new THREE.TubeGeometry(curve, 140, 0.012, 6, false)`.
+
+Maybe `MeshPhysicalMaterial` clearcoat property. yes.
+
+Need maybe panel texture orientation. CanvasTexture on PlaneGeometry. good.
+
+Maybe use `renderer.setAnimationLoop`? requestAnimationFrame fine.
+
+Could add `scene.fog = new THREE.Fog(0xdde4e7, 15, 35);`.
+
+Lighting shadows:
+sun.shadow.camera left etc. `sun.shadow.bias=-0.0004; normalBias=.025`.
+Ground receive.
+Panel cast.
+
+Maybe add a soft "ground pad" under? no.
+
+Need include `aria-label`.
+
+Let's ensure code size manageable.
+
+One concern: module has "thin silver border" but full box cell plane inside. Good.
+"dark blue cell grid" texture.
+"junction box on the back" body.
+"ground-mounted" footings.
+"adjustable struts" telescoping and threaded.
+"two rails" under panel.
+"four adjustable struts" exactly 4.
+
+Could maybe add labels in 3D? no.
+
+Need maybe use `scene.add(panel)` and `panel.updateMatrixWorld(true)`.
+`panelGroup.localToWorld` mutates vector and calls updateWorldMatrix? `Object3D.localToWorld` calls updateWorldMatrix(true,false), yes.
+
+Strut top:
+```
+for (const x of [-1.62,1.62]) {
+ for (const z of [-.70,.70]) {
+  const top = panelGroup.localToWorld(new THREE.Vector3(x,.16,z));
+  createStrut(top, new Vector3(x,.48, z*0.58?));
+ }
+}
+```
+Bottom z ±.38. Good.
+Maybe front strut top z=.65, bottom .38. rear top -.65, bottom -.38.
+Footings x ±1.78, top x ±1.62, slight lean.
+
+Base plate positions x ±1.78, z ±.38. Footing centered z=0.
+
+`createStrut`:
+```
+const group = new THREE.Group();
+const dir=top-bottom;
+const len=dir.length();
+const lowerTop=bottom.clone().lerp(top,.58);
+const upperStart=bottom.clone().lerp(top,.48);
+cylinderBetween(group, lowerTop, upperStart,...)
+...
+threadGroup.position.copy(lowerTop);
+threadGroup.quaternion.setFromUnitVectors(Y, dir.clone().normalize());
+const threadLength=lowerTop.distanceTo(top*.?); 
+```
+Need thread from lowerTop to a point maybe bottom.lerp(top,.92). local height = len*.44. group orientation aligns Y to dir. Place local y 0..len*.44.
+`threadGroup.position.copy(lowerTop); threadGroup.quaternion...`
+Inside curve y=0..h.
+Tube.
+Upper cylinder from upperStart to top.
+Lower cylinder from bottom+.02 to lowerTop.
+Collar at lowerTop maybe cylinderBetween lowerTop - dir*.05 to lowerTop+dir*.05 radius .095.
+Top knob at top: group pos top, quat align Y to dir. Cylinder local y 0.. .14. Add wing box local x .18 etc.
+But if group quaternion rotates, cylinder local y aligns strut. Good.
+Base plate separate.
+`cylinderBetween` adds to group with coordinates local. Group at origin.
+Thread group orientation.
+Knob group orientation.
+
+`cylinderBetween` geometry length and quaternion. If group is later quaternion, local geometry okay.
+
+Screws front and back.
+
+Concrete texture:
+```
+function concreteTexture() {
+ canvas 256; fill #a7a69f; for 5000 random circles...
+ const tex = new THREE.CanvasTexture(canvas); tex.wrapS=RepeatWrapping; tex.repeat.set(2,2); ...
+}
+```
+Map on Box.
+Cell texture.
+
+Need maybe ground material color.
+
+Maybe add a `GridHelper` but can use no.
+
+Could add a `CircleGeometry` under panel? no.
+
+Let's think camera view: target y2.4, camera y5.4, so looking slightly down. Panel at 3.65, visible. Struts from .5 to 3.5. Good.
+Footing at x ±1.8. Panel width 3.8. camera x7 sees right side and front. Good.
+
+Maybe panel appears too high? fine.
+
+Need use only Three.js core. yes.
+
+Should we include explanatory text after code? User asked create, likely just code. We can preface concise.
+
+Let's compose final with complete HTML. Ensure no accidental addons.
+
+Let's test mentally JS syntax.
+
+`const mat = { ... };`
+`const concreteMat = new THREE.MeshStandardMaterial({map: concreteTexture(), color:0xffffff,...})`.
+`const cellMat = ...`
+`const cellPlane = new THREE.Mesh(new THREE.PlaneGeometry(...), cellMat);`
+Plane normal +Z. panel rotation.
+`cellPlane.renderOrder` no.
+`frame.castShadow=true`.
+
+Frame screws:
+```
+function addScrew(parent,x,y,z,back=false) {
+ const m = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.025,12), screwMat);
+ m.position.set(x,y,z);
+ if(back) m.rotation.x=-Math.PI/2; else m.rotation.x=Math.PI/2;
+ ...
+}
+```
+Cylinder axis after rotation x=PI/2: y axis maps z positive. yes.
+
+Junction body:
+`const box = new Mesh(BoxGeometry(.55,.42,.18), darkMat); position(.76,-.04,-.205)`.
+Lid at y=.205, z=-.205. Body extends y -0.25 to .17, lid center .19 h .04. maybe overlap.
+Screws on back z=-.307, y .12? Add 2 screws.
+Add a small side plate? no.
+
+Cable start maybe body bottom world. Need calculate: local (0.76,-.25,-.31) transform y=3.65-.238=3.412, z=-.079-.304=-.383. Start (0.76,3.40,-.40). Then.
+Tube curve.
+
+`const cable = new Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([...]), 40,.025,8,false), cableMat);`
+
+Panel back label? no.
+
+Rails:
+`panel.add(rail)`; clamps.
+`panelGroup.updateMatrixWorld(true);`
+Top local y .16.
+
+Strut group:
+`const lower = new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,len*.58,18), steelMat);` But helper cylinderBetween creates geometry. Use helper:
+```
+function cylinderBetween(parent,a,b,r,material,radial=16) {
+ const dir=b.clone().sub(a), len=dir.length();
+ const mesh = new Mesh(new CylinderGeometry(r,r,len,radial), material);
+ mesh.position.copy(a).add(b).multiplyScalar(.5);
+ mesh.quaternion.setFromUnitVectors(Y, dir.normalize());
+...
+}
+```
+If len zero no.
+Thread group:
+```
+const threadLength = lowerTop.distanceTo(top.clone().lerp(bottom,.08));
+const thread = new Mesh(new TubeGeometry(new HelixCurve(.078,threadLength*.46,18), 120,.011,6,false), threadMat);
+thread.position.copy(lowerTop);
+thread.quaternion.setFromUnitVectors(Y, dir.normalize());
+group.add(thread)
+```
+But `thread` group orientation and position; curve local y 0..h. Good.
+`HelixCurve` x radius .078, z. The rod centerline is group origin? thread group position lowerTop and orientation, curve centerline y. yes.
+Upper cylinder from upperStart to top.
+Lower from bottom+.02 to lowerTop.
+Collar cylinderBetween lowerTop-dir*.04 to lowerTop+dir*.04 radius .095.
+Knob:
+```
+const knob = new Group(); knob.position.copy(top); knob.quaternion.setFromUnitVectors(Y,dir.normalize());
+const knobBody = Mesh(CylinderGeometry(.115,.115,.13,18), knobMat); knobBody.position.y=.065; knob.add
+const wing = Mesh(BoxGeometry(.32,.07,.10), knobMat); wing.position.set(.17,.065,0); knob.add
+```
+Wing extends x.
+Maybe top rail connector small cylinder from top to top+dir*.08, but strut top itself touches rail. Add `connector` cylinderBetween top, top+dir*.10, .075.
+
+Base:
+base plate Box .34,.06,.34 at bottom y+.03.
+anchor bolt cylinder y etc.
+
+`createStrut` group scene.add.
+
+Need maybe lower fixed tube and upper tube materials distinct. lower `aluminum`, upper `steel`. Thread dark.
+
+Footings:
+`addFooting(x)` group. block. `cap`. base plate perhaps in strut bottom world x. Add 4 bolts.
+Use `MeshStandardMaterial` concrete.
+Maybe footing cast/receive.
+
+Ground and grid. `GridHelper` material can be array? In r160 GridHelper material is LineBasicMaterial maybe. `grid.material.transparent=true; grid.material.opacity=.12;` if array no. Usually one material. Fine.
+Grid at y=.006.
+
+Lights.
+
+Camera controls and buttons.
+
+`setView` uses `spherical.copy`? `new THREE.Spherical().setFromVector3`.
+```
+function setView(position,target) {
+ cameraTween={
+ start: performance.now(),
+ fromS: spherical.clone(),
+ toS: new THREE.Spherical().setFromVector3(position.clone().sub(target)),
+ fromTarget: target.clone(),
+ toTarget: target.clone()
+ };
+}
+```
+Spherical constructor `.setFromVector3` exists. yes.
+In animate:
+```
+if (cameraTween) {
+ const t=Math.min(1,(now-tween.start)/1000);
+ const e=t*t*(3-2*t);
+ spherical.from? `spherical.makeSafe(); spherical.copy(tween.fromS).lerp(tween.toS,e);`
+ target.lerpVectors(...)
+ const offset = new Vector3().setFromSpherical(spherical);
+ camera.position.copy(target).add(offset); camera.lookAt(target);
+ if t>=1 cameraTween=null;
+}
+```
+`Spherical.lerp` exists. `copy` then lerp.
+`makeSafe` maybe.
+Initial `spherical.setFromVector3`.
+`updateCamera` just camera pos.
+
+Pointer:
+```
+canvas.addEventListener('pointerdown', e => {
+ cameraTween=null;
+ pointers.set(...);
+ if(pointers.size===1){...}
+ else if(size===2){...}
+});
+```
+When second pointer down, `lastPinch` set.
+On pointermove:
+```
+if(!pointers.has(e.pointerId)) return;
+const prev=pointers.get(id); pointers.set(id,new)
+if(pointers.size===1){dx=e.clientX-lastX...}
+else if(size===2){ dist; ...}
+```
+For one pointer after pinch, lastX set to current.
+`dragMode` global.
+`panCamera` uses `camera.matrixWorld` columns. `camera.updateMatrixWorld()`.
+Right vector: `new Vector3().setFromMatrixColumn(camera.matrixWorld,0)`.
+Up similarly.
+`target.addScaledVector(right, -dx*panScale).addScaledVector(up, dy*panScale);`
+Clamp target.
+Wheel `spherical.radius = clamp(spherical.radius * Math.exp(e.deltaY*0.001), 4.5, 22)`.
+Keydown:
+ArrowLeft theta += .08 etc; ArrowUp phi -= .06; + radius*.1.
+`event.key` plus equals.
+`R` set iso.
+Buttons.
+
+`loading` hide class.
+
+Maybe panel front cells texture not visible due `cellPlane` at z .076 and frame front .07, okay.
+
+Need maybe add thin silver border with a slight bevel? Box no bevel. Could use `EdgesGeometry` line? no. Full box.
+
+Maybe use `frame` material `color:0xb8c0c5, metalness:.85, roughness:.24`.
+`aluminum` similar.
+
+Could add front frame corner bolts.
+
+Maybe add a `Mesh` for cell grid with `polygonOffset` to avoid. no.
+
+One concern: `MeshPhysicalMaterial` with `map` and `color` okay.
+
+Let's produce final.
+=====CONTENT=====
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ground-Mounted Photovoltaic Module</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #dce5e8;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 22px;
+      left: 22px;
+      z-index: 10;
+      max-width: min(360px, calc(100vw - 44px));
+      padding: 16px 18px;
+      color: #17252b;
+      background: rgba(249, 252, 252, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(29, 48, 55, 0.14);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #527078;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 28px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: #60747b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .views {
+      position: fixed;
+      top: 22px;
+      right: 22px;
+      z-index: 10;
+      display: flex;
+      gap: 7px;
+      padding: 7px;
+      background: rgba(249, 252, 252, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(29, 48, 55, 0.13);
+      backdrop-filter: blur(12px);
+    }
+
+    .views button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #52666d;
+      background: transparent;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+
+    .views button:hover,
+    .views button:focus-visible {
+      color: #173039;
+      background: #e8eef0;
+      outline: none;
+    }
+
+    .help {
+      position: fixed;
+      left: 22px;
+      bottom: 20px;
+      z-index: 10;
+      padding: 9px 12px;
+      color: #53676e;
+      background: rgba(249, 252, 252, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 9px;
+      box-shadow: 0 8px 24px rgba(29, 48, 55, 0.1);
+      backdrop-filter: blur(10px);
+      font-size: 11px;
+      pointer-events: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      color: #466069;
+      background: #dce5e8;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: opacity 400ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 650px) {
+      .title-card {
+        top: 12px;
+        left: 12px;
+        padding: 12px 14px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .views {
+        top: auto;
+        right: 12px;
+        bottom: 12px;
+      }
+
+      .help {
+        left: 12px;
+        bottom: 64px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-label="Interactive 3D model of a ground-mounted photovoltaic module"></canvas>
+
+  <section class="title-card">
+    <div class="eyebrow">Renewable Energy Systems</div>
+    <h1>Ground-Mounted PV Module</h1>
+    <p class="subtitle">
+      Tilted photovoltaic array with two aluminum rails, four threaded support struts,
+      and paired concrete footings.
+    </p>
+  </section>
+
+  <nav class="views" aria-label="Camera views">
+    <button type="button" data-view="iso">Isometric</button>
+    <button type="button" data-view="front">Front</button>
+    <button type="button" data-view="service">Service</button>
+  </nav>
+
+  <div class="help">
+    Drag to orbit · Shift/right-drag to pan · Scroll to zoom
+  </div>
+
+  <div id="loading">Building photovoltaic assembly…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const canvas = document.querySelector("#scene");
+    const loading = document.querySelector("#loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xdce5e8);
+    scene.fog = new THREE.Fog(0xdce5e8, 16, 36);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 2.35, 0);
+    const spherical = new THREE.Spherical().setFromVector3(
+      camera.position.clone().sub(target)
+    );
+
+    function updateCamera() {
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(target).add(offset);
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // Lighting
+    const hemisphere = new THREE.HemisphereLight(0xf5fbff, 0x687068, 2.15);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff7e9, 3.1);
+    sun.position.set(-6, 10, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 25;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xc8e2ff, 0.8);
+    fill.position.set(7, 5, -6);
+    scene.add(fill);
+
+    // Materials
+    const silverMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb9c2c7,
+      metalness: 0.88,
+      roughness: 0.24
+    });
+
+    const aluminumMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8e9ba1,
+      metalness: 0.78,
+      roughness: 0.3
+    });
+
+    const steelMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4e5960,
+      metalness: 0.72,
+      roughness: 0.34
+    });
+
+    const darkMetalMaterial = new THREE.MeshStandardMaterial({
+      color: 0x252d31,
+      metalness: 0.48,
+      roughness: 0.4
+    });
+
+    const knobMaterial = new THREE.MeshStandardMaterial({
+      color: 0x171d20,
+      metalness: 0.2,
+      roughness: 0.58
+    });
+
+    const cableMaterial = new THREE.MeshStandardMaterial({
+      color: 0x15191b,
+      metalness: 0.08,
+      roughness: 0.76
+    });
+
+    // Procedural concrete texture; no external image assets are required.
+    function createConcreteTexture() {
+      const size = 256;
+      const concreteCanvas = document.createElement("canvas");
+      concreteCanvas.width = concreteCanvas.height = size;
+      const context = concreteCanvas.getContext("2d");
+
+      context.fillStyle = "#a8a79f";
+      context.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 4200; i++) {
+        const value = 115 + Math.floor(Math.random() * 85);
+        const alpha = 0.025 + Math.random() * 0.08;
+        const radius = 0.3 + Math.random() * 2.2;
+        context.fillStyle = `rgba(${value},${value},${value - 4},${alpha})`;
+        context.beginPath();
+        context.arc(
+          Math.random() * size,
+          Math.random() * size,
+          radius,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
+      }
+
+      const texture = new THREE.CanvasTexture(concreteCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 2);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // Procedural photovoltaic cell grid.
+    function createPVTexture() {
+      const width = 1024;
+      const height = 640;
+      const pvCanvas = document.createElement("canvas");
+      pvCanvas.width = width;
+      pvCanvas.height = height;
+      const context = pvCanvas.getContext("2d");
+
+      context.fillStyle = "#071a36";
+      context.fillRect(0, 0, width, height);
+
+      const columns = 16;
+      const rows = 10;
+      const cellWidth = width / columns;
+      const cellHeight = height / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const x = column * cellWidth;
+          const y = row * cellHeight;
+          const tint = 35 + Math.floor(Math.random() * 25);
+          const blue = 8 + tint;
+          const green = 24 + tint * 0.55;
+
+          context.fillStyle = `rgb(${blue},${green},${112 + tint})`;
+          context.fillRect(x + 3, y + 3, cellWidth - 6, cellHeight - 6);
+
+          context.strokeStyle = "rgba(135, 190, 225, 0.16)";
+          context.lineWidth = 1;
+          context.strokeRect(x + 4, y + 4, cellWidth - 8, cellHeight - 8);
+
+          // Fine bus bars give the cells a photovoltaic appearance.
+          for (let bus = 0; bus < 3; bus++) {
+            context.strokeStyle = "rgba(145, 205, 235, 0.11)";
+            context.beginPath();
+            context.moveTo(x + 5 + bus * 8, y + 5);
+            context.lineTo(x + cellWidth - 5 - bus * 8, y + cellHeight);
+            context.stroke();
+          }
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(pvCanvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const concreteMaterial = new THREE.MeshStandardMaterial({
+      map: createConcreteTexture(),
+      color: 0xffffff,
+      roughness: 0.94,
+      metalness: 0.01
+    });
+
+    const pvMaterial = new THREE.MeshPhysicalMaterial({
+      map: createPVTexture(),
+      color: 0xffffff,
+      metalness: 0.08,
+      roughness: 0.25,
+      clearcoat: 0.55,
+      clearcoatRoughness: 0.2
+    });
+
+    // Ground
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0xaeb7b7,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(24, 48, 0x718187, 0x9ca6a8);
+    grid.position.y = 0.006;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.13;
+    scene.add(grid);
+
+    // Utility helpers
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    function cylinderBetween(parent, start, end, radius, material, radialSegments = 18) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, radialSegments),
+        material
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    class HelixCurve extends THREE.Curve {
+      constructor(radius, height, turns) {
+        super();
+        this.radius = radius;
+        this.height = height;
+        this.turns = turns;
+      }
+
+      getPoint(t, target = new THREE.Vector3()) {
+        const angle = t * this.turns * Math.PI * 2;
+        return target.set(
+          Math.cos(angle) * this.radius,
+          t * this.height,
+          Math.sin(angle) * this.radius
+        );
+      }
+    }
+
+    function addFooting(x) {
+      const group = new THREE.Group();
+      group.position.x = x;
+      scene.add(group);
+
+      const block = new THREE.Mesh(
+        new THREE.BoxGeometry(0.9, 0.36, 1.0),
+        concreteMaterial
+      );
+      block.position.y = 0.18;
+      block.castShadow = true;
+      block.receiveShadow = true;
+      group.add(block);
+
+      const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(1.04, 0.08, 1.12),
+        concreteMaterial
+      );
+      cap.position.y = 0.37;
+      cap.castShadow = true;
+      cap.receiveShadow = true;
+      group.add(cap);
+
+      const basePlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.36, 0.06, 0.36),
+        steelMaterial
+      );
+      basePlate.position.y = 0.46;
+      basePlate.castShadow = true;
+      group.add(basePlate);
+
+      for (const boltX of [-0.12, 0.12]) {
+        for (const boltZ of [-0.12, 0.12]) {
+          const bolt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.035, 0.035, 0.035, 6),
+            steelMaterial
+          );
+          bolt.position.set(boltX, 0.505, boltZ);
+          bolt.castShadow = true;
+          group.add(bolt);
+        }
+      }
+    }
+
+    addFooting(-1.78);
+    addFooting(1.78);
+
+    // Photovoltaic module
+    const panelGroup = new THREE.Group();
+    panelGroup.position.set(0, 3.65, 0);
+    panelGroup.rotation.x = -0.32;
+    scene.add(panelGroup);
+
+    const moduleWidth = 3.8;
+    const moduleHeight = 2.4;
+
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(moduleWidth + 0.2, moduleHeight + 0.2, 0.14),
+      silverMaterial
+    );
+    frame.castShadow = true;
+    frame.receiveShadow = true;
+    panelGroup.add(frame);
+
+    const cellPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(moduleWidth - 0.12, moduleHeight - 0.12),
+      pvMaterial
+    );
+    cellPlane.position.z = 0.076;
+    cellPlane.receiveShadow = true;
+    panelGroup.add(cellPlane);
+
+    const backPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(moduleWidth - 0.1, moduleHeight - 0.1, 0.035),
+      darkMetalMaterial
+    );
+    backPlate.position.z = -0.086;
+    panelGroup.add(backPlate);
+
+    function addScrew(parent, x, y, z, back = false) {
+      const screw = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.034, 0.034, 0.025, 12),
+        steelMaterial
+      );
+      screw.position.set(x, y, z);
+      screw.rotation.x = back ? -Math.PI / 2 : Math.PI / 2;
+      screw.castShadow = true;
+      parent.add(screw);
+    }
+
+    for (const x of [-moduleWidth / 2, moduleWidth / 2]) {
+      for (const y of [-moduleHeight / 2, moduleHeight / 2]) {
+        addScrew(panelGroup, x, y, 0.081);
+        addScrew(panelGroup, x, y, -0.102, true);
+      }
+    }
+
+    // Junction box mounted to the rear of the module.
+    const junctionBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.56, 0.43, 0.19),
+      darkMetalMaterial
+    );
+    junctionBody.position.set(0.76, -0.04, -0.205);
+    junctionBody.castShadow = true;
+    panelGroup.add(junctionBody);
+
+    const junctionLid = new THREE.Mesh(
+      new THREE.BoxGeometry(0.59, 0.04, 0.21),
+      steelMaterial
+    );
+    junctionLid.position.set(0.76, 0.205, -0.205);
+    junctionLid.castShadow = true;
+    panelGroup.add(junctionLid);
+
+    addScrew(panelGroup, 0.61, 0.16, -0.312, true);
+    addScrew(panelGroup, 0.91, 0.16, -0.312, true);
+
+    // A short rear conduit makes the junction-box connection legible in service view.
+    panelGroup.updateMatrixWorld(true);
+    const conduitStart = panelGroup.localToWorld(
+      new THREE.Vector3(0.76, -0.25, -0.30)
+    );
+
+    const conduitCurve = new THREE.CatmullRomCurve3([
+      conduitStart,
+      new THREE.Vector3(1.02, 3.28, -0.64),
+      new THREE.Vector3(1.28, 2.45, -0.94),
+      new THREE.Vector3(1.43, 0.95, -1.02),
+      new THREE.Vector3(1.52, 0.1, -0.82)
+    ]);
+
+    const conduit = new THREE.Mesh(
+      new THREE.TubeGeometry(conduitCurve, 48, 0.026, 8, false),
+      cableMaterial
+    );
+    conduit.castShadow = true;
+    scene.add(conduit);
+
+    // Two longitudinal support rails.
+    const railGeometry = new THREE.BoxGeometry(4.28, 0.12, 0.13);
+    const clampGeometry = new THREE.BoxGeometry(0.28, 0.24, 0.24);
+
+    for (const railZ of [-0.7, 0.7]) {
+      const rail = new THREE.Mesh(railGeometry, aluminumMaterial);
+      rail.position.set(0, 0.05, railZ);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      panelGroup.add(rail);
+
+      for (const x of [-1.62, 1.62]) {
+        const clamp = new THREE.Mesh(clampGeometry, steelMaterial);
+        clamp.position.set(x, 0.05, railZ);
+        clamp.castShadow = true;
+        clamp.receiveShadow = true;
+        panelGroup.add(clamp);
+      }
+    }
+
+    panelGroup.updateMatrixWorld(true);
+
+    // Four individually adjustable, threaded support struts.
+    function createAdjustableStrut(top, bottom) {
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const direction = top.clone().sub(bottom);
+      const totalLength = direction.length();
+      direction.normalize();
+
+      const lowerTop = bottom.clone().lerp(top, 0.58);
+      const upperStart = bottom.clone().lerp(top, 0.48);
+
+      cylinderBetween(
+        group,
+        bottom.clone().add(new THREE.Vector3(0, 0.025, 0)),
+        lowerTop,
+        0.075,
+        aluminumMaterial
+      );
+
+      cylinderBetween(
+        group,
+        upperStart,
+        top,
+        0.055,
+        steelMaterial
+      );
+
+      // Threaded section of the upper tube.
+      const threadLength = totalLength * 0.44;
+      const thread = new THREE.Mesh(
+        new THREE.TubeGeometry(
+          new HelixCurve(0.077, threadLength, 18),
+          140,
+          0.011,
+          6,
+          false
+        ),
+        darkMetalMaterial
+      );
+      thread.position.copy(lowerTop);
+      thread.quaternion.setFromUnitVectors(Y_AXIS, direction);
+      thread.castShadow = true;
+      group.add(thread);
+
+      // Collar at the telescoping joint.
+      cylinderBetween(
+        group,
+        lowerTop.clone().addScaledVector(direction, -0.055),
+        lowerTop.clone().addScaledVector(direction, 0.055),
+        0.095,
+        darkMetalMaterial
+      );
+
+      // Base plate and anchor bolt.
+      const basePlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.055, 0.34),
+        steelMaterial
+      );
+      basePlate.position.copy(bottom).add(new THREE.Vector3(0, 0.025, 0));
+      basePlate.castShadow = true;
+      group.add(basePlate);
+
+      const anchor = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.045, 0.045, 6),
+        steelMaterial
+      );
+      anchor.position.copy(bottom).add(new THREE.Vector3(0, 0.06, 0));
+      anchor.castShadow = true;
+      group.add(anchor);
+
+      // Adjustable top knob and wing.
+      const knob = new THREE.Group();
+      knob.position.copy(top);
+      knob.quaternion.setFromUnitVectors(Y_AXIS, direction);
+      group.add(knob);
+
+      const knobBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.115, 0.115, 0.13, 18),
+        knobMaterial
+      );
+      knobBody.position.y = 0.065;
+      knobBody.castShadow = true;
+      knob.add(knobBody);
+
+      const knobWing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.065, 0.1),
+        knobMaterial
+      );
+      knobWing.position.set(0.17, 0.065, 0);
+      knobWing.castShadow = true;
+      knob.add(knobWing);
+
+      // Short connector into the rail.
+      cylinderBetween(
+        group,
+        top,
+        top.clone().addScaledVector(direction, 0.1),
+        0.07,
+        steelMaterial
+      );
+    }
+
+    for (const x of [-1.62, 1.62]) {
+      for (const railZ of [-0.7, 0.7]) {
+        const top = panelGroup.localToWorld(
+          new THREE.Vector3(x, 0.16, railZ)
+        );
+
+        createAdjustableStrut(
+          top,
+          new THREE.Vector3(x, 0.49, railZ * 0.58)
+        );
+      }
+    }
+
+    // Direct camera controls: orbit, pan, wheel zoom, and touch pinch.
+    const pointers = new Map();
+    let dragMode = "orbit";
+    let lastX = 0;
+    let lastY = 0;
+    let lastPinchDistance = 0;
+    let cameraTween = null;
+
+    function panCamera(dx, dy) {
+      camera.updateMatrixWorld();
+
+      const right = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrixWorld,
+        0
+      );
+      const up = new THREE.Vector3().setFromMatrixColumn(
+        camera.matrixWorld,
+        1
+      );
+      const scale = spherical.radius * 0.00145;
+
+      target.addScaledVector(right, -dx * scale);
+      target.addScaledVector(up, dy * scale);
+
+      target.x = THREE.MathUtils.clamp(target.x, -4, 4);
+      target.y = THREE.MathUtils.clamp(target.y, 0.6, 5.2);
+      target.z = THREE.MathUtils.clamp(target.z, -3, 3);
+    }
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointerdown", (event) => {
+      cameraTween = null;
+      canvas.setPointerCapture(event.pointerId);
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragMode = event.button === 2 || event.shiftKey ? "pan" : "orbit";
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        dragMode = "pinch";
+        lastPinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+
+        if (dragMode === "pan") {
+          panCamera(dx, dy);
+        } else {
+          spherical.theta -= dx * 0.006;
+          spherical.phi = THREE.MathUtils.clamp(
+            spherical.phi - dy * 0.005,
+            0.18,
+            Math.PI / 2 - 0.025
+          );
+        }
+      } else if (pointers.size === 2) {
+        const distance = pointerDistance();
+        if (lastPinchDistance > 0 && distance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (lastPinchDistance / distance),
+            4.5,
+            22
+          );
+        }
+        lastPinchDistance = distance;
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        lastX = remaining.x;
+        lastY = remaining.y;
+        dragMode = "orbit";
+      } else if (pointers.size === 0) {
+        dragMode = "orbit";
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraTween = null;
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          4.5,
+          22
+        );
+      },
+      { passive: false }
+    );
+
+    function setView(position, lookTarget) {
+      cameraTween = {
+        start: performance.now(),
+        fromSpherical: spherical.clone(),
+        toSpherical: new THREE.Spherical().setFromVector3(
+          position.clone().sub(lookTarget)
+        ),
+        fromTarget: target.clone(),
+        toTarget: lookTarget.clone()
+      };
+    }
+
+    const views = {
+      iso: {
+        position: new THREE.Vector3(7.4, 5.4, 9.2),
+        target: new THREE.Vector3(0, 2.35, 0)
+      },
+      front: {
+        position: new THREE.Vector3(0, 4.7, 10.8),
+        target: new THREE.Vector3(0, 2.75, 0)
+      },
+      service: {
+        position: new THREE.Vector3(-6.8, 3.7, -8.8),
+        target: new THREE.Vector3(0, 2.75, 0)
+      }
+    };
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const view = views[button.dataset.view];
+        setView(view.position, view.target);
+      });
+    });
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      let handled = true;
+
+      if (key === "arrowleft") spherical.theta += 0.08;
+      else if (key === "arrowright") spherical.theta -= 0.08;
+      else if (key === "arrowup") {
+        spherical.phi = THREE.MathUtils.clamp(spherical.phi - 0.06, 0.18, 1.5);
+      } else if (key === "arrowdown") {
+        spherical.phi = THREE.MathUtils.clamp(spherical.phi + 0.06, 0.18, 1.5);
+      } else if (key === "+" || key === "=") {
+        spherical.radius = Math.max(4.5, spherical.radius * 0.9);
+      } else if (key === "-") {
+        spherical.radius = Math.min(22, spherical.radius * 1.1);
+      } else if (key === "r") {
+        setView(views.iso.position, views.iso.target);
+      } else {
+        handled = false;
+      }
+
+      if (handled) {
+        event.preventDefault();
+        cameraTween = null;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    let firstFrame = true;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      if (cameraTween) {
+        const progress = Math.min(1, (now - cameraTween.start) / 1100);
+        const eased = progress * progress * (3 - 2 * progress);
+
+        spherical.copy(cameraTween.fromSpherical).lerp(
+          cameraTween.toSpherical,
+          eased
+        );
+        target.lerpVectors(
+          cameraTween.fromTarget,
+          cameraTween.toTarget,
+          eased
+        );
+
+        const offset = new THREE.Vector3().setFromSpherical(spherical);
+        camera.position.copy(target).add(offset);
+        camera.lookAt(target);
+
+        if (progress >= 1) cameraTween = null;
+      }
+
+      updateCamera();
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        loading.classList.add("hidden");
+        setTimeout(() => loading.remove(), 450);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
+```

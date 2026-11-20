@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antler Pressure Flaker — Studio Viewer</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --ivory: #eee4cf;
+      --muted: #9ca6a8;
+      --line: rgba(225, 218, 197, 0.2);
+      --panel: rgba(14, 20, 23, 0.74);
+      --accent: #d6b27c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0b1013;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .title-block {
+      top: 30px;
+      left: 34px;
+      max-width: 440px;
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ivory);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(31px, 4vw, 58px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+      text-shadow: 0 3px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .subtitle {
+      max-width: 390px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .controls {
+      top: 30px;
+      right: 30px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: var(--ivory);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(214, 178, 124, 0.7);
+      color: #fff4df;
+      background: rgba(37, 31, 24, 0.84);
+      transform: translateY(-1px);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: rgba(214, 178, 124, 0.72);
+      color: #f3d6a5;
+    }
+
+    .legend {
+      bottom: 30px;
+      left: 34px;
+      display: grid;
+      gap: 11px;
+      padding: 17px 19px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+    }
+
+    .legend-title {
+      margin-bottom: 2px;
+      color: #748084;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 9px auto;
+      align-items: center;
+      gap: 10px;
+      color: #c3c8c6;
+      font-size: 11px;
+    }
+
+    .swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      box-shadow: 0 0 9px currentColor;
+    }
+
+    .antler {
+      color: #9a633d;
+      background: #9a633d;
+    }
+
+    .leather {
+      color: #3d241a;
+      background: #3d241a;
+    }
+
+    .polished {
+      color: #eee2c6;
+      background: #eee2c6;
+    }
+
+    .hint {
+      right: 30px;
+      bottom: 30px;
+      color: #798387;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-align: right;
+      line-height: 1.7;
+    }
+
+    .hint strong {
+      color: #b8c0c0;
+      font-weight: 600;
+    }
+
+    #tip-marker {
+      position: fixed;
+      z-index: 4;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      will-change: transform;
+    }
+
+    #tip-marker.visible {
+      opacity: 1;
+    }
+
+    .marker-dot {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      margin: -3.5px 0 0 -3.5px;
+      border: 1px solid rgba(255, 241, 208, 0.95);
+      border-radius: 50%;
+      background: rgba(255, 239, 199, 0.35);
+      box-shadow: 0 0 14px rgba(255, 229, 174, 0.85);
+    }
+
+    .marker-line {
+      width: 55px;
+      height: 1px;
+      margin-left: 5px;
+      background: linear-gradient(90deg, rgba(239, 222, 188, 0.85), rgba(239, 222, 188, 0.28));
+    }
+
+    .marker-label {
+      margin-left: 9px;
+      color: #eee3ca;
+      font-size: 9px;
+      font-weight: 650;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      text-shadow: 0 2px 12px #000;
+    }
+
+    #loading {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #d6c5a4;
+      background: #0b1013;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .title-block {
+        top: 20px;
+        left: 20px;
+        max-width: calc(100vw - 40px);
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        top: auto;
+        right: 16px;
+        bottom: 76px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 230px;
+      }
+
+      button {
+        padding: 9px 12px;
+        font-size: 9px;
+      }
+
+      .legend {
+        bottom: 18px;
+        left: 18px;
+        padding: 12px 14px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .marker-line {
+        width: 26px;
+      }
+
+      .marker-label {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene" aria-label="Interactive 3D model of an antler pressure flaker"></div>
+
+  <header class="hud title-block">
+    <div class="eyebrow">Procedural artifact · Study 01</div>
+    <h1>Antler<br>Pressure Flaker</h1>
+    <p class="subtitle">
+      A sculpted antler implement with a smoothly burnished working tip,
+      hand-bound leather grip, and naturally formed tines.
+    </p>
+  </header>
+
+  <nav class="hud controls" aria-label="Viewer controls">
+    <button id="auto-rotate" type="button" aria-pressed="true">Auto rotate</button>
+    <button id="tip-detail" type="button">Inspect tip</button>
+    <button id="reset-view" type="button">Reset</button>
+  </nav>
+
+  <aside class="hud legend" aria-label="Material legend">
+    <div class="legend-title">Material study</div>
+    <div class="legend-row">
+      <span class="swatch antler"></span>
+      <span>Weathered antler</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch leather"></span>
+      <span>Bound leather grip</span>
+    </div>
+    <div class="legend-row">
+      <span class="swatch polished"></span>
+      <span>Polished working tip</span>
+    </div>
+  </aside>
+
+  <div class="hud hint">
+    <strong>Drag</strong> to orbit<br>
+    <strong>Scroll / pinch</strong> to inspect
+  </div>
+
+  <div id="tip-marker" aria-hidden="true">
+    <span class="marker-dot"></span>
+    <span class="marker-line"></span>
+    <span class="marker-label">Burnished antler tip</span>
+  </div>
+
+  <div id="loading">Preparing artifact…</div>
+
+  <noscript>This viewer requires JavaScript and WebGL.</noscript>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const container = document.querySelector("#scene");
+    const loading = document.querySelector("#loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b1013);
+    scene.fog = new THREE.Fog(0x0b1013, 10.5, 22);
+
+    const camera = new THREE.PerspectiveCamera(
+      39,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    const clock = new THREE.Clock();
+    const artifact = new THREE.Group();
+    artifact.position.set(-0.12, -0.24, 0);
+    artifact.rotation.set(0.015, -0.035, -0.025);
+    artifact.scale.setScalar(0.86);
+    scene.add(artifact);
+
+    // ---------------------------------------------------------------------
+    // Procedural texture helpers
+    // ---------------------------------------------------------------------
+
+    function seededRandom(seed) {
+      let value = seed >>> 0;
+      return function random() {
+        value += 0x6d2b79f5;
+        let t = value;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function makeCanvasTexture(size, painter, color = true) {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const context = canvas.getContext("2d");
+      painter(context, size, seededRandom(size * 7919));
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      if (color) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
+
+      return texture;
+    }
+
+    const antlerTexture = makeCanvasTexture(512, (ctx, size, random) => {
+      ctx.fillStyle = "#98613a";
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 5000; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const length = 4 + random() * 35;
+        const alpha = 0.025 + random() * 0.11;
+        const light = random() > 0.48;
+
+        ctx.strokeStyle = light
+          ? `rgba(231, 185, 129, ${alpha})`
+          : `rgba(55, 28, 15, ${alpha})`;
+        ctx.lineWidth = 0.4 + random() * 2.1;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.bezierCurveTo(
+          x + random() * 5,
+          y + length * 0.3,
+          x - random() * 5,
+          y + length * 0.7,
+          x + random() * 4,
+          y + length
+        );
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 60; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 5 + random() * 24;
+
+        const gradient = ctx.createRadialGradient(
+          x, y, 0, x, y, radius
+        );
+        gradient.addColorStop(0, "rgba(45, 23, 12, 0.15)");
+        gradient.addColorStop(1, "rgba(45, 23, 12, 0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+    });
+
+    antlerTexture.repeat.set(3, 5);
+
+    const antlerBump = makeCanvasTexture(512, (ctx, size, random) => {
+      ctx.fillStyle = "#888";
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 4000; i++) {
+        const shade = 75 + Math.floor(random() * 105);
+        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+        const x = random() * size;
+        const y = random() * size;
+        ctx.fillRect(x, y, 0.5 + random() * 2, 2 + random() * 24);
+      }
+    }, false);
+
+    antlerBump.repeat.set(3, 5);
+
+    const leatherTexture = makeCanvasTexture(512, (ctx, size, random) => {
+      ctx.fillStyle = "#2c1b14";
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 4200; i++) {
+        const shade = 28 + Math.floor(random() * 35);
+        ctx.fillStyle = `rgba(${shade + 13}, ${shade}, ${shade - 5}, 0.18)`;
+        ctx.fillRect(
+          random() * size,
+          random() * size,
+          0.5 + random() * 2,
+          0.5 + random() * 3
+        );
+      }
+
+      for (let i = 0; i < 120; i++) {
+        ctx.strokeStyle = "rgba(7, 4, 3, 0.24)";
+        ctx.lineWidth = 0.5 + random();
+        ctx.beginPath();
+        const x = random() * size;
+        const y = random() * size;
+        ctx.moveTo(x, y);
+        ctx.lineTo(
+          x + random() * 18 - 9,
+          y + random() * 18 - 9
+        );
+        ctx.stroke();
+      }
+    });
+
+    const leatherBump = makeCanvasTexture(512, (ctx, size, random) => {
+      ctx.fillStyle = "#777";
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 3200; i++) {
+        const shade = 50 + Math.floor(random() * 120);
+        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+        ctx.fillRect(
+          random() * size,
+          random() * size,
+          1 + random() * 2,
+          1 + random() * 3
+        );
+      }
+    }, false);
+
+    const tipTexture = makeCanvasTexture(256, (ctx, size, random) => {
+      ctx.fillStyle = "#ece2ca";
+      ctx.fillRect(0, 0, size, size);
+
+      for (let i = 0; i < 650; i++) {
+        const alpha = 0.02 + random() * 0.06;
+        ctx.strokeStyle = `rgba(102, 78, 45, ${alpha})`;
+        ctx.lineWidth = 0.4 + random() * 0.7;
+        const x = random() * size;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.bezierCurveTo(
+          x + random() * 8,
+          size * 0.3,
+          x - random() * 8,
+          size * 0.7,
+          x + random() * 4,
+          size
+        );
+        ctx.stroke();
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const antlerMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xb0784c,
+      map: antlerTexture,
+      bumpMap: antlerBump,
+      bumpScale: 0.027,
+      roughness: 0.36,
+      metalness: 0,
+      clearcoat: 0.22,
+      clearcoatRoughness: 0.4
+    });
+
+    const tineMaterial = antlerMaterial.clone();
+    tineMaterial.color.set(0xc08a5b);
+    tineMaterial.roughness = 0.34;
+
+    const cutMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb9885a,
+      map: antlerTexture,
+      roughness: 0.58
+    });
+
+    const leatherMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x3b241a,
+      map: leatherTexture,
+      bumpMap: leatherBump,
+      bumpScale: 0.045,
+      roughness: 0.72,
+      clearcoat: 0.08
+    });
+
+    const polishedTipMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf0e6ce,
+      map: tipTexture,
+      roughness: 0.105,
+      metalness: 0,
+      ior: 1.46,
+      reflectivity: 0.68,
+      specularIntensity: 1,
+      clearcoat: 1,
+      clearcoatRoughness: 0.075
+    });
+
+    const darkCollarMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x38291e,
+      roughness: 0.28,
+      metalness: 0.42,
+      clearcoat: 0.45
+    });
+
+    // ---------------------------------------------------------------------
+    // Variable-radius swept antler geometry
+    // ---------------------------------------------------------------------
+
+    function makeSweptTube(
+      curve,
+      radiusAt,
+      radialSegments = 28,
+      tubularSegments = 100,
+      material = antlerMaterial
+    ) {
+      const frames = curve.computeFrenetFrames(
+        tubularSegments,
+        false
+      );
+
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+
+      for (let i = 0; i <= tubularSegments; i++) {
+        const t = i / tubularSegments;
+        const point = curve.getPointAt(t);
+        const normal = frames.normals[i];
+        const binormal = frames.binormals[i];
+        const baseRadius = radiusAt(t);
+
+        for (let j = 0; j <= radialSegments; j++) {
+          const angle = (j / radialSegments) * Math.PI * 2;
+          const irregularity =
+            1 +
+            Math.sin(angle * 3 + t * 15) * 0.018 +
+            Math.sin(angle * 7 - t * 24) * 0.011;
+
+          const radius = baseRadius * irregularity;
+          const radial =
+            normal.clone().multiplyScalar(Math.cos(angle) * radius * 1.02)
+            .add(
+              binormal.clone().multiplyScalar(
+                Math.sin(angle) * radius * 0.9
+              )
+            );
+
+          positions.push(
+            point.x + radial.x,
+            point.y + radial.y,
+            point.z + radial.z
+          );
+
+          uvs.push(j / radialSegments, t);
+        }
+      }
+
+      for (let i = 0; i < tubularSegments; i++) {
+        for (let j = 0; j < radialSegments; j++) {
+          const a = i * (radialSegments + 1) + j;
+          const b = a + radialSegments + 1;
+          const c = b + 1;
+          const d = a + 1;
+
+          indices.push(a, b, d);
+          indices.push(b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "uv",
+        new THREE.Float32BufferAttribute(uvs, 2)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      geometry.computeBoundingSphere();
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function addEndPoint(curve, t, radius, material) {
+      const point = curve.getPointAt(t);
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 18, 12),
+        material
+      );
+      mesh.position.copy(point);
+      mesh.scale.set(1, 1, 1.7);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    // Main antler beam.
+    const mainCurve = new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(-3.08, -0.18, 0.02),
+        new THREE.Vector3(-2.48, -0.07, 0.05),
+        new THREE.Vector3(-1.83, 0.08, 0.02),
+        new THREE.Vector3(-1.12, 0.23, -0.05),
+        new THREE.Vector3(-0.42, 0.35, -0.02),
+        new THREE.Vector3(0.24, 0.53, 0.04),
+        new THREE.Vector3(0.91, 0.72, 0.01),
+        new THREE.Vector3(1.48, 0.91, -0.02),
+        new THREE.Vector3(1.95, 1.08, 0)
+      ],
+      false,
+      "catmullrom",
+      0.42
+    );
+
+    const mainRadius = (t) =>
+      THREE.MathUtils.lerp(0.36, 0.235, t) +
+      Math.sin(t * Math.PI) * 0.026;
+
+    artifact.add(
+      makeSweptTube(
+        mainCurve,
+        mainRadius,
+        32,
+        150,
+        antlerMaterial
+      )
+    );
+
+    // Exposed antler base.
+    const basePoint = mainCurve.getPointAt(0);
+    const baseTangent = mainCurve.getTangentAt(0).normalize();
+    const baseCap = new THREE.Mesh(
+      new THREE.CircleGeometry(0.365, 48),
+      cutMaterial
+    );
+    baseCap.position.copy(basePoint);
+    baseCap.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      baseTangent
+    );
+    baseCap.castShadow = true;
+    artifact.add(baseCap);
+
+    const baseRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.345, 0.028, 10, 64),
+      antlerMaterial
+    );
+    baseRing.position.copy(basePoint);
+    baseRing.quaternion.copy(baseCap.quaternion);
+    baseRing.castShadow = true;
+    artifact.add(baseRing);
+
+    // Naturally forked antler tines.
+    const tineDefinitions = [
+      {
+        points: [
+          [-1.92, 0.10, 0.01],
+          [-2.00, 0.48, 0.03],
+          [-1.86, 0.91, 0.01],
+          [-1.53, 1.29, -0.03],
+          [-1.24, 1.49, -0.04]
+        ],
+        startRadius: 0.205,
+        material: tineMaterial
+      },
+      {
+        points: [
+          [-0.92, 0.23, -0.01],
+          [-0.94, 0.62, 0.04],
+          [-0.75, 1.02, 0.02],
+          [-0.44, 1.37, -0.03]
+        ],
+        startRadius: 0.18,
+        material: antlerMaterial
+      },
+      {
+        points: [
+          [0.12, 0.47, 0.02],
+          [0.31, 0.80, -0.03],
+          [0.67, 1.12, -0.05],
+          [1.07, 1.34, -0.04]
+        ],
+        startRadius: 0.155,
+        material: tineMaterial
+      }
+    ];
+
+    for (const definition of tineDefinitions) {
+      const curve = new THREE.CatmullRomCurve3(
+        definition.points.map(
+          (point) => new THREE.Vector3(...point)
+        ),
+        false,
+        "catmullrom",
+        0.45
+      );
+
+      const radius = (t) =>
+        THREE.MathUtils.lerp(
+          definition.startRadius,
+          0.014,
+          Math.pow(t, 0.85)
+        );
+
+      artifact.add(
+        makeSweptTube(
+          curve,
+          radius,
+          24,
+          90,
+          definition.material
+        )
+      );
+
+      artifact.add(
+        addEndPoint(curve, 1, 0.022, definition.material)
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Leather grip and binding
+    // ---------------------------------------------------------------------
+
+    const gripPoints = [];
+    for (let i = 0; i <= 14; i++) {
+      const t = THREE.MathUtils.lerp(0.055, 0.31, i / 14);
+      gripPoints.push(mainCurve.getPointAt(t));
+    }
+
+    const gripCurve = new THREE.CatmullRomCurve3(
+      gripPoints,
+      false,
+      "catmullrom",
+      0.35
+    );
+
+    artifact.add(
+      makeSweptTube(
+        gripCurve,
+        (t) => {
+          const originalT = THREE.MathUtils.lerp(0.055, 0.31, t);
+          return mainRadius(originalT) + 0.047;
+        },
+        28,
+        100,
+        leatherMaterial
+      )
+    );
+
+    const bindingAxis = new THREE.Vector3(0, 0, 1);
+
+    for (let i = 0; i < 13; i++) {
+      const t = THREE.MathUtils.lerp(0.062, 0.304, i / 12);
+      const point = mainCurve.getPointAt(t);
+      const tangent = mainCurve.getTangentAt(t).normalize();
+
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(
+          mainRadius(t) + 0.055,
+          0.024,
+          9,
+          54
+        ),
+        leatherMaterial
+      );
+
+      ring.position.copy(point);
+      ring.quaternion.setFromUnitVectors(bindingAxis, tangent);
+      ring.castShadow = true;
+      artifact.add(ring);
+    }
+
+    // Leather knot and short hanging tails.
+    const knotPoint = mainCurve.getPointAt(0.29).clone();
+    knotPoint.add(new THREE.Vector3(-0.02, -0.27, 0.24));
+
+    const knot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.075, 20, 14),
+      leatherMaterial
+    );
+    knot.position.copy(knotPoint);
+    knot.scale.set(1.15, 0.9, 0.8);
+    knot.castShadow = true;
+    artifact.add(knot);
+
+    for (const side of [-1, 1]) {
+      const cordCurve = new THREE.CatmullRomCurve3([
+        knotPoint.clone(),
+        knotPoint.clone().add(
+          new THREE.Vector3(0.04 * side, -0.16, 0.02)
+        ),
+        knotPoint.clone().add(
+          new THREE.Vector3(0.09 * side, -0.3, -0.02)
+        )
+      ]);
+
+      artifact.add(
+        makeSweptTube(
+          cordCurve,
+          () => 0.022,
+          10,
+          26,
+          leatherMaterial
+        )
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Highly polished working tip
+    // ---------------------------------------------------------------------
+
+    const tipCurve = new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(1.82, 1.025, 0),
+        new THREE.Vector3(2.03, 1.115, 0),
+        new THREE.Vector3(2.29, 1.255, -0.005),
+        new THREE.Vector3(2.51, 1.36, 0),
+        new THREE.Vector3(2.67, 1.46, 0.005)
+      ],
+      false,
+      "catmullrom",
+      0.4
+    );
+
+    const tip = makeSweptTube(
+      tipCurve,
+      (t) =>
+        THREE.MathUtils.lerp(0.245, 0.024, Math.pow(t, 1.05)),
+      36,
+      120,
+      polishedTipMaterial
+    );
+
+    artifact.add(tip);
+    artifact.add(
+      addEndPoint(tipCurve, 1, 0.029, polishedTipMaterial)
+    );
+
+    // Dark polished collar at the transition.
+    const collarPoint = tipCurve.getPointAt(0.055);
+    const collarTangent = tipCurve.getTangentAt(0.055).normalize();
+    const collar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.247, 0.036, 12, 72),
+      darkCollarMaterial
+    );
+    collar.position.copy(collarPoint);
+    collar.quaternion.setFromUnitVectors(
+      bindingAxis,
+      collarTangent
+    );
+    collar.castShadow = true;
+    artifact.add(collar);
+
+    const tipAnchor = new THREE.Object3D();
+    tipAnchor.position.copy(tipCurve.getPointAt(1));
+    artifact.add(tipAnchor);
+
+    // ---------------------------------------------------------------------
+    // Display plinth and studio environment
+    // ---------------------------------------------------------------------
+
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x11171a,
+      roughness: 0.88,
+      metalness: 0.04
+    });
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(36, 36),
+      floorMaterial
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.98;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const plinthMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x171d20,
+      roughness: 0.32,
+      metalness: 0.22,
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.4
+    });
+
+    const plinth = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.38, 3.62, 0.42, 128),
+      plinthMaterial
+    );
+    plinth.position.y = -0.77;
+    plinth.receiveShadow = true;
+    plinth.castShadow = true;
+    scene.add(plinth);
+
+    const plinthTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.3, 3.3, 0.035, 128),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x20272a,
+        roughness: 0.24,
+        metalness: 0.26,
+        clearcoat: 0.48
+      })
+    );
+    plinthTop.position.y = -0.54;
+    plinthTop.receiveShadow = true;
+    scene.add(plinthTop);
+
+    const accentRing = new THREE.Mesh(
+      new THREE.TorusGeometry(3.26, 0.013, 8, 160),
+      new THREE.MeshStandardMaterial({
+        color: 0x9f8056,
+        roughness: 0.35,
+        metalness: 0.75
+      })
+    );
+    accentRing.rotation.x = Math.PI / 2;
+    accentRing.position.y = -0.517;
+    scene.add(accentRing);
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xb9d1dd,
+      0x28170e,
+      1.55
+    );
+    scene.add(hemisphere);
+
+    const keyLight = new THREE.DirectionalLight(
+      0xffe4ba,
+      3.25
+    );
+    keyLight.position.set(4.8, 6.2, 4.2);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -6;
+    keyLight.shadow.camera.right = 6;
+    keyLight.shadow.camera.top = 6;
+    keyLight.shadow.camera.bottom = -6;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(
+      0x9fc4dc,
+      2.05
+    );
+    rimLight.position.set(-5, 3.2, -4.5);
+    scene.add(rimLight);
+
+    const warmFill = new THREE.PointLight(
+      0xc67a3d,
+      14,
+      8,
+      2
+    );
+    warmFill.position.set(-3.8, 0.8, 2.8);
+    scene.add(warmFill);
+
+    const tipLight = new THREE.SpotLight(
+      0xfff0d0,
+      32,
+      10,
+      Math.PI / 7,
+      0.7,
+      1.4
+    );
+    tipLight.position.set(4.3, 4.8, 3.1);
+    tipLight.castShadow = true;
+    tipLight.shadow.mapSize.set(1024, 1024);
+    tipLight.shadow.bias = -0.0003;
+    scene.add(tipLight);
+    scene.add(tipLight.target);
+
+    artifact.updateMatrixWorld(true);
+    tipLight.target.position.copy(
+      tipAnchor.getWorldPosition(new THREE.Vector3())
+    );
+
+    // Fine dust particles for depth.
+    const dustRandom = seededRandom(4921);
+    const dustPositions = [];
+
+    for (let i = 0; i < 150; i++) {
+      dustPositions.push(
+        (dustRandom() - 0.5) * 12,
+        dustRandom() * 5.5 - 0.6,
+        (dustRandom() - 0.5) * 8
+      );
+    }
+
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(dustPositions, 3)
+    );
+
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xcbb89a,
+        size: 0.018,
+        transparent: true,
+        opacity: 0.26,
+        depthWrite: false
+      })
+    );
+    scene.add(dust);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls: orbit, drag, wheel, and touch pinch
+    // ---------------------------------------------------------------------
+
+    const defaultView = {
+      target: new THREE.Vector3(-0.1, 0.35, 0),
+      radius: 7.8,
+      theta: 0.48,
+      phi: 1.24
+    };
+
+    const currentView = {
+      target: defaultView.target.clone(),
+      radius: defaultView.radius,
+      theta: defaultView.theta,
+      phi: defaultView.phi
+    };
+
+    const goalView = {
+      target: defaultView.target.clone(),
+      radius: defaultView.radius,
+      theta: defaultView.theta,
+      phi: defaultView.phi
+    };
+
+    let autoRotate = true;
+    let dragging = false;
+    let activePointer = null;
+    let previousX = 0;
+    let previousY = 0;
+    const activePointers = new Map();
+    let pinchDistance = 0;
+
+    const autoButton = document.querySelector("#auto-rotate");
+    const detailButton = document.querySelector("#tip-detail");
+    const resetButton = document.querySelector("#reset-view");
+    const marker = document.querySelector("#tip-marker");
+
+    function updateCamera() {
+      const sinPhi = Math.sin(currentView.phi);
+
+      camera.position.set(
+        currentView.target.x +
+          currentView.radius * sinPhi * Math.sin(currentView.theta),
+        currentView.target.y +
+          currentView.radius * Math.cos(currentView.phi),
+        currentView.target.z +
+          currentView.radius * sinPhi * Math.cos(currentView.theta)
+      );
+
+      camera.lookAt(currentView.target);
+    }
+
+    function setView({
+      target = currentView.target,
+      radius = currentView.radius,
+      theta = currentView.theta,
+      phi = currentView.phi
+    } = {}) {
+      goalView.target.copy(target);
+      goalView.radius = radius;
+      goalView.theta = theta;
+      goalView.phi = phi;
+    }
+
+    function resetView() {
+      setView(defaultView);
+    }
+
+    function showTip() {
+      artifact.updateMatrixWorld(true);
+      const worldTarget = artifact.localToWorld(
+        new THREE.Vector3(1.92, 1.02, 0)
+      );
+
+      setView({
+        target: worldTarget,
+        radius: 3.25,
+        theta: 0.9,
+        phi: 1.27
+      });
+
+      autoRotate = false;
+      autoButton.setAttribute("aria-pressed", "false");
+      autoButton.textContent = "Auto rotate";
+    }
+
+    autoButton.addEventListener("click", () => {
+      autoRotate = !autoRotate;
+      autoButton.setAttribute("aria-pressed", String(autoRotate));
+      autoButton.textContent = autoRotate ? "Auto rotate" : "Rotation paused";
+    });
+
+    detailButton.addEventListener("click", showTip);
+    resetButton.addEventListener("click", resetView);
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 1) {
+        dragging = true;
+        activePointer = event.pointerId;
+        previousX = event.clientX;
+        previousY = event.clientY;
+        renderer.domElement.setPointerCapture(event.pointerId);
+      } else if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        pinchDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!activePointers.has(event.pointerId)) return;
+
+      activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (activePointers.size === 2) {
+        const points = [...activePointers.values()];
+        const distance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+
+        if (pinchDistance > 0) {
+          goalView.radius = THREE.MathUtils.clamp(
+            goalView.radius * (pinchDistance / distance),
+            2.45,
+            11
+          );
+        }
+
+        pinchDistance = distance;
+        return;
+      }
+
+      if (!dragging || event.pointerId !== activePointer) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      goalView.theta -= deltaX * 0.006;
+      goalView.phi = THREE.MathUtils.clamp(
+        goalView.phi - deltaY * 0.005,
+        0.45,
+        1.48
+      );
+    });
+
+    function endPointer(event) {
+      activePointers.delete(event.pointerId);
+
+      if (activePointers.size < 2) {
+        pinchDistance = 0;
+      }
+
+      if (event.pointerId === activePointer) {
+        dragging = false;
+        activePointer = null;
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endPointer);
+    renderer.domElement.addEventListener("pointercancel", endPointer);
+    renderer.domElement.addEventListener("lostpointercapture", endPointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        goalView.radius = THREE.MathUtils.clamp(
+          goalView.radius * Math.exp(event.deltaY * 0.001),
+          2.45,
+          11
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    renderer.domElement.addEventListener(
+      "contextmenu",
+      (event) => event.preventDefault()
+    );
+
+    // ---------------------------------------------------------------------
+    // Rendering and annotation
+    // ---------------------------------------------------------------------
+
+    const projectedTip = new THREE.Vector3();
+
+    function updateMarker() {
+      artifact.updateMatrixWorld(true);
+      tipAnchor.getWorldPosition(projectedTip);
+      projectedTip.project(camera);
+
+      const visible =
+        projectedTip.z > -1 &&
+        projectedTip.z < 1 &&
+        Math.abs(projectedTip.x) < 0.94 &&
+        Math.abs(projectedTip.y) < 0.9;
+
+      marker.classList.toggle("visible", visible);
+
+      if (!visible) return;
+
+      const x = (projectedTip.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-projectedTip.y * 0.5 + 0.5) * window.innerHeight;
+
+      marker.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
+
+    function resize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    window.addEventListener("resize", resize);
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      if (autoRotate && !dragging) {
+        goalView.theta += delta * 0.12;
+      }
+
+      const damping = 1 - Math.exp(-delta * 5.5);
+
+      currentView.target.lerp(goalView.target, damping);
+      currentView.radius = THREE.MathUtils.lerp(
+        currentView.radius,
+        goalView.radius,
+        damping
+      );
+      currentView.theta = THREE.MathUtils.lerp(
+        currentView.theta,
+        goalView.theta,
+        damping
+      );
+      currentView.phi = THREE.MathUtils.lerp(
+        currentView.phi,
+        goalView.phi,
+        damping
+      );
+
+      updateCamera();
+
+      tipLight.intensity =
+        30 + Math.sin(elapsed * 0.8) * 2.2;
+
+      dust.rotation.y = elapsed * 0.008;
+      dust.position.y = Math.sin(elapsed * 0.12) * 0.06;
+
+      updateMarker();
+      renderer.render(scene, camera);
+    }
+
+    updateCamera();
+    renderer.render(scene, camera);
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 600);
+    });
+  </script>
+</body>
+</html>

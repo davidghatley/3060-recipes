@@ -1,0 +1,15 @@
+# Quant sweep: decode (tg128) at depth 0 and 16k, prefill pp2048. Pass A then pass B in reverse order (drift control).
+q8off-A  | | -m $D/Qwen3.5-4B-3D-Coder-Q8_0.gguf             -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q8own-A  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf     -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q6own-A  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf     -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q5own-A  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf   -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q4own-A  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf   -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q4off-A  | | -m $D/Qwen3.5-4B-3D-Coder-Q4_K_M.gguf           -fa on -p 2048 -n 128 -d 0,16384 -r 6
+f16own-A | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-F16.gguf      -fa on -p 2048 -n 128 -d 0 -r 6
+f16own-B | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-F16.gguf      -fa on -p 2048 -n 128 -d 0 -r 6
+q4off-B  | | -m $D/Qwen3.5-4B-3D-Coder-Q4_K_M.gguf           -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q4own-B  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf   -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q5own-B  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf   -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q6own-B  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf     -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q8own-B  | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf     -fa on -p 2048 -n 128 -d 0,16384 -r 6
+q8off-B  | | -m $D/Qwen3.5-4B-3D-Coder-Q8_0.gguf             -fa on -p 2048 -n 128 -d 0,16384 -r 6

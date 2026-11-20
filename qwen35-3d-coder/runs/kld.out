@@ -1,0 +1,61 @@
+== official-Qwen3.5-4B-3D-Coder-Q8_0
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.663581 ±   0.053679
+Mean PPL(Q)/PPL(base)         :   0.999794 ±   0.000401
+Mean PPL(Q)-PPL(base)         :  -0.000754 ±   0.001468
+Mean    KLD:   0.001067 ±   0.000011
+Maximum KLD:   0.035961
+99.0%   KLD:   0.006077
+RMS Δp    :  1.054 ± 0.012 %
+Same top p: 98.138 ± 0.106 %
+== official-Qwen3.5-4B-3D-Coder-Q4_K_M
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.734781 ±   0.055114
+Mean PPL(Q)/PPL(base)         :   1.019225 ±   0.002038
+Mean PPL(Q)-PPL(base)         :   0.070445 ±   0.007523
+Mean    KLD:   0.025723 ±   0.000367
+Maximum KLD:   1.818551
+99.0%   KLD:   0.178765
+RMS Δp    :  4.612 ± 0.078 %
+Same top p: 92.141 ± 0.210 %
+== own-Qwen3.5-4B-3D-Coder-MTP-Q8_0
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.664204 ±   0.053680
+Mean PPL(Q)/PPL(base)         :   0.999964 ±   0.000398
+Mean PPL(Q)-PPL(base)         :  -0.000132 ±   0.001458
+Mean    KLD:   0.001071 ±   0.000011
+Maximum KLD:   0.042724
+99.0%   KLD:   0.006207
+RMS Δp    :  1.058 ± 0.012 %
+Same top p: 98.205 ± 0.104 %
+== own-Qwen3.5-4B-3D-Coder-MTP-Q6_K
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.667828 ±   0.053780
+Mean PPL(Q)/PPL(base)         :   1.000953 ±   0.000673
+Mean PPL(Q)-PPL(base)         :   0.003492 ±   0.002465
+Mean    KLD:   0.003026 ±   0.000034
+Maximum KLD:   0.116440
+99.0%   KLD:   0.018548
+RMS Δp    :  1.661 ± 0.021 %
+Same top p: 96.959 ± 0.134 %
+== own-Qwen3.5-4B-3D-Coder-MTP-Q5_K_M
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.686176 ±   0.054201
+Mean PPL(Q)/PPL(base)         :   1.005960 ±   0.001114
+Mean PPL(Q)-PPL(base)         :   0.021840 ±   0.004096
+Mean    KLD:   0.007318 ±   0.000092
+Maximum KLD:   0.340180
+99.0%   KLD:   0.048481
+RMS Δp    :  2.431 ± 0.035 %
+Same top p: 95.768 ± 0.157 %
+== own-Qwen3.5-4B-3D-Coder-MTP-Q4_K_M
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   3.734026 ±   0.055103
+Mean PPL(Q)/PPL(base)         :   1.019019 ±   0.002039
+Mean PPL(Q)-PPL(base)         :   0.069691 ±   0.007526
+Mean    KLD:   0.025649 ±   0.000368
+Maximum KLD:   1.905029
+99.0%   KLD:   0.179566
+RMS Δp    :  4.611 ± 0.079 %
+Same top p: 92.171 ± 0.210 %
+kld exit 0

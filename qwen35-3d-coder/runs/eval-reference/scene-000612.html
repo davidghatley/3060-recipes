@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cliffside Rock-Cut Monastery</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #aebcb5;
+    }
+
+    #view {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #view.dragging {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 2;
+      max-width: min(430px, calc(100vw - 56px));
+      color: #f4ead4;
+      pointer-events: none;
+      text-shadow: 0 2px 14px rgba(24, 22, 17, 0.55);
+    }
+
+    .eyebrow {
+      margin-bottom: 6px;
+      font: 600 10px/1.2 system-ui, sans-serif;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    h1 {
+      margin: 0;
+      font: 400 clamp(25px, 4vw, 43px)/1.03 Georgia, serif;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin-top: 9px;
+      font: 400 12px/1.5 system-ui, sans-serif;
+      letter-spacing: 0.05em;
+      opacity: 0.78;
+    }
+
+    .help {
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      z-index: 2;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 244, 218, 0.2);
+      border-radius: 4px;
+      color: rgba(255, 246, 225, 0.8);
+      background: rgba(32, 35, 31, 0.38);
+      backdrop-filter: blur(8px);
+      font: 400 10px/1.4 system-ui, sans-serif;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title-card {
+        top: 17px;
+        left: 18px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .help {
+        right: 12px;
+        bottom: 12px;
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="view" aria-label="Interactive three-dimensional rock-cut Buddhist monastery"></canvas>
+
+  <div class="title-card">
+    <div class="eyebrow">Sacred Architecture in Stone</div>
+    <h1>Cliffside Monastery</h1>
+    <div class="subtitle">Four rock-cut terraces · cave cells · assembly hall · pilgrim stairways</div>
+  </div>
+
+  <div class="help">
+    Drag to orbit · Wheel to zoom · Shift/right-drag to pan · Double-click to reset
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const canvas = document.getElementById("view");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xb9c1b4, 62, 158);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      260
+    );
+
+    const initialTarget = new THREE.Vector3(0, 7.2, -3.0);
+    const initialPosition = new THREE.Vector3(27, 28, 39);
+    camera.position.copy(initialPosition);
+    camera.lookAt(initialTarget);
+
+    // ------------------------------------------------------------
+    // Procedural materials
+    // ------------------------------------------------------------
+
+    function mulberry32(seed) {
+      return function () {
+        seed |= 0;
+        seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    const random = mulberry32(73421);
+
+    function makeStoneTexture(size = 512) {
+      const textureCanvas = document.createElement("canvas");
+      textureCanvas.width = textureCanvas.height = size;
+      const context = textureCanvas.getContext("2d");
+      const image = context.createImageData(size, size);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const i = (y * size + x) * 4;
+          const grain = (random() - 0.5) * 24;
+          const strata =
+            Math.sin(y * 0.075 + Math.sin(x * 0.023) * 1.7) * 7 +
+            Math.sin(y * 0.019 + x * 0.006) * 10;
+          const mottling =
+            Math.sin(x * 0.047) * Math.cos(y * 0.061) * 6;
+          const value = Math.max(
+            0,
+            Math.min(255, 188 + grain + strata + mottling)
+          );
+
+          image.data[i] = value;
+          image.data[i + 1] = value * 0.955;
+          image.data[i + 2] = value * 0.855;
+          image.data[i + 3] = 255;
+        }
+      }
+
+      context.putImageData(image, 0, 0);
+
+      context.globalAlpha = 0.19;
+      context.strokeStyle = "#554c3e";
+      context.lineWidth = 1.2;
+
+      for (let i = 0; i < 45; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(
+          x + (random() - 0.5) * 28,
+          y + random() * 42
+        );
+        context.lineTo(
+          x + (random() - 0.5) * 46,
+          y + 55 + random() * 55
+        );
+        context.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(textureCanvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2.2, 2.2);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const stoneTexture = makeStoneTexture();
+
+    const facadeMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xe1d4b8,
+      bumpMap: stoneTexture,
+      bumpScale: 0.055,
+      roughness: 0.96
+    });
+
+    const cliffMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xb5a78d,
+      bumpMap: stoneTexture,
+      bumpScale: 0.12,
+      roughness: 1
+    });
+
+    const ledgeMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xd1c3a6,
+      bumpMap: stoneTexture,
+      bumpScale: 0.045,
+      roughness: 0.95
+    });
+
+    const trimMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xe4d3b2,
+      roughness: 0.9
+    });
+
+    const stairMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xc8b99d,
+      roughness: 0.97
+    });
+
+    const alternateStairMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xb4a58a,
+      roughness: 1
+    });
+
+    const boulderMaterial = new THREE.MeshStandardMaterial({
+      map: stoneTexture,
+      color: 0xb7aa8f,
+      bumpMap: stoneTexture,
+      bumpScale: 0.1,
+      roughness: 1,
+      flatShading: true
+    });
+
+    const caveMaterial = new THREE.MeshBasicMaterial({
+      color: 0x111512,
+      side: THREE.DoubleSide
+    });
+
+    const insetMaterial = new THREE.MeshStandardMaterial({
+      color: 0x756a56,
+      roughness: 1
+    });
+
+    const stupaMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe2d7bd,
+      roughness: 0.82
+    });
+
+    const goldMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb98542,
+      roughness: 0.4,
+      metalness: 0.5
+    });
+
+    // ------------------------------------------------------------
+    // Sky and lighting
+    // ------------------------------------------------------------
+
+    const skyMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      vertexShader: `
+        varying vec3 vDirection;
+
+        void main() {
+          vDirection = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vDirection;
+
+        void main() {
+          vec3 direction = normalize(vDirection);
+          float height = clamp(direction.y * 0.5 + 0.5, 0.0, 1.0);
+
+          vec3 horizon = vec3(0.79, 0.78, 0.68);
+          vec3 middle = vec3(0.57, 0.68, 0.67);
+          vec3 zenith = vec3(0.30, 0.47, 0.54);
+
+          vec3 color = mix(horizon, middle, smoothstep(0.18, 0.58, height));
+          color = mix(color, zenith, smoothstep(0.52, 1.0, height));
+
+          vec3 sunDirection = normalize(vec3(-0.45, 0.57, 0.44));
+          float sun = pow(max(dot(direction, sunDirection), 0.0), 420.0);
+          float glow = pow(max(dot(direction, sunDirection), 0.0), 12.0);
+
+          color += vec3(1.0, 0.78, 0.47) * sun * 1.8;
+          color += vec3(0.55, 0.34, 0.14) * glow * 0.16;
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    });
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(175, 36, 20),
+      skyMaterial
+    );
+    sky.frustumCulled = false;
+    sky.renderOrder = -1000;
+    scene.add(sky);
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xdce7df,
+      0x594b37,
+      1.5
+    );
+    scene.add(hemisphere);
+
+    const sunlight = new THREE.DirectionalLight(0xffe0aa, 3.25);
+    sunlight.position.set(-30, 46, 29);
+    sunlight.target.position.set(0, 7, -4);
+    sunlight.castShadow = true;
+    sunlight.shadow.mapSize.set(2048, 2048);
+    sunlight.shadow.camera.left = -38;
+    sunlight.shadow.camera.right = 38;
+    sunlight.shadow.camera.top = 34;
+    sunlight.shadow.camera.bottom = -30;
+    sunlight.shadow.camera.near = 1;
+    sunlight.shadow.camera.far = 125;
+    sunlight.shadow.bias = -0.00025;
+    sunlight.shadow.normalBias = 0.035;
+    scene.add(sunlight, sunlight.target);
+
+    const fillLight = new THREE.DirectionalLight(0xabc5ce, 0.7);
+    fillLight.position.set(35, 17, 20);
+    scene.add(fillLight);
+
+    // ------------------------------------------------------------
+    // General geometry helpers
+    // ------------------------------------------------------------
+
+    function roughBox(width, height, depth, amount = 0.16) {
+      const geometry = new THREE.BoxGeometry(
+        width,
+        height,
+        depth,
+        4,
+        3,
+        4
+      );
+
+      const positions = geometry.attributes.position;
+
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+
+        const displacement =
+          Math.sin(x * 1.31 + z * 0.77) +
+          Math.sin(y * 1.73 - x * 0.43) +
+          Math.cos(z * 1.17 + y * 0.51);
+
+        positions.setXYZ(
+          i,
+          x + displacement * amount,
+          y + displacement * amount * 0.35,
+          z - displacement * amount * 0.7
+        );
+      }
+
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function makeArchPath(cx, width, spring, bottom = 0.12, ShapeClass = THREE.Path) {
+      const path = new ShapeClass();
+      path.moveTo(cx - width / 2, bottom);
+      path.lineTo(cx - width / 2, spring);
+      path.absarc(cx, spring, width / 2, Math.PI, 0, true);
+      path.lineTo(cx + width / 2, bottom);
+      path.closePath();
+      return path;
+    }
+
+    function beamBetween(a, b, thickness, material) {
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        material
+      );
+
+      beam.position.copy(a).add(b).multiplyScalar(0.5);
+      beam.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      beam.scale.set(thickness, length, thickness);
+      beam.castShadow = true;
+      beam.receiveShadow = true;
+      return beam;
+    }
+
+    function cylinderBetween(a, b, radius, material) {
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, length, 10),
+        material
+      );
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    function addBoulder(x, y, z, sx, sy, sz) {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1, 1),
+        boulderMaterial
+      );
+      rock.position.set(x, y, z);
+      rock.scale.set(sx, sy, sz);
+      rock.rotation.set(
+        random() * Math.PI,
+        random() * Math.PI,
+        random() * Math.PI
+      );
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+      return rock;
+    }
+
+    // ------------------------------------------------------------
+    // Terrain
+    // ------------------------------------------------------------
+
+    const groundGeometry = new THREE.PlaneGeometry(180, 180, 70, 70);
+    groundGeometry.rotateX(-Math.PI / 2);
+
+    const groundPositions = groundGeometry.attributes.position;
+    const groundColors = [];
+    const lowGround = new THREE.Color(0x77705b);
+    const highGround = new THREE.Color(0x8b9276);
+    const color = new THREE.Color();
+
+    for (let i = 0; i < groundPositions.count; i++) {
+      const x = groundPositions.getX(i);
+      const z = groundPositions.getZ(i);
+      const distance = Math.max(0, Math.hypot(x, z + 3) - 15);
+      const influence = THREE.MathUtils.clamp(distance / 55, 0, 1);
+
+      const terrain =
+        Math.sin(x * 0.075) * 2.2 +
+        Math.cos(z * 0.061) * 2.7 +
+        Math.sin((x + z) * 0.037) * 3.2;
+
+      const y = -0.62 + terrain * influence;
+      groundPositions.setY(i, y);
+
+      color.copy(lowGround).lerp(highGround, influence * 0.8);
+      groundColors.push(color.r, color.g, color.b);
+    }
+
+    groundGeometry.setAttribute(
+      "color",
+      new THREE.Float32BufferAttribute(groundColors, 3)
+    );
+    groundGeometry.computeVertexNormals();
+
+    const ground = new THREE.Mesh(
+      groundGeometry,
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 1
+      })
+    );
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const mountainMaterial = new THREE.MeshStandardMaterial({
+      color: 0x738078,
+      roughness: 1,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 13; i++) {
+      const mountain = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(1, 1),
+        mountainMaterial
+      );
+
+      const sx = 7 + random() * 13;
+      const sy = 4 + random() * 9;
+      const sz = 7 + random() * 13;
+
+      mountain.position.set(
+        (random() - 0.5) * 125,
+        -1.8 + sy * 0.35,
+        -42 - random() * 62
+      );
+      mountain.scale.set(sx, sy, sz);
+      mountain.rotation.y = random() * Math.PI;
+      mountain.receiveShadow = true;
+      scene.add(mountain);
+    }
+
+    // ------------------------------------------------------------
+    // Four rock-cut terrace levels
+    // ------------------------------------------------------------
+
+    const levels = [
+      { y: 0.00, z: -1.45, width: 42 },
+      { y: 5.15, z: -3.75, width: 38 },
+      { y: 10.30, z: -6.05, width: 34 },
+      { y: 15.45, z: -8.35, width: 30 }
+    ];
+
+    const facadeHeight = 4.4;
+    const ledgeDepth = 1.8;
+    const frontZ = level => level.z + ledgeDepth;
+
+    const caveRows = [
+      Array.from({ length: 11 }, (_, i) => (i - 5) * 3.45),
+      [-15.4, -11.8, -8.2, 8.2, 11.8, 15.4],
+      Array.from({ length: 9 }, (_, i) => (i - 4) * 3.5),
+      Array.from({ length: 7 }, (_, i) => (i - 3) * 3.6)
+    ];
+
+    function addCaveFacade(level, rowIndex, cellPositions) {
+      const wallShape = new THREE.Shape();
+      wallShape.moveTo(-level.width / 2, 0);
+      wallShape.lineTo(level.width / 2, 0);
+      wallShape.lineTo(level.width / 2, facadeHeight);
+      wallShape.lineTo(-level.width / 2, facadeHeight);
+      wallShape.closePath();
+
+      const caveWidth = 2.35;
+      const springHeight = 1.82;
+
+      for (const cx of cellPositions) {
+        wallShape.holes.push(
+          makeArchPath(cx, caveWidth, springHeight, 0.12, THREE.Path)
+        );
+      }
+
+      const wall = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(wallShape, {
+          depth: 0.58,
+          bevelEnabled: false,
+          curveSegments: 14
+        }),
+        facadeMaterial
+      );
+      wall.position.set(0, level.y + 0.05, level.z);
+      wall.castShadow = true;
+      wall.receiveShadow = true;
+      scene.add(wall);
+
+      cellPositions.forEach((cx, cellIndex) => {
+        const darkShape = makeArchPath(
+          cx,
+          caveWidth,
+          springHeight,
+          0.12,
+          THREE.Shape
+        );
+
+        const interior = new THREE.Mesh(
+          new THREE.ShapeGeometry(darkShape, 14),
+          caveMaterial
+        );
+        interior.position.set(0, level.y + 0.05, level.z - 0.43);
+        scene.add(interior);
+
+        const caveFloor = new THREE.Mesh(
+          new THREE.BoxGeometry(caveWidth, 0.08, 1.15),
+          insetMaterial
+        );
+        caveFloor.position.set(cx, level.y + 0.13, level.z - 0.08);
+        caveFloor.receiveShadow = true;
+        scene.add(caveFloor);
+
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(
+            caveWidth / 2 + 0.07,
+            0.11,
+            6,
+            28,
+            Math.PI
+          ),
+          trimMaterial
+        );
+        arch.position.set(
+          cx,
+          level.y + 0.05 + springHeight,
+          level.z + 0.65
+        );
+        arch.castShadow = true;
+        scene.add(arch);
+
+        for (const side of [-1, 1]) {
+          const jamb = new THREE.Mesh(
+            new THREE.BoxGeometry(
+              0.18,
+              springHeight - 0.12,
+              0.18
+            ),
+            trimMaterial
+          );
+          jamb.position.set(
+            cx + side * caveWidth / 2,
+            level.y + 0.05 + (springHeight + 0.12) / 2,
+            level.z + 0.65
+          );
+          jamb.castShadow = true;
+          scene.add(jamb);
+        }
+
+        const threshold = new THREE.Mesh(
+          new THREE.BoxGeometry(caveWidth + 0.35, 0.16, 0.36),
+          trimMaterial
+        );
+        threshold.position.set(
+          cx,
+          level.y + 0.13,
+          level.z + 0.64
+        );
+        threshold.castShadow = true;
+        scene.add(threshold);
+
+        if ((rowIndex + cellIndex) % 3 === 0) {
+          const lamp = new THREE.Mesh(
+            new THREE.CircleGeometry(0.085, 12),
+            new THREE.MeshBasicMaterial({ color: 0xd4934f })
+          );
+          lamp.position.set(
+            cx,
+            level.y + 1.05,
+            level.z - 0.40
+          );
+          scene.add(lamp);
+        }
+      });
+
+      const lowerBand = new THREE.Mesh(
+        new THREE.BoxGeometry(level.width, 0.11, 0.14),
+        trimMaterial
+      );
+      lowerBand.position.set(
+        0,
+        level.y + 3.58,
+        level.z + 0.63
+      );
+      scene.add(lowerBand);
+
+      for (let x = -level.width / 2 + 1.1; x < level.width / 2; x += 2.3) {
+        const inset = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, 0.24, 0.055),
+          insetMaterial
+        );
+        inset.position.set(x, level.y + 3.92, level.z + 0.62);
+        scene.add(inset);
+      }
+
+      const cornice = new THREE.Mesh(
+        new THREE.BoxGeometry(level.width + 0.6, 0.34, 1.05),
+        trimMaterial
+      );
+      cornice.position.set(
+        0,
+        level.y + 4.57,
+        level.z + 0.17
+      );
+      cornice.castShadow = true;
+      cornice.receiveShadow = true;
+      scene.add(cornice);
+    }
+
+    levels.forEach((level, index) => {
+      const core = new THREE.Mesh(
+        roughBox(level.width + 1.3, 5.15, 7, 0.18),
+        cliffMaterial
+      );
+      core.position.set(0, level.y + 2.25, level.z - 4.3);
+      core.castShadow = true;
+      core.receiveShadow = true;
+      scene.add(core);
+
+      const ledge = new THREE.Mesh(
+        roughBox(level.width, 0.36, ledgeDepth, 0.055),
+        ledgeMaterial
+      );
+      ledge.position.set(
+        0,
+        level.y - 0.18,
+        level.z + ledgeDepth / 2
+      );
+      ledge.castShadow = true;
+      ledge.receiveShadow = true;
+      scene.add(ledge);
+
+      addCaveFacade(level, index, caveRows[index]);
+
+      for (const side of [-1, 1]) {
+        addBoulder(
+          side * (level.width / 2 + 1.25),
+          level.y + 1.45 + random() * 1.4,
+          level.z - 0.9 - random() * 1.8,
+          1.25 + random() * 0.55,
+          2.0 + random() * 1.15,
+          1.8 + random() * 0.8
+        );
+      }
+    });
+
+    for (let i = 0; i < 13; i++) {
+      addBoulder(
+        (random() - 0.5) * 35,
+        19.4 + random() * 1.8,
+        -10.3 - random() * 4.5,
+        0.7 + random() * 1.4,
+        0.7 + random() * 1.3,
+        0.8 + random() * 1.5
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Contour-following low parapets
+    // ------------------------------------------------------------
+
+    const parapetGaps = [
+      [[14.6, 17.1]],
+      [
+        [-16.2, -14.6],
+        [14.6, 16.2]
+      ],
+      [
+        [-14.2, -12.7],
+        [10.7, 12.2]
+      ],
+      [[10.6, 12.2]]
+    ];
+
+    function addParapet(level, gaps) {
+      const segmentLength = 1.12;
+      const start = -level.width / 2 + 0.45;
+      const end = level.width / 2 - 0.45;
+
+      for (let x = start; x < end; x += segmentLength) {
+        const x2 = Math.min(x + segmentLength, end);
+        const mid = (x + x2) * 0.5;
+
+        const inGap = gaps.some(
+          ([gapStart, gapEnd]) => mid > gapStart && mid < gapEnd
+        );
+        if (inGap) continue;
+
+        const z0 =
+          frontZ(level) +
+          0.12 * Math.sin(x * 0.29 + level.y * 0.37);
+        const z1 =
+          frontZ(level) +
+          0.12 * Math.sin(x2 * 0.29 + level.y * 0.37);
+
+        const dx = x2 - x;
+        const dz = z1 - z0;
+        const length = Math.hypot(dx, dz);
+        const angle = Math.atan2(-dz, dx);
+        const height = 0.74 + random() * 0.12;
+
+        const block = new THREE.Mesh(
+          new THREE.BoxGeometry(length * 1.04, height, 0.29),
+          trimMaterial
+        );
+        block.position.set(mid, level.y + height / 2 + 0.03, (z0 + z1) / 2);
+        block.rotation.y = angle;
+        block.castShadow = true;
+        block.receiveShadow = true;
+        scene.add(block);
+
+        const cap = new THREE.Mesh(
+          new THREE.BoxGeometry(length * 1.07, 0.13, 0.37),
+          ledgeMaterial
+        );
+        cap.position.set(mid, level.y + height + 0.08, (z0 + z1) / 2);
+        cap.rotation.y = angle;
+        cap.castShadow = true;
+        scene.add(cap);
+      }
+
+      for (const side of [-1, 1]) {
+        const endWall = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.78, 1.25),
+          trimMaterial
+        );
+        endWall.position.set(
+          side * (level.width / 2 - 0.35),
+          level.y + 0.4,
+          level.z + 1.1
+        );
+        endWall.castShadow = true;
+        scene.add(endWall);
+      }
+    }
+
+    levels.forEach((level, index) => {
+      addParapet(level, parapetGaps[index]);
+    });
+
+    // ------------------------------------------------------------
+    // Switchback rock-cut stairways
+    // ------------------------------------------------------------
+
+    function buildFlight(a, b, width = 1.5, steps = 9, addRails = true) {
+      const horizontal = new THREE.Vector3(
+        b.x - a.x,
+        0,
+        b.z - a.z
+      );
+      const runLength = horizontal.length();
+      const direction = horizontal.clone().normalize();
+      const treadLength = runLength / steps;
+      const baseY = Math.min(a.y, b.y) - 0.16;
+      const angle = Math.atan2(-direction.z, direction.x);
+
+      for (let i = 0; i < steps; i++) {
+        const fraction = (i + 1) / steps;
+        const topY = THREE.MathUtils.lerp(a.y, b.y, fraction);
+        const height = topY - baseY;
+
+        const step = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            treadLength * 1.04,
+            height,
+            width
+          ),
+          i % 2 ? alternateStairMaterial : stairMaterial
+        );
+
+        step.position.set(
+          a.x + direction.x * (i + 0.5) * treadLength,
+          baseY + height / 2,
+          a.z + direction.z * (i + 0.5) * treadLength
+        );
+        step.rotation.y = angle;
+        step.castShadow = true;
+        step.receiveShadow = true;
+        scene.add(step);
+      }
+
+      if (addRails) {
+        const perpendicular = new THREE.Vector3(
+          -direction.z,
+          0,
+          direction.x
+        );
+
+        for (const side of [-1, 1]) {
+          const offset = perpendicular
+            .clone()
+            .multiplyScalar(side * (width / 2 + 0.08));
+
+          const railStart = a.clone().add(offset);
+          railStart.y += 0.69;
+          const railEnd = b.clone().add(offset);
+          railEnd.y += 0.69;
+
+          const rail = beamBetween(
+            railStart,
+            railEnd,
+            0.17,
+            trimMaterial
+          );
+          scene.add(rail);
+
+          for (let i = 0; i <= 3; i++) {
+            const t = i / 3;
+            const point = a.clone().lerp(b, t);
+            point.addScaledVector(offset, 1);
+            point.y += 0.04;
+
+            const post = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.085, 0.105, 0.68, 8),
+              trimMaterial
+            );
+            post.position.set(point.x, point.y + 0.34, point.z);
+            post.castShadow = true;
+            scene.add(post);
+          }
+        }
+      }
+    }
+
+    function buildSwitchback(lower, upper, side) {
+      const lowerStartX = side * (lower.width / 2 - 5.5);
+      const landingX = side * (lower.width / 2 - 0.5);
+      const upperEndX = side * (upper.width / 2 - 3.5);
+
+      const lowerZ = frontZ(lower) - 0.27;
+      const upperZ = frontZ(upper) - 0.27;
+      const middleY = (lower.y + upper.y) / 2;
+
+      buildFlight(
+        new THREE.Vector3(lowerStartX, lower.y, lowerZ),
+        new THREE.Vector3(landingX, middleY, lowerZ),
+        1.5,
+        9,
+        true
+      );
+
+      buildFlight(
+        new THREE.Vector3(landingX, middleY, upperZ),
+        new THREE.Vector3(upperEndX, upper.y, upperZ),
+        1.5,
+        9,
+        true
+      );
+
+      const landingDepth = Math.abs(upperZ - lowerZ) + 1.55;
+      const landing = new THREE.Mesh(
+        new THREE.BoxGeometry(1.75, 0.36, landingDepth),
+        stairMaterial
+      );
+      landing.position.set(
+        landingX,
+        middleY - 0.18,
+        (lowerZ + upperZ) / 2
+      );
+      landing.castShadow = true;
+      landing.receiveShadow = true;
+      scene.add(landing);
+
+      const support = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          1.65,
+          middleY - lower.y,
+          landingDepth - 0.4
+        ),
+        cliffMaterial
+      );
+      support.position.set(
+        landingX,
+        (lower.y + middleY) / 2,
+        (lowerZ + upperZ) / 2
+      );
+      support.castShadow = true;
+      support.receiveShadow = true;
+      scene.add(support);
+
+      const railA = new THREE.Vector3(
+        landingX + side * 0.9,
+        middleY + 0.69,
+        lowerZ
+      );
+      const railB = new THREE.Vector3(
+        landingX + side * 0.9,
+        middleY + 0.69,
+        upperZ
+      );
+      scene.add(beamBetween(railA, railB, 0.18, trimMaterial));
+    }
+
+    buildSwitchback(levels[0], levels[1], 1);
+    buildSwitchback(levels[1], levels[2], -1);
+    buildSwitchback(levels[2], levels[3], 1);
+
+    // Broad approach stair from the valley floor.
+    buildFlight(
+      new THREE.Vector3(0, -0.60, 6.4),
+      new THREE.Vector3(0, 0.02, 0.75),
+      6.5,
+      6,
+      false
+    );
+
+    // ------------------------------------------------------------
+    // Central columned assembly hall
+    // ------------------------------------------------------------
+
+    const hallLevel = levels[1];
+    const hallY = hallLevel.y;
+    const hallZ = hallLevel.z;
+    const hallBaseY = hallY + 0.18;
+
+    const hallPlatform = new THREE.Mesh(
+      new THREE.BoxGeometry(14.1, 0.32, 3.55),
+      ledgeMaterial
+    );
+    hallPlatform.position.set(0, hallY + 0.02, hallZ + 1.45);
+    hallPlatform.castShadow = true;
+    hallPlatform.receiveShadow = true;
+    scene.add(hallPlatform);
+
+    const hallBack = new THREE.Mesh(
+      new THREE.BoxGeometry(12.7, 3.45, 0.22),
+      new THREE.MeshStandardMaterial({
+        color: 0x171a16,
+        roughness: 1
+      })
+    );
+    hallBack.position.set(0, hallBaseY + 1.72, hallZ + 0.68);
+    hallBack.receiveShadow = true;
+    scene.add(hallBack);
+
+    for (const side of [-1, 1]) {
+      const sideWall = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 3.45, 2.5),
+        facadeMaterial
+      );
+      sideWall.position.set(
+        side * 6.45,
+        hallBaseY + 1.72,
+        hallZ + 1.65
+      );
+      sideWall.castShadow = true;
+      sideWall.receiveShadow = true;
+      scene.add(sideWall);
+    }
+
+    function addHallColumn(x, z) {
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.39, 0.43, 0.18, 12),
+        trimMaterial
+      );
+      base.position.set(x, hallBaseY + 0.09, z);
+      base.castShadow = true;
+      scene.add(base);
+
+      const shaft = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.31, 2.8, 12),
+        trimMaterial
+      );
+      shaft.position.set(x, hallBaseY + 1.58, z);
+      shaft.castShadow = true;
+      scene.add(shaft);
+
+      const capital = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.43, 0.29, 0.24, 12),
+        trimMaterial
+      );
+      capital.position.set(x, hallBaseY + 3.1, z);
+      capital.castShadow = true;
+      scene.add(capital);
+    }
+
+    const columnPositions = [-5.4, -3.25, -1.08, 1.08, 3.25, 5.4];
+    for (const x of columnPositions) {
+      addHallColumn(x, hallZ + 2.65);
+    }
+
+    const entablature = new THREE.Mesh(
+      new THREE.BoxGeometry(13.7, 0.48, 0.72),
+      trimMaterial
+    );
+    entablature.position.set(0, hallBaseY + 3.46, hallZ + 2.7);
+    entablature.castShadow = true;
+    entablature.receiveShadow = true;
+    scene.add(entablature);
+
+    const hallRoof = new THREE.Mesh(
+      roughBox(14.25, 0.3, 3.5, 0.045),
+      ledgeMaterial
+    );
+    hallRoof.position.set(0, hallBaseY + 3.86, hallZ + 1.48);
+    hallRoof.castShadow = true;
+    hallRoof.receiveShadow = true;
+    scene.add(hallRoof);
+
+    const medallion = new THREE.Mesh(
+      new THREE.TorusGeometry(0.36, 0.065, 8, 28),
+      goldMaterial
+    );
+    medallion.position.set(0, hallBaseY + 3.47, hallZ + 3.08);
+    scene.add(medallion);
+
+    const innerMedallion = new THREE.Mesh(
+      new THREE.CircleGeometry(0.27, 24),
+      goldMaterial
+    );
+    innerMedallion.position.set(0, hallBaseY + 3.47, hallZ + 3.07);
+    scene.add(innerMedallion);
+
+    // A small seated Buddha in the shadowed assembly hall.
+    const statue = new THREE.Group();
+    statue.position.set(0, hallBaseY, hallZ + 1.48);
+
+    const lotusBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.58, 0.73, 0.2, 16),
+      goldMaterial
+    );
+    lotusBase.position.y = 0.1;
+    statue.add(lotusBase);
+
+    const crossedLegs = new THREE.Mesh(
+      new THREE.SphereGeometry(0.48, 16, 10),
+      goldMaterial
+    );
+    crossedLegs.scale.set(1.18, 0.38, 0.8);
+    crossedLegs.position.y = 0.34;
+    statue.add(crossedLegs);
+
+    const torso = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.38, 0.88, 12),
+      goldMaterial
+    );
+    torso.position.y = 0.85;
+    statue.add(torso);
+
+    const shoulders = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 14, 10),
+      goldMaterial
+    );
+    shoulders.scale.set(1.1, 0.58, 0.72);
+    shoulders.position.y = 1.19;
+    statue.add(shoulders);
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.235, 16, 12),
+      goldMaterial
+    );
+    head.position.y = 1.58;
+    statue.add(head);
+
+    const hair = new THREE.Mesh(
+      new THREE.SphereGeometry(0.242, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({
+        color: 0x403528,
+        roughness: 0.82
+      })
+    );
+    hair.position.y = 1.59;
+    statue.add(hair);
+
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.56, 0.045, 8, 40),
+      goldMaterial
+    );
+    halo.position.set(0, 1.58, -0.18);
+    statue.add(halo);
+
+    statue.traverse(object => {
+      if (object.isMesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+      }
+    });
+
+    scene.add(statue);
+
+    const hallLight = new THREE.PointLight(0xffa85b, 11, 5.5, 2);
+    hallLight.position.set(0, hallBaseY + 1.7, hallZ + 2.0);
+    scene.add(hallLight);
+
+    // ------------------------------------------------------------
+    // Small stupas at the terrace edges
+    // ------------------------------------------------------------
+
+    function addStupa(x, y, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.scale.setScalar(scale);
+
+      const lowerBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.58, 0.66, 0.18, 12),
+        stupaMaterial
+      );
+      lowerBase.position.y = 0.09;
+      group.add(lowerBase);
+
+      const upperBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.43, 0.55, 0.19, 12),
+        stupaMaterial
+      );
+      upperBase.position.y = 0.27;
+      group.add(upperBase);
+
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.46,
+          16,
+          10,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI / 2
+        ),
+        stupaMaterial
+      );
+      dome.position.y = 0.48;
+      dome.scale.y = 0.88;
+      group.add(dome);
+
+      const neck = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.21, 0.22, 12),
+        stupaMaterial
+      );
+      neck.position.y = 0.91;
+      group.add(neck);
+
+      for (let i = 0; i < 3; i++) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.15 - i * 0.025, 0.035, 6, 16),
+          stupaMaterial
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 1.08 + i * 0.13;
+        group.add(ring);
+      }
+
+      const spire = new THREE.Mesh(
+        new THREE.ConeGeometry(0.115, 0.5, 10),
+        goldMaterial
+      );
+      spire.position.y = 1.57;
+      group.add(spire);
+
+      group.traverse(object => {
+        if (object.isMesh) {
+          object.castShadow = true;
+          object.receiveShadow = true;
+        }
+      });
+
+      scene.add(group);
+    }
+
+    levels.forEach((level, index) => {
+      const sideInset = level.width / 2 - 1.05;
+      const stupaZ = level.z + 0.65;
+
+      addStupa(-sideInset, level.y, stupaZ, 0.82 + index * 0.025);
+      addStupa(sideInset, level.y, stupaZ, 0.82 + index * 0.025);
+    });
+
+    // Small loose stones lend the ledges a less architectural finish.
+    for (let i = 0; i < 28; i++) {
+      const level = levels[Math.floor(random() * levels.length)];
+      const side = random() > 0.5 ? 1 : -1;
+
+      addBoulder(
+        side * (level.width / 2 - 0.5 - random() * 2.1),
+        level.y + 0.18,
+        level.z + 0.3 + random() * 0.7,
+        0.15 + random() * 0.28,
+        0.12 + random() * 0.22,
+        0.16 + random() * 0.3
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Floating dust
+    // ------------------------------------------------------------
+
+    const dustCount = 170;
+    const dustPositions = new Float32Array(dustCount * 3);
+
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = (random() - 0.5) * 49;
+      dustPositions[i * 3 + 1] = random() * 22;
+      dustPositions[i * 3 + 2] = -11 + random() * 17;
+    }
+
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(dustPositions, 3)
+    );
+
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xf0d7a3,
+        size: 0.045,
+        transparent: true,
+        opacity: 0.34,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+    scene.add(dust);
+
+    // ------------------------------------------------------------
+    // Custom camera controls
+    // ------------------------------------------------------------
+
+    const initialOffset = initialPosition.clone().sub(initialTarget);
+    const initialSpherical = new THREE.Spherical().setFromVector3(initialOffset);
+
+    const currentSpherical = initialSpherical.clone();
+    const desiredSpherical = initialSpherical.clone();
+    const currentTarget = initialTarget.clone();
+    const desiredTarget = initialTarget.clone();
+
+    const pointers = new Map();
+    let dragMode = "rotate";
+    let pinchDistance = 0;
+
+    function resetCamera() {
+      desiredSpherical.copy(initialSpherical);
+      desiredTarget.copy(initialTarget);
+    }
+
+    canvas.addEventListener("contextmenu", event => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", event => {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragMode =
+          event.shiftKey || event.button === 2 ? "pan" : "rotate";
+      } else if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        pinchDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+      }
+
+      canvas.classList.add("dragging");
+    });
+
+    canvas.addEventListener("pointermove", event => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+
+      previous.x = event.clientX;
+      previous.y = event.clientY;
+
+      if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (pinchDistance > 0 && distance > 0) {
+          desiredSpherical.radius *= pinchDistance / distance;
+          desiredSpherical.radius = THREE.MathUtils.clamp(
+            desiredSpherical.radius,
+            24,
+            115
+          );
+        }
+
+        pinchDistance = distance;
+        return;
+      }
+
+      if (dragMode === "rotate") {
+        desiredSpherical.theta -= dx * 0.006;
+        desiredSpherical.phi -= dy * 0.005;
+        desiredSpherical.phi = THREE.MathUtils.clamp(
+          desiredSpherical.phi,
+          0.18,
+          Math.PI * 0.49
+        );
+      } else {
+        camera.updateMatrixWorld();
+
+        const right = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          0
+        );
+        const up = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          1
+        );
+        const scale = currentSpherical.radius * 0.00135;
+
+        desiredTarget.addScaledVector(right, -dx * scale);
+        desiredTarget.addScaledVector(up, dy * scale);
+
+        desiredTarget.x = THREE.MathUtils.clamp(
+          desiredTarget.x,
+          -32,
+          32
+        );
+        desiredTarget.y = THREE.MathUtils.clamp(
+          desiredTarget.y,
+          -2,
+          28
+        );
+        desiredTarget.z = THREE.MathUtils.clamp(
+          desiredTarget.z,
+          -24,
+          22
+        );
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size < 2) {
+        pinchDistance = 0;
+      }
+
+      if (pointers.size === 0) {
+        canvas.classList.remove("dragging");
+      }
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        desiredSpherical.radius *= Math.exp(event.deltaY * 0.001);
+        desiredSpherical.radius = THREE.MathUtils.clamp(
+          desiredSpherical.radius,
+          24,
+          115
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    // ------------------------------------------------------------
+    // Resize and render loop
+    // ------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const smoothing = 1 - Math.exp(-delta * 9);
+
+      currentSpherical.theta = THREE.MathUtils.lerp(
+        currentSpherical.theta,
+        desiredSpherical.theta,
+        smoothing
+      );
+      currentSpherical.phi = THREE.MathUtils.lerp(
+        currentSpherical.phi,
+        desiredSpherical.phi,
+        smoothing
+      );
+      currentSpherical.radius = THREE.MathUtils.lerp(
+        currentSpherical.radius,
+        desiredSpherical.radius,
+        smoothing
+      );
+      currentTarget.lerp(desiredTarget, smoothing);
+
+      camera.position
+        .setFromSpherical(currentSpherical)
+        .add(currentTarget);
+      camera.lookAt(currentTarget);
+
+      sky.position.copy(camera.position);
+      dust.rotation.y += delta * 0.008;
+      dust.position.y = Math.sin(clock.elapsedTime * 0.15) * 0.12;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

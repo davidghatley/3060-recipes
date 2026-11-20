@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High-Voltage Impulse Laboratory</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080d12;
+      color: #e8f2f7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #app canvas {
+      touch-action: none;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      border: 1px solid rgba(157, 204, 225, 0.22);
+      background: linear-gradient(
+        145deg,
+        rgba(10, 18, 26, 0.91),
+        rgba(8, 14, 21, 0.78)
+      );
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    #title-card {
+      top: 24px;
+      left: 24px;
+      width: min(390px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border-left: 4px solid #f5b942;
+      border-radius: 3px 10px 10px 3px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #f5b942;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.4vw, 31px);
+      font-weight: 720;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin-top: 9px;
+      color: #91a9b8;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 13px;
+    }
+
+    .stat {
+      padding: 5px 8px;
+      border: 1px solid rgba(145, 185, 205, 0.17);
+      border-radius: 4px;
+      color: #b8cad5;
+      background: rgba(255, 255, 255, 0.025);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    #controls {
+      right: 24px;
+      bottom: 24px;
+      width: 300px;
+      padding: 17px;
+      border-radius: 12px;
+    }
+
+    .control-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 13px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .control-title span:last-child {
+      color: #64c9f2;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.04em;
+    }
+
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #a9bdc9;
+      font-size: 12px;
+    }
+
+    #gap-value {
+      color: #f5b942;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      margin: 4px 0 14px;
+      appearance: none;
+      border-radius: 5px;
+      outline: none;
+      background: linear-gradient(90deg, #e9a932, #405568);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 17px;
+      height: 17px;
+      appearance: none;
+      border: 3px solid #12212b;
+      border-radius: 50%;
+      background: #f7c85a;
+      box-shadow: 0 0 0 1px #f7c85a, 0 0 15px rgba(247, 200, 90, 0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border: 3px solid #12212b;
+      border-radius: 50%;
+      background: #f7c85a;
+      box-shadow: 0 0 0 1px #f7c85a, 0 0 15px rgba(247, 200, 90, 0.4);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid rgba(132, 191, 218, 0.23);
+      border-radius: 6px;
+      color: #dcebf3;
+      background: rgba(82, 117, 138, 0.17);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(132, 191, 218, 0.5);
+      background: rgba(82, 117, 138, 0.3);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #fire {
+      color: #17100a;
+      border-color: #f5b942;
+      background: linear-gradient(#ffd46d, #eaa42b);
+    }
+
+    #fire:hover {
+      border-color: #ffe099;
+      background: linear-gradient(#ffe08a, #f2ad34);
+      box-shadow: 0 0 20px rgba(242, 173, 52, 0.22);
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 13px;
+      color: #91a9b8;
+      font-size: 11px;
+    }
+
+    .check-row input {
+      accent-color: #f5b942;
+    }
+
+    #hint {
+      position: fixed;
+      z-index: 10;
+      bottom: 26px;
+      left: 24px;
+      max-width: calc(100vw - 380px);
+      padding: 10px 13px;
+      border: 1px solid rgba(157, 204, 225, 0.14);
+      border-radius: 7px;
+      color: #7f99a9;
+      background: rgba(8, 14, 20, 0.68);
+      font-size: 11px;
+      line-height: 1.6;
+      pointer-events: none;
+    }
+
+    #hint b {
+      color: #c4d6e0;
+      font-weight: 700;
+    }
+
+    #fallback {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 30px;
+      color: white;
+      background: #101820;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      #title-card {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 14px;
+      }
+
+      .subtitle,
+      .stats {
+        display: none;
+      }
+
+      #controls {
+        right: 12px;
+        bottom: 12px;
+        width: min(300px, calc(100vw - 24px));
+      }
+
+      #hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <section id="title-card" class="panel">
+    <div class="eyebrow">High-Voltage Test Facility</div>
+    <h1>Impulse Laboratory</h1>
+    <div class="subtitle">
+      Eight-stage Marx generator with resistive charging, curved high-voltage
+      busbars, and a variable spherical discharge gap.
+    </div>
+    <div class="stats">
+      <div class="stat">8 STAGES</div>
+      <div class="stat">2.6 MV</div>
+      <div class="stat">AIR GAP</div>
+      <div class="stat">PULSE LAB</div>
+    </div>
+  </section>
+
+  <section id="controls" class="panel">
+    <div class="control-title">
+      <span>Sphere Gap Control</span>
+      <span>HV-02</span>
+    </div>
+
+    <div class="range-label">
+      <span>Surface separation</span>
+      <span id="gap-value">0.60 m</span>
+    </div>
+
+    <input
+      id="gap-range"
+      type="range"
+      min="0.35"
+      max="3.20"
+      step="0.05"
+      value="0.60"
+      aria-label="Sphere gap separation"
+    >
+
+    <div class="button-row">
+      <button id="fire" type="button">Fire Impulse</button>
+      <button id="reset-view" type="button">Reset View</button>
+    </div>
+
+    <label class="check-row">
+      <input id="auto-pulse" type="checkbox" checked>
+      Automatic impulse every 6.5 seconds
+    </label>
+  </section>
+
+  <div id="hint">
+    <b>Drag</b> to orbit · <b>Wheel</b> to zoom ·
+    <b>Right-drag / Shift-drag</b> to pan · <b>Double-click</b> to reset
+  </div>
+
+  <div id="fallback">
+    <div>
+      <h2>WebGL could not be initialized.</h2>
+      <p>Please open this scene in a browser with hardware acceleration enabled.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const app = document.getElementById("app");
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b1118);
+    scene.fog = new THREE.FogExp2(0x0b1118, 0.0135);
+
+    const camera = new THREE.PerspectiveCamera(
+      47,
+      innerWidth / innerHeight,
+      0.1,
+      160
+    );
+
+    let renderer;
+
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance"
+      });
+    } catch (error) {
+      document.getElementById("fallback").style.display = "grid";
+      throw error;
+    }
+
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    app.appendChild(renderer.domElement);
+
+    const clock = new THREE.Clock();
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      floor: new THREE.MeshStandardMaterial({
+        color: 0x303840,
+        roughness: 0.9,
+        metalness: 0.05
+      }),
+      wall: new THREE.MeshStandardMaterial({
+        color: 0x3b4650,
+        roughness: 0.76,
+        metalness: 0.12
+      }),
+      wallDark: new THREE.MeshStandardMaterial({
+        color: 0x202a33,
+        roughness: 0.7,
+        metalness: 0.2
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x53616c,
+        roughness: 0.34,
+        metalness: 0.86
+      }),
+      steelDark: new THREE.MeshStandardMaterial({
+        color: 0x252f38,
+        roughness: 0.4,
+        metalness: 0.82
+      }),
+      aluminum: new THREE.MeshStandardMaterial({
+        color: 0xb9c4cc,
+        roughness: 0.23,
+        metalness: 0.92
+      }),
+      copper: new THREE.MeshStandardMaterial({
+        color: 0xc77836,
+        roughness: 0.24,
+        metalness: 0.9
+      }),
+      ceramic: new THREE.MeshStandardMaterial({
+        color: 0xd8ddd8,
+        roughness: 0.28,
+        metalness: 0.02
+      }),
+      ceramicBlue: new THREE.MeshStandardMaterial({
+        color: 0x386b7e,
+        roughness: 0.3,
+        metalness: 0.05
+      }),
+      blue: new THREE.MeshStandardMaterial({
+        color: 0x23799a,
+        roughness: 0.34,
+        metalness: 0.48
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x11171d,
+        roughness: 0.78,
+        metalness: 0.05
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xe4ae32,
+        roughness: 0.52,
+        metalness: 0.22
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xc52e27,
+        roughness: 0.38,
+        metalness: 0.3
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xdce4e8,
+        roughness: 0.4,
+        metalness: 0.12
+      }),
+      window: new THREE.MeshStandardMaterial({
+        color: 0x86bfd3,
+        emissive: 0x376a85,
+        emissiveIntensity: 1.7,
+        roughness: 0.18,
+        metalness: 0.1
+      }),
+      screen: new THREE.MeshStandardMaterial({
+        color: 0x183d4a,
+        emissive: 0x1c7794,
+        emissiveIntensity: 1.2,
+        roughness: 0.2,
+        metalness: 0.2
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addMesh(parent, geometry, material, x = 0, y = 0, z = 0) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addBox(parent, width, height, depth, material, x = 0, y = 0, z = 0) {
+      return addMesh(
+        parent,
+        new THREE.BoxGeometry(width, height, depth),
+        material,
+        x,
+        y,
+        z
+      );
+    }
+
+    function addCylinder(
+      parent,
+      radius,
+      height,
+      material,
+      x = 0,
+      y = 0,
+      z = 0,
+      segments = 24
+    ) {
+      return addMesh(
+        parent,
+        new THREE.CylinderGeometry(radius, radius, height, segments),
+        material,
+        x,
+        y,
+        z
+      );
+    }
+
+    function cylinderBetween(
+      parent,
+      start,
+      end,
+      radius,
+      material,
+      radialSegments = 16
+    ) {
+      const a = new THREE.Vector3(...start);
+      const b = new THREE.Vector3(...end);
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+      const mesh = addMesh(
+        parent,
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length,
+          radialSegments
+        ),
+        material
+      );
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        Y_AXIS,
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function beamBetween(
+      parent,
+      start,
+      end,
+      width,
+      depth,
+      material
+    ) {
+      const a = new THREE.Vector3(...start);
+      const b = new THREE.Vector3(...end);
+      const direction = b.clone().sub(a);
+      const length = direction.length();
+      const mesh = addMesh(
+        parent,
+        new THREE.BoxGeometry(width, length, depth),
+        material
+      );
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        Y_AXIS,
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function addTube(parent, points, radius, material, tubularSegments = 60) {
+      const vectors = points.map(
+        point => point.isVector3
+          ? point.clone()
+          : new THREE.Vector3(...point)
+      );
+
+      const curve = new THREE.CatmullRomCurve3(vectors);
+      return addMesh(
+        parent,
+        new THREE.TubeGeometry(
+          curve,
+          tubularSegments,
+          radius,
+          8,
+          false
+        ),
+        material
+      );
+    }
+
+    function addTextSprite(
+      parent,
+      text,
+      x,
+      y,
+      z,
+      width = 4,
+      height = 0.8,
+      accent = "#f4b63e"
+    ) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 192;
+
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "rgba(7, 13, 19, 0.86)";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = accent;
+      context.fillRect(0, 0, 13, canvas.height);
+      context.strokeStyle = "rgba(180, 215, 231, 0.4)";
+      context.lineWidth = 4;
+      context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+      context.fillStyle = "#e7f0f4";
+      context.font = "700 58px system-ui, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false
+        })
+      );
+
+      sprite.position.set(x, y, z);
+      sprite.scale.set(width, height, 1);
+      parent.add(sprite);
+      return sprite;
+    }
+
+    function addWallPlaque(parent, title, subtitle, x, y, z, width = 9) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 300;
+
+      const context = canvas.getContext("2d");
+      context.fillStyle = "rgba(8, 16, 23, 0.95)";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.strokeStyle = "#d5a536";
+      context.lineWidth = 12;
+      context.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+      context.fillStyle = "#f0b83c";
+      context.fillRect(8, 8, canvas.width - 16, 16);
+
+      context.textAlign = "center";
+      context.fillStyle = "#eef5f7";
+      context.font = "800 78px system-ui, sans-serif";
+      context.fillText(title, canvas.width / 2, 130);
+
+      context.fillStyle = "#8fb0bf";
+      context.font = "500 35px system-ui, sans-serif";
+      context.fillText(subtitle, canvas.width / 2, 215);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const plaque = addMesh(
+        parent,
+        new THREE.PlaneGeometry(width, width / 4),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          toneMapped: false
+        }),
+        x,
+        y,
+        z
+      );
+
+      plaque.castShadow = false;
+      return plaque;
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(
+      new THREE.HemisphereLight(0x9ac9eb, 0x182027, 1.35)
+    );
+
+    const keyLight = new THREE.DirectionalLight(0xe3efff, 2.6);
+    keyLight.position.set(12, 22, 16);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -22;
+    keyLight.shadow.camera.right = 22;
+    keyLight.shadow.camera.top = 22;
+    keyLight.shadow.camera.bottom = -22;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 65;
+    keyLight.shadow.bias = -0.00025;
+    scene.add(keyLight);
+
+    const blueFill = new THREE.PointLight(0x468dcc, 22, 23, 2);
+    blueFill.position.set(-4, 7, 3);
+    scene.add(blueFill);
+
+    const warmFill = new THREE.PointLight(0xffc16a, 16, 26, 2);
+    warmFill.position.set(10, 10, -11);
+    scene.add(warmFill);
+
+    const overheadLight = new THREE.SpotLight(
+      0xb9e5ff,
+      85,
+      42,
+      Math.PI / 5,
+      0.65,
+      1.4
+    );
+    overheadLight.position.set(4, 16, 5);
+    overheadLight.target.position.set(-1, 3, -2);
+    scene.add(overheadLight, overheadLight.target);
+
+    // -------------------------------------------------------------------------
+    // Open industrial hall
+    // -------------------------------------------------------------------------
+
+    const hall = new THREE.Group();
+    scene.add(hall);
+
+    addBox(hall, 34, 0.3, 40, materials.floor, 0, -0.16, 0);
+
+    const grid = new THREE.GridHelper(40, 20, 0x6a7882, 0x46515b);
+    grid.position.y = 0.012;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.17;
+    hall.add(grid);
+
+    addBox(hall, 34, 16, 0.35, materials.wall, 0, 8, -19.8);
+    addBox(hall, 0.35, 5.5, 40, materials.wallDark, -16.8, 2.75, 0);
+    addBox(hall, 0.35, 5.5, 40, materials.wallDark, 16.8, 2.75, 0);
+
+    // Wall panel divisions.
+    for (let x = -15; x <= 15; x += 5) {
+      addBox(hall, 0.07, 15.7, 0.08, materials.steelDark, x, 8, -19.58);
+    }
+
+    // High windows.
+    for (let x = -13.5; x <= 13.5; x += 4.5) {
+      addBox(hall, 3.2, 2.05, 0.08, materials.window, x, 11.3, -19.56);
+      for (let bar = -1; bar <= 1; bar++) {
+        addBox(
+          hall,
+          0.055,
+          2.1,
+          0.1,
+          materials.steelDark,
+          x + bar * 0.8,
+          11.3,
+          -19.48
+        );
+      }
+    }
+
+    // Tall columns and roof trusses.
+    const trussZ = [-17, -10, -3, 4, 11, 18];
+
+    for (const z of trussZ) {
+      addBox(hall, 0.48, 15.3, 0.48, materials.steelDark, -16.1, 7.65, z);
+      addBox(hall, 0.48, 15.3, 0.48, materials.steelDark, 16.1, 7.65, z);
+      beamBetween(
+        hall,
+        [-16.1, 15.15, z],
+        [16.1, 15.15, z],
+        0.24,
+        0.24,
+        materials.steel
+      );
+      beamBetween(
+        hall,
+        [-16.1, 13.8, z],
+        [16.1, 13.8, z],
+        0.12,
+        0.12,
+        materials.steelDark
+      );
+
+      for (let x = -14; x < 14; x += 4) {
+        beamBetween(
+          hall,
+          [x, 13.8, z],
+          [x + 4, 15.15, z],
+          0.1,
+          0.1,
+          materials.steel
+        );
+        beamBetween(
+          hall,
+          [x, 15.15, z],
+          [x + 4, 13.8, z],
+          0.1,
+          0.1,
+          materials.steel
+        );
+      }
+    }
+
+    for (const x of [-16.1, 16.1]) {
+      beamBetween(
+        hall,
+        [x, 15.15, -17],
+        [x, 15.15, 18],
+        0.18,
+        0.18,
+        materials.steel
+      );
+    }
+
+    // Wall utility pipes.
+    cylinderBetween(
+      hall,
+      [-15.5, 7.4, -19.1],
+      [15.5, 7.4, -19.1],
+      0.1,
+      materials.blue,
+      18
+    );
+
+    cylinderBetween(
+      hall,
+      [-15.5, 6.9, -19.05],
+      [15.5, 6.9, -19.05],
+      0.075,
+      materials.copper,
+      18
+    );
+
+    addWallPlaque(
+      hall,
+      "IMPULSE TEST HALL",
+      "HIGH VOLTAGE LABORATORY  /  AUTHORIZED PERSONNEL ONLY",
+      0,
+      6.2,
+      -19.42,
+      12
+    );
+
+    // Overhead crane.
+    addBox(hall, 30, 0.48, 0.58, materials.yellow, 0, 14.2, 8);
+    addBox(hall, 1.6, 0.8, 1.05, materials.steelDark, 2.3, 13.65, 8);
+    cylinderBetween(
+      hall,
+      [2.3, 13.25, 8],
+      [2.3, 9.7, 8],
+      0.025,
+      materials.rubber,
+      10
+    );
+    const hook = addMesh(
+      hall,
+      new THREE.TorusGeometry(0.18, 0.045, 10, 24, Math.PI * 1.55),
+      materials.steel,
+      2.3,
+      9.45,
+      8
+    );
+    hook.rotation.z = -0.35;
+
+    // Cable trays along the floor and back wall.
+    addBox(hall, 29, 0.13, 0.45, materials.steelDark, 0, 0.14, -15.5);
+    for (let x = -14; x <= 14; x += 2) {
+      addBox(hall, 0.08, 0.28, 0.55, materials.steel, x, 0.15, -15.5);
+    }
+
+    // Control cabinets.
+    function addCabinet(x, z, rotation = 0) {
+      const cabinet = new THREE.Group();
+      cabinet.position.set(x, 0, z);
+      cabinet.rotation.y = rotation;
+      scene.add(cabinet);
+
+      addBox(cabinet, 2.15, 2.8, 0.9, materials.steelDark, 0, 1.4, 0);
+      addBox(cabinet, 1.72, 1.25, 0.08, materials.screen, 0, 1.95, 0.48);
+      addBox(cabinet, 0.12, 0.12, 0.1, materials.red, 0.65, 1.03, 0.51);
+      addBox(cabinet, 0.12, 0.12, 0.1, materials.yellow, 0.35, 1.03, 0.51);
+      addBox(cabinet, 0.12, 0.12, 0.1, materials.blue, 0.05, 1.03, 0.51);
+
+      for (let i = 0; i < 5; i++) {
+        addBox(
+          cabinet,
+          1.75,
+          0.055,
+          0.08,
+          materials.steel,
+          0,
+          0.48 + i * 0.12,
+          0.49
+        );
+      }
+
+      return cabinet;
+    }
+
+    addCabinet(11.7, -10.5, -0.18);
+    addCabinet(-13.2, -10.2, 0.14);
+
+    // -------------------------------------------------------------------------
+    // Floor safety markings around the sphere gap
+    // -------------------------------------------------------------------------
+
+    const safetyY = 0.035;
+    const zoneX = 6.2;
+    const zoneZ = 0.45;
+    const zoneW = 8.4;
+    const zoneD = 6.4;
+
+    addBox(scene, zoneW, 0.025, 0.1, materials.yellow, zoneX, safetyY, zoneZ - zoneD / 2);
+    addBox(scene, zoneW, 0.025, 0.1, materials.yellow, zoneX, safetyY, zoneZ + zoneD / 2);
+    addBox(scene, 0.1, 0.025, zoneD, materials.yellow, zoneX - zoneW / 2, safetyY, zoneZ);
+    addBox(scene, 0.1, 0.025, zoneD, materials.yellow, zoneX + zoneW / 2, safetyY, zoneZ);
+
+    for (let i = 0; i < 11; i++) {
+      const stripe = addBox(
+        scene,
+        0.11,
+        0.028,
+        1.25,
+        materials.yellow,
+        zoneX - 3.6 + i * 0.72,
+        safetyY + 0.001,
+        zoneZ - zoneD / 2 - 0.35
+      );
+      stripe.rotation.y = -0.65;
+    }
+
+    // -------------------------------------------------------------------------
+    // Eight-stage Marx generator
+    // -------------------------------------------------------------------------
+
+    const generator = new THREE.Group();
+    generator.position.set(-5, 0, -2);
+    scene.add(generator);
+
+    const frameHalfWidth = 4.15;
+    const frameHalfDepth = 1.85;
+    const frameTop = 13.55;
+
+    // Foundation feet.
+    for (const x of [-frameHalfWidth, frameHalfWidth]) {
+      for (const z of [-frameHalfDepth, frameHalfDepth]) {
+        addBox(generator, 0.85, 0.18, 0.8, materials.steelDark, x, 0.1, z);
+        addBox(generator, 0.48, 0.22, 0.48, materials.steel, x, 0.27, z);
+      }
+    }
+
+    // Four main uprights.
+    for (const x of [-frameHalfWidth, frameHalfWidth]) {
+      for (const z of [-frameHalfDepth, frameHalfDepth]) {
+        beamBetween(
+          generator,
+          [x, 0.25, z],
+          [x, frameTop, z],
+          0.22,
+          0.22,
+          materials.steel
+        );
+      }
+    }
+
+    // Top perimeter.
+    beamBetween(
+      generator,
+      [-frameHalfWidth, frameTop, -frameHalfDepth],
+      [frameHalfWidth, frameTop, -frameHalfDepth],
+      0.22,
+      0.22,
+      materials.steel
+    );
+    beamBetween(
+      generator,
+      [-frameHalfWidth, frameTop, frameHalfDepth],
+      [frameHalfWidth, frameTop, frameHalfDepth],
+      0.22,
+      0.22,
+      materials.steel
+    );
+
+    for (const z of [-frameHalfDepth, frameHalfDepth]) {
+      beamBetween(
+        generator,
+        [-frameHalfWidth, frameTop, z],
+        [-frameHalfWidth, frameTop, z],
+        0.22,
+        0.22,
+        materials.steel
+      );
+    }
+
+    // Side and rear diagonal bracing.
+    beamBetween(
+      generator,
+      [-frameHalfWidth, 0.4, -frameHalfDepth],
+      [frameHalfWidth, 6.5, -frameHalfDepth],
+      0.09,
+      0.09,
+      materials.steelDark
+    );
+    beamBetween(
+      generator,
+      [frameHalfWidth, 0.4, -frameHalfDepth],
+      [-frameHalfWidth, 6.5, -frameHalfDepth],
+      0.09,
+      0.09,
+      materials.steelDark
+    );
+    beamBetween(
+      generator,
+      [-frameHalfWidth, 0.4, frameHalfDepth],
+      [frameHalfWidth, 12.5, frameHalfDepth],
+      0.075,
+      0.075,
+      materials.steelDark
+    );
+
+    function addCapacitorStage(stageIndex, y) {
+      // Perimeter shelf for the stage.
+      beamBetween(
+        generator,
+        [-frameHalfWidth, y, -frameHalfDepth],
+        [frameHalfWidth, y, -frameHalfDepth],
+        0.13,
+        0.13,
+        materials.steelDark
+      );
+      beamBetween(
+        generator,
+        [-frameHalfWidth, y, frameHalfDepth],
+        [frameHalfWidth, y, frameHalfDepth],
+        0.13,
+        0.13,
+        materials.steelDark
+      );
+
+      for (const x of [-frameHalfWidth, frameHalfWidth]) {
+        beamBetween(
+          generator,
+          [x, y, -frameHalfDepth],
+          [x, y, frameHalfDepth],
+          0.13,
+          0.13,
+          materials.steelDark
+        );
+      }
+
+      // Three horizontal capacitor cans per Marx stage.
+      const capacitorX = [-2.55, 0, 2.55];
+      const bodyY = y + 0.47;
+
+      for (const x of capacitorX) {
+        const body = addCylinder(
+          generator,
+          0.34,
+          1.55,
+          materials.aluminum,
+          x,
+          bodyY,
+          0
+        );
+        body.rotation.z = Math.PI / 2;
+
+        for (const side of [-1, 1]) {
+          const cap = addCylinder(
+            generator,
+            0.38,
+            0.19,
+            materials.blue,
+            x + side * 0.86,
+            bodyY,
+            0
+          );
+          cap.rotation.z = Math.PI / 2;
+
+          const band = addMesh(
+            generator,
+            new THREE.TorusGeometry(0.35, 0.035, 8, 24),
+            materials.steelDark,
+            x + side * 0.7,
+            bodyY,
+            0
+          );
+          band.rotation.y = Math.PI / 2;
+        }
+
+        // HV terminal rising from each capacitor.
+        cylinderBetween(
+          generator,
+          [x, bodyY + 0.3, 0],
+          [x, y + 0.94, 0],
+          0.055,
+          materials.copper,
+          12
+        );
+
+        addMesh(
+          generator,
+          new THREE.SphereGeometry(0.09, 12, 8),
+          materials.copper,
+          x,
+          y + 0.94,
+          0
+        );
+      }
+
+      // Series links between the three capacitor cans.
+      beamBetween(
+        generator,
+        [-1.61, bodyY, 0],
+        [-0.94, bodyY, 0],
+        0.095,
+        0.095,
+        materials.copper
+      );
+      beamBetween(
+        generator,
+        [0.94, bodyY, 0],
+        [1.61, bodyY, 0],
+        0.095,
+        0.095,
+        materials.copper
+      );
+
+      // Curved high-voltage busbar in front of the stage.
+      addTube(
+        generator,
+        [
+          [-3.18, y + 0.2, 1.02],
+          [-2.72, y + 0.77, 1.25],
+          [0, y + 1.08, 1.43],
+          [2.72, y + 0.77, 1.25],
+          [3.18, y + 0.2, 1.02]
+        ],
+        0.073,
+        materials.copper,
+        72
+      );
+
+      // Blue insulated lower bus.
+      addTube(
+        generator,
+        [
+          [-3.3, y + 0.07, 0.78],
+          [-1.5, y + 0.01, 0.89],
+          [1.5, y + 0.01, 0.89],
+          [3.3, y + 0.07, 0.78]
+        ],
+        0.058,
+        materials.blue,
+        60
+      );
+
+      // Branch from the capacitor terminals to the upper busbar.
+      for (const x of capacitorX) {
+        addTube(
+          generator,
+          [
+            [x, y + 0.94, 0],
+            [x, y + 1.16, 0.36],
+            [x, y + 0.98, 0.93],
+            [x, y + 0.77, 1.26]
+          ],
+          0.028,
+          materials.copper,
+          24
+        );
+      }
+
+      // Vertical curved interstage links along the right side.
+      if (stageIndex < 7) {
+        const nextY = y + 1.4;
+        addTube(
+          generator,
+          [
+            [3.18, y + 0.2, 1.02],
+            [3.62, y + 0.48, 1.13],
+            [3.65, y + 0.95, 1.12],
+            [3.18, nextY + 0.2, 1.02]
+          ],
+          0.06,
+          materials.copper,
+          40
+        );
+      }
+
+      // Small stage marker.
+      addTextSprite(
+        generator,
+        String(stageIndex + 1).padStart(2, "0"),
+        -3.85,
+        y + 0.16,
+        2.05,
+        0.58,
+        0.34,
+        "#72c9ec"
+      );
+    }
+
+    function addChargingResistor(x, z, y, side) {
+      const resistor = new THREE.Group();
+      resistor.position.set(x, y, z);
+      generator.add(resistor);
+
+      addCylinder(resistor, 0.13, 0.85, materials.ceramic, 0, 0.68, 0, 18);
+      addCylinder(resistor, 0.2, 0.1, materials.ceramicBlue, 0, 0.23, 0, 18);
+      addCylinder(resistor, 0.2, 0.1, materials.ceramicBlue, 0, 1.13, 0, 18);
+
+      for (let i = 0; i < 9; i++) {
+        addCylinder(
+          resistor,
+          0.245,
+          0.055,
+          materials.ceramic,
+          0,
+          0.34 + i * 0.085,
+          0,
+          20
+        );
+      }
+
+      cylinderBetween(
+        resistor,
+        [0, 0.05, 0],
+        [0, 0.3, 0],
+        0.035,
+        materials.copper,
+        10
+      );
+      cylinderBetween(
+        resistor,
+        [0, 1.16, 0],
+        [0, 1.42, 0],
+        0.035,
+        materials.copper,
+        10
+      );
+
+      // Connection from the resistor bank toward the stage busbar.
+      addTube(
+        generator,
+        [
+          [x, y + 1.42, z],
+          [x - side * 0.22, y + 1.25, z + 0.22],
+          [side * 3.25, y + 0.68, 1.18]
+        ],
+        0.028,
+        materials.copper,
+        28
+      );
+    }
+
+    for (let i = 0; i < 8; i++) {
+      const y = 1.1 + i * 1.4;
+      addCapacitorStage(i, y);
+      addChargingResistor(-4.62, 0.35, y, -1);
+      addChargingResistor(4.62, 0.35, y, 1);
+    }
+
+    // Ground bus and top output collector.
+    addTube(
+      generator,
+      [
+        [-3.9, 0.48, 0.6],
+        [-2, 0.4, 0.7],
+        [2, 0.4, 0.7],
+        [3.9, 0.48, 0.6]
+      ],
+      0.08,
+      materials.blue,
+      60
+    );
+
+    addTube(
+      generator,
+      [
+        [-3.3, 12.1, 0.1],
+        [-1.5, 12.5, 0.1],
+        [1.4, 12.5, 0.1],
+        [3.3, 12.1, 0.1]
+      ],
+      0.09,
+      materials.copper,
+      60
+    );
+
+    for (const x of [-3.3, 3.3]) {
+      addCylinder(generator, 0.16, 0.45, materials.ceramicBlue, x, 12.1, 0.1);
+      addMesh(
+        generator,
+        new THREE.SphereGeometry(0.16, 16, 12),
+        materials.copper,
+        x,
+        12.43,
+        0.1
+      );
+    }
+
+    addTextSprite(
+      generator,
+      "8-STAGE MARX GENERATOR",
+      0,
+      13.55,
+      0.2,
+      5.7,
+      0.9,
+      "#f3b83f"
+    );
+
+    // -------------------------------------------------------------------------
+    // Adjustable sphere gap and insulated stands
+    // -------------------------------------------------------------------------
+
+    const sphereRadius = 1.05;
+    const sphereY = 3.15;
+    const gapCenterX = 6.2;
+    const gapZ = 0.45;
+
+    const sphereMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xc6d1d8,
+      metalness: 0.72,
+      roughness: 0.16,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.14
+    });
+
+    function createElectrode() {
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // Moving carriage and base plate.
+      addBox(group, 1.7, 0.18, 1.45, materials.steelDark, 0, 0.22, 0);
+      addBox(group, 1.95, 0.08, 0.75, materials.steel, 0, 0.09, 0);
+      addBox(group, 0.34, 0.22, 1.05, materials.yellow, 0, 0.34, 0);
+
+      // Ribbed porcelain insulator.
+      addCylinder(group, 0.23, 1.6, materials.ceramic, 0, 1.2, 0, 28);
+
+      for (let i = 0; i < 11; i++) {
+        addCylinder(
+          group,
+          0.46,
+          0.075,
+          i % 2 === 0 ? materials.ceramic : materials.ceramicBlue,
+          0,
+          0.54 + i * 0.14,
+          0,
+          28
+        );
+      }
+
+      addCylinder(group, 0.34, 0.18, materials.ceramicBlue, 0, 2.07, 0, 28);
+      addCylinder(group, 0.18, 0.22, materials.steel, 0, 2.22, 0, 24);
+
+      const sphere = addMesh(
+        group,
+        new THREE.SphereGeometry(sphereRadius, 64, 40),
+        sphereMaterial,
+        0,
+        sphereY,
+        0
+      );
+      sphere.castShadow = true;
+
+      // Small mounting flange and grounding lug.
+      addCylinder(group, 0.28, 0.1, materials.steel, 0, 2.09, 0, 28);
+      addMesh(
+        group,
+        new THREE.SphereGeometry(0.12, 14, 10),
+        materials.copper,
+        0.48,
+        0.46,
+        0
+      );
+
+      return group;
+    }
+
+    const leftElectrode = createElectrode();
+    const rightElectrode = createElectrode();
+
+    leftElectrode.position.z = gapZ;
+    rightElectrode.position.z = gapZ;
+
+    // Adjustment rail beneath both stands.
+    addBox(scene, 8.2, 0.1, 0.36, materials.steel, gapCenterX, 0.045, gapZ);
+    addBox(scene, 8.5, 0.06, 0.08, materials.yellow, gapCenterX, 0.11, gapZ - 0.24);
+
+    for (const x of [2.3, 10.1]) {
+      addBox(scene, 0.28, 0.4, 1.2, materials.steelDark, x, 0.2, gapZ);
+    }
+
+    addTextSprite(
+      scene,
+      "VARIABLE SPHERE GAP",
+      gapCenterX,
+      6.35,
+      gapZ,
+      4.7,
+      0.78,
+      "#68c8ef"
+    );
+
+    // Flexible HV cable from generator to the left sphere stand.
+    let gapCable = null;
+
+    function updateGapCable(leftX) {
+      if (gapCable) {
+        scene.remove(gapCable);
+        gapCable.geometry.dispose();
+      }
+
+      gapCable = addTube(
+        scene,
+        [
+          [-1.45, 12.1, -1.55],
+          [-0.25, 10.2, -0.5],
+          [0.9, 5.1, 0.55],
+          [2.25, 0.7, 0.8],
+          [leftX - 0.4, 0.38, gapZ]
+        ],
+        0.105,
+        materials.rubber,
+        90
+      );
+    }
+
+    // Ground conductor from the right stand to a floor bonding point.
+    addTube(
+      scene,
+      [
+        [8.25, 0.42, 0.5],
+        [9.2, 0.25, 0.4],
+        [11.4, 0.18, -1],
+        [14.8, 0.18, -8]
+      ],
+      0.055,
+      materials.blue,
+      80
+    );
+
+    // -------------------------------------------------------------------------
+    // Impulse arc
+    // -------------------------------------------------------------------------
+
+    const arcGroup = new THREE.Group();
+    scene.add(arcGroup);
+
+    const arcSegments = 22;
+    const arcLines = [];
+
+    for (let lineIndex = 0; lineIndex < 4; lineIndex++) {
+      const positions = new Float32Array(arcSegments * 3);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage)
+      );
+
+      const material = new THREE.LineBasicMaterial({
+        color: lineIndex === 0 ? 0xffffff : 0x8bdfff,
+        transparent: true,
+        opacity: lineIndex === 0 ? 1 : 0.78,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false
+      });
+
+      const line = new THREE.Line(geometry, material);
+      line.frustumCulled = false;
+      line.visible = false;
+      line.renderOrder = 8;
+      arcGroup.add(line);
+      arcLines.push(line);
+    }
+
+    // Soft radial glow texture.
+    const glowCanvas = document.createElement("canvas");
+    glowCanvas.width = 128;
+    glowCanvas.height = 128;
+    const glowContext = glowCanvas.getContext("2d");
+    const glowGradient = glowContext.createRadialGradient(
+      64,
+      64,
+      0,
+      64,
+      64,
+      64
+    );
+    glowGradient.addColorStop(0, "rgba(235,250,255,1)");
+    glowGradient.addColorStop(0.16, "rgba(120,220,255,0.9)");
+    glowGradient.addColorStop(0.48, "rgba(50,140,255,0.28)");
+    glowGradient.addColorStop(1, "rgba(20,80,255,0)");
+    glowContext.fillStyle = glowGradient;
+    glowContext.fillRect(0, 0, 128, 128);
+
+    const glowTexture = new THREE.CanvasTexture(glowCanvas);
+    glowTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const arcGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0x7cd7ff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        toneMapped: false
+      })
+    );
+    arcGlow.visible = false;
+    arcGlow.renderOrder = 7;
+    scene.add(arcGlow);
+
+    const arcLight = new THREE.PointLight(0x8edaff, 0, 12, 2);
+    scene.add(arcLight);
+
+    let surfaceGap = 0.6;
+    let pulseEnd = 0;
+    let nextAutomaticPulse = performance.now() + 1800;
+
+    function updateGap() {
+      const gapRange = document.getElementById("gap-range");
+      surfaceGap = Number(gapRange.value);
+      document.getElementById("gap-value").textContent =
+        `${surfaceGap.toFixed(2)} m`;
+
+      const centerSeparation = sphereRadius * 2 + surfaceGap;
+      const leftX = gapCenterX - centerSeparation / 2;
+      const rightX = gapCenterX + centerSeparation / 2;
+
+      leftElectrode.position.x = leftX;
+      rightElectrode.position.x = rightX;
+
+      updateGapCable(leftX);
+    }
+
+    function fireImpulse() {
+      pulseEnd = performance.now() + 430;
+    }
+
+    function updateArc(active, time) {
+      arcLines.forEach(line => {
+        line.visible = active;
+      });
+
+      arcGlow.visible = active;
+      arcLight.intensity = active ? 32 : 0;
+
+      if (!active) {
+        arcGlow.material.opacity = 0;
+        return;
+      }
+
+      const startX = leftElectrode.position.x + sphereRadius * 0.99;
+      const endX = rightElectrode.position.x - sphereRadius * 0.99;
+      const centerX = (startX + endX) / 2;
+      const flicker = 0.82 + Math.sin(time * 0.075) * 0.16;
+
+      arcGlow.position.set(centerX, sphereY, gapZ);
+      arcGlow.scale.set(Math.max(1.2, surfaceGap + 1.15), 1.65, 1);
+      arcGlow.material.opacity = 0.62 * flicker;
+      arcLight.position.set(centerX, sphereY, gapZ + 0.1);
+      arcLight.intensity = 32 * flicker;
+
+      arcLines.forEach((line, lineIndex) => {
+        const attribute = line.geometry.getAttribute("position");
+
+        for (let i = 0; i < arcSegments; i++) {
+          const t = i / (arcSegments - 1);
+          const envelope = Math.sin(Math.PI * t);
+          const amplitude = Math.min(0.42, 0.1 + surfaceGap * 0.22);
+          const randomY = (Math.random() - 0.5) * amplitude * envelope;
+          const randomZ = (Math.random() - 0.5) * amplitude * envelope;
+          const branch = lineIndex === 0
+            ? 0
+            : Math.sin(t * Math.PI * (lineIndex + 1) + time * 0.03) *
+              0.055 *
+              envelope;
+
+          attribute.setXYZ(
+            i,
+            THREE.MathUtils.lerp(startX, endX, t),
+            sphereY + randomY + branch,
+            gapZ + randomZ
+          );
+        }
+
+        attribute.needsUpdate = true;
+      });
+    }
+
+    document.getElementById("gap-range").addEventListener("input", updateGap);
+    document.getElementById("fire").addEventListener("click", fireImpulse);
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls: orbit, zoom and pan
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      target: new THREE.Vector3(-1, 5.2, -1),
+      radius: 28,
+      theta: 0.28,
+      phi: 1.17
+    };
+
+    const defaultCamera = {
+      target: new THREE.Vector3(-1, 5.2, -1),
+      radius: 28,
+      theta: 0.28,
+      phi: 1.17
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(cameraState.phi);
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * sinPhi * Math.sin(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z +
+          cameraState.radius * sinPhi * Math.cos(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+    }
+
+    function resetCamera() {
+      cameraState.target.copy(defaultCamera.target);
+      cameraState.radius = defaultCamera.radius;
+      cameraState.theta = defaultCamera.theta;
+      cameraState.phi = defaultCamera.phi;
+      updateCamera();
+    }
+
+    document.getElementById("reset-view").addEventListener("click", resetCamera);
+
+    let dragging = false;
+    let dragMode = "orbit";
+    let previousX = 0;
+    let previousY = 0;
+    let activePointer = null;
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("contextmenu", event => event.preventDefault());
+
+    canvas.addEventListener("pointerdown", event => {
+      dragging = true;
+      activePointer = event.pointerId;
+      dragMode =
+        event.button === 2 || event.button === 1 || event.shiftKey
+          ? "pan"
+          : "orbit";
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", event => {
+      if (!dragging || event.pointerId !== activePointer) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      if (dragMode === "orbit") {
+        cameraState.theta -= dx * 0.005;
+        cameraState.phi = THREE.MathUtils.clamp(
+          cameraState.phi - dy * 0.0045,
+          0.22,
+          1.49
+        );
+      } else {
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+
+        const right = new THREE.Vector3()
+          .crossVectors(forward, Y_AXIS)
+          .normalize();
+        const up = new THREE.Vector3()
+          .crossVectors(right, forward)
+          .normalize();
+
+        const panScale = cameraState.radius * 0.00145;
+        cameraState.target.addScaledVector(right, -dx * panScale);
+        cameraState.target.addScaledVector(up, dy * panScale);
+        cameraState.target.y = THREE.MathUtils.clamp(
+          cameraState.target.y,
+          0.5,
+          13
+        );
+      }
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      if (event.pointerId !== activePointer) return;
+      dragging = false;
+      activePointer = null;
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+
+    canvas.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        cameraState.radius = THREE.MathUtils.clamp(
+          cameraState.radius * Math.exp(event.deltaY * 0.001),
+          9,
+          52
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", event => {
+      if (event.key.toLowerCase() === "r") {
+        resetCamera();
+      }
+
+      if (event.key === "+" || event.key === "=") {
+        cameraState.radius = Math.max(9, cameraState.radius - 1.5);
+        updateCamera();
+      }
+
+      if (event.key === "-" || event.key === "_") {
+        cameraState.radius = Math.min(52, cameraState.radius + 1.5);
+        updateCamera();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+
+    // -------------------------------------------------------------------------
+    // Initialization and render loop
+    // -------------------------------------------------------------------------
+
+    updateGap();
+    updateCamera();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const now = performance.now();
+      const elapsed = clock.getElapsedTime();
+
+      if (
+        document.getElementById("auto-pulse").checked &&
+        now >= nextAutomaticPulse
+      ) {
+        fireImpulse();
+        nextAutomaticPulse = now + 6500;
+      }
+
+      updateArc(now < pulseEnd, elapsed);
+
+      // Subtle fluorescent lighting variation.
+      blueFill.intensity = 21 + Math.sin(elapsed * 0.7) * 1.2;
+      warmFill.intensity = 15 + Math.sin(elapsed * 0.43 + 1.4) * 0.8;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

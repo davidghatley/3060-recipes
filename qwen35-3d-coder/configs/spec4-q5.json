@@ -1,0 +1,65 @@
+{
+ "name": "spec4-q5",
+ "bench": [
+  "decode"
+ ],
+ "n_predict": 1024,
+ "prompts": 5,
+ "order": [
+  "q5none",
+  "q5mtp2",
+  "q5mtp3",
+  "q5none",
+  "q5mtp2",
+  "q5none"
+ ],
+ "configs": {
+  "q5none": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1"
+   ]
+  },
+  "q5mtp2": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "2"
+   ]
+  },
+  "q5mtp3": {
+   "model": "/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf",
+   "args": [
+    "-ngl",
+    "99",
+    "-fa",
+    "on",
+    "-c",
+    "65536",
+    "-np",
+    "1",
+    "--spec-type",
+    "draft-mtp",
+    "--spec-draft-n-max",
+    "3"
+   ]
+  }
+ }
+}

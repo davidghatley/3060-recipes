@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cryogenic Dilution Refrigerator</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #050a0f;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 10;
+      border: 1px solid rgba(164, 216, 231, 0.15);
+      background:
+        linear-gradient(135deg, rgba(16, 28, 38, 0.88), rgba(7, 14, 21, 0.78));
+      box-shadow:
+        0 18px 60px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    #intro {
+      top: 24px;
+      left: 24px;
+      width: min(430px, calc(100vw - 48px));
+      padding: 22px 24px 20px;
+      border-radius: 18px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 9px;
+      color: #7fe6ed;
+      font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 24px;
+      height: 1px;
+      content: "";
+      background: #61dce7;
+      box-shadow: 0 0 12px #61dce7;
+    }
+
+    h1 {
+      margin: 0;
+      color: #f1f7f8;
+      font-size: clamp(23px, 3vw, 34px);
+      font-weight: 620;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    #intro p {
+      max-width: 370px;
+      margin: 11px 0 0;
+      color: #91a5ae;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    #controls {
+      top: 24px;
+      right: 24px;
+      width: 224px;
+      padding: 12px;
+      border-radius: 16px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 5px 12px;
+      color: #8ea3ad;
+      font: 650 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #a6f0d0;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #7ee5b0;
+      box-shadow: 0 0 10px #7ee5b0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid rgba(157, 205, 218, 0.13);
+      border-radius: 10px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.035);
+      color: #aebfc6;
+      cursor: pointer;
+      font: 650 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(111, 224, 235, 0.38);
+      background: rgba(93, 203, 215, 0.08);
+      color: #d9f7f8;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.active {
+      border-color: rgba(97, 221, 231, 0.42);
+      background: rgba(79, 204, 216, 0.12);
+      color: #a8f3f5;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.38;
+    }
+
+    #readout {
+      margin-top: 10px;
+      padding: 11px 12px;
+      border: 1px solid rgba(150, 204, 218, 0.09);
+      border-radius: 11px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .readout-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      color: #637b86;
+      font: 600 9px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .readout-row strong {
+      color: #c4d8de;
+      font-weight: 650;
+    }
+
+    #hint {
+      position: fixed;
+      z-index: 8;
+      bottom: 22px;
+      left: 24px;
+      padding: 10px 13px;
+      border: 1px solid rgba(163, 212, 224, 0.1);
+      border-radius: 10px;
+      background: rgba(5, 12, 17, 0.62);
+      color: #708892;
+      font: 600 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+      transition: opacity 400ms ease;
+      pointer-events: none;
+    }
+
+    #hint.dim {
+      opacity: 0.35;
+    }
+
+    #legend {
+      position: fixed;
+      z-index: 8;
+      right: 24px;
+      bottom: 22px;
+      display: flex;
+      gap: 14px;
+      padding: 10px 13px;
+      border: 1px solid rgba(163, 212, 224, 0.1);
+      border-radius: 10px;
+      background: rgba(5, 12, 17, 0.62);
+      color: #80949c;
+      font: 600 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .annotation {
+      position: fixed;
+      z-index: 7;
+      min-width: 118px;
+      max-width: 190px;
+      padding: 7px 9px;
+      border-left: 1px solid rgba(117, 222, 232, 0.5);
+      background: linear-gradient(90deg, rgba(8, 19, 25, 0.82), rgba(8, 19, 25, 0.28));
+      color: #d7eaed;
+      font: 650 9px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+    }
+
+    .annotation small {
+      display: block;
+      margin-top: 3px;
+      color: #6d939e;
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .annotation.left {
+      transform: translate(calc(-100% - 16px), -50%);
+      border-right: 1px solid rgba(117, 222, 232, 0.5);
+      border-left: 0;
+      background: linear-gradient(270deg, rgba(8, 19, 25, 0.82), rgba(8, 19, 25, 0.28));
+      text-align: right;
+    }
+
+    .annotation::after {
+      position: absolute;
+      top: 50%;
+      width: 5px;
+      height: 5px;
+      content: "";
+      border: 1px solid #86e8ed;
+      border-radius: 50%;
+      background: #10232b;
+      box-shadow: 0 0 9px rgba(110, 231, 238, 0.55);
+      transform: translateY(-50%);
+    }
+
+    .annotation.right::after {
+      left: -20px;
+    }
+
+    .annotation.left::after {
+      right: -20px;
+    }
+
+    #loading {
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #050a0f;
+      color: #8ee6eb;
+      font: 650 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 760px) {
+      #intro {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 16px 18px;
+      }
+
+      #intro p {
+        display: none;
+      }
+
+      #controls {
+        top: auto;
+        right: 12px;
+        bottom: 64px;
+        width: 200px;
+      }
+
+      #readout,
+      #legend {
+        display: none;
+      }
+
+      #hint {
+        bottom: 14px;
+        left: 12px;
+        max-width: calc(100vw - 24px);
+      }
+
+      .annotation {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage"></div>
+
+  <section id="intro" class="panel">
+    <div class="eyebrow">Quantum thermal system</div>
+    <h1>Dilution Refrigerator</h1>
+    <p>
+      A layered cryogenic assembly with thermally anchored plates, magnetic
+      shielding, vacuum vessels, and a color-coded coaxial wiring harness.
+    </p>
+  </section>
+
+  <section id="controls" class="panel" aria-label="Scene controls">
+    <div class="status">
+      <span>System status</span>
+      <span class="status-value">
+        <span class="status-dot"></span>
+        Stable
+      </span>
+    </div>
+
+    <div class="button-grid">
+      <button id="orbitButton" class="active">Auto orbit</button>
+      <button id="labelButton" class="active">Labels</button>
+      <button id="explodeButton">Explode</button>
+      <button id="shellButton" class="active">Shell on</button>
+      <button id="resetButton" style="grid-column: 1 / -1">Reset view</button>
+    </div>
+
+    <div id="readout">
+      <div class="readout-row">
+        <span>Base temp.</span><strong>8.2 mK</strong>
+      </div>
+      <div class="readout-row">
+        <span>Plate stages</span><strong>08</strong>
+      </div>
+      <div class="readout-row">
+        <span>Coax lines</span><strong>12</strong>
+      </div>
+      <div class="readout-row">
+        <span>Shielding</span><strong>Cu / Al</strong>
+      </div>
+    </div>
+  </section>
+
+  <div id="hint">Drag to orbit · Wheel / pinch to zoom · Double-click to reset</div>
+
+  <div id="legend">
+    <span class="legend-item">
+      <span class="swatch" style="background:#d6a84f"></span> Thermal stage
+    </span>
+    <span class="legend-item">
+      <span class="swatch" style="background:#54dce5"></span> Coax harness
+    </span>
+  </div>
+
+  <div id="loading">Initializing cryogenic assembly</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, camera
+    // -------------------------------------------------------------------------
+
+    const stage = document.querySelector("#stage");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050a0f);
+    scene.fog = new THREE.FogExp2(0x050a0f, 0.024);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.08,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 3.35, 0);
+    const spherical = new THREE.Spherical(13.7, 1.22, 0.68);
+    const defaultView = {
+      radius: 13.7,
+      phi: 1.22,
+      theta: 0.68,
+      target: target.clone()
+    };
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // -------------------------------------------------------------------------
+    // Procedural studio environment, generated without external assets
+    // -------------------------------------------------------------------------
+
+    function createEnvironmentTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 256);
+      gradient.addColorStop(0, "#273746");
+      gradient.addColorStop(0.42, "#111d28");
+      gradient.addColorStop(1, "#03070a");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 256);
+
+      const panels = [
+        [28, 35, 74, 125, "#bfe7ef"],
+        [190, 20, 42, 150, "#f4d9b0"],
+        [350, 42, 95, 100, "#7bbfd7"]
+      ];
+
+      for (const [x, y, w, h, color] of panels) {
+        const glow = ctx.createRadialGradient(
+          x + w / 2,
+          y + h / 2,
+          0,
+          x + w / 2,
+          y + h / 2,
+          Math.max(w, h)
+        );
+        glow.addColorStop(0, color);
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = glow;
+        ctx.fillRect(x - 35, y - 35, w + 70, h + 70);
+      }
+
+      ctx.globalAlpha = 1;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      return texture;
+    }
+
+    const environmentTexture = createEnvironmentTexture();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const environmentTarget = pmrem.fromEquirectangular(environmentTexture);
+    scene.environment = environmentTarget.texture;
+    environmentTexture.dispose();
+    pmrem.dispose();
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xa8d9ee, 0x080c10, 1.2));
+
+    const keyLight = new THREE.DirectionalLight(0xffe2b8, 3.1);
+    keyLight.position.set(6.5, 10, 7.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -7;
+    keyLight.shadow.camera.right = 7;
+    keyLight.shadow.camera.top = 9;
+    keyLight.shadow.camera.bottom = -3;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 30;
+    keyLight.shadow.bias = -0.0003;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x78caff, 1.55);
+    fillLight.position.set(-7, 5, -5);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.PointLight(0x39dce8, 18, 16, 2);
+    rimLight.position.set(-3.8, 4.6, -3.4);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xffb35a, 12, 12, 2);
+    warmLight.position.set(3.6, 2.2, 3.3);
+    scene.add(warmLight);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      gold: new THREE.MeshStandardMaterial({
+        color: 0xd6a84f,
+        metalness: 0.78,
+        roughness: 0.23
+      }),
+      copper: new THREE.MeshStandardMaterial({
+        color: 0xb86d43,
+        metalness: 0.72,
+        roughness: 0.28
+      }),
+      aluminum: new THREE.MeshStandardMaterial({
+        color: 0xbfcbd1,
+        metalness: 0.76,
+        roughness: 0.25
+      }),
+      steel: new THREE.MeshStandardMaterial({
+        color: 0x6e808b,
+        metalness: 0.84,
+        roughness: 0.2
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x17232c,
+        metalness: 0.7,
+        roughness: 0.32
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x070b0e,
+        metalness: 0.35,
+        roughness: 0.55
+      }),
+      ceramic: new THREE.MeshStandardMaterial({
+        color: 0xd6d2c8,
+        metalness: 0.05,
+        roughness: 0.46
+      }),
+      cyanLED: new THREE.MeshStandardMaterial({
+        color: 0x7ceaf0,
+        emissive: 0x31d6df,
+        emissiveIntensity: 3,
+        roughness: 0.25
+      }),
+      amberLED: new THREE.MeshStandardMaterial({
+        color: 0xffbf6b,
+        emissive: 0xff7d2f,
+        emissiveIntensity: 2.4,
+        roughness: 0.25
+      })
+    };
+
+    const model = new THREE.Group();
+    scene.add(model);
+
+    const movingParts = [];
+    const plateGroups = [];
+    const wireMaterials = [];
+
+    // -------------------------------------------------------------------------
+    // Utility functions
+    // -------------------------------------------------------------------------
+
+    const UP = new THREE.Vector3(0, 1, 0);
+
+    function cylinderBetween(a, b, radius, material, radialSegments = 12) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        radialSegments
+      );
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        UP,
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function horizontalTorus(radius, tube, material, segments = 64) {
+      const mesh = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, tube, 10, segments),
+        material
+      );
+      mesh.rotation.x = Math.PI / 2;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function makeTube(points, radius, material, tubularSegments = 64) {
+      const curve = new THREE.CatmullRomCurve3(points);
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(
+          curve,
+          tubularSegments,
+          radius,
+          7,
+          false
+        ),
+        material
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // -------------------------------------------------------------------------
+    // Floor, pedestal, and base assembly
+    // -------------------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x0a1117,
+        metalness: 0.12,
+        roughness: 0.82
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.14;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(30, 60, 0x24414c, 0x14252e);
+    grid.position.y = -0.125;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.34;
+    scene.add(grid);
+
+    const pedestal = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.85, 3.0, 0.18, 96),
+      materials.darkSteel
+    );
+    pedestal.position.y = -0.035;
+    pedestal.receiveShadow = true;
+    pedestal.castShadow = true;
+    scene.add(pedestal);
+
+    const pedestalRing = horizontalTorus(2.72, 0.018, materials.cyanLED, 96);
+    pedestalRing.position.y = 0.058;
+    scene.add(pedestalRing);
+
+    const base = new THREE.Group();
+    model.add(base);
+
+    const baseBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.24, 2.3, 0.42, 96),
+      materials.darkSteel
+    );
+    baseBody.position.y = 0.25;
+    baseBody.castShadow = true;
+    baseBody.receiveShadow = true;
+    base.add(baseBody);
+
+    for (const y of [0.035, 0.47]) {
+      const ring = horizontalTorus(2.22, 0.035, materials.aluminum, 96);
+      ring.position.y = y;
+      base.add(ring);
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.PI / 4 + i * Math.PI / 2;
+      const foot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.19, 0.18, 20),
+        materials.black
+      );
+      foot.position.set(
+        Math.cos(angle) * 1.77,
+        -0.01,
+        Math.sin(angle) * 1.77
+      );
+      foot.castShadow = true;
+      base.add(foot);
+    }
+
+    // Decorative equipment plate on the front of the base.
+    function createEquipmentPlate() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 190;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#0b171e";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#3a6470";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+      ctx.fillStyle = "#b8e9eb";
+      ctx.font = "700 58px monospace";
+      ctx.fillText("DR-07", 30, 78);
+
+      ctx.fillStyle = "#6a969f";
+      ctx.font = "500 24px monospace";
+      ctx.fillText("DILUTION UNIT", 32, 124);
+      ctx.fillText("8.2 mK  |  READY", 32, 160);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const plate = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.22, 0.36),
+        new THREE.MeshBasicMaterial({ map: texture })
+      );
+      plate.position.set(0, 0.27, 2.275);
+      base.add(plate);
+    }
+
+    createEquipmentPlate();
+
+    // -------------------------------------------------------------------------
+    // Structural frame and central support mast
+    // -------------------------------------------------------------------------
+
+    const frame = new THREE.Group();
+    model.add(frame);
+
+    const framePositions = [
+      [-1.62, -1.62],
+      [1.62, -1.62],
+      [-1.62, 1.62],
+      [1.62, 1.62]
+    ];
+
+    for (const [x, z] of framePositions) {
+      const post = cylinderBetween(
+        new THREE.Vector3(x, 0.43, z),
+        new THREE.Vector3(x, 6.17, z),
+        0.055,
+        materials.steel,
+        12
+      );
+      frame.add(post);
+
+      const socket = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.12, 0.16, 18),
+        materials.black
+      );
+      socket.position.set(x, 0.5, z);
+      socket.castShadow = true;
+      frame.add(socket);
+    }
+
+    for (const y of [0.54, 5.97]) {
+      frame.add(
+        cylinderBetween(
+          new THREE.Vector3(-1.62, y, -1.62),
+          new THREE.Vector3(1.62, y, -1.62),
+          0.04,
+          materials.steel
+        )
+      );
+
+      frame.add(
+        cylinderBetween(
+          new THREE.Vector3(-1.62, y, 1.62),
+          new THREE.Vector3(1.62, y, 1.62),
+          0.04,
+          materials.steel
+        )
+      );
+    }
+
+    const centralMast = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.145, 0.145, 6.2, 32),
+      materials.steel
+    );
+    centralMast.position.y = 3.45;
+    centralMast.castShadow = true;
+    model.add(centralMast);
+
+    // -------------------------------------------------------------------------
+    // Layered thermal plates
+    // -------------------------------------------------------------------------
+
+    const plateDefinitions = [
+      { name: "Pump plate", y: 0.72, radius: 1.58, finish: "steel" },
+      { name: "Thermal shield", y: 1.45, radius: 1.42, finish: "copper" },
+      { name: "Cold plate", y: 2.18, radius: 1.24, finish: "aluminum" },
+      { name: "Still", y: 2.91, radius: 1.08, finish: "copper" },
+      { name: "Condenser", y: 3.64, radius: 0.94, finish: "gold" },
+      { name: "100 mK plate", y: 4.37, radius: 0.8, finish: "gold" },
+      { name: "1 K plate", y: 5.1, radius: 0.98, finish: "aluminum" },
+      { name: "4 K plate", y: 5.83, radius: 1.24, finish: "gold" }
+    ];
+
+    const annotations = [];
+
+    function addAnnotation(anchor, title, detail, side = "right") {
+      const element = document.createElement("div");
+      element.className = `annotation ${side}`;
+      element.innerHTML = `
+        <span>${title}</span>
+        <small>${detail}</small>
+      `;
+      document.body.appendChild(element);
+      annotations.push({ anchor, element });
+    }
+
+    function createPlate(definition, index) {
+      const group = new THREE.Group();
+      group.position.y = definition.y;
+      group.userData.baseY = definition.y;
+      group.userData.explodeOffset = index * 0.23;
+
+      const surfaceMaterial =
+        definition.finish === "gold"
+          ? materials.gold
+          : definition.finish === "copper"
+            ? materials.copper
+            : materials.aluminum;
+
+      const edgeMaterial =
+        definition.finish === "copper"
+          ? materials.gold
+          : materials.gold;
+
+      const plate = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          definition.radius,
+          definition.radius,
+          0.105,
+          72
+        ),
+        surfaceMaterial
+      );
+      plate.castShadow = true;
+      plate.receiveShadow = true;
+      group.add(plate);
+
+      const lowerPlate = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          definition.radius * 0.97,
+          definition.radius * 0.97,
+          0.05,
+          72
+        ),
+        materials.darkSteel
+      );
+      lowerPlate.position.y = -0.075;
+      lowerPlate.castShadow = true;
+      group.add(lowerPlate);
+
+      const topRim = horizontalTorus(
+        definition.radius - 0.035,
+        0.027,
+        edgeMaterial,
+        72
+      );
+      topRim.position.y = 0.06;
+      group.add(topRim);
+
+      const lowerRim = horizontalTorus(
+        definition.radius - 0.04,
+        0.021,
+        materials.steel,
+        72
+      );
+      lowerRim.position.y = -0.095;
+      group.add(lowerRim);
+
+      const centralCollar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.19, 0.19, 0.17, 28),
+        materials.steel
+      );
+      centralCollar.position.y = 0.07;
+      centralCollar.castShadow = true;
+      group.add(centralCollar);
+
+      const boltCount = definition.radius > 1.2 ? 14 : 10;
+      const boltGeometry = new THREE.CylinderGeometry(
+        0.029,
+        0.029,
+        0.045,
+        10
+      );
+
+      for (let i = 0; i < boltCount; i++) {
+        const angle = (i / boltCount) * Math.PI * 2;
+        const bolt = new THREE.Mesh(boltGeometry, materials.steel);
+        bolt.position.set(
+          Math.cos(angle) * definition.radius * 0.79,
+          0.085,
+          Math.sin(angle) * definition.radius * 0.79
+        );
+        bolt.castShadow = true;
+        group.add(bolt);
+      }
+
+      const portGeometry = new THREE.CylinderGeometry(
+        0.034,
+        0.034,
+        0.012,
+        12
+      );
+
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + 0.18;
+        const port = new THREE.Mesh(portGeometry, materials.black);
+        port.position.set(
+          Math.cos(angle) * definition.radius * 0.5,
+          0.061,
+          Math.sin(angle) * definition.radius * 0.5
+        );
+        group.add(port);
+      }
+
+      model.add(group);
+      plateGroups.push(group);
+      movingParts.push(group);
+      return group;
+    }
+
+    plateDefinitions.forEach(createPlate);
+
+    const plateByName = Object.fromEntries(
+      plateDefinitions.map((definition, index) => [
+        definition.name,
+        plateGroups[index]
+      ])
+    );
+
+    // Still vessel mounted above the still plate.
+    const stillGroup = plateByName["Still"];
+    const stillVessel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.19, 0.21, 0.3, 32),
+      materials.copper
+    );
+    stillVessel.position.set(0.43, 0.23, 0.18);
+    stillVessel.castShadow = true;
+    stillGroup.add(stillVessel);
+
+    const stillCap = horizontalTorus(0.19, 0.025, materials.gold, 32);
+    stillCap.position.set(0.43, 0.39, 0.18);
+    stillGroup.add(stillCap);
+
+    // Mixing chamber between the 1 K and 100 mK stages.
+    const mixingGroup = new THREE.Group();
+    mixingGroup.position.y = 4.72;
+    mixingGroup.userData.baseY = 4.72;
+    mixingGroup.userData.explodeOffset = 1.15;
+    model.add(mixingGroup);
+    movingParts.push(mixingGroup);
+
+    const mixingCan = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.245, 0.245, 0.34, 40),
+      materials.copper
+    );
+    mixingCan.castShadow = true;
+    mixingGroup.add(mixingCan);
+
+    const mixingCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.285, 0.285, 0.055, 40),
+      materials.aluminum
+    );
+    mixingCap.position.y = 0.19;
+    mixingCap.castShadow = true;
+    mixingGroup.add(mixingCap);
+
+    const mixingPipe = cylinderBetween(
+      new THREE.Vector3(0.18, -0.05, 0),
+      new THREE.Vector3(0.47, -0.48, 0),
+      0.045,
+      materials.steel
+    );
+    mixingGroup.add(mixingPipe);
+
+    // -------------------------------------------------------------------------
+    // Top magnet and connector block
+    // -------------------------------------------------------------------------
+
+    const magnetGroup = new THREE.Group();
+    magnetGroup.position.y = 6.45;
+    magnetGroup.userData.baseY = 6.45;
+    magnetGroup.userData.explodeOffset = 1.75;
+    model.add(magnetGroup);
+    movingParts.push(magnetGroup);
+
+    for (const y of [-0.14, 0.14]) {
+      const coil = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.66, 0.66, 0.22, 64),
+        materials.darkSteel
+      );
+      coil.position.y = y;
+      coil.castShadow = true;
+      magnetGroup.add(coil);
+
+      const coilTrim = horizontalTorus(0.65, 0.035, materials.gold, 64);
+      coilTrim.position.y = y + (y < 0 ? -0.11 : 0.11);
+      magnetGroup.add(coilTrim);
+    }
+
+    const magnetCore = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.74, 32),
+      materials.aluminum
+    );
+    magnetCore.position.y = 0.49;
+    magnetCore.castShadow = true;
+    magnetGroup.add(magnetCore);
+
+    const magnetCap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.19, 32, 16),
+      materials.gold
+    );
+    magnetCap.position.y = 0.86;
+    magnetCap.castShadow = true;
+    magnetGroup.add(magnetCap);
+
+    const fourKPlate = plateByName["4 K plate"];
+
+    const connectorBlock = new THREE.Mesh(
+      new THREE.BoxGeometry(0.48, 0.3, 0.58),
+      materials.darkSteel
+    );
+    connectorBlock.position.set(1.15, 0.19, 0.36);
+    connectorBlock.castShadow = true;
+    fourKPlate.add(connectorBlock);
+
+    const connectorColors = [
+      0x50dbe3,
+      0xe49b53,
+      0xda6060,
+      0x7b9eea,
+      0x74c18b,
+      0xd6a84f
+    ];
+
+    connectorColors.forEach((color, index) => {
+      const z = 0.15 + index * 0.085;
+      const connector = cylinderBetween(
+        new THREE.Vector3(1.32, 0.19, z),
+        new THREE.Vector3(1.67, 0.19, z),
+        0.038,
+        materials.steel,
+        14
+      );
+      fourKPlate.add(connector);
+
+      const colorMaterial = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.18,
+        metalness: 0.45,
+        roughness: 0.3
+      });
+      wireMaterials.push(colorMaterial);
+
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.04, 0.009, 7, 16),
+        colorMaterial
+      );
+      ring.rotation.y = Math.PI / 2;
+      ring.position.set(1.61, 0.19, z);
+      fourKPlate.add(ring);
+    });
+
+    // -------------------------------------------------------------------------
+    // Transparent vacuum shells
+    // -------------------------------------------------------------------------
+
+    const shellGroup = new THREE.Group();
+    model.add(shellGroup);
+
+    const shellMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8bc7d6,
+      transparent: true,
+      opacity: 0.075,
+      metalness: 0.15,
+      roughness: 0.12,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const upperShellMaterial = shellMaterial.clone();
+    upperShellMaterial.opacity = 0.055;
+
+    function addShell(radius, bottom, top, material) {
+      const shell = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          top - bottom,
+          96,
+          1,
+          true
+        ),
+        material
+      );
+      shell.position.y = (top + bottom) / 2;
+      shell.renderOrder = 3;
+      shellGroup.add(shell);
+
+      for (const y of [bottom, top]) {
+        const rim = horizontalTorus(radius, 0.038, materials.steel, 96);
+        rim.position.y = y;
+        shellGroup.add(rim);
+      }
+    }
+
+    addShell(1.91, 0.55, 3.42, shellMaterial);
+    addShell(1.43, 3.27, 5.99, upperShellMaterial);
+
+    // Radial vacuum ports on the lower vessel.
+    for (let i = 0; i < 6; i++) {
+      const angle = -0.35 + i * 0.42;
+      const direction = new THREE.Vector3(
+        Math.cos(angle),
+        0,
+        Math.sin(angle)
+      );
+      const a = direction.clone().multiplyScalar(1.87);
+      const b = direction.clone().multiplyScalar(2.08);
+      a.y = b.y = 1.04;
+
+      const port = cylinderBetween(a, b, 0.085, materials.steel, 18);
+      shellGroup.add(port);
+
+      const cap = cylinderBetween(
+        b,
+        b.clone().add(direction.clone().multiplyScalar(0.045)),
+        0.105,
+        materials.black,
+        18
+      );
+      shellGroup.add(cap);
+    }
+
+    // -------------------------------------------------------------------------
+    // Braided wiring harness and individual coaxial branches
+    // -------------------------------------------------------------------------
+
+    const harness = new THREE.Group();
+    model.add(harness);
+
+    const strandColors = [
+      0x4fdbe3,
+      0xe89b51,
+      0xd96565,
+      0x789de5,
+      0x8dc878,
+      0xd7b464
+    ];
+
+    for (let strand = 0; strand < 6; strand++) {
+      const points = [];
+      const material = new THREE.MeshStandardMaterial({
+        color: strandColors[strand],
+        emissive: strandColors[strand],
+        emissiveIntensity: 0.13,
+        metalness: 0.38,
+        roughness: 0.3,
+        transparent: true
+      });
+      wireMaterials.push(material);
+
+      for (let i = 0; i <= 64; i++) {
+        const t = i / 64;
+        const y = 6.05 - t * 5.34;
+        const centerX = 1.78 + Math.sin(t * Math.PI * 2) * 0.12;
+        const centerZ = 0.48 + Math.cos(t * Math.PI * 2.2) * 0.1;
+        const angle =
+          (strand / 6) * Math.PI * 2 + t * Math.PI * 10;
+
+        points.push(
+          new THREE.Vector3(
+            centerX + Math.cos(angle) * 0.09,
+            y,
+            centerZ + Math.sin(angle) * 0.09
+          )
+        );
+      }
+
+      harness.add(makeTube(points, 0.019, material, 150));
+    }
+
+    // Cable ties around the main harness.
+    for (const y of [1.18, 2.08, 2.98, 3.88, 4.78, 5.68]) {
+      const tie = horizontalTorus(0.13, 0.018, materials.black, 24);
+      tie.position.set(1.78, y, 0.48);
+      harness.add(tie);
+    }
+
+    // Branches from the main harness to each thermal plate.
+    plateDefinitions.forEach((definition, index) => {
+      const material = new THREE.MeshStandardMaterial({
+        color: strandColors[index % strandColors.length],
+        emissive: strandColors[index % strandColors.length],
+        emissiveIntensity: 0.11,
+        metalness: 0.34,
+        roughness: 0.31,
+        transparent: true
+      });
+      wireMaterials.push(material);
+
+      const endX = definition.radius * 0.79;
+      const end = new THREE.Vector3(endX, definition.y + 0.11, 0.34);
+      const start = new THREE.Vector3(1.78, definition.y + 0.22, 0.48);
+
+      const points = [
+        start,
+        new THREE.Vector3(1.62, definition.y + 0.25, 0.46),
+        new THREE.Vector3(endX + 0.34, definition.y + 0.13, 0.4),
+        end
+      ];
+
+      harness.add(makeTube(points, 0.022, material, 34));
+
+      const connector = cylinderBetween(
+        end,
+        end.clone().add(new THREE.Vector3(0.19, 0, 0)),
+        0.04,
+        materials.steel,
+        14
+      );
+      harness.add(connector);
+
+      const colorBand = new THREE.Mesh(
+        new THREE.TorusGeometry(0.043, 0.01, 7, 16),
+        material
+      );
+      colorBand.rotation.y = Math.PI / 2;
+      colorBand.position.copy(end).add(new THREE.Vector3(0.12, 0, 0));
+      harness.add(colorBand);
+    });
+
+    // Electronics termination box.
+    const terminationBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.68, 0.72, 0.62),
+      materials.darkSteel
+    );
+    terminationBox.position.set(1.78, 0.72, 0.48);
+    terminationBox.castShadow = true;
+    terminationBox.receiveShadow = true;
+    model.add(terminationBox);
+
+    const terminationFace = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.52, 0.48),
+      new THREE.MeshStandardMaterial({
+        color: 0x15262f,
+        metalness: 0.42,
+        roughness: 0.44
+      })
+    );
+    terminationFace.position.set(1.78, 0.74, 0.795);
+    model.add(terminationFace);
+
+    for (let i = 0; i < 3; i++) {
+      const led = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035, 14, 8),
+        i === 1 ? materials.amberLED : materials.cyanLED
+      );
+      led.position.set(1.62 + i * 0.16, 0.85, 0.82);
+      model.add(led);
+    }
+
+    // A larger service loop adds an asymmetric, engineered silhouette.
+    const serviceMaterial = new THREE.MeshStandardMaterial({
+      color: 0x10171c,
+      metalness: 0.22,
+      roughness: 0.64,
+      transparent: true
+    });
+    wireMaterials.push(serviceMaterial);
+
+    harness.add(
+      makeTube(
+        [
+          new THREE.Vector3(1.86, 6.1, 0.38),
+          new THREE.Vector3(2.45, 5.72, 0.45),
+          new THREE.Vector3(2.62, 4.35, 0.25),
+          new THREE.Vector3(2.36, 2.9, 0.42),
+          new THREE.Vector3(2.22, 1.55, 0.63),
+          new THREE.Vector3(2.02, 1.06, 0.7)
+        ],
+        0.045,
+        serviceMaterial,
+        90
+      )
+    );
+
+    // -------------------------------------------------------------------------
+    // Annotation anchors
+    // -------------------------------------------------------------------------
+
+    function plateAnchor(plate, x, y, z) {
+      const anchor = new THREE.Object3D();
+      anchor.position.set(x, y, z);
+      plate.add(anchor);
+      return anchor;
+    }
+
+    addAnnotation(
+      plateAnchor(plateByName["4 K plate"], -0.76, 0.13, 0.18),
+      "4 K flange",
+      "Top thermal anchor",
+      "left"
+    );
+
+    addAnnotation(
+      plateAnchor(plateByName["1 K plate"], -0.56, 0.12, -0.12),
+      "1 K plate",
+      "Cryogenic intercept",
+      "left"
+    );
+
+    addAnnotation(
+      plateAnchor(plateByName["100 mK plate"], 0.53, 0.13, 0.22),
+      "100 mK stage",
+      "Base temperature",
+      "right"
+    );
+
+    addAnnotation(
+      plateAnchor(plateByName["Still"], -0.6, 0.13, 0.2),
+      "Still stage",
+      "3He / 4He separation",
+      "left"
+    );
+
+    addAnnotation(
+      plateAnchor(plateByName["Cold plate"], -0.72, 0.12, 0.05),
+      "Cold plate",
+      "Return-line intercept",
+      "left"
+    );
+
+    addAnnotation(
+      plateAnchor(mixingGroup, 0.3, 0.18, 0.1),
+      "Mixing chamber",
+      "Dilution junction",
+      "right"
+    );
+
+    addAnnotation(
+      plateAnchor(magnetGroup, 0.56, 0.16, 0.12),
+      "Magnet assembly",
+      "Persistent-field source",
+      "right"
+    );
+
+    const harnessAnchor = new THREE.Object3D();
+    harnessAnchor.position.set(1.82, 3.3, 0.52);
+    model.add(harnessAnchor);
+    addAnnotation(
+      harnessAnchor,
+      "Coax harness",
+      "12-wire braided bundle",
+      "right"
+    );
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no external control add-ons
+    // -------------------------------------------------------------------------
+
+    const pointers = new Map();
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let pinchDistance = 0;
+    let autoOrbit = true;
+    let labelsVisible = true;
+    let shellVisible = true;
+    let exploded = false;
+
+    const orbitButton = document.querySelector("#orbitButton");
+    const labelButton = document.querySelector("#labelButton");
+    const explodeButton = document.querySelector("#explodeButton");
+    const shellButton = document.querySelector("#shellButton");
+    const resetButton = document.querySelector("#resetButton");
+    const hint = document.querySelector("#hint");
+
+    function dimHint() {
+      hint.classList.add("dim");
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+      }
+
+      if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        pinchDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+      }
+
+      dimHint();
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1 && dragging) {
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+
+        spherical.theta -= dx * 0.006;
+        spherical.phi = THREE.MathUtils.clamp(
+          spherical.phi - dy * 0.005,
+          0.24,
+          Math.PI - 0.2
+        );
+
+        lastX = event.clientX;
+        lastY = event.clientY;
+      }
+
+      if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (pinchDistance > 0 && distance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (pinchDistance / distance),
+            7.2,
+            21
+          );
+        }
+
+        pinchDistance = distance;
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      dragging = pointers.size > 0;
+      pinchDistance = 0;
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          7.2,
+          21
+        );
+        dimHint();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    function resetView() {
+      spherical.radius = defaultView.radius;
+      spherical.phi = defaultView.phi;
+      spherical.theta = defaultView.theta;
+      target.copy(defaultView.target);
+      updateCamera();
+    }
+
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+    });
+
+    labelButton.addEventListener("click", () => {
+      labelsVisible = !labelsVisible;
+      labelButton.classList.toggle("active", labelsVisible);
+    });
+
+    explodeButton.addEventListener("click", () => {
+      exploded = !exploded;
+      explodeButton.classList.toggle("active", exploded);
+      explodeButton.textContent = exploded ? "Assemble" : "Explode";
+      shellButton.disabled = exploded;
+    });
+
+    shellButton.addEventListener("click", () => {
+      shellVisible = !shellVisible;
+      shellButton.classList.toggle("active", shellVisible);
+      shellButton.textContent = shellVisible ? "Shell on" : "Shell off";
+    });
+
+    resetButton.addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") resetView();
+      if (event.key.toLowerCase() === "l") labelButton.click();
+      if (event.code === "Space") {
+        event.preventDefault();
+        orbitButton.click();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Responsive rendering and annotation projection
+    // -------------------------------------------------------------------------
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    window.addEventListener("resize", resize);
+
+    const projected = new THREE.Vector3();
+    const worldPosition = new THREE.Vector3();
+
+    function updateAnnotations() {
+      for (const annotation of annotations) {
+        if (!labelsVisible) {
+          annotation.element.style.opacity = "0";
+          continue;
+        }
+
+        annotation.anchor.getWorldPosition(worldPosition);
+        projected.copy(worldPosition).project(camera);
+
+        const inFront = projected.z > -1 && projected.z < 1;
+        const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+        const onScreen =
+          x > 40 &&
+          x < window.innerWidth - 40 &&
+          y > 25 &&
+          y < window.innerHeight - 25;
+
+        annotation.element.style.left = `${x}px`;
+        annotation.element.style.top = `${y}px`;
+        annotation.element.style.opacity =
+          inFront && onScreen ? "1" : "0";
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Animation loop
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const ease = 1 - Math.exp(-delta * 5);
+
+      if (autoOrbit) {
+        spherical.theta += delta * 0.105;
+      }
+
+      updateCamera();
+
+      for (const part of movingParts) {
+        const targetY =
+          part.userData.baseY +
+          (exploded ? part.userData.explodeOffset : 0);
+
+        part.position.y = THREE.MathUtils.lerp(
+          part.position.y,
+          targetY,
+          ease
+        );
+      }
+
+      for (const material of wireMaterials) {
+        material.opacity = THREE.MathUtils.lerp(
+          material.opacity,
+          exploded ? 0.18 : 1,
+          ease
+        );
+      }
+
+      shellGroup.visible = shellVisible && !exploded;
+
+      scene.updateMatrixWorld(true);
+      updateAnnotations();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    requestAnimationFrame(() => {
+      document.querySelector("#loading").classList.add("hidden");
+      setTimeout(() => {
+        document.querySelector("#loading").remove();
+      }, 600);
+    });
+  </script>
+</body>
+</html>

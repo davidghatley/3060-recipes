@@ -1,0 +1,76 @@
+gpu_run: waiting for the GPU lock (3311624 11:19:06 .venv/bin/python -I tools/gen.py /tmp/claude-1000/-home-davidhatley-Projects-3060-recipes/187dbfc1-ab9b-47be-81f7-7361c3)
+start 2026-11-19T11:20:05-07:00 48, 1905 MHz, 7301 MHz, P2
+D2D memcpy 1 GiB: 333.2 GB/s (read+write)
+cuBLAS SGEMV-N 1 GiB matrix: 340.2 GB/s (read)
+cuBLAS SGEMV-T 1 GiB matrix: 342.1 GB/s (read)
+cuBLAS SGEMV-T 8 MiB (2560 x 819): 303.4 GB/s, 27.6 us
+cuBLAS SGEMV-T 32 MiB (2560 x 3276): 328.0 GB/s, 102.3 us
+cuBLAS SGEMV-T 128 MiB (2560 x 13107): 338.7 GB/s, 396.3 us
+== q8off-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/Qwen3.5-4B-3D-Coder-Q8_0.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q8own-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q6own-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q5own-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q4own-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q4off-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/Qwen3.5-4B-3D-Coder-Q4_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== f16own-A ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-F16.gguf -fa on -p 2048 -n 128 -d 0 -r 6
+== f16own-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-F16.gguf -fa on -p 2048 -n 128 -d 0 -r 6
+== q4off-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/Qwen3.5-4B-3D-Coder-Q4_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q4own-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q5own-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q6own-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q8own-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+== q8off-B ::  :: -m /mnt/models/llm/qwen3.5-4b-3d-coder/Qwen3.5-4B-3D-Coder-Q8_0.gguf -fa on -p 2048 -n 128 -d 0,16384 -r 6
+end 2026-11-19T11:28:53-07:00 76, 1882 MHz, 7301 MHz, P2
+label                        model                                            test    ub    kv fa     tok/s     sd  ms/tok
+f16own-A                     Qwen3.5-4B-3D-Coder-MTP-F16.gguf               pp2048   512   f16  1   3249.95   7.79   0.308
+f16own-A                     Qwen3.5-4B-3D-Coder-MTP-F16.gguf                tg128   512   f16  1     37.18   0.01  26.898
+f16own-B                     Qwen3.5-4B-3D-Coder-MTP-F16.gguf               pp2048   512   f16  1   3244.03   8.81   0.308
+f16own-B                     Qwen3.5-4B-3D-Coder-MTP-F16.gguf                tg128   512   f16  1     37.21   0.04  26.875
+q4off-A                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf                pp2048   512   f16  1   3275.75  10.58   0.305
+q4off-A                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf                 tg128   512   f16  1     90.77   0.43  11.016
+q4off-A                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf         pp2048@d16384   512   f16  1   2605.08   2.51   0.384
+q4off-A                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf          tg128@d16384   512   f16  1     79.12   0.24  12.639
+q4off-B                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf                pp2048   512   f16  1   3264.85   5.81   0.306
+q4off-B                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf                 tg128   512   f16  1     90.87   0.09  11.004
+q4off-B                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf         pp2048@d16384   512   f16  1   2599.17   7.93   0.385
+q4off-B                      Qwen3.5-4B-3D-Coder-Q4_K_M.gguf          tg128@d16384   512   f16  1     79.44   0.05  12.587
+q4own-A                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf            pp2048   512   f16  1   3278.21   7.35   0.305
+q4own-A                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf             tg128   512   f16  1     91.00   0.08  10.988
+q4own-A                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf     pp2048@d16384   512   f16  1   2610.16   4.67   0.383
+q4own-A                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf      tg128@d16384   512   f16  1     79.58   0.05  12.566
+q4own-B                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf            pp2048   512   f16  1   3264.67   6.95   0.306
+q4own-B                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf             tg128   512   f16  1     90.85   0.05  11.007
+q4own-B                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf     pp2048@d16384   512   f16  1   2600.75   4.12   0.385
+q4own-B                      Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf      tg128@d16384   512   f16  1     79.47   0.06  12.584
+q5own-A                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf            pp2048   512   f16  1   3180.75   7.93   0.314
+q5own-A                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf             tg128   512   f16  1     82.61   0.09  12.105
+q5own-A                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf     pp2048@d16384   512   f16  1   2548.90   1.62   0.392
+q5own-A                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf      tg128@d16384   512   f16  1     73.04   0.10  13.692
+q5own-B                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf            pp2048   512   f16  1   3168.30   6.40   0.316
+q5own-B                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf             tg128   512   f16  1     82.52   0.09  12.119
+q5own-B                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf     pp2048@d16384   512   f16  1   2544.43   2.22   0.393
+q5own-B                      Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf      tg128@d16384   512   f16  1     73.02   0.09  13.696
+q6own-A                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf              pp2048   512   f16  1   3087.36   5.63   0.324
+q6own-A                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf               tg128   512   f16  1     75.98   0.08  13.161
+q6own-A                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf       pp2048@d16384   512   f16  1   2488.88   3.86   0.402
+q6own-A                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf        tg128@d16384   512   f16  1     67.73   0.07  14.763
+q6own-B                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf              pp2048   512   f16  1   3079.57   7.03   0.325
+q6own-B                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf               tg128   512   f16  1     75.94   0.06  13.168
+q6own-B                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf       pp2048@d16384   512   f16  1   2485.32   3.55   0.402
+q6own-B                      Qwen3.5-4B-3D-Coder-MTP-Q6_K.gguf        tg128@d16384   512   f16  1     67.75   0.03  14.760
+q8off-A                      Qwen3.5-4B-3D-Coder-Q8_0.gguf                  pp2048   512   f16  1   3531.68  17.37   0.283
+q8off-A                      Qwen3.5-4B-3D-Coder-Q8_0.gguf                   tg128   512   f16  1     63.09   0.09  15.849
+q8off-A                      Qwen3.5-4B-3D-Coder-Q8_0.gguf           pp2048@d16384   512   f16  1   2744.50   4.91   0.364
+q8off-A                      Qwen3.5-4B-3D-Coder-Q8_0.gguf            tg128@d16384   512   f16  1     57.25   0.26  17.468
+q8off-B                      Qwen3.5-4B-3D-Coder-Q8_0.gguf                  pp2048   512   f16  1   3502.69   7.95   0.285
+q8off-B                      Qwen3.5-4B-3D-Coder-Q8_0.gguf                   tg128   512   f16  1     63.61   0.02  15.720
+q8off-B                      Qwen3.5-4B-3D-Coder-Q8_0.gguf           pp2048@d16384   512   f16  1   2719.54   6.33   0.368
+q8off-B                      Qwen3.5-4B-3D-Coder-Q8_0.gguf            tg128@d16384   512   f16  1     57.27   0.11  17.460
+q8own-A                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf              pp2048   512   f16  1   3518.75   5.39   0.284
+q8own-A                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf               tg128   512   f16  1     63.61   0.05  15.722
+q8own-A                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf       pp2048@d16384   512   f16  1   2759.75   3.15   0.362
+q8own-A                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf        tg128@d16384   512   f16  1     57.77   0.05  17.311
+q8own-B                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf              pp2048   512   f16  1   3511.05  12.33   0.285
+q8own-B                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf               tg128   512   f16  1     63.67   0.03  15.706
+q8own-B                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf       pp2048@d16384   512   f16  1   2751.90   1.93   0.363
+q8own-B                      Qwen3.5-4B-3D-Coder-MTP-Q8_0.gguf        tg128@d16384   512   f16  1     57.72   0.07  17.326

@@ -1,0 +1,1190 @@
+We need create HTML likely respond code. Need satisfy single self-contained, Three.js core ES module CDN only, no addons. Need model detailed. Need perhaps include controls implemented. Need maybe save as index.html. Need ensure no external assets. We can craft substantial HTML with CSS JS module. Need use only three.module.min.js. Camera controls directly. Need folding clothes drying rack: two A-frame side supports flat wooden slats, three horizontal drying rails with small notches, lower hinged shelf swings out on two pivot bolts, rails slender rounded bars spanning between A frames, hinges small metal plates visible pins.
+
+Need design visually convincing. Need maybe use RoundedBoxGeometry? Can't import addons. Implement rounded rectangular extrude geometry ourselves or capsules. Three core has CapsuleGeometry? in 0.160 yes likely THREE.CapsuleGeometry core. But rails horizontal cylinders perhaps rounded bars. Need "slender rounded bars" could use CapsuleGeometry oriented along X, but capsule ends round and body cylindrical, nice. Or custom rounded rectangular extrusion via ExtrudeGeometry with rounded rectangle shape. Need notches on rails. We can build rail as a group: central rounded bar and small notch cutouts? Actual geometry holes difficult. Could make rail segmented with gaps/notches, plus little upright stops. "small notches" likely notches in rail top where clothes hang. We can create main bar with holes? Use ExtrudeGeometry Shape with holes for notches, but holes in a horizontal bar and orientation. Better build rails as rounded rectangular bars with small top tabs/notches as separate geometry, visually clear. Could make a base bar and 6 small downward/raised tabs, perhaps notches represented as U-shaped cutouts. We can use shape with holes if bar is in XY and extrude along Z, but rails span X, profile in YZ? Let's reason.
+
+Coordinate: rack width X, height Y, depth Z. A frames at x ±. A-frame side supports in YZ planes, made flat wooden slats. Need two A frames each side x constant. Each A frame has two slanted wooden slats from top center to lower outer? A-frame side support in YZ: top at y=2.75,z=0; bottom at y=0.15,z ±0.85. Two slats meeting at top, forming A viewed from side? Actually side support A-frame in vertical YZ plane: each support has two slats from bottom front/back to top center, making A shape. At each side x ±1.1. So slats are boards with dimensions thickness X=0.12, height variable, depth length. Use box between points with orientation.
+
+Three horizontal rails at y 1.85,1.25,0.65 spanning x -0.85 to 0.85, z=0 perhaps. Slender rounded bars. Lower hinged shelf swings out on two pivot bolts at front? "lower hinged shelf that swings out on two pivot bolts." Could make shelf horizontal at y=.35, depth 1.4, width 1.65, hinged along X-axis at front z=.72? To swing out toward camera, pivot at front edge and shelf extends backward. Hinges visible pins on sides x ±.65. Shelf group pivot at (0,0.38,0.72), shelf mesh extends local z=-0.72. Rotate x? If shelf extends backward local -Z and hinge along X, swing out in +Z by rotating around X negative? Vector local (0,0,-d), rotation x angle: y' = -z sin? Matrix x: y'=y cos - z sin, z'=y sin+z cos. For z=-d, angle positive => y'=+d sin, z=-d cos (moves up/back); angle negative => y'=-d sin down, z=+d cos out. So rotate x negative to swing out and down. But shelf should maybe lift upward when open. Hinge pivot at back? If shelf extends forward from hinge at z=-.75, rotate x positive: y'= z sin negative (down), not. Negative gives up. Could set hinge at back and shelf extends forward +Z, then negative rotation raises front. But "swings out" from vertical stowed under rails to horizontal projecting forward. Hinge along X at z=-0.72, shelf extends +Z. Rotate x negative ~ -65°, front rises. That is plausible. Visible hinge pins at x ±.67, z=-.72, y=.42. Shelf extends +Z from hinge. But lower shelf might conflict with lower rail at z=0. Could hinge at front z=.72 and shelf extends backward -Z, open angle +? Let's derive if angle +65: front? shelf from hinge at z=.72 extends -Z to z=-.72, y=.42. At angle +65, front? The far end local z=-1.4 gives y = -(-1.4)sin=+1.1, z=-.64, so it swings up and inward, not out. Angle -65 gives y=-1.1, z=.64, down and out. Could hinge at top and shelf extend down/back? Better visual can be shelf hinged at back underside, opens upward, and front edge rises. That's okay.
+
+Maybe shelf is a wooden platform at y=.48, z=0, width 1.7, depth 1.45, hinged along X at rear z=-.72. Closed it extends forward +Z. Open rotate x=-1.15 rad, rear hinge stays, front lifts to y~1.55 and z~.05? Actually local front z=+1.45, angle -1.15: y'=-1.34, z'=.62 relative, so front goes down/out relative, not up. Wait rotation x negative: y'= y cos - z sin(-)= y cos + z sin positive. So front rises. z'=y sin(-)+z cos = -y sin + z cos. For y=0, z positive remains positive. So front rises and stays forward. Good. Hinge at z=-.72, shelf extends +Z, open front at z=.0? local z=1.45, cos .41 => z=.31 global, so it folds upward-ish? Actually y=1.34, z=.31, so shelf nearly vertical, leaning forward. Great.
+
+Need perhaps state toggle button to fold/unfold shelf, camera orbit, reset, maybe labels. User only asks create. We can make polished scene with ambient lighting, shadows, ground, color. Three core only. Implement OrbitControls manually: pointer drag orbit, wheel zoom, touch. Need no addons.
+
+Need ensure only import statement from cdnjs. "single self-contained HTML file using Three.js from cdnjs" means external CDN okay. We need not use other resources. Could include all CSS/JS.
+
+Need maybe use SVG? no, 3D only.
+
+Need geometry.
+
+Let's plan scene:
+- Background warm light gray/blue, fog.
+- Floor plane matte.
+- Rack center.
+- Dimensions: width 2.3, height 3.15, depth 1.55.
+- A frames at x ±1.03. Each made of 3? "two A-frame side supports of flat wooden slats" Could each side support consist of two slats (left and right in YZ) plus maybe horizontal brace? The phrase two A-frame side supports each of flat wooden slats. Build each side as two flat slats meeting top, with end caps? Need side support in YZ plane. Use makeBeamBetween with BoxGeometry dimensions: length along local Y or Z? Use BoxGeometry(thickness, length, width) oriented between endpoints. For slat from bottom (x, .12, z ±.82) to top (x, 2.95, z=0). Each slat is flat board, thickness .13 along X, width .16 along Z, length along local Y. Use BoxGeometry(.14, length, .18), position midpoint, quaternion setFromUnitVectors(new Vector3(0,1,0), direction normalized). This board's local Y length, local Z width. Need orientation may twist, but direction in YZ and quaternion from Y to direction rotates around X, preserving Z somewhat. Good. Add caps at bottom maybe small blocks.
+- Two A frames (left/right x). Maybe each has crossbar at y=.55 connecting front/back? A-frame itself each side has two slats. Add small metal bolts at joints visible.
+- Three rails at y 1.95,1.25,.55, z=0. Span x -0.9 to .9. Rounded bars. Use CapsuleGeometry(radius .065, length 1.75, capSegments 6, radialSegments 12) oriented along X. Capsule total length = length + 2r =1.9? If length param is middle section. Set length=1.55, radius=.065 => total 1.68. x endpoints ±.84. Good. Three rails maybe front/back? "three horizontal drying rails with small notches" all across width, perhaps at z=0. Could stagger slightly? Usually floor drying rack has 3 bars side by side in depth, but floor rack with A frames and three horizontal rails likely three bars across width at different heights. We'll do three at heights 1.95,1.32,.69, z=0. Notches small. Need actual notches. Could create bar as rounded rectangular extruded along X? A rail is a bar with cross-section maybe rectangular and notches on top. Use custom Shape with notches and ExtrudeGeometry depth .1, then rotate to X? Let's create rounded rectangle profile in YZ? ExtrudeGeometry extrudes along Z. Shape in XY, extrude depth. Want bar long along X, cross-section in YZ. Build shape coordinates where u corresponds Z and v Y, extrude depth along local Z then rotate Y=π/2 to map local Z to X and local X to -Z. But notches along top edge in Z direction. Shape outline:
+moveTo(-halfDepth, -height/2) etc around rectangle with semicircular notches cut into top. Holes? Notches are U-shaped cutouts open at top, can shape outline with indentation. For each rail, perhaps 5 notches at positions. Outline: start bottom left, up to top, then for each notch from top edge down depth and back up, but need order. Could create shape with top edge segmented and dips. Then extrude thickness .11. Rotate Y π/2, center. This creates actual notches. But ExtrudeGeometry bevel enabled maybe nice. Need shape path order. Let's define depth d=.72, height=.11, notch count 5, spacing .12. Top y=+h/2. Traverse bottom left -> bottom right -> top right then along top from right to left, dipping at each x. Since shape coordinates x=depth coordinate, y=vertical. Start (-d/2,-h/2), line to (d/2,-h/2), line to (d/2,h/2), then for i from right to left:
+ at x_i top, line to x_i, y=h/2-depth/2 maybe U notch; line to x_i, y=h/2-depth? Actually notch is a rectangular cut down, with rounded bottom. We can make semicircular notch by use absarc? Shape holes not. For outline, from top at x_i+spacing/2, line down to y=h/2-depth/2, absarc center (x_i, h/2-depth/2), radius depth/2, π to 0? Need orientation. Then line up to top at x_i-spacing/2. This creates U notch with semicircular bottom. But if top traversal right-to-left, at x_i+half, down, arc from angle π to 2π? Coordinates x = cx + r cos(theta), y=cy+r sin(theta). At theta π left, theta 2π right, goes bottom at 3π/2. So absarc(cx,cy,r,Math.PI,2*Math.PI,false). Then up. Great. Then continue top.
+But shape coordinates local x maps to z after rotate Y=π/2: local x -> world z? Rotation Y: x'=z, z'=-x. Extrude local z -> world x. So local x positive maps world z negative. Fine symmetric. Center.
+Extrude depth .12, bevelEnabled true, bevelSize .015, bevelThickness .012, bevelSegments 2, curveSegments maybe. Then geometry.rotateY(Math.PI/2), translate x? After rotate, local extrusion z [0,.12] maps world x [0,.12]. translate x=-.12. local x maps z=-x, centered. Good.
+But notch count 5 and spacing maybe .11, total .6. rail length 1.75.
+Could also add small metal hangers? Not requested. Notches should be visible. Maybe a few cream shirts hanging to showcase? User asks shows rack, could include folded clothes? "folding clothes drying rack" maybe no need clothes. Adding simple hanging garments could obscure notches. Could include a folded towel on lower shelf, maybe visually communicates. But request likely wants model. We can add a couple of simple cloth shapes? It may be beneficial but not necessary. Better focus rack and perhaps one small towel draped? Could be interpreted. Yet geometry not requested. We can include minimal folded towels on shelf, in muted colors. But "shows folding clothes drying rack" means object. I think no clothes, but shelf visible.
+
+- shelf: wooden platform, width 1.8, depth 1.4, thickness .1. Group pivot at (0,.48,-.72) maybe. Mesh centered local z=.70 (extends from 0 to1.4). Use BoxGeometry(1.8,.10,1.4) position z=.7. Rounded edges? Box with bevel? Use RoundedBox custom geometry. Could create rounded rectangular prism via Shape + ExtrudeGeometry. But box is okay. Use bevelled box via ExtrudeGeometry rounded rectangle shape? We can make a beveled box with BoxGeometry and edges not rounded. Better custom roundedBox geometry function using Shape rounded rectangle in XZ and Extrude along Y. But orientation complexity. Could use Capsule? For shelf, BoxGeometry with wood texture and edge strips maybe. Use RoundedBoxGeometry not allowed. We can implement roundedBox using ExtrudeGeometry: shape in XY rounded rectangle, extrude depth thickness, center. For shelf want width X, depth Z, thickness Y. Build shape x=width, y=depth, extrude thickness along Z then rotate X π/2? Shape XY, extrude local Z. Rotate X π/2: local y -> world z, local z -> world -y. Then translate. Good. But bevel. Or use BoxGeometry and add edge trim. We'll use custom roundedPrism(width, depth, height, radius) with Shape rounded rect in x,z and Extrude height, rotate X π/2. Need ensure shape coordinates x and y then after rotateX(π/2): y' = -z, z'=y. extrusion z 0..h maps world y 0..-h, translate y h/2. So mesh position y maybe. We'll use.
+- shelf group closed extends from hinge z=-.72 to z=.68, y=.48. It may overlap lower rail at y=.65 and z=0. Put shelf y=.34, rail lower y=.95 maybe. Then shelf under lower rail. A-frame bottom .1. rails y 1.9,1.3,.72. Shelf y=.42, depth 1.45, open lifts. Good.
+- Hinges: two pivot bolts at x ±.68, along X? Shelf extends along Z, hinge axis X, so pins are cylinders oriented along X, located z=-.72, y=.43. CylinderGeometry radius .045, height .22, default along Y, rotate Z π/2. Add plates on each side x ±.70, small metal plate dimensions .035 x .18 x .24 perhaps. "hinges are small metal plates with visible pins." Each side has plate and pin. Add hinge knuckles maybe three small cylinders along X at y .36,.43,.50. Pin through.
+- shelf group rotation x maybe 0 closed. Toggle open angle -1.15.
+- Add shelf support? no.
+- A-frame support slats: each side x ±1.02. top y=2.85, bottom y=.12, z ±.82. Flat slats. Add perhaps horizontal connector at bottom? A frame each side enough. Add wooden end caps and metal bolts.
+- Rails span between A frames: endpoints x ±.91, inside supports. Use capsule.
+- Maybe front/back rails? Three horizontal rails across width. Notches visible from camera.
+- Add metal brackets where rails meet supports: small dark brackets at x ±1.0, each rail. Could use small box.
+- bolts on slats: cylinders oriented X at x outer faces, positions along slats maybe top and bottom. Add visible metal bolt heads.
+- Wood material with procedural CanvasTexture? Self-contained. We can generate canvas wood texture in JS, no external. Use CanvasTexture and repeat. This improves. Need maybe color and grain. Create canvas 512x512, fill tan, draw sine grain lines, knots. Texture wrap repeat. But same texture on different geometry with repeat maybe. Use MeshStandardMaterial map, roughness. Need avoid too much. We can generate.
+- floor and backdrop.
+- lighting: HemisphereLight, DirectionalLight shadows, area? RectAreaLight core maybe need uniforms lib? avoid. Directional + spot.
+- contact shadows via plane receiving.
+- renderer antialias, shadowMap PCFSoft, toneMapping ACES, outputColorSpace SRGB.
+- camera perspective 35, position (4.4,3.1,5.2), target (0,1.45,0).
+- Orbit controls custom:
+ state spherical radius, theta, phi. pointerdown, pointermove, pointerup. On drag update theta/phi. Wheel radius. Touch pinch maybe implement pointer map. Could simpler pointer events and wheel. Need camera controls directly. Add keyboard? Buttons.
+- UI: title, subtitle, toggle shelf button, reset camera, maybe "Drag to orbit • Scroll to zoom". Ensure pointer events not conflict.
+- animation: smooth shelf target angle, camera easing maybe.
+- maybe auto rotate? no.
+- responsive.
+
+Need perhaps include accessible button.
+
+Need code only maybe mention save. The final answer likely code block. User asked create, so deliver full HTML.
+
+Need ensure Three.js import exactly. `import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';`
+
+Potential issue `THREE.CapsuleGeometry` exists in core 0.160 yes.
+
+Geometry details:
+Rounded prism function:
+function roundedRectShape(w,h,r) {
+ const x=-w/2,y=-h/2; shape.moveTo(x+r,y); lineTo(x+w-r,y); quadraticCurveTo...
+}
+function roundedBoxGeometry(w,d,h,r=.08) {
+ const shape=roundedRectShape(w,d,r);
+ const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:Math.min(.025,h*.2),bevelThickness:Math.min(.025,h*.2),curveSegments:8});
+ geo.rotateX(Math.PI/2);
+ geo.translate(0,h/2,0)? Let's derive after rotateX: original extrude z 0..h plus bevel extends maybe -bevelThickness to h+bevelThickness. After rotation, world y = -z. So range -(h+bevel) to +bevel. translate y=h/2 gives range -(h/2+bevel) to (h/2+bevel). okay. local shape y maps world z positive. Great. Center x.
+ But bevel changes depth. Fine.
+ For shelf, use roundedBoxGeometry(1.82,1.45,.10,.08).
+ For rail, custom profile extrude and rotate Y. Need shape notch. Build `roundedPrism` maybe shape with notches. Use `THREE.Shape`; `absarc`.
+ Need orientation of shape and extrude. `geo.rotateY(Math.PI / 2); geo.translate(-depth/2,0,0);` Wait after rotateY: local x -> world z? Matrix Y: x'=cos x + sin z = z, z'=-sin x+cos z=-x. So local extrusion z [0,t] -> world x [0,t]. translate -t/2 centers. local shape x -> world z=-x. shape centered so fine. local shape y -> world y. Great.
+ Shape top dips. Need path orientation maybe shape triangulation handles.
+ Let's outline carefully:
+const s=new THREE.Shape();
+s.moveTo(-d/2,-h/2);
+s.lineTo(d/2,-h/2);
+s.lineTo(d/2,h/2);
+for i from notchCount-1 down to 0:
+ x=(i-(n-1)/2)*spacing;
+ s.lineTo(x,h/2-depth/2);
+ s.absarc(x,h/2-depth/2,depth/2,Math.PI,2*Math.PI,false);
+ s.lineTo(x-spacing,h/2);
+But after first iteration at x right, we line to top? We came from d/2,h/2 to x,h/2 then down. arc ends at x+ r? Wait arc center x, radius r, start at angle π = x-r, not x. We need notch boundaries at x±r. So top traversal should at x+r. Let's define notch center positions; top edge from right to left. At rightmost center x_right, boundary right = x_right+r. Start top at d/2 then line to x_right+r, h/2. Then down to center y, absarc center x_right from π to 2π, ends x_right+r, then line up to top at x_right-r, h/2. Then continue to next center's right boundary. So:
+s.lineTo(xright, h/2);
+s.lineTo(xright, h/2-depth/2);
+s.absarc(xright,h/2-depth/2,r,Math.PI,2*Math.PI,false);
+s.lineTo(xright-r,h/2);
+Then for next x (less), lineTo(xnext,h/2) where xnext = xright - spacing; there is horizontal top between notch boundaries. Good.
+At end after leftmost, lineTo(-d/2,h/2), close.
+This creates 5 notches.
+But shape's top edge y h/2 and notch bottom h/2-depth. Nice.
+Extrude bevel maybe notch bevel could be odd but okay. bevelEnabled false perhaps actual notch crisp. Use bevelEnabled true small .008.
+Rail material wood. Texture mapping on extrude maybe UV weird but okay.
+Could add a thin dark line in notch bottoms? no.
+
+Wood texture:
+Canvas 1024x256, background #b9793f, horizontal? Texture on boxes uses UV. We can draw vertical grain. Since slats long local Y, UV may map. Fine.
+`texture.colorSpace = THREE.SRGBColorSpace; texture.wrapS=... repeat.set(1,1)`.
+For different parts maybe clone with repeats.
+
+A-frame slat geometry: BoxGeometry(.14,length,.18). `makeBeam` uses BoxGeometry(thickness,length,width), quaternion from Y to dir. But local z orientation after quaternion from Y to direction in YZ rotates around X; local z remains? Rotation around X maps local z to z, yes. So width along z. Good.
+For each side x ±1.03, two slats from bottom z ±.82 to top z=0. The board thickness .14, width .18. Top endpoints maybe (x,2.82,0). Bottom (x,.12,±.82). This is A shape in YZ. Add small top cross block? Two slats meet at top. Add metal connector plate at top maybe small box x=.18 y=.16 z=.22.
+Add bottom feet blocks at (x,.08,±.82) dims .2,.18,.22.
+Bolts: on outer x face of each slat at positions along line t=.25,.75, y etc. Cylinder axis X. Need compute point. For each slat, point = lerp(bottom,top,t). Cylinder radius .035 length .18 axis X, position x ±1.03 plus sign*? Outer face x = side*(1.03+.09). Cylinder default Y rotate Z π/2. Add hex head maybe CylinderGeometry(.035,.035,.04,6). visible.
+At top connector, bolts maybe.
+
+Rails:
+capsule geometry `new THREE.CapsuleGeometry(.055, 1.58, 6, 12)` total 1.69. Position x=0, y, z=0. Capsule along Y by default, rotate Z π/2 to X.
+Could add central small collar? no.
+Rail supports: bracket at x ±.98, y rail, z=0: box .12,.18,.28 dark metal.
+Maybe rail end touches support.
+
+Shelf:
+Pivot group position (0,.42,-.72). Shelf mesh local position (0,0,.72) if depth 1.44 extends 0 to1.44. group rotation x. Add underside support maybe two crossbars? Shelf itself.
+Hinges fixed at world x ±.68, y=.42,z=-.72. Plate on sides. Pin cylinder length .24 axis X.
+Knuckles 3 cylinders at y .36,.42,.48, z=-.72, axis X, radius .045, length .18. But shelf group rotates, knuckle should perhaps move with shelf? hinge axis fixed. We can add fixed plates and pins, shelf rotates around pins. Fine.
+Maybe hinge plates are on x sides, dimensions .035,.22,.28.
+Shelf wood texture.
+
+Need maybe add folded towel on shelf. Could create a rounded box on shelf local position (0,.12,.85) dims 1.1,.12,.75 and a smaller one. But shelf when open, nice. Yet request "folding clothes drying rack" maybe include a folded towel. Add one folded towel on lower shelf, muted blue, with slight wavy? Rounded box. This demonstrates folding. But shelf is under rack and visible from camera maybe. Camera front at z positive sees shelf when open? Hinge rear, shelf extends front, yes. Lower shelf y .42, camera target 1.4. Good. Add folded towel with rounded box and maybe drape over lower rail? Not necessary.
+Could add a small hanger? no.
+
+Need maybe shelf open angle default maybe 0.18? User wants shows lower hinged shelf that swings out. If default closed, hinge and shelf less visible. Better default slightly open? The shelf is part of rack; show it swung out perhaps default open 18° or 35°. But user may want mechanism clear. Could default open at -0.35 rad (~20°) so shelf extends forward and slightly up, visible. Toggle "Open shelf" / "Close shelf". Maybe default open 28° to showcase. But lower shelf at y .42, open angle -1.05 (~60°) makes front rise significantly and maybe hides lower rail. At 35°, front rises .8, visible. Let's set default `shelfAngle=-0.38` (22° open), and button "Close lower shelf" / "Open lower shelf". If open state angle -1.18. The user can toggle. In description maybe "lower hinged shelf ... swings out". The model has animation.
+
+Could auto start open 24° so visible. Button text "Close shelf". On click toggle.
+
+Camera controls:
+- `let target = new THREE.Vector3(0,1.45,0); let spherical = new THREE.Spherical(5.4, Math.PI*.47, Math.PI*.25?)`
+Three Spherical phi from y axis, theta around y. position x = r sin phi sin theta, z=r sin phi cos theta. Want camera (4.2,3,5) relative target: r~6.6, phi acos(1.55/6.6)=1.33, theta atan2(4.2,5)=0.70. Set radius 5.6, phi 1.28, theta .72 gives x=3.55,z=4.1,y=4.1? target y1.4 + r cos1.28=3.8. Too high. radius 5.4, phi1.38 cos=.19 => y2.43, good. x=5.4*.982*.70=3.73, z=4.5. Great. camera pos 3.7,2.4,4.5.
+- pointer drag: theta -= dx*0.006; phi -= dy*0.006 clamp .45,1.48.
+- wheel radius clamp 3.6,9.
+- touch pinch: maintain Map pointers, if 2 compute distance and radius.
+- click UI no canvas.
+- reset.
+
+Animation:
+`let shelfTarget=-0.38, shelfAngle=shelfTarget;`
+toggle target.
+`shelfPivot.rotation.x += (target-angle)*.08`.
+Maybe button active.
+
+Renderer resize.
+
+Need maybe CSS with glass panel. Use font system no external.
+
+Potential use `document.createElement('canvas')` texture. Self-contained.
+
+Need maybe `renderer.setAnimationLoop`.
+
+Need `scene.environment` no.
+
+Need shadows: all meshes cast/receive. Ground plane.
+Could add subtle circular rug? no.
+
+Need perhaps labels? not.
+
+Need ensure `THREE.MathUtils.damp` exists? use lerp.
+
+Need code no syntax errors.
+
+Let's draft full HTML.
+
+Need mention only external dependency CDN.
+
+Let's consider if "single self-contained HTML file" might expect no explanation and code. We'll provide one code block.
+
+Let's ensure all geometries and materials.
+
+Wood texture generation:
+```
+function makeWoodTexture() {
+ const c=document.createElement('canvas'); c.width=1024;c.height=256;
+ const ctx=...
+ const grad...
+ ctx.fillStyle...
+ for (let i=0;i<180;i++) {
+  const y=Math.random()*h;
+  ctx.beginPath();
+  for x 0..w step16 { const yy=y+sin(x*.01+phase)*amp + ...; ...}
+ }
+ // knots
+ const tex = new THREE.CanvasTexture(c);
+ tex.colorSpace=THREE.SRGBColorSpace;
+ tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+ tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+ return tex;
+}
+```
+Renderer must be created before texture to anisotropy. Fine.
+Material `wood = new THREE.MeshStandardMaterial({map: woodTex, color:0xffffff, roughness:.68})`.
+Texture repeat maybe 1.2,1.2.
+
+Ground maybe MeshStandardMaterial.
+
+Rounded box geometry function shape with `quadraticCurveTo`. ExtrudeGeometry may be heavy but okay.
+
+For shelf, `roundedPrism` with bevel. Need shape centered in x and y. After rotate X, local shape y -> world z. `geo.rotateX(Math.PI / 2); geo.translate(0, h/2, 0);` But bevel extends local z negative/positive; world y range maybe. Center okay.
+For towel, use same.
+
+Rail profile shape:
+Potential `absarc` with clockwise false and start π end 2π. In Three Path.absarc calls absellipse; false counterclockwise. From π to 2π is clockwise in standard? angles increase π->2π is counterclockwise mathematically, but visual lower? At π left, 3π/2 bottom, 2π right, that's clockwise (left->bottom->right) yes because angle increases but coordinate y down? Standard y up, increasing angle from π to 3π/2 moves down, so clockwise. Shape expects? `absarc(..., false)` likely clockwise if end&lt;start? Three's absellipse uses clockwise parameter directly? In Path.absarc: if clockwise false, delta = end-start, else 2π-(end-start). Here end&gt;start, false =&gt; delta positive, standard CCW in path coordinate maybe shape coordinate y up; from left to bottom to right is actually clockwise visually but path orientation may be okay. Extrude triangulation uses shape orientation? likely.
+Alternative use `THREE.QuadraticCurve` not. Could make notch as a hole? Actual notch open top can be represented by shape indentation without arc, simpler and guaranteed:
+At top right boundary, line down to bottom, line to bottom+0.03, line to left boundary, line up. That creates rectangular notch. "small notches" can be rectangular. Use no absarc. But rounded bottom nicer. We can use `quadraticCurveTo` maybe:
+from (x+r,h/2) line to (x,h/2-depth/2); quadraticCurveTo(x,h/2-depth, x+r,h/2-depth/2)? Need U shape. Let's use:
+s.lineTo(x+r, h/2);
+s.lineTo(x, h/2-depth/2);
+s.quadraticCurveTo(x, h/2-depth, x+r, h/2-depth/2); This curves bottom up to right boundary. Then s.lineTo(x-r,h/2). This is a rounded U. Good. The quadratic control at (x,h/2-depth) gives bottom. Great.
+Need shape path orientation maybe. Fine.
+
+Rail geometry bevel on notch shape could bevel weird at notch, but small. `bevelEnabled: true, bevelThickness:.008, bevelSize:.008, bevelSegments:2`. It may round notches.
+
+Wood grain on extrude UV: ExtrudeGeometry UV generator uses x/y coordinates, texture repeat maybe. okay.
+
+Shelf group:
+```
+const shelfPivot = new THREE.Group(); shelfPivot.position.set(0,.44,-.72); scene.add.
+const shelf = mesh; shelf.position.z=.72;
+```
+When rotation x=-.38, front local z=1.44 transforms y = -z sin(-.38)=+.53, z=1.31, so front rises and extends to z=.59. Nice.
+Open -1.18: y=1.28, z=.56. Good.
+Maybe lower rail at y=.78, shelf closed at .44, no conflict. Open shelf vertical-ish and could overlap lower rail? Front at z=.56, y1.28, rail at z0 y.78, okay.
+
+Hinges:
+- plates at x ±.71, y=.44,z=-.72, dimensions .035,.24,.30.
+- pin cylinder axis X length .26 radius .04.
+- 3 knuckle cylinders at y .36,.44,.52, x ±.72, length .18.
+Need cylinder orientation: default along Y, rotate Z=Math.PI/2 to along X. `mesh.rotation.z=Math.PI/2`.
+Shelf width 1.82 extends x±.91, so hinge x±.68 on shelf. Good.
+- maybe hinge pin visible outside plate x ±.76.
+
+A-frame rails:
+`makeBeam` with BoxGeometry. Need set castShadow.
+`const dir = end.clone().sub(start); const len=dir.length(); geo=BoxGeometry(thick,len,width); mesh.position midpoint; mesh.quaternion.setFromUnitVectors(Y, dir.normalize())`.
+For a slat, local Y length. Good.
+At top, two slats from z=-.82 and +.82 to top. The A-frame plane is YZ. In world, left support x=-1.03, right x=1.03. The bars are visible.
+Maybe add a horizontal stretcher at y=.48 between z -0.82 and .82 on each side? That would make side support not pure A, but could add small wood crossbar. Not requested. Avoid.
+Add a diagonal brace? no.
+
+"two A-frame side supports of flat wooden slats" could mean each support is an A-frame made of flat slats, perhaps each side has 3 slats? Our two bars per side create A shape. Good.
+
+Three rails:
+At y 1.95,1.32,.69. The lower shelf at .43.
+Capsule bar total 1.68, x endpoints ±.84, support inner x ±1.0, gap .16. brackets.
+Maybe rail should span between A frames, endpoints x ±.98. Capsule total 1.98 if length 1.5? Set `CapsuleGeometry(.06,1.55)` total1.67. Could scale x 1.18 to total2.0. `mesh.scale.x=1.18` then total 2.0. Position 0. endpoints ±1.0. Good. But scale affects radius x too, okay. Or length=1.65 total1.77, scale1.13 total2.0. Use `new CapsuleGeometry(.06,1.62,6,12)` total1.74, scale.x=1.15 =>2.0. Great.
+Maybe slight z offsets? all z=0.
+- Add little end caps? Capsule itself.
+
+Brackets at x ±1.0, y, z=0: box .12,.20,.30.
+
+Need maybe rail notches count 5 and depth .09, height .12, so visible gaps. Rail top y+ .06, notch down .09. Clothes could hang. Good.
+
+Add small metal clips? no.
+
+Maybe add folded towel:
+`const towel = roundedPrism(1.15,.72,.10,.08)` but function signature width, depth, height. position (0,.10,.82) relative shelf. Material blue. Add a smaller cream cloth atop. But lower shelf visible. Add one folded towel with slight offset. Rounded prism.
+Maybe a shirt draped over middle rail would be too much. no.
+
+Scene composition:
+- `scene.background = new Color(0xe8eef1)`, fog 0xe8eef1 8,18.
+- floor plane 30, rotate -π/2, y=0.
+- maybe a backdrop wall? floor and fog enough.
+- shadows.
+
+Renderer:
+```
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize...
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+```
+Canvas append.
+
+Camera.
+
+UI:
+- top-left card title "Folding Drying Rack" and subtitle.
+- bottom center control card with button.
+- maybe status "Lower shelf: open".
+Need not overdo.
+
+Custom camera:
+```
+const canvas=renderer.domElement;
+let dragging=false,lastX...
+canvas.addEventListener('pointerdown', e=> { if(e.button!==0)return; ... setPointerCapture});
+...
+```
+For touch, pointer events. `touch-action:none`.
+Pinch:
+`const pointers = new Map();`
+on pointerdown pointers.set(id,{x,y}); if size2 pinchDistance.
+on move if size2: compute old dist from stored? We can track lastPinch. Simpler each move update and compare current distance to `lastPinch`; radius *= lastPinch/current; lastPinch=current. But pointermove only one pointer at a time, other remains. okay.
+If one pointer, orbit.
+on pointerup delete.
+Wheel preventDefault.
+Double click reset maybe.
+
+Buttons:
+```
+shelfBtn.addEventListener('click',()=>{ shelfTarget=shelfTarget&lt;0?0:-.38; ...});
+resetBtn...
+```
+Maybe button label changes.
+
+Need keyboard space toggles shelf, R reset.
+
+Need animation:
+```
+function animate() {
+ const k=1-Math.pow(.001,dt?) 
+ shelfPivot.rotation.x = THREE.MathUtils.lerp(...,.08)
+ ...
+ renderer.render
+}
+```
+No need clock.
+
+Need maybe camera subtle no auto.
+
+Potential issue CSS `backdrop-filter` okay.
+
+Need include no import maps.
+
+Let's ensure "Use only Three.js core ES module" no other imports. We use no addons. Good.
+
+Could perhaps use `THREE.CapsuleGeometry` and `ExtrudeGeometry`, all core.
+
+Let's formulate final with code. Need maybe not too huge but desired 5. This is around 500 lines. Fine.
+
+Let's write code accurately.
+
+One concern: `roundedPrism` shape and ExtrudeGeometry orientation for shelf. `geo.rotateX(Math.PI / 2)` maps shape y to z positive? Rotation X matrix y'=y cos - z sin = -z; z'=y sin+z cos=y. Wait local shape coordinate y maps world z = y, yes. local extrude z maps world y=-z. So after translate y=h/2, shape centered. Good.
+For rounded box shape width x, depth y, after rotation, world z=shape y. Great.
+
+For rail, shape local x maps world z=-x, symmetric. extrude local z maps world x=z, translate -t/2. Good.
+
+Towel `roundedPrism` with bevel.
+
+Wood texture orientation maybe.
+
+Create `addMesh` helper.
+
+Materials:
+```
+const metal = new MeshStandardMaterial({color:0x6e777b,metalness:.8,roughness:.35});
+const darkMetal...
+```
+
+Shadows on transparent? no.
+
+A-frame slats:
+At each side, two beams. Add bolts. Need `bolt.position.x = side*1.03 + side*0.095`? For side=-1, outer face is -1.125. `side*1.03 + side*.095 = -1.125`. correct.
+Cylinder length .05, axis X. It will protrude both sides, okay.
+Maybe bolt heads both sides? one outer enough.
+Add a small plate at top:
+`box .20,.18,.24` at x side*1.03, y2.82.
+Maybe A-frame top slats overlap.
+
+Foot blocks.
+
+Brackets:
+`box(.13,.18,.30)` at x side*1.00, y rail, z=0. Since rail x=0, bracket extends to x1.065.
+
+Shelf hinge plates:
+`box(.045,.26,.32)` x side*.72. Pin length .28.
+Maybe plate is on side, visible.
+
+Shelf underside:
+Could add two narrow support bars under shelf? not needed.
+Maybe shelf group includes a center support cross? no.
+
+Wood shelf has texture.
+
+Towel: add to shelfPivot at local y=.11,z=.82. But rounded prism height .10, center y=.10 means bottom .05. Good. Add smaller cream at y=.19.
+Maybe towel shape too blocky but rounded.
+
+Add a small hanging tag? no.
+
+Floor shadow.
+
+Maybe set `scene.fog`.
+
+Need maybe `renderer.domElement.setAttribute('aria-label',...)`.
+
+Let's produce.
+=====CONTENT=====
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Folding Clothes Drying Rack</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #e8eef1;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .info {
+      position: fixed;
+      top: 22px;
+      left: 22px;
+      z-index: 10;
+      max-width: min(360px, calc(100vw - 44px));
+      padding: 17px 19px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 16px;
+      background: rgba(250, 252, 253, 0.76);
+      box-shadow: 0 12px 36px rgba(35, 52, 60, 0.12);
+      backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: #718087;
+      font-size: 0.7rem;
+      font-weight: 750;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: #263238;
+      font-size: clamp(1.15rem, 3vw, 1.5rem);
+      font-weight: 720;
+      letter-spacing: -0.035em;
+    }
+
+    .info p:last-child {
+      margin: 8px 0 0;
+      color: #65747a;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 10;
+      display: flex;
+      gap: 9px;
+      padding: 9px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, 0.68);
+      border-radius: 14px;
+      background: rgba(250, 252, 253, 0.82);
+      box-shadow: 0 12px 36px rgba(35, 52, 60, 0.14);
+      backdrop-filter: blur(14px);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(104, 124, 132, 0.16);
+      border-radius: 9px;
+      padding: 10px 13px;
+      color: #34434a;
+      background: rgba(255, 255, 255, 0.88);
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease, color 150ms ease;
+    }
+
+    button:hover {
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.primary {
+      color: white;
+      border-color: transparent;
+      background: #64757d;
+    }
+
+    button.primary:hover {
+      background: #53666e;
+    }
+
+    .hint {
+      position: fixed;
+      right: 20px;
+      bottom: 24px;
+      z-index: 10;
+      color: rgba(55, 72, 79, 0.62);
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
+
+    @media (max-width: 650px) {
+      .info {
+        top: 12px;
+        left: 12px;
+        padding: 13px 15px;
+      }
+
+      .info p:last-child {
+        display: none;
+      }
+
+      .controls {
+        bottom: 12px;
+        width: calc(100vw - 24px);
+      }
+
+      button {
+        flex: 1;
+        padding: 10px 7px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="scene" aria-label="Interactive 3D folding clothes drying rack"></main>
+
+  <section class="info">
+    <p class="eyebrow">Laundry Storage</p>
+    <h1>Folding Drying Rack</h1>
+    <p>
+      Flat wooden A-frames, three notched drying rails, and a lower shelf
+      that pivots outward on visible metal hinges.
+    </p>
+  </section>
+
+  <nav class="controls" aria-label="Rack controls">
+    <button id="shelfButton" class="primary" type="button">Close lower shelf</button>
+    <button id="resetButton" type="button">Reset view</button>
+  </nav>
+
+  <div class="hint">Drag to orbit · Scroll or pinch to zoom</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Three-dimensional folding clothes drying rack"
+    );
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe8eef1);
+    scene.fog = new THREE.Fog(0xe8eef1, 8, 18);
+
+    const camera = new THREE.PerspectiveCamera(
+      36,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const target = new THREE.Vector3(0, 1.45, 0);
+    const spherical = new THREE.Spherical(5.5, 1.37, 0.72);
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+    }
+
+    updateCamera();
+
+    // Procedural wood texture: no external image assets.
+    function createWoodTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#c78a4d");
+      gradient.addColorStop(0.5, "#b9783f");
+      gradient.addColorStop(1, "#ca9258");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 170; i++) {
+        const baseY = Math.random() * canvas.height;
+        const amplitude = 1 + Math.random() * 7;
+        const frequency = 0.006 + Math.random() * 0.012;
+        const phase = Math.random() * Math.PI * 2;
+
+        ctx.beginPath();
+        for (let x = 0; x <= canvas.width; x += 12) {
+          const y =
+            baseY +
+            Math.sin(x * frequency + phase) * amplitude +
+            Math.sin(x * frequency * 0.37 + phase) * amplitude * 0.45;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = `rgba(83, 39, 15, ${0.035 + Math.random() * 0.08})`;
+        ctx.lineWidth = 0.5 + Math.random() * 1.5;
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const radius = 8 + Math.random() * 22;
+
+        for (let ring = 0; ring < 4; ring++) {
+          ctx.beginPath();
+          ctx.ellipse(
+            x,
+            y,
+            radius + ring * 5,
+            (radius + ring * 5) * 0.28,
+            Math.random() * 0.2,
+            0,
+            Math.PI * 2
+          );
+          ctx.strokeStyle = `rgba(78, 35, 12, ${0.12 - ring * 0.02})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1.2, 1.2);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const woodTexture = createWoodTexture();
+
+    const wood = new THREE.MeshStandardMaterial({
+      map: woodTexture,
+      color: 0xffffff,
+      roughness: 0.68,
+      metalness: 0
+    });
+
+    const darkWood = new THREE.MeshStandardMaterial({
+      map: woodTexture,
+      color: 0x9c6338,
+      roughness: 0.72,
+      metalness: 0
+    });
+
+    const metal = new THREE.MeshStandardMaterial({
+      color: 0x707b80,
+      roughness: 0.3,
+      metalness: 0.82
+    });
+
+    const darkMetal = new THREE.MeshStandardMaterial({
+      color: 0x3c484d,
+      roughness: 0.38,
+      metalness: 0.75
+    });
+
+    const boltMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb7bec0,
+      roughness: 0.24,
+      metalness: 0.9
+    });
+
+    function addBox(parent, size, position, material, rotation = null) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size.x, size.y, size.z),
+        material
+      );
+      mesh.position.copy(position);
+      if (rotation) mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // Creates a rounded rectangular prism.
+    function roundedRectShape(width, depth, radius) {
+      const w = width / 2;
+      const d = depth / 2;
+      const r = Math.min(radius, w, d);
+      const shape = new THREE.Shape();
+
+      shape.moveTo(-w + r, -d);
+      shape.lineTo(w - r, -d);
+      shape.quadraticCurveTo(w, -d, w, -d + r);
+      shape.lineTo(w, d - r);
+      shape.quadraticCurveTo(w, d, w - r, d);
+      shape.lineTo(-w + r, d);
+      shape.quadraticCurveTo(-w, d, -w, d - r);
+      shape.lineTo(-w, -d + r);
+      shape.quadraticCurveTo(-w, -d, -w + r, -d);
+      return shape;
+    }
+
+    function roundedPrismGeometry(width, depth, height, radius = 0.08) {
+      const shape = roundedRectShape(width, depth, radius);
+      const bevel = Math.min(0.025, height * 0.2);
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: height,
+        steps: 1,
+        curveSegments: 10,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        bevelSize: bevel,
+        bevelThickness: bevel
+      });
+
+      geometry.rotateX(Math.PI / 2);
+      geometry.translate(0, height / 2, 0);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    // Creates a rail with genuine U-shaped notches cut into the top.
+    function createNotchedRailGeometry(length, height, depth, notchCount) {
+      const halfLength = length / 2;
+      const halfDepth = depth / 2;
+      const spacing = (length - depth) / notchCount;
+      const shape = new THREE.Shape();
+
+      shape.moveTo(-halfDepth, -height / 2);
+      shape.lineTo(halfDepth, -height / 2);
+      shape.lineTo(halfDepth, height / 2);
+
+      // Traverse the top edge from right to left, forming each notch.
+      for (let i = notchCount - 1; i >= 0; i--) {
+        const centerX = (i - (notchCount - 1) / 2) * spacing;
+        const notchRadius = depth / 2;
+
+        shape.lineTo(centerX + notchRadius, height / 2);
+        shape.lineTo(centerX, height / 2 - depth / 2);
+        shape.quadraticCurveTo(
+          centerX,
+          height / 2 - depth,
+          centerX + notchRadius,
+          height / 2 - depth / 2
+        );
+        shape.lineTo(centerX - notchRadius, height / 2);
+      }
+
+      shape.lineTo(-halfDepth, height / 2);
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 0.12,
+        steps: 1,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: 0.008,
+        bevelThickness: 0.008
+      });
+
+      geometry.rotateY(Math.PI / 2);
+      geometry.translate(-0.06, 0, 0);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function beamBetween(start, end, thickness, width, material) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+      const geometry = new THREE.BoxGeometry(thickness, length, width);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function cylinderAlongX(radius, length, material, radialSegments = 20) {
+      const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length,
+          radialSegments
+        ),
+        material
+      );
+      mesh.rotation.z = Math.PI / 2;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Ground.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshStandardMaterial({
+        color: 0xdde5e7,
+        roughness: 0.93,
+        metalness: 0
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.015;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Lighting.
+    scene.add(new THREE.HemisphereLight(0xf4fbff, 0x8a7257, 2.15));
+
+    const keyLight = new THREE.DirectionalLight(0xfff6e9, 3.5);
+    keyLight.position.set(4.5, 7, 4.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -4;
+    keyLight.shadow.camera.right = 4;
+    keyLight.shadow.camera.top = 5;
+    keyLight.shadow.camera.bottom = -2;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 15;
+    keyLight.shadow.bias = -0.0003;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xc8e1ef, 1.35);
+    fillLight.position.set(-4, 3.5, -3);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    rimLight.position.set(1, 4, -5);
+    scene.add(rimLight);
+
+    // Two flat-wood A-frame side supports.
+    const rack = new THREE.Group();
+    scene.add(rack);
+
+    const frameX = 1.04;
+    const top = new THREE.Vector3(0, 2.86, 0);
+    const footFront = new THREE.Vector3(0, 0.13, 0.84);
+    const footBack = new THREE.Vector3(0, 0.13, -0.84);
+
+    for (const side of [-1, 1]) {
+      const x = side * frameX;
+
+      const leftSlat = beamBetween(
+        new THREE.Vector3(x, 0.13, -0.84),
+        top,
+        0.145,
+        0.19,
+        wood
+      );
+      const rightSlat = beamBetween(
+        new THREE.Vector3(x, 0.13, 0.84),
+        top,
+        0.145,
+        0.19,
+        wood
+      );
+
+      rack.add(leftSlat, rightSlat);
+
+      addBox(
+        rack,
+        new THREE.Vector3(0.22, 0.18, 0.23),
+        new THREE.Vector3(x, 0.08, 0.84),
+        darkWood
+      );
+      addBox(
+        rack,
+        new THREE.Vector3(0.22, 0.18, 0.23),
+        new THREE.Vector3(x, 0.08, -0.84),
+        darkWood
+      );
+
+      addBox(
+        rack,
+        new THREE.Vector3(0.21, 0.18, 0.23),
+        new THREE.Vector3(x, 2.86, 0),
+        darkWood
+      );
+
+      // Visible bolt heads on the outside of each slat.
+      for (const t of [0.22, 0.78]) {
+        const point = new THREE.Vector3().lerpVectors(footFront, top, t);
+        const bolt = cylinderAlongX(
+          0.035,
+          0.055,
+          boltMaterial,
+          6
+        );
+        bolt.position.set(side * (frameX + 0.095), point.y, point.z);
+        rack.add(bolt);
+      }
+    }
+
+    // Three slender rounded drying rails.
+    const railHeights = [1.96, 1.32, 0.69];
+
+    for (const y of railHeights) {
+      const rail = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.06, 1.62, 6, 12),
+        wood
+      );
+      rail.rotation.z = Math.PI / 2;
+      rail.scale.x = 1.15;
+      rail.position.set(0, y, 0);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      rack.add(rail);
+
+      for (const side of [-1, 1]) {
+        addBox(
+          rack,
+          new THREE.Vector3(0.13, 0.2, 0.31),
+          new THREE.Vector3(side * 0.99, y, 0),
+          darkMetal
+        );
+      }
+    }
+
+    // Lower hinged shelf.
+    const shelfPivot = new THREE.Group();
+    shelfPivot.position.set(0, 0.43, -0.72);
+    scene.add(shelfPivot);
+
+    const shelf = new THREE.Mesh(
+      roundedPrismGeometry(1.84, 1.45, 0.1, 0.085),
+      wood
+    );
+    shelf.position.z = 0.725;
+    shelf.castShadow = true;
+    shelf.receiveShadow = true;
+    shelfPivot.add(shelf);
+
+    // A folded towel on the lower shelf helps communicate its use.
+    const towel = new THREE.Mesh(
+      roundedPrismGeometry(1.12, 0.76, 0.11, 0.065),
+      new THREE.MeshStandardMaterial({
+        color: 0x7899a5,
+        roughness: 0.95,
+        metalness: 0
+      })
+    );
+    towel.position.set(0, 0.115, 0.83);
+    towel.rotation.y = -0.025;
+    towel.castShadow = true;
+    towel.receiveShadow = true;
+    shelfPivot.add(towel);
+
+    const towelFold = new THREE.Mesh(
+      roundedPrismGeometry(0.68, 0.49, 0.055, 0.05),
+      new THREE.MeshStandardMaterial({
+        color: 0xd7d2c4,
+        roughness: 0.96,
+        metalness: 0
+      })
+    );
+    towelFold.position.set(-0.08, 0.195, 0.83);
+    towelFold.rotation.y = 0.018;
+    towelFold.castShadow = true;
+    shelfPivot.add(towelFold);
+
+    // Two hinge assemblies with small plates and visible pins.
+    for (const side of [-1, 1]) {
+      const x = side * 0.72;
+
+      addBox(
+        rack,
+        new THREE.Vector3(0.045, 0.27, 0.32),
+        new THREE.Vector3(x, 0.43, -0.72),
+        metal
+      );
+
+      const pin = cylinderAlongX(0.043, 0.29, boltMaterial);
+      pin.position.set(side * 0.76, 0.43, -0.72);
+      rack.add(pin);
+
+      for (const y of [0.355, 0.43, 0.505]) {
+        const knuckle = cylinderAlongX(0.047, 0.19, metal);
+        knuckle.position.set(side * 0.73, y, -0.72);
+        rack.add(knuckle);
+      }
+    }
+
+    // Custom orbit controls implemented directly, without Three.js addons.
+    const pointers = new Map();
+    let lastPinchDistance = 0;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 1) {
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+      } else if (pointers.size === 2) {
+        dragging = false;
+        lastPinchDistance = pointerDistance();
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (pointers.size === 2) {
+        const distance = pointerDistance();
+        if (lastPinchDistance > 0 && distance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius * (lastPinchDistance / distance),
+            3.4,
+            9
+          );
+          updateCamera();
+        }
+        lastPinchDistance = distance;
+        return;
+      }
+
+      if (!dragging) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      spherical.theta -= dx * 0.006;
+      spherical.phi = THREE.MathUtils.clamp(
+        spherical.phi - dy * 0.006,
+        0.42,
+        1.49
+      );
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      if (pointers.size === 0) dragging = false;
+      if (pointers.size < 2) lastPinchDistance = 0;
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+    renderer.domElement.addEventListener("lostpointercapture", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          3.4,
+          9
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    function resetCamera() {
+      target.set(0, 1.45, 0);
+      spherical.set(5.5, 1.37, 0.72);
+      updateCamera();
+    }
+
+    // Shelf animation.
+    const shelfButton = document.getElementById("shelfButton");
+    const resetButton = document.getElementById("resetButton");
+
+    let shelfOpen = true;
+    let shelfTargetAngle = -0.38;
+    let shelfAngle = shelfTargetAngle;
+
+    shelfButton.addEventListener("click", () => {
+      shelfOpen = !shelfOpen;
+      shelfTargetAngle = shelfOpen ? -0.38 : 0;
+      shelfButton.textContent = shelfOpen
+        ? "Close lower shelf"
+        : "Open lower shelf";
+    });
+
+    resetButton.addEventListener("click", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        shelfButton.click();
+      }
+      if (event.key.toLowerCase() === "r") resetCamera();
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    renderer.setAnimationLoop(() => {
+      shelfAngle = THREE.MathUtils.lerp(
+        shelfAngle,
+        shelfTargetAngle,
+        0.085
+      );
+      shelfPivot.rotation.x = shelfAngle;
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
+```

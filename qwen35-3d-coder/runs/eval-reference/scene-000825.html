@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coastal Fishing Village</title>
+<style>
+  :root {
+    color-scheme: dark;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #9eb7bd;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  canvas:active { cursor: grabbing; }
+
+  .hud {
+    position: fixed;
+    top: 22px;
+    left: 22px;
+    z-index: 10;
+    color: #f5f1e8;
+    text-shadow: 0 2px 12px rgba(0,0,0,.55);
+    pointer-events: none;
+  }
+
+  .hud h1 {
+    margin: 0 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(24px, 3vw, 42px);
+    font-weight: 500;
+    letter-spacing: .025em;
+  }
+
+  .hud p {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .9;
+  }
+
+  .count {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 7px 10px;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 3px;
+    background: rgba(15,28,32,.28);
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    letter-spacing: .045em;
+    text-transform: none;
+  }
+
+  .help {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: rgba(255,255,255,.9);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-shadow: 0 1px 7px #142126;
+  }
+
+  button {
+    border: 1px solid rgba(255,255,255,.42);
+    border-radius: 4px;
+    padding: 8px 11px;
+    color: white;
+    background: rgba(20,34,39,.58);
+    backdrop-filter: blur(8px);
+    font: inherit;
+    letter-spacing: .04em;
+    cursor: pointer;
+  }
+
+  button:hover { background: rgba(44,65,70,.8); }
+
+  @media (max-width: 600px) {
+    .hud { top: 14px; left: 14px; }
+    .hud p { max-width: 250px; line-height: 1.5; }
+    .count { display: none; }
+    .help { left: 14px; right: auto; bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud">
+  <h1>Northquay</h1>
+  <p>A working fishing village on a rocky coast</p>
+  <div class="count">14 gable-fronted houses · 3 boat sheds · 2 net lofts · 1 drying yard</div>
+</div>
+
+<div class="help">
+  <span>Drag to orbit · Shift-drag to pan · Scroll to zoom</span>
+  <button id="reset" type="button">Reset view</button>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+const canvas = document.querySelector('#scene');
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x9eb5b8, 0.0065);
+
+const camera = new THREE.PerspectiveCamera(
+  43,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  320
+);
+
+camera.position.set(49, 31, 56);
+
+const target = new THREE.Vector3(0, 2.2, -3.5);
+const spherical = new THREE.Spherical().setFromVector3(
+  camera.position.clone().sub(target)
+);
+
+/* ---------- Deterministic helpers ---------- */
+
+let seed = 84271;
+function random() {
+  seed |= 0;
+  seed = seed + 0x6D2B79F5 | 0;
+  let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+
+const range = (a, b) => a + (b - a) * random();
+const choose = a => a[Math.floor(random() * a.length)];
+
+function box(parent, material, x, y, z, w, h, d, cast = true) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    material
+  );
+  mesh.position.set(x, y, z);
+  mesh.castShadow = cast;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function cylinder(parent, material, x, y, z, rTop, rBottom, h, segments = 12) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(rTop, rBottom, h, segments),
+    material
+  );
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function beamBetween(parent, material, a, b, width = 0.12, depth = width) {
+  const start = new THREE.Vector3(...a);
+  const end = new THREE.Vector3(...b);
+  const direction = end.clone().sub(start);
+  const length = direction.length();
+
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(width, length, depth),
+    material
+  );
+  mesh.position.copy(start).add(end).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    direction.normalize()
+  );
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function makeCanvasTexture(kind) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+
+  if (kind === 'slate') {
+    ctx.fillStyle = '#343d43';
+    ctx.fillRect(0, 0, 256, 256);
+
+    for (let row = 0; row < 8; row++) {
+      const y = row * 32;
+      const offset = (row % 2) * 32;
+
+      for (let x = -64; x < 256; x += 64) {
+        const shade = Math.floor(range(63, 91));
+        ctx.fillStyle = `rgb(${shade},${shade + 8},${shade + 12})`;
+        ctx.fillRect(x + offset + 1, y + 1, 62, 30);
+        ctx.fillStyle = 'rgba(255,255,255,.10)';
+        ctx.fillRect(x + offset + 2, y + 29, 60, 2);
+        ctx.fillStyle = 'rgba(0,0,0,.24)';
+        ctx.fillRect(x + offset + 1, y, 62, 2);
+      }
+    }
+  } else if (kind === 'stone') {
+    ctx.fillStyle = '#645e52';
+    ctx.fillRect(0, 0, 256, 256);
+
+    for (let row = 0; row < 7; row++) {
+      const y = row * 37;
+      const offset = (row % 2) * 28;
+
+      for (let x = -56; x < 256; x += 57) {
+        const v = Math.floor(range(128, 166));
+        ctx.fillStyle = `rgb(${v},${v - 8},${v - 24})`;
+        ctx.fillRect(x + offset + 2, y + 2, 53, 32);
+        ctx.fillStyle = 'rgba(255,255,255,.13)';
+        ctx.fillRect(x + offset + 3, y + 3, 51, 2);
+      }
+    }
+  } else {
+    ctx.fillStyle = '#6a4930';
+    ctx.fillRect(0, 0, 256, 256);
+
+    for (let x = 0; x < 256; x += 32) {
+      const v = Math.floor(range(72, 112));
+      ctx.fillStyle = `rgb(${v + 35},${v},${Math.max(35, v - 35)})`;
+      ctx.fillRect(x + 1, 0, 30, 256);
+      ctx.fillStyle = 'rgba(25,12,5,.35)';
+      ctx.fillRect(x, 0, 2, 256);
+    }
+
+    for (let i = 0; i < 90; i++) {
+      ctx.strokeStyle = `rgba(35,18,8,${range(.05, .18)})`;
+      ctx.beginPath();
+      const x = range(0, 256);
+      const y = range(0, 256);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + range(-5, 5), y + range(15, 70));
+      ctx.stroke();
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return texture;
+}
+
+const slateTexture = makeCanvasTexture('slate');
+const stoneTexture = makeCanvasTexture('stone');
+const woodTexture = makeCanvasTexture('wood');
+
+const M = {
+  slate: new THREE.MeshStandardMaterial({
+    map: slateTexture,
+    color: 0xc4cbcc,
+    roughness: .84,
+    metalness: .04
+  }),
+  slateRoof: new THREE.MeshStandardMaterial({
+    map: slateTexture,
+    color: 0x929da1,
+    roughness: .83,
+    metalness: .05
+  }),
+  stone: new THREE.MeshStandardMaterial({
+    map: stoneTexture,
+    color: 0xd4c9b0,
+    roughness: .96
+  }),
+  wood: new THREE.MeshStandardMaterial({
+    map: woodTexture,
+    color: 0xd6b083,
+    roughness: .9
+  }),
+  darkWood: new THREE.MeshStandardMaterial({
+    map: woodTexture,
+    color: 0x74533a,
+    roughness: .95
+  }),
+  beam: new THREE.MeshStandardMaterial({
+    color: 0x4c3b2d,
+    roughness: .95
+  }),
+  iron: new THREE.MeshStandardMaterial({
+    color: 0x242c2d,
+    roughness: .65,
+    metalness: .55
+  }),
+  glass: new THREE.MeshStandardMaterial({
+    color: 0x274653,
+    roughness: .2,
+    metalness: .25,
+    emissive: 0x10262b,
+    emissiveIntensity: .25
+  }),
+  warmGlass: new THREE.MeshStandardMaterial({
+    color: 0x8c6a36,
+    emissive: 0xd39438,
+    emissiveIntensity: .22,
+    roughness: .35
+  }),
+  rope: new THREE.LineBasicMaterial({
+    color: 0x5e5039,
+    transparent: true,
+    opacity: .9
+  }),
+  net: new THREE.LineBasicMaterial({
+    color: 0x756a4e,
+    transparent: true,
+    opacity: .82
+  }),
+  red: new THREE.MeshStandardMaterial({
+    color: 0x9d3d2d,
+    roughness: .76
+  }),
+  cream: new THREE.MeshStandardMaterial({
+    color: 0xd8ccb0,
+    roughness: .8
+  })
+};
+
+const doorMaterials = [
+  new THREE.MeshStandardMaterial({ color: 0x244d58, roughness: .75 }),
+  new THREE.MeshStandardMaterial({ color: 0x6f342b, roughness: .8 }),
+  new THREE.MeshStandardMaterial({ color: 0x435244, roughness: .82 })
+];
+
+/* ---------- Lighting and sky ---------- */
+
+scene.add(new THREE.HemisphereLight(0xc8e3ed, 0x514c3e, 2.1));
+
+const sun = new THREE.DirectionalLight(0xffe7c3, 3.0);
+sun.position.set(-38, 55, 30);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -62;
+sun.shadow.camera.right = 62;
+sun.shadow.camera.top = 58;
+sun.shadow.camera.bottom = -58;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 150;
+sun.shadow.bias = -.00035;
+scene.add(sun);
+
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(185, 32, 20),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: {
+      topColor: { value: new THREE.Color(0x6e9eb7) },
+      horizonColor: { value: new THREE.Color(0xd8d6c7) }
+    },
+    vertexShader: `
+      varying vec3 vWorld;
+      void main() {
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        vWorld = world.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 topColor;
+      uniform vec3 horizonColor;
+      varying vec3 vWorld;
+      void main() {
+        float h = normalize(vWorld - cameraPosition).y;
+        float t = smoothstep(-0.12, 0.72, h);
+        vec3 color = mix(horizonColor, topColor, t);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `
+  })
+);
+sky.renderOrder = -10;
+scene.add(sky);
+
+const sunDisc = new THREE.Mesh(
+  new THREE.SphereGeometry(3.4, 20, 12),
+  new THREE.MeshBasicMaterial({ color: 0xffedc1, fog: false })
+);
+sunDisc.position.set(-55, 40, -95);
+scene.add(sunDisc);
+
+/* ---------- Rocky land ---------- */
+
+function coastZ(x) {
+  return 6.5 + Math.sin(x * .13) * 1.7 + Math.sin(x * .43 + .6) * .7;
+}
+
+function terrainHeight(x, z) {
+  const d = coastZ(x) - z;
+  const noise = Math.sin(x * .7 + z * .38) * .07 +
+                Math.cos(x * .31 - z * .61) * .055;
+
+  if (d >= 0) {
+    return .72 + Math.min(d * .017, .23) + noise;
+  }
+  return Math.max(-1.25, .72 + d * .64 + noise);
+}
+
+const landGeometry = new THREE.PlaneGeometry(110, 70, 75, 55);
+landGeometry.rotateX(-Math.PI / 2);
+landGeometry.translate(0, 0, -18);
+
+const landPosition = landGeometry.attributes.position;
+const landColors = [];
+const landColor = new THREE.Color();
+
+for (let i = 0; i < landPosition.count; i++) {
+  const x = landPosition.getX(i);
+  const z = landPosition.getZ(i) - 18;
+  const h = terrainHeight(x, z);
+  landPosition.setY(i, h);
+
+  if (h < .2) {
+    landColor.setHSL(.10, .12, range(.20, .31));
+  } else {
+    landColor.setHSL(.16, .20, range(.30, .42));
+  }
+  landColors.push(landColor.r, landColor.g, landColor.b);
+}
+landGeometry.setAttribute('color', new THREE.Float32BufferAttribute(landColors, 3));
+landGeometry.computeVertexNormals();
+
+const land = new THREE.Mesh(
+  landGeometry,
+  new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 1
+  })
+);
+land.receiveShadow = true;
+scene.add(land);
+
+/* ---------- Sea ---------- */
+
+const waterGeometry = new THREE.PlaneGeometry(180, 160, 60, 50);
+waterGeometry.rotateX(-Math.PI / 2);
+
+const water = new THREE.Mesh(
+  waterGeometry,
+  new THREE.MeshPhongMaterial({
+    color: 0x2d7280,
+    specular: 0x8fc4ca,
+    shininess: 78,
+    transparent: true,
+    opacity: .94,
+    flatShading: true
+  })
+);
+water.position.set(0, -.28, 45);
+water.receiveShadow = true;
+scene.add(water);
+
+const waterData = [];
+const wp = waterGeometry.attributes.position;
+for (let i = 0; i < wp.count; i++) {
+  waterData.push({ x: wp.getX(i), z: wp.getZ(i) });
+}
+
+/* ---------- Shore rocks ---------- */
+
+const rockGeometry = new THREE.DodecahedronGeometry(1, 0);
+const rockMaterial = new THREE.MeshStandardMaterial({
+  color: 0x6d6d64,
+  roughness: 1,
+  flatShading: true
+});
+const rocks = new THREE.InstancedMesh(rockGeometry, rockMaterial, 150);
+const dummy = new THREE.Object3D();
+const rockColor = new THREE.Color();
+
+for (let i = 0; i < 150; i++) {
+  const x = range(-49, 49);
+  const z = coastZ(x) + range(-2.4, 2.1);
+
+  dummy.position.set(
+    x,
+    terrainHeight(x, z) + range(.05, .28),
+    z
+  );
+  dummy.rotation.set(range(0, 3), range(0, 6.2), range(0, 3));
+  dummy.scale.set(
+    range(.35, 1.25),
+    range(.28, .92),
+    range(.4, 1.45)
+  );
+  dummy.updateMatrix();
+  rocks.setMatrixAt(i, dummy.matrix);
+  rockColor.setHSL(range(.08, .16), range(.04, .13), range(.25, .43));
+  rocks.setColorAt(i, rockColor);
+}
+rocks.castShadow = true;
+rocks.receiveShadow = true;
+scene.add(rocks);
+
+const foamMaterial = new THREE.MeshBasicMaterial({
+  color: 0xe0e4d9,
+  transparent: true,
+  opacity: .45
+});
+const foamGeometry = new THREE.SphereGeometry(1, 7, 4);
+
+for (let i = 0; i < 75; i++) {
+  const x = range(-48, 48);
+  if (Math.abs(x) < 5) continue;
+  const z = coastZ(x) + .35;
+  const foam = new THREE.Mesh(foamGeometry, foamMaterial);
+  foam.position.set(x, -.10, z);
+  foam.scale.set(range(.25, .8), .035, range(.12, .35));
+  scene.add(foam);
+}
+
+/* ---------- Cobbled slipway and stone apron ---------- */
+
+const apron = new THREE.Mesh(
+  new THREE.CylinderGeometry(8.6, 8.9, .28, 40),
+  M.stone
+);
+apron.position.set(0, .82, -.5);
+apron.scale.set(.82, 1, .72);
+apron.receiveShadow = true;
+scene.add(apron);
+
+const rampGeometry = new THREE.BufferGeometry();
+rampGeometry.setAttribute('position', new THREE.Float32BufferAttribute([
+  -4.6, 1.05,  2.5,
+   4.6, 1.05,  2.5,
+  -2.8, -.15, 30.5,
+   2.8, -.15, 30.5
+], 3));
+rampGeometry.setIndex([0, 2, 1, 1, 2, 3]);
+rampGeometry.computeVertexNormals();
+
+const ramp = new THREE.Mesh(rampGeometry, M.stone);
+ramp.receiveShadow = true;
+scene.add(ramp);
+
+const cobbleCount = 220;
+const cobbles = new THREE.InstancedMesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({
+    color: 0x8b877b,
+    roughness: 1
+  }),
+  cobbleCount
+);
+const cobbleColor = new THREE.Color();
+
+for (let i = 0; i < cobbleCount; i++) {
+  const row = Math.floor(i / 11);
+  const col = i % 11 - 5;
+  const t = row / 19;
+  const widthScale = 1 - t * .38;
+  const z = 2.7 + t * 27.6;
+  const y = 1.10 - t * 1.20;
+
+  dummy.position.set(
+    col * .73 * widthScale + range(-.08, .08),
+    y + range(-.025, .025),
+    z + range(-.16, .16)
+  );
+  dummy.rotation.set(.03, range(-.18, .18), range(-.05, .05));
+  dummy.scale.set(
+    range(.48, .68) * widthScale,
+    range(.10, .17),
+    range(.48, .76)
+  );
+  dummy.updateMatrix();
+  cobbles.setMatrixAt(i, dummy.matrix);
+  cobbleColor.setHSL(.10, .07, range(.38, .54));
+  cobbles.setColorAt(i, cobbleColor);
+}
+cobbles.receiveShadow = true;
+scene.add(cobbles);
+
+for (const side of [-1, 1]) {
+  beamBetween(
+    scene,
+    M.stone,
+    [side * 4.65, .92, 2.5],
+    [side * 2.9, -.25, 30.5],
+    .34,
+    .28
+  );
+}
+
+/* ---------- House construction ---------- */
+
+function makeWindow(parent, x, y, z, width, height, warm = false) {
+  const frame = box(parent, M.darkWood, x, y, z, width, height, .12);
+  const glass = box(
+    parent,
+    warm ? M.warmGlass : M.glass,
+    x,
+    y,
+    z + .075,
+    width * .76,
+    height * .76,
+    .045,
+    false
+  );
+  box(parent, M.darkWood, x, y, z + .11, .055, height * .82, .05, false);
+  box(parent, M.darkWood, x, y, z + .11, width * .82, .055, .05, false);
+  return frame;
+}
+
+function makeHouse(index, x, z, width, depth, rotation) {
+  const group = new THREE.Group();
+  group.position.set(x, terrainHeight(x, z) + .02, z);
+  group.rotation.y = rotation;
+  scene.add(group);
+
+  const baseH = 1.16;
+  const wallH = 2.48;
+  const gableH = 1.46;
+  const wallTop = baseH + wallH;
+
+  box(group, M.stone, 0, baseH / 2, 0, width, baseH, depth);
+
+  const upperMaterial = M.slate;
+  box(group, upperMaterial, 0, baseH + wallH / 2, 0, width, wallH, depth);
+
+  const gableShape = new THREE.Shape();
+  gableShape.moveTo(-width / 2, 0);
+  gableShape.lineTo(width / 2, 0);
+  gableShape.lineTo(0, gableH);
+  gableShape.closePath();
+
+  const gableGeometry = new THREE.ExtrudeGeometry(gableShape, {
+    depth,
+    bevelEnabled: false,
+    steps: 1
+  });
+  gableGeometry.translate(0, 0, -depth / 2);
+  const gable = new THREE.Mesh(gableGeometry, M.slateRoof);
+  gable.position.y = wallTop;
+  gable.castShadow = true;
+  gable.receiveShadow = true;
+  group.add(gable);
+
+  const angle = Math.atan2(gableH, width / 2);
+  const slopeLength = Math.hypot(width / 2, gableH);
+
+  for (const side of [-1, 1]) {
+    const roof = box(
+      group,
+      M.slateRoof,
+      side * width / 4,
+      wallTop + gableH / 2,
+      0,
+      slopeLength + .22,
+      .18,
+      depth + .52
+    );
+    roof.rotation.z = side * angle;
+  }
+
+  const front = depth / 2 + .055;
+  const doorMaterial = doorMaterials[index % doorMaterials.length];
+
+  box(group, M.stone, 0, baseH + .82, front, 1.28, 1.68, .16);
+  box(group, doorMaterial, 0, baseH + .78, front + .10, .94, 1.48, .09);
+  box(group, M.iron, .29, baseH + .78, front + .16, .07, .07, .04, false);
+  box(group, M.stone, 0, baseH - .12, front + .35, 1.55, .22, .72);
+  box(group, M.stone, 0, baseH - .31, front + .51, 1.82, .18, .88);
+
+  const warmWindow = index % 4 === 0 || index % 7 === 0;
+  makeWindow(group, -width * .29, baseH + 1.58, front, 1.03, 1.02, warmWindow);
+  makeWindow(group,  width * .29, baseH + 1.58, front, 1.03, 1.02, warmWindow);
+
+  const vent = new THREE.Mesh(
+    new THREE.CircleGeometry(.22, 12),
+    M.iron
+  );
+  vent.position.set(0, wallTop + .54, front + .015);
+  group.add(vent);
+
+  for (const side of [-1, 1]) {
+    makeWindow(
+      group,
+      side * (width / 2 + .025),
+      baseH + 1.55,
+      .25,
+      .95,
+      1.0,
+      false
+    );
+  }
+
+  const chimneyX = width * .22;
+  box(
+    group,
+    M.stone,
+    chimneyX,
+    wallTop + gableH + .45,
+    -depth * .17,
+    .65,
+    1.45,
+    .72
+  );
+  box(
+    group,
+    M.iron,
+    chimneyX,
+    wallTop + gableH + 1.2,
+    -depth * .17,
+    .78,
+    .12,
+    .84
+  );
+
+  for (const side of [-1, 1]) {
+    beamBetween(
+      group,
+      M.darkWood,
+      [side * width / 2, wallTop, front + .19],
+      [0, wallTop + gableH, front + .19],
+      .14,
+      .16
+    );
+  }
+
+  return group;
+}
+
+/* Exactly fourteen gable-fronted houses. */
+const houseData = [
+  [-30, -24, 5.6, 6.0,  .16],
+  [-20, -25, 5.4, 5.4,  .10],
+  [-10, -24, 5.7, 5.8,  .08],
+  [ 10, -24, 5.5, 5.6, -.08],
+  [ 20, -25, 5.8, 5.5, -.10],
+  [ 30, -23, 5.2, 6.0, -.18],
+  [-31, -13, 5.3, 5.5,  .25],
+  [-21, -13, 5.8, 5.8,  .19],
+  [-11, -13, 5.3, 5.5,  .12],
+  [ 11, -13, 5.7, 5.6, -.12],
+  [ 21, -13, 5.4, 5.7, -.19],
+  [ 31, -12, 5.6, 5.8, -.25],
+  [ -9,  -2, 5.4, 5.6,  .38],
+  [  9,  -2, 5.5, 5.6, -.38]
+];
+
+houseData.forEach((data, i) => makeHouse(i, ...data));
+
+/* ---------- Boat construction ---------- */
+
+function makeBoat(hullColor = 0x244c57, scale = 1) {
+  const boat = new THREE.Group();
+
+  const shape = new THREE.Shape();
+  shape.moveTo(-1.12, -1.9);
+  shape.lineTo(1.12, -1.9);
+  shape.lineTo(1.25, 1.15);
+  shape.quadraticCurveTo(.7, 2.05, 0, 2.55);
+  shape.quadraticCurveTo(-.7, 2.05, -1.25, 1.15);
+  shape.closePath();
+
+  const hullGeometry = new THREE.ExtrudeGeometry(shape, {
+    depth: .78,
+    bevelEnabled: true,
+    bevelSize: .12,
+    bevelThickness: .12,
+    bevelSegments: 1,
+    steps: 1
+  });
+  hullGeometry.rotateX(Math.PI / 2);
+
+  const hull = new THREE.Mesh(
+    hullGeometry,
+    new THREE.MeshStandardMaterial({
+      color: hullColor,
+      roughness: .66,
+      metalness: .05
+    })
+  );
+  hull.castShadow = true;
+  hull.receiveShadow = true;
+  boat.add(hull);
+
+  const deckGeometry = new THREE.ShapeGeometry(shape);
+  deckGeometry.rotateX(Math.PI / 2);
+  const deck = new THREE.Mesh(
+    deckGeometry,
+    new THREE.MeshStandardMaterial({
+      color: 0xa88658,
+      roughness: .85,
+      side: THREE.DoubleSide
+    })
+  );
+  deck.position.y = .025;
+  deck.receiveShadow = true;
+  boat.add(deck);
+
+  box(boat, M.cream, 0, .72, -.35, 1.22, 1.03, 1.05);
+  box(boat, M.glass, 0, .95, .19, .86, .34, .035, false);
+  box(boat, M.glass, -.62, .95, -.25, .035, .34, .56, false);
+  box(boat, M.glass,  .62, .95, -.25, .035, .34, .56, false);
+
+  cylinder(boat, M.beam, 0, 2.2, -.72, .065, .09, 3.55, 8);
+  beamBetween(boat, M.beam, [0, 3.45, -.72], [0, 1.12, 1.45], .065);
+  beamBetween(boat, M.beam, [0, 3.35, -.72], [0, 1.2, -1.55], .055);
+  box(boat, M.darkWood, 0, .28, 1.72, .25, .2, .48);
+
+  const tire = new THREE.Mesh(
+    new THREE.TorusGeometry(.23, .075, 8, 16),
+    M.iron
+  );
+  tire.position.set(1.28, .2, .35);
+  tire.rotation.y = Math.PI / 2;
+  boat.add(tire);
+
+  boat.scale.setScalar(scale);
+  return boat;
+}
+
+/* ---------- Boat sheds and elevated net lofts ---------- */
+
+function makeSign(parent, text, x, y, z, width = 2.8) {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#243c42';
+  ctx.fillRect(0, 0, 512, 128);
+  ctx.strokeStyle = '#c5b995';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(8, 8, 496, 112);
+  ctx.fillStyle = '#e9dfc6';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '42px Georgia';
+  ctx.fillText(text, 256, 66);
+
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, width / 4),
+    new THREE.MeshBasicMaterial({ map: texture })
+  );
+  sign.position.set(x, y, z);
+  parent.add(sign);
+  return sign;
+}
+
+function makeNetPanel(parent, width, height, x, y, z, cols = 9, rows = 7) {
+  const positions = [];
+
+  for (let row = 0; row <= rows; row++) {
+    const yy = -height / 2 + height * row / rows;
+    for (let col = 0; col < cols; col++) {
+      const x1 = -width / 2 + width * col / cols;
+      const x2 = -width / 2 + width * (col + 1) / cols;
+      const sag1 = Math.sin((col / cols) * Math.PI) * .13;
+      const sag2 = Math.sin(((col + 1) / cols) * Math.PI) * .13;
+      positions.push(
+        x1, yy, -sag1,
+        x2, yy, -sag2
+      );
+    }
+  }
+
+  for (let col = 0; col <= cols; col++) {
+    const xx = -width / 2 + width * col / cols;
+    for (let row = 0; row < rows; row++) {
+      const y1 = -height / 2 + height * row / rows;
+      const y2 = -height / 2 + height * (row + 1) / rows;
+      const sag1 = Math.sin((row / rows) * Math.PI) * .10;
+      const sag2 = Math.sin(((row + 1) / rows) * Math.PI) * .10;
+      positions.push(
+        xx, y1, -sag1,
+        xx, y2, -sag2
+      );
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const net = new THREE.LineSegments(geometry, M.net);
+  net.position.set(x, y, z);
+  parent.add(net);
+  return net;
+}
+
+function makeBoatShed(x, z, hasLoft, index) {
+  const group = new THREE.Group();
+  group.position.set(x, .66, z);
+  scene.add(group);
+
+  const width = 5.7;
+  const depth = 4.8;
+  const eaveY = 3.05;
+  const ridgeY = 4.05;
+
+  box(group, M.stone, 0, .12, 0, width + .35, .35, depth + .35);
+  box(group, M.darkWood, 0, 1.65, -depth / 2, width, 2.75, .18);
+
+  for (const side of [-1, 1]) {
+    box(group, M.wood, side * width / 2, 1.58, 0, .18, 2.6, depth);
+    box(group, M.beam, side * (width / 2 - .12), 1.42, depth / 2 - .12, .24, 2.85, .24);
+  }
+
+  box(group, M.beam, 0, 2.85, depth / 2 - .12, width, .22, .25);
+
+  const angle = Math.atan2(ridgeY - eaveY, width / 2);
+  const slope = Math.hypot(width / 2, ridgeY - eaveY);
+
+  for (const side of [-1, 1]) {
+    const roof = box(
+      group,
+      M.slateRoof,
+      side * width / 4,
+      (ridgeY + eaveY) / 2,
+      0,
+      slope + .25,
+      .17,
+      depth + .55
+    );
+    roof.rotation.z = side * angle;
+  }
+
+  const boat = makeBoat(index === 1 ? 0x7c3028 : 0x254e5a, .83);
+  boat.position.set(0, .47, .1);
+  group.add(boat);
+
+  makeSign(group, index === 0 ? 'BOAT SHED' : 'NET LOFT', 0, 2.75, depth / 2 + .16, 2.45);
+
+  if (hasLoft) {
+    const floorY = 3.85;
+    const loftDepth = depth + .28;
+
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) {
+        box(
+          group,
+          M.beam,
+          sx * (width / 2 - .1),
+          floorY / 2 + .22,
+          sz * (loftDepth / 2 - .12),
+          .28,
+          floorY,
+          .28
+        );
+      }
+    }
+
+    box(group, M.wood, 0, floorY, 0, width + .4, .22, loftDepth);
+    box(group, M.darkWood, 0, 4.78, -loftDepth / 2, width + .3, 1.72, .16);
+
+    for (const side of [-1, 1]) {
+      box(
+        group,
+        M.wood,
+        side * width / 2,
+        4.78,
+        0,
+        .16,
+        1.72,
+        loftDepth
+      );
+    }
+
+    for (const side of [-1, 1]) {
+      box(
+        group,
+        M.beam,
+        side * (width / 2 - .08),
+        4.78,
+        loftDepth / 2 + .04,
+        .25,
+        1.8,
+        .25
+      );
+    }
+
+    /* Horizontal open louvres leave visible gaps. */
+    for (let i = 0; i < 5; i++) {
+      const slat = box(
+        group,
+        M.darkWood,
+        0,
+        4.10 + i * .34,
+        loftDepth / 2 + .10,
+        width - .2,
+        .15,
+        .18
+      );
+      slat.rotation.x = -.08;
+    }
+
+    box(group, M.beam, 0, 5.65, loftDepth / 2 + .1, width, .18, .22);
+
+    const loftAngle = Math.atan2(1.0, width / 2);
+    const loftSlope = Math.hypot(width / 2, 1.0);
+    for (const side of [-1, 1]) {
+      const roof = box(
+        group,
+        M.slateRoof,
+        side * width / 4,
+        6.16,
+        0,
+        loftSlope + .22,
+        .16,
+        loftDepth + .5
+      );
+      roof.rotation.z = side * loftAngle;
+    }
+
+    beamBetween(
+      group,
+      M.beam,
+      [-width / 2 + .2, .35, loftDepth / 2],
+      [width / 2 - .2, floorY, loftDepth / 2],
+      .15
+    );
+
+    makeNetPanel(group, 1.55, 1.2, -1.45, 4.7, loftDepth / 2 + .22, 7, 6);
+  }
+
+  return group;
+}
+
+/* Exactly three boat sheds; exactly two carry net lofts. */
+makeBoatShed(-13.3, 5.4, true,  0);
+makeBoatShed( 12.7, 5.2, true,  1);
+makeBoatShed(-23.0, 5.0, false, 2);
+
+/* ---------- Walled net drying yard ---------- */
+
+const dryingYard = new THREE.Group();
+dryingYard.position.set(24.5, .78, 2.8);
+scene.add(dryingYard);
+
+const yardWidth = 13;
+const yardDepth = 7.2;
+const wallHeight = 1.42;
+
+box(dryingYard, M.stone, 0, wallHeight / 2, -yardDepth / 2, yardWidth, wallHeight, .38);
+box(dryingYard, M.stone, -yardWidth / 2, wallHeight / 2, 0, .38, wallHeight, yardDepth);
+box(dryingYard, M.stone,  yardWidth / 2, wallHeight / 2, 0, .38, wallHeight, yardDepth);
+
+const frontGate = 2.8;
+const frontSegment = (yardWidth - frontGate) / 2;
+box(
+  dryingYard,
+  M.stone,
+  -(frontGate / 2 + frontSegment / 2),
+  wallHeight / 2,
+  yardDepth / 2,
+  frontSegment,
+  wallHeight,
+  .38
+);
+box(
+  dryingYard,
+  M.stone,
+  frontGate / 2 + frontSegment / 2,
+  wallHeight / 2,
+  yardDepth / 2,
+  frontSegment,
+  wallHeight,
+  .38
+);
+
+box(dryingYard, M.stone, 0, wallHeight + .06, -yardDepth / 2, yardWidth + .25, .16, .52);
+box(dryingYard, M.stone, -yardWidth / 2, wallHeight + .06, 0, .52, .16, yardDepth);
+box(dryingYard, M.stone,  yardWidth / 2, wallHeight + .06, 0, .52, .16, yardDepth);
+
+for (const side of [-1, 1]) {
+  box(
+    dryingYard,
+    M.stone,
+    side * (frontGate / 2 + frontSegment / 2),
+    wallHeight + .06,
+    yardDepth / 2,
+    frontSegment + .12,
+    .16,
+    .52
+  );
+}
+
+for (const x of [-4.1, 0, 4.1]) {
+  const z = -.45;
+  for (const side of [-1, 1]) {
+    box(dryingYard, M.beam, x + side * 1.35, 1.85, z, .14, 3.4, .16);
+  }
+  box(dryingYard, M.beam, x, 3.49, z, 2.85, .15, .18);
+  makeNetPanel(dryingYard, 2.55, 2.75, x, 1.87, z + .08, 11, 9);
+
+  for (let i = 0; i < 6; i++) {
+    const float = new THREE.Mesh(
+      new THREE.SphereGeometry(.10, 8, 6),
+      i % 2 ? M.red : M.cream
+    );
+    float.position.set(x - 1.15 + i * .46, 3.43, z + .14);
+    dryingYard.add(float);
+  }
+}
+
+makeSign(dryingYard, 'NET DRYING YARD', 0, 2.15, yardDepth / 2 + .22, 4.0);
+
+/* ---------- Shore props ---------- */
+
+function makeBarrel(x, y, z, scale = 1) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.scale.setScalar(scale);
+
+  cylinder(group, M.wood, 0, .55, 0, .37, .43, 1.1, 12);
+  for (const yy of [.18, .55, .92]) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(.405, .035, 6, 16),
+      M.iron
+    );
+    ring.position.y = yy;
+    ring.rotation.x = Math.PI / 2;
+    group.add(ring);
+  }
+  scene.add(group);
+}
+
+function makeCrate(x, y, z, scale = 1, rotation = 0) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.rotation.y = rotation;
+  group.scale.setScalar(scale);
+
+  box(group, M.wood, 0, .43, 0, .95, .82, .95);
+  for (const side of [-1, 1]) {
+    box(group, M.darkWood, 0, .43, side * .49, 1.03, .10, .06);
+    box(group, M.darkWood, side * .49, .43, 0, .06, .10, 1.03);
+  }
+  scene.add(group);
+}
+
+function makeLobsterPot(x, y, z, rotation = 0) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.rotation.y = rotation;
+
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(.48, .56, .38, 8, 1, true),
+    M.beam
+  );
+  group.add(pot);
+
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    box(group, M.iron, Math.cos(a) * .48, 0, Math.sin(a) * .48, .035, .4, .035, false);
+  }
+  box(group, M.iron, 0, .20, 0, .9, .035, .06, false);
+  box(group, M.iron, 0, -.20, 0, .9, .035, .06, false);
+  scene.add(group);
+}
+
+function makeBollard(x, y, z) {
+  cylinder(scene, M.beam, x, y + .55, z, .16, .22, 1.1, 9);
+  cylinder(scene, M.iron, x, y + 1.1, z, .25, .19, .12, 9);
+}
+
+function makeLamp(x, z) {
+  const y = terrainHeight(x, z);
+  cylinder(scene, M.iron, x, y + 1.8, z, .055, .085, 3.6, 8);
+  box(scene, M.iron, x, y + 3.55, z, .42, .12, .42);
+
+  const lamp = new THREE.Mesh(
+    new THREE.SphereGeometry(.16, 10, 8),
+    new THREE.MeshStandardMaterial({
+      color: 0xffd58a,
+      emissive: 0xffa62c,
+      emissiveIntensity: 1.4
+    })
+  );
+  lamp.position.set(x, y + 3.38, z);
+  scene.add(lamp);
+}
+
+makeBarrel(-7.7, .83, -.3, 1.1);
+makeBarrel(-8.6, .83, -.6, .9);
+makeBarrel(7.4, .83, -.8, 1.05);
+makeCrate(8.5, .84, -1.5, .9, .16);
+makeCrate(-16.2, .78, 2.3, 1.0, -.12);
+makeCrate(-15.4, .78, 2.5, .78, .22);
+makeCrate(17.1, .82, 1.0, .95, .2);
+
+for (let i = 0; i < 5; i++) {
+  makeLobsterPot(18.3 + i * .72, .84, 4.8 + (i % 2) * .15, range(-.2, .2));
+}
+makeLobsterPot(-18.3, .78, 3.4, .3);
+makeLobsterPot(-18.1, 1.15, 3.4, .1);
+
+makeLamp(-7.2, .2);
+makeLamp(7.1, .1);
+makeLamp(-5.0, 9.0);
+makeLamp(5.0, 8.6);
+
+for (const z of [4.5, 8.2, 12.0]) {
+  const t = (z - 2.5) / 28;
+  const x = 4.5 - t * 1.6;
+  const y = 1.05 - t * 1.2;
+  makeBollard(-x, y, z);
+  makeBollard(x, y, z);
+}
+
+const ropeCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-4.5, 1.65, 4.5),
+  new THREE.Vector3(-3.2, 1.1, 6.4),
+  new THREE.Vector3(-3.8, .8, 8.2),
+  new THREE.Vector3(-2.6, .48, 10.0)
+]);
+const rope = new THREE.Mesh(
+  new THREE.TubeGeometry(ropeCurve, 24, .035, 6, false),
+  M.beam
+);
+scene.add(rope);
+
+/* Boat resting on the slipway. */
+const slipBoat = makeBoat(0x6d332a, .78);
+slipBoat.position.set(.75, .48, 18.2);
+slipBoat.rotation.y = -.12;
+scene.add(slipBoat);
+
+/* ---------- Distant landscape ---------- */
+
+const distantMaterial = new THREE.MeshStandardMaterial({
+  color: 0x65756e,
+  roughness: 1,
+  flatShading: true
+});
+
+for (let i = 0; i < 15; i++) {
+  const hill = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(1, 1),
+    distantMaterial
+  );
+  hill.position.set(
+    -58 + i * 8.5 + range(-2, 2),
+    range(1.5, 5.5),
+    -57 - range(0, 14)
+  );
+  hill.scale.set(
+    range(6, 13),
+    range(4, 11),
+    range(5, 10)
+  );
+  hill.rotation.y = range(0, Math.PI);
+  hill.receiveShadow = true;
+  scene.add(hill);
+}
+
+const cloudMaterial = new THREE.MeshStandardMaterial({
+  color: 0xf1eee4,
+  roughness: 1,
+  transparent: true,
+  opacity: .82,
+  depthWrite: false
+});
+const clouds = [];
+
+for (let i = 0; i < 10; i++) {
+  const cloud = new THREE.Group();
+  const pieces = 4 + Math.floor(random() * 4);
+
+  for (let j = 0; j < pieces; j++) {
+    const puff = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(range(1.4, 2.7), 1),
+      cloudMaterial
+    );
+    puff.position.set(j * 2.1, range(-.3, .55), range(-.8, .8));
+    puff.scale.y = range(.45, .7);
+    cloud.add(puff);
+  }
+
+  cloud.position.set(range(-70, 55), range(17, 27), range(-55, -18));
+  cloud.scale.setScalar(range(.7, 1.5));
+  cloud.userData.speed = range(.12, .35);
+  clouds.push(cloud);
+  scene.add(cloud);
+}
+
+/* ---------- Gulls ---------- */
+
+const gulls = [];
+const gullWhite = new THREE.MeshStandardMaterial({
+  color: 0xf4f0df,
+  roughness: .9
+});
+const gullDark = new THREE.MeshStandardMaterial({
+  color: 0x4a5353,
+  roughness: .9
+});
+
+for (let i = 0; i < 7; i++) {
+  const gull = new THREE.Group();
+
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(.18, 8, 6),
+    gullWhite
+  );
+  body.scale.set(1, .65, 1.75);
+  gull.add(body);
+
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(.12, 8, 6),
+    gullWhite
+  );
+  head.position.set(0, .06, .31);
+  gull.add(head);
+
+  const beak = new THREE.Mesh(
+    new THREE.ConeGeometry(.045, .17, 6),
+    gullDark
+  );
+  beak.rotation.x = Math.PI / 2;
+  beak.position.set(0, .04, .48);
+  gull.add(beak);
+
+  const leftWing = box(gull, gullWhite, -.25, .03, 0, .56, .045, .22);
+  const rightWing = box(gull, gullWhite, .25, .03, 0, .56, .045, .22);
+  leftWing.userData.wing = true;
+  rightWing.userData.wing = true;
+
+  gull.position.set(range(-28, 28), range(9, 18), range(-12, 25));
+  gull.rotation.y = range(0, Math.PI * 2);
+  gull.userData.speed = range(.7, 1.2);
+  gull.userData.phase = range(0, 6.2);
+  gulls.push(gull);
+  scene.add(gull);
+}
+
+/* ---------- Buoys ---------- */
+
+const buoys = [];
+for (const [x, z, color] of [
+  [-10, 29, M.red],
+  [12, 34, M.cream],
+  [-24, 38, M.red],
+  [21, 26, M.cream]
+]) {
+  const buoy = new THREE.Mesh(
+    new THREE.SphereGeometry(.27, 10, 8),
+    color
+  );
+  buoy.position.set(x, -.03, z);
+  buoy.userData.baseY = -.03;
+  buoy.userData.phase = range(0, 6.2);
+  buoys.push(buoy);
+  scene.add(buoy);
+}
+
+/* ---------- Custom camera controls ---------- */
+
+const pointer = new THREE.Vector2();
+let dragging = false;
+let panning = false;
+let previousX = 0;
+let previousY = 0;
+
+function updateCamera() {
+  spherical.makeSafe();
+  camera.position.copy(target).add(
+    new THREE.Vector3().setFromSpherical(spherical)
+  );
+  camera.lookAt(target);
+}
+
+canvas.addEventListener('pointerdown', event => {
+  dragging = true;
+  panning = event.button === 2 || event.shiftKey;
+  previousX = event.clientX;
+  previousY = event.clientY;
+  canvas.setPointerCapture(event.pointerId);
+});
+
+canvas.addEventListener('pointermove', event => {
+  if (!dragging) return;
+
+  const dx = event.clientX - previousX;
+  const dy = event.clientY - previousY;
+  previousX = event.clientX;
+  previousY = event.clientY;
+
+  if (panning) {
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+    const scale = spherical.radius * .00135;
+    target.addScaledVector(right, -dx * scale);
+    target.y = THREE.MathUtils.clamp(target.y + dy * scale, -2, 18);
+  } else {
+    spherical.theta -= dx * .0048;
+    spherical.phi = THREE.MathUtils.clamp(
+      spherical.phi - dy * .0042,
+      .28,
+      1.48
+    );
+  }
+
+  updateCamera();
+});
+
+function stopDragging() {
+  dragging = false;
+  panning = false;
+}
+canvas.addEventListener('pointerup', stopDragging);
+canvas.addEventListener('pointercancel', stopDragging);
+canvas.addEventListener('contextmenu', event => event.preventDefault());
+
+canvas.addEventListener('wheel', event => {
+  event.preventDefault();
+  spherical.radius = THREE.MathUtils.clamp(
+    spherical.radius * Math.exp(event.deltaY * .001),
+    28,
+    115
+  );
+  updateCamera();
+}, { passive: false });
+
+window.addEventListener('keydown', event => {
+  const step = .09;
+  if (event.key === 'ArrowLeft') spherical.theta += step;
+  if (event.key === 'ArrowRight') spherical.theta -= step;
+  if (event.key === 'ArrowUp') spherical.phi -= step * .65;
+  if (event.key === 'ArrowDown') spherical.phi += step * .65;
+  if (event.key === '+' || event.key === '=') spherical.radius *= .92;
+  if (event.key === '-' || event.key === '_') spherical.radius *= 1.08;
+
+  spherical.phi = THREE.MathUtils.clamp(spherical.phi, .28, 1.48);
+  spherical.radius = THREE.MathUtils.clamp(spherical.radius, 28, 115);
+  updateCamera();
+});
+
+function resetView() {
+  target.set(0, 2.2, -3.5);
+  camera.position.set(49, 31, 56);
+  spherical.setFromVector3(camera.position.clone().sub(target));
+  updateCamera();
+}
+document.querySelector('#reset').addEventListener('click', resetView);
+canvas.addEventListener('dblclick', resetView);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---------- Animation ---------- */
+
+const clock = new THREE.Clock();
+let frame = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
+
+  const waterPosition = waterGeometry.attributes.position;
+  for (let i = 0; i < waterPosition.count; i++) {
+    const { x, z } = waterData[i];
+    const wave =
+      Math.sin(x * .16 + elapsed * .78 + z * .08) * .075 +
+      Math.sin(z * .21 - elapsed * .63 + x * .045) * .045;
+    waterPosition.setY(i, wave);
+  }
+  waterPosition.needsUpdate = true;
+  if (frame % 2 === 0) waterGeometry.computeVertexNormals();
+
+  for (const gull of gulls) {
+    const phase = gull.userData.phase + elapsed * gull.userData.speed;
+    gull.position.y += Math.sin(phase * 1.7) * .003;
+    gull.rotation.z = Math.sin(phase) * .08;
+
+    for (const child of gull.children) {
+      if (child.userData.wing) {
+        child.rotation.z = child.position.x < 0
+          ? Math.sin(phase * 4.2) * .48
+          : -Math.sin(phase * 4.2) * .48;
+      }
+    }
+  }
+
+  for (const cloud of clouds) {
+    cloud.position.x += cloud.userData.speed * .008;
+    if (cloud.position.x > 72) cloud.position.x = -72;
+  }
+
+  for (const buoy of buoys) {
+    buoy.position.y = buoy.userData.baseY +
+      Math.sin(elapsed * 1.4 + buoy.userData.phase) * .08;
+    buoy.rotation.z = Math.sin(elapsed + buoy.userData.phase) * .08;
+  }
+
+  frame++;
+  renderer.render(scene, camera);
+}
+
+updateCamera();
+animate();
+</script>
+</body>
+</html>

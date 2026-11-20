@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#172633" />
+  <title>Lighthouse at Dusk</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --cream: #f4ead7;
+      --muted: rgba(244, 234, 215, 0.66);
+      --line: rgba(244, 234, 215, 0.2);
+      --glass: rgba(15, 29, 37, 0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #172633;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 45%, rgba(5, 14, 21, 0.2) 100%),
+        linear-gradient(to bottom, rgba(5, 14, 21, 0.16), transparent 30%);
+    }
+
+    header {
+      position: fixed;
+      top: clamp(22px, 4vw, 48px);
+      left: clamp(22px, 4vw, 52px);
+      width: min(430px, calc(100vw - 44px));
+      pointer-events: none;
+      color: var(--cream);
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+
+    header p {
+      max-width: 330px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .controls {
+      position: fixed;
+      right: clamp(18px, 3vw, 40px);
+      bottom: clamp(18px, 3vw, 36px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--glass);
+      color: var(--cream);
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .controls span {
+      white-space: nowrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      padding: 8px 13px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff3dc;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 2px solid #ffd39a;
+      outline-offset: 3px;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: #172633;
+      color: #e9dfcb;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      transition: opacity 700ms ease, visibility 700ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 650px) {
+      header p {
+        max-width: 270px;
+        font-size: 11px;
+      }
+
+      .controls {
+        right: 50%;
+        transform: translateX(50%);
+      }
+
+      .controls span {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene" aria-label="Interactive 3D lighthouse scene at dusk"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header>
+    <p class="eyebrow">The North Coast · Dusk</p>
+    <h1>Light<br />keeping the way.</h1>
+    <p>
+      A weathered coastal beacon standing alone among the rocks,
+      as the last warmth of day settles over the sea.
+    </p>
+  </header>
+
+  <div class="controls">
+    <span>Drag to orbit · Scroll or pinch to zoom</span>
+    <button id="lightToggle" type="button">Lamp: On</button>
+  </div>
+
+  <div id="loading">Preparing the coast…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const container = document.querySelector("#scene");
+    const loading = document.querySelector("#loading");
+    const lightToggle = document.querySelector("#lightToggle");
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x718996, 0.0105);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      innerWidth / innerHeight,
+      0.1,
+      220
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // -------------------------------------------------------------------------
+    // Procedural sky
+    // -------------------------------------------------------------------------
+
+    const skyMaterial = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {
+        uSunDirection: {
+          value: new THREE.Vector3(-0.52, 0.32, -0.78).normalize()
+        }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uSunDirection;
+        varying vec3 vWorldPosition;
+
+        void main() {
+          vec3 direction = normalize(vWorldPosition - cameraPosition);
+          float height = clamp(direction.y * 0.5 + 0.5, 0.0, 1.0);
+
+          vec3 horizon = vec3(0.46, 0.53, 0.55);
+          vec3 zenith = vec3(0.10, 0.17, 0.22);
+          vec3 color = mix(horizon, zenith, smoothstep(0.02, 0.9, height));
+
+          float horizonGlow = pow(
+            max(dot(direction, normalize(uSunDirection)), 0.0),
+            18.0
+          );
+
+          color += vec3(1.0, 0.40, 0.16) * horizonGlow * 0.32;
+
+          float sunDisk = pow(
+            max(dot(direction, normalize(uSunDirection)), 0.0),
+            650.0
+          );
+
+          float sunHalo = pow(
+            max(dot(direction, normalize(uSunDirection)), 0.0),
+            22.0
+          );
+
+          color += vec3(1.0, 0.55, 0.24) * sunDisk * 2.0;
+          color += vec3(1.0, 0.38, 0.12) * sunHalo * 0.18;
+
+          gl_FragColor = vec4(color, 1.0);
+
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `
+    });
+
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(100, 40, 24),
+      skyMaterial
+    );
+    scene.add(sky);
+
+    // -------------------------------------------------------------------------
+    // Calm, animated sea
+    // -------------------------------------------------------------------------
+
+    const seaUniforms = {
+      uTime: { value: 0 }
+    };
+
+    const seaMaterial = new THREE.ShaderMaterial({
+      uniforms: seaUniforms,
+      vertexShader: `
+        uniform float uTime;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          vec3 displaced = position;
+
+          float waveA = sin(position.x * 0.22 + uTime * 0.55) * 0.12;
+          float waveB = sin(position.z * 0.31 - uTime * 0.40) * 0.08;
+          float waveC = sin((position.x + position.z) * 0.11 + uTime * 0.25) * 0.06;
+
+          displaced.y += waveA + waveB + waveC;
+
+          vec4 worldPosition = modelMatrix * vec4(displaced, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          vWave = waveA + waveB + waveC;
+
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        varying vec3 vWorldPosition;
+        varying float vWave;
+
+        void main() {
+          float broadRipple = sin(
+            vWorldPosition.x * 0.72 +
+            sin(vWorldPosition.z * 0.52 + uTime * 0.55) * 1.35 +
+            uTime * 0.72
+          );
+
+          float fineRipple = sin(
+            vWorldPosition.z * 1.38 -
+            uTime * 0.82 +
+            sin(vWorldPosition.x * 0.34) * 1.8
+          );
+
+          float glint = pow(max(0.0, broadRipple * 0.5 + 0.5), 18.0) * 0.30;
+
+          float horizonMix = smoothstep(22.0, 82.0, length(vWorldPosition.xz));
+          vec3 deepColor = vec3(0.025, 0.105, 0.135);
+          vec3 distantColor = vec3(0.075, 0.205, 0.225);
+          vec3 color = mix(deepColor, distantColor, horizonMix);
+
+          color += glint * vec3(0.75, 0.82, 0.78);
+          color += max(vWave, 0.0) * vec3(0.08, 0.12, 0.12);
+
+          gl_FragColor = vec4(color, 1.0);
+
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `
+    });
+
+    const seaGeometry = new THREE.PlaneGeometry(160, 160, 120, 120);
+    seaGeometry.rotateX(-Math.PI / 2);
+
+    const sea = new THREE.Mesh(seaGeometry, seaMaterial);
+    sea.position.y = -0.02;
+    scene.add(sea);
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xa9c2d0,
+      0x17201d,
+      1.35
+    );
+    scene.add(hemisphere);
+
+    const sunset = new THREE.DirectionalLight(0xffbd78, 3.1);
+    sunset.position.set(-18, 24, 12);
+    sunset.castShadow = true;
+    sunset.shadow.mapSize.set(2048, 2048);
+    sunset.shadow.camera.left = -13;
+    sunset.shadow.camera.right = 13;
+    sunset.shadow.camera.top = 13;
+    sunset.shadow.camera.bottom = -13;
+    sunset.shadow.camera.near = 1;
+    sunset.shadow.camera.far = 60;
+    sunset.shadow.bias = -0.00035;
+    sunset.shadow.normalBias = 0.025;
+    scene.add(sunset);
+
+    const coolFill = new THREE.DirectionalLight(0x8eb7c9, 0.65);
+    coolFill.position.set(12, 8, -15);
+    scene.add(coolFill);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const lighthouseWhite = new THREE.MeshStandardMaterial({
+      color: 0xf0eee2,
+      roughness: 0.78,
+      metalness: 0.02
+    });
+
+    const lighthouseRed = new THREE.MeshStandardMaterial({
+      color: 0xa52f28,
+      roughness: 0.7,
+      metalness: 0.03
+    });
+
+    const darkMetal = new THREE.MeshStandardMaterial({
+      color: 0x263438,
+      roughness: 0.42,
+      metalness: 0.72
+    });
+
+    const roofMetal = new THREE.MeshStandardMaterial({
+      color: 0x76302b,
+      roughness: 0.5,
+      metalness: 0.48
+    });
+
+    const glass = new THREE.MeshPhysicalMaterial({
+      color: 0x9bc9c5,
+      roughness: 0.12,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.34,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const lampMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffca72
+    });
+
+    const rockMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0x4b514d,
+        roughness: 0.96,
+        flatShading: true
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x62665f,
+        roughness: 0.94,
+        flatShading: true
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x39413f,
+        roughness: 0.98,
+        flatShading: true
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x707066,
+        roughness: 0.92,
+        flatShading: true
+      })
+    ];
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function makeFacetedRock(radius, seed, detail = 0) {
+      const geometry = new THREE.IcosahedronGeometry(radius, detail);
+      const positions = geometry.attributes.position;
+      const array = new Float32Array(positions.count * 3);
+
+      for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const z = positions.getZ(i);
+
+        const distortion =
+          1 +
+          0.12 * Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + seed) +
+          0.05 * Math.sin(y * 21.4 + z * 17.1 - seed * 0.7);
+
+        array[i * 3] = x * distortion;
+        array[i * 3 + 1] = y * distortion;
+        array[i * 3 + 2] = z * distortion;
+      }
+
+      geometry.setAttribute("position", new THREE.BufferAttribute(array, 3));
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function cylinderBetween(start, end, radius, material, radialSegments = 8) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        radialSegments
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function addRailing(parent, radius, y, count = 12) {
+      const points = [];
+
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        points.push(
+          new THREE.Vector3(
+            Math.cos(angle) * radius,
+            y,
+            Math.sin(angle) * radius
+          )
+        );
+      }
+
+      for (let i = 0; i < count; i++) {
+        const next = (i + 1) % count;
+        parent.add(cylinderBetween(points[i], points[next], 0.045, darkMetal));
+        parent.add(
+          cylinderBetween(
+            points[i].clone().add(new THREE.Vector3(0, -0.24, 0)),
+            points[i].clone().add(new THREE.Vector3(0, 0, 0)),
+            0.035,
+            darkMetal
+          )
+        );
+      }
+
+      parent.add(
+        cylinderBetween(
+          points[0].clone().add(new THREE.Vector3(0, 0.22, 0)),
+          points[points.length - 1].clone().add(new THREE.Vector3(0, 0.22, 0)),
+          0.045,
+          darkMetal
+        )
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Island and surrounding rocks
+    // -------------------------------------------------------------------------
+
+    const island = new THREE.Mesh(
+      makeFacetedRock(4.15, 2.7, 1),
+      new THREE.MeshStandardMaterial({
+        color: 0x59605a,
+        roughness: 0.98,
+        flatShading: true
+      })
+    );
+    island.scale.set(1, 0.48, 1);
+    island.position.y = -0.55;
+    island.castShadow = true;
+    island.receiveShadow = true;
+    scene.add(island);
+
+    for (let i = 0; i < 19; i++) {
+      const angle = (i / 19) * Math.PI * 2 + Math.sin(i * 2.3) * 0.12;
+      const radius = 3.25 + Math.random() * 0.95;
+      const size = 0.3 + Math.pow(Math.random(), 2) * 0.95;
+
+      const rock = new THREE.Mesh(
+        makeFacetedRock(1, i * 0.81 + 0.4, 0),
+        rockMaterials[i % rockMaterials.length]
+      );
+
+      rock.position.set(
+        Math.cos(angle) * radius,
+        -0.08 + Math.random() * 0.12,
+        Math.sin(angle) * radius
+      );
+      rock.scale.set(
+        size * (0.8 + Math.random() * 0.5),
+        size * (0.55 + Math.random() * 0.45),
+        size * (0.8 + Math.random() * 0.5)
+      );
+      rock.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // Distant headlands.
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2 + 0.35;
+      const rock = new THREE.Mesh(
+        makeFacetedRock(3 + Math.random() * 2.5, i * 1.7, 1),
+        rockMaterials[i % rockMaterials.length]
+      );
+
+      rock.position.set(
+        Math.cos(angle) * (17 + Math.random() * 12),
+        -1.5 - Math.random() * 0.8,
+        Math.sin(angle) * (17 + Math.random() * 12)
+      );
+      rock.scale.set(1.4, 0.65 + Math.random() * 0.45, 1);
+      rock.rotation.y = Math.random() * Math.PI;
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+    }
+
+    // Sparse, low-poly vegetation.
+    const shrubMaterial = new THREE.MeshStandardMaterial({
+      color: 0x35483b,
+      roughness: 1,
+      flatShading: true
+    });
+
+    for (let i = 0; i < 14; i++) {
+      const angle = (i / 14) * Math.PI * 2;
+      const radius = 2.1 + Math.random() * 1.5;
+      const shrub = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.18 + Math.random() * 0.14, 0),
+        shrubMaterial
+      );
+
+      shrub.position.set(
+        Math.cos(angle) * radius,
+        1.48 + Math.random() * 0.2,
+        Math.sin(angle) * radius
+      );
+      shrub.scale.y = 0.55 + Math.random() * 0.45;
+      shrub.castShadow = true;
+      scene.add(shrub);
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighthouse
+    // -------------------------------------------------------------------------
+
+    const lighthouse = new THREE.Group();
+    lighthouse.position.y = 1.3;
+    scene.add(lighthouse);
+
+    // Foundation.
+    const foundation = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.48, 1.72, 0.38, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0x8a8172,
+        roughness: 0.92
+      })
+    );
+    foundation.position.y = 0.16;
+    foundation.castShadow = true;
+    foundation.receiveShadow = true;
+    lighthouse.add(foundation);
+
+    // Main tower.
+    const tower = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.08, 1.28, 4.3, 12),
+      lighthouseWhite
+    );
+    tower.position.y = 2.35;
+    tower.castShadow = true;
+    tower.receiveShadow = true;
+    lighthouse.add(tower);
+
+    // Red painted bands.
+    const lowerBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.245, 1.245, 0.48, 12),
+      lighthouseRed
+    );
+    lowerBand.position.y = 1.25;
+    lowerBand.castShadow = true;
+    lighthouse.add(lowerBand);
+
+    const middleBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.15, 1.15, 0.46, 12),
+      lighthouseRed
+    );
+    middleBand.position.y = 2.75;
+    middleBand.castShadow = true;
+    lighthouse.add(middleBand);
+
+    const upperBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.075, 1.075, 0.44, 12),
+      lighthouseRed
+    );
+    upperBand.position.y = 4.12;
+    upperBand.castShadow = true;
+    lighthouse.add(upperBand);
+
+    // Front door.
+    const door = new THREE.Mesh(
+      new THREE.BoxGeometry(0.62, 0.92, 0.08),
+      new THREE.MeshStandardMaterial({
+        color: 0x343a38,
+        roughness: 0.78
+      })
+    );
+    door.position.set(0, 0.58, 1.115);
+    door.castShadow = true;
+    lighthouse.add(door);
+
+    const doorHandle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 8, 6),
+      darkMetal
+    );
+    doorHandle.position.set(0, 0.62, 1.17);
+    lighthouse.add(doorHandle);
+
+    // Gallery and railing.
+    const gallery = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.48, 1.48, 0.28, 16),
+      darkMetal
+    );
+    gallery.position.y = 4.58;
+    gallery.castShadow = true;
+    lighthouse.add(gallery);
+
+    addRailing(lighthouse, 1.43, 4.78);
+
+    // Lantern room lower drum.
+    const lanternDrum = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.58, 1.48, 0.72, 16),
+      lighthouseWhite
+    );
+    lanternDrum.position.y = 5.18;
+    lanternDrum.castShadow = true;
+    lighthouse.add(lanternDrum);
+
+    // Glass lantern room.
+    const lanternGlass = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.43, 1.43, 0.78, 16, 1, true),
+      glass
+    );
+    lanternGlass.position.y = 5.92;
+    lighthouse.add(lanternGlass);
+
+    // Glass mullions.
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const mullion = cylinderBetween(
+        new THREE.Vector3(
+          Math.cos(angle) * 1.43,
+          5.55,
+          Math.sin(angle) * 1.43
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * 1.43,
+          6.29,
+          Math.sin(angle) * 1.43
+        ),
+        0.025,
+        darkMetal,
+        6
+      );
+      lighthouse.add(mullion);
+    }
+
+    // Warm lamp chamber.
+    const lampChamber = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.18, 1.28, 0.38, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0x3c3027,
+        roughness: 0.6,
+        metalness: 0.35
+      })
+    );
+    lampChamber.position.y = 5.88;
+    lampChamber.castShadow = true;
+    lighthouse.add(lampChamber);
+
+    const lamp = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 12, 8),
+      lampMaterial
+    );
+    lamp.position.y = 5.88;
+    lighthouse.add(lamp);
+
+    // Pyramidal roof and cap.
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(1.8, 0.68, 8),
+      roofMetal
+    );
+    roof.position.y = 6.55;
+    roof.castShadow = true;
+    lighthouse.add(roof);
+
+    const roofCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.34, 0.22, 8),
+      darkMetal
+    );
+    roofCap.position.y = 7.0;
+    roofCap.castShadow = true;
+    lighthouse.add(roofCap);
+
+    // Soft procedural glow texture.
+    const glowCanvas = document.createElement("canvas");
+    glowCanvas.width = 128;
+    glowCanvas.height = 128;
+
+    const glowContext = glowCanvas.getContext("2d");
+    const gradient = glowContext.createRadialGradient(
+      64,
+      64,
+      0,
+      64,
+      64,
+      64
+    );
+    gradient.addColorStop(0, "rgba(255,235,180,1)");
+    gradient.addColorStop(0.12, "rgba(255,199,105,0.95)");
+    gradient.addColorStop(0.38, "rgba(255,153,55,0.38)");
+    gradient.addColorStop(1, "rgba(255,120,40,0)");
+    glowContext.fillStyle = gradient;
+    glowContext.fillRect(0, 0, 128, 128);
+
+    const glowTexture = new THREE.CanvasTexture(glowCanvas);
+    glowTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const glow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: 0xffb85c,
+        transparent: true,
+        opacity: 0.82,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    glow.position.y = 5.92;
+    glow.scale.set(3.8, 3.8, 1);
+    lighthouse.add(glow);
+
+    const lampLight = new THREE.PointLight(0xffb85c, 72, 15, 2);
+    lampLight.position.y = 5.92;
+    lighthouse.add(lampLight);
+
+    // Small red aviation light.
+    const redLight = new THREE.PointLight(0xff3322, 3, 5, 2);
+    redLight.position.set(0, 6.98, 0);
+    lighthouse.add(redLight);
+
+    // -------------------------------------------------------------------------
+    // Distant gulls
+    // -------------------------------------------------------------------------
+
+    const gulls = [];
+    const gullMaterial = new THREE.LineBasicMaterial({
+      color: 0xe8e4d7,
+      transparent: true,
+      opacity: 0.65
+    });
+
+    for (let i = 0; i < 4; i++) {
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.5, 0, 0),
+        new THREE.Vector3(0, -0.1, 0),
+        new THREE.Vector3(0.5, 0, 0)
+      ]);
+
+      const gull = new THREE.Line(geometry, gullMaterial);
+      gull.position.set(
+        Math.cos(i * 2.4) * (18 + i * 2.2),
+        7.2 + i * 0.55,
+        Math.sin(i * 2.4) * (18 + i * 2.2)
+      );
+      gull.rotation.y = Math.random() * Math.PI;
+      scene.add(gull);
+      gulls.push({
+        mesh: gull,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.08 + Math.random() * 0.05
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // Distant stars
+    // -------------------------------------------------------------------------
+
+    const starPositions = [];
+    for (let i = 0; i < 180; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const elevation = 0.06 + Math.random() * 0.88;
+      const radius = 58;
+
+      starPositions.push(
+        Math.cos(angle) * Math.cos(elevation) * radius,
+        Math.sin(elevation) * radius,
+        Math.sin(angle) * Math.cos(elevation) * radius
+      );
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0xdde8ed,
+        size: 0.14,
+        transparent: true,
+        opacity: 0.6,
+        depthWrite: false
+      })
+    );
+    scene.add(stars);
+
+    // -------------------------------------------------------------------------
+    // Direct camera controls: orbit, wheel zoom, and touch pinch
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      theta: 0.58,
+      phi: 1.18,
+      radius: 15.6,
+      targetTheta: 0.58,
+      targetPhi: 1.18,
+      targetRadius: 15.6,
+      target: new THREE.Vector3(0, 3.45, 0)
+    };
+
+    const pointers = new Map();
+    const canvas = renderer.domElement;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const previous = pointers.get(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        controls.targetTheta -= (event.clientX - previous.x) * 0.006;
+        controls.targetPhi -= (event.clientY - previous.y) * 0.0045;
+        controls.targetPhi = THREE.MathUtils.clamp(
+          controls.targetPhi,
+          0.35,
+          1.48
+        );
+      } else if (pointers.size === 2) {
+        const oldDistance = pointerDistance();
+        const newDistance = pointerDistance();
+
+        if (oldDistance > 0 && newDistance > 0) {
+          controls.targetRadius *= oldDistance / newDistance;
+          controls.targetRadius = THREE.MathUtils.clamp(
+            controls.targetRadius,
+            7.5,
+            29
+          );
+        }
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+    canvas.addEventListener("lostpointercapture", releasePointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.targetRadius *= Math.exp(event.deltaY * 0.001);
+        controls.targetRadius = THREE.MathUtils.clamp(
+          controls.targetRadius,
+          7.5,
+          29
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", () => {
+      controls.targetTheta = 0.58;
+      controls.targetPhi = 1.18;
+      controls.targetRadius = 15.6;
+    });
+
+    function updateCamera(delta) {
+      const smoothing = 1 - Math.exp(-8 * delta);
+
+      controls.theta +=
+        (controls.targetTheta - controls.theta) * smoothing;
+      controls.phi +=
+        (controls.targetPhi - controls.phi) * smoothing;
+      controls.radius +=
+        (controls.targetRadius - controls.radius) * smoothing;
+
+      const horizontal = Math.sin(controls.phi) * controls.radius;
+
+      camera.position.set(
+        controls.target.x + horizontal * Math.sin(controls.theta),
+        controls.target.y + Math.cos(controls.phi) * controls.radius,
+        controls.target.z + horizontal * Math.cos(controls.theta)
+      );
+
+      camera.lookAt(controls.target);
+    }
+
+    // -------------------------------------------------------------------------
+    // Lamp toggle
+    // -------------------------------------------------------------------------
+
+    let lampOn = true;
+
+    lightToggle.addEventListener("click", () => {
+      lampOn = !lampOn;
+      lightToggle.textContent = `Lamp: ${lampOn ? "On" : "Off"}`;
+    });
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    let firstFrame = true;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      seaUniforms.uTime.value = elapsed;
+
+      const flash = lampOn
+        ? 0.9 + Math.pow(Math.max(0, Math.sin(elapsed * 1.65)), 9) * 0.1
+        : 0;
+
+      lampLight.intensity = 72 * flash;
+      glow.material.opacity = lampOn ? 0.78 * flash : 0;
+      redLight.intensity = lampOn ? 2.5 * flash : 0;
+
+      for (const gull of gulls) {
+        gull.mesh.position.x += Math.cos(elapsed * gull.speed + gull.phase) * 0.006;
+        gull.mesh.position.z +=
+          Math.sin(elapsed * gull.speed + gull.phase) * 0.006;
+        gull.mesh.rotation.z =
+          Math.sin(elapsed * 1.8 + gull.phase) * 0.12;
+      }
+
+      updateCamera(delta);
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        loading.classList.add("hidden");
+      }
+    }
+
+    animate();
+
+    // -------------------------------------------------------------------------
+    // Resize
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

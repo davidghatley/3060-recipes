@@ -1,0 +1,16 @@
+# Serving-flag sweep on our Q4_K_M (+MTP). Control = defaults (-fa on, f16 KV, ub 512, graphs on). Controls bracket candidates.
+ctl-1     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384,32768 -r 6
+kvq8      | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -ctk q8_0 -ctv q8_0 -p 0 -n 128 -d 0,16384,32768 -r 6
+faoff     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa off -p 0 -n 128 -d 0,16384 -r 6
+nographs  | GGML_CUDA_DISABLE_GRAPHS=1 | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384 -r 6
+ctl-2     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384,32768 -r 6
+graphopt  | GGML_CUDA_GRAPH_OPT=1 | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384 -r 6
+nofusion  | GGML_CUDA_DISABLE_FUSION=1 | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384 -r 6
+ctl-3     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -p 0 -n 128 -d 0,16384,32768 -r 6
+# Prefill vs ubatch (batch = ubatch)
+ub256     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 256  -ub 256  -p 2048,16384 -n 0 -r 3
+ub512     | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 512  -ub 512  -p 2048,16384 -n 0 -r 3
+ub1024    | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 1024 -ub 1024 -p 2048,16384 -n 0 -r 3
+ub2048    | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 2048 -ub 2048 -p 2048,16384 -n 0 -r 3
+ub4096    | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 4096 -ub 4096 -p 2048,16384 -n 0 -r 3
+ub512-b   | | -m $D/own/Qwen3.5-4B-3D-Coder-MTP-Q4_K_M.gguf -fa on -b 512  -ub 512  -p 2048,16384 -n 0 -r 3

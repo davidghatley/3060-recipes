@@ -1,0 +1,66 @@
+session smoke order ['none', 'mtp2', 'mtp3', 'mtp4', 'mtp6', 'ngram', 'dflash', 'd08b', 'mtp3ng'] at 2026-11-19 11:29:01; gpu 53, 210 MHz, 810 MHz, 18.57 W, 1395 MiB, P5
+  [none] R scene-000048 ctx=87 n=64 88.15 tok/s draft None/None
+  [none] C scene-000048 ctx=9964 n=64 80.64 tok/s draft None/None
+  [none] prefill 2048 tok: 3099 tok/s, 661 ms
+  [none] prefill 8191 tok: 3073 tok/s, 2666 ms
+  [none] prefill 16010 tok: 2907 tok/s, 5508 ms
+step 0 none: decode median 84.4 (R 88.2, C 80.6) load 1.0s gpu_end [75, 1845 MHz, 7301 MHz, 169.50 W, 6316 MiB, P2]
+  [mtp2] R scene-000048 ctx=87 n=64 81.1 tok/s draft 22/79
+  [mtp2] C scene-000048 ctx=9964 n=64 128.31 tok/s draft 39/47
+  [mtp2] prefill 2048 tok: 2985 tok/s, 686 ms
+  [mtp2] prefill 8191 tok: 2934 tok/s, 2792 ms
+  [mtp2] prefill 16010 tok: 2748 tok/s, 5825 ms
+step 1 mtp2: decode median 104.7 (R 81.1, C 128.3) load 1.5s gpu_end [76, 1852 MHz, 7301 MHz, 168.87 W, 6880 MiB, P2]
+  [mtp3] R scene-000048 ctx=87 n=64 69.48 tok/s draft 23/114
+  [mtp3] C scene-000048 ctx=9964 n=64 128.54 tok/s draft 43/57
+  [mtp3] prefill 2048 tok: 2979 tok/s, 688 ms
+  [mtp3] prefill 8191 tok: 2926 tok/s, 2799 ms
+  [mtp3] prefill 16010 tok: 2753 tok/s, 5816 ms
+step 2 mtp3: decode median 99.0 (R 69.5, C 128.5) load 1.5s gpu_end [76, 1852 MHz, 7301 MHz, 168.38 W, 6930 MiB, P2]
+  [mtp4] R scene-000048 ctx=87 n=64 61.13 tok/s draft 24/149
+  [mtp4] C scene-000048 ctx=9964 n=64 129.13 tok/s draft 46/66
+  [mtp4] prefill 2048 tok: 2977 tok/s, 688 ms
+  [mtp4] prefill 8190 tok: 2923 tok/s, 2802 ms
+  [mtp4] prefill 16009 tok: 2750 tok/s, 5822 ms
+step 3 mtp4: decode median 95.1 (R 61.1, C 129.1) load 1.5s gpu_end [77, 1845 MHz, 7301 MHz, 169.29 W, 7010 MiB, P2]
+  [mtp6] R scene-000048 ctx=87 n=64 46.65 tok/s draft 24/221
+  [mtp6] C scene-000048 ctx=9964 n=64 118.07 tok/s draft 49/83
+  [mtp6] prefill 2048 tok: 2985 tok/s, 686 ms
+  [mtp6] prefill 8191 tok: 2925 tok/s, 2800 ms
+  [mtp6] prefill 16010 tok: 2752 tok/s, 5818 ms
+step 4 mtp6: decode median 82.4 (R 46.6, C 118.1) load 1.5s gpu_end [78, 1852 MHz, 7301 MHz, 167.96 W, 7110 MiB, P2]
+  [ngram] R scene-000048 ctx=87 n=64 88.5 tok/s draft None/None
+  [ngram] C scene-000048 ctx=9964 n=64 81.39 tok/s draft None/None
+  [ngram] prefill 2048 tok: 3117 tok/s, 657 ms
+  [ngram] prefill 8191 tok: 3091 tok/s, 2650 ms
+  [ngram] prefill 16010 tok: 2927 tok/s, 5469 ms
+step 5 ngram: decode median 84.9 (R 88.5, C 81.4) load 1.0s gpu_end [78, 1837 MHz, 7301 MHz, 168.38 W, 6346 MiB, P2]
+  [dflash] R scene-000048 ctx=87 n=64 53.32 tok/s draft 20/565
+  [dflash] C scene-000048 ctx=9964 n=64 83.57 tok/s draft 37/351
+  [dflash] prefill 2048 tok: 3019 tok/s, 678 ms
+  [dflash] prefill 8190 tok: 2975 tok/s, 2753 ms
+  [dflash] prefill 16009 tok: 2844 tok/s, 5629 ms
+step 6 dflash: decode median 68.4 (R 53.3, C 83.6) load 2.0s gpu_end [74, 1852 MHz, 7301 MHz, 166.77 W, 9312 MiB, P2]
+  [d08b] R scene-000048 ctx=87 n=64 38.58 tok/s draft 16/90
+  [d08b] C scene-000048 ctx=9964 n=64 61.51 tok/s draft 38/64
+  [d08b] prefill 2048 tok: 2608 tok/s, 785 ms
+  [d08b] prefill 8190 tok: 2577 tok/s, 3179 ms
+  [d08b] prefill 16009 tok: 2432 tok/s, 6584 ms
+step 7 d08b: decode median 50.0 (R 38.6, C 61.5) load 2.0s gpu_end [77, 1837 MHz, 7301 MHz, 169.61 W, 8006 MiB, P2]
+  [mtp3ng] R scene-000048 ctx=87 n=64 69.44 tok/s draft 23/114
+  [mtp3ng] C scene-000048 ctx=9964 n=64 129.34 tok/s draft 43/57
+  [mtp3ng] prefill 2048 tok: 2957 tok/s, 693 ms
+  [mtp3ng] prefill 8191 tok: 2917 tok/s, 2808 ms
+  [mtp3ng] prefill 16010 tok: 2751 tok/s, 5820 ms
+step 8 mtp3ng: decode median 99.4 (R 69.4, C 129.3) load 1.5s gpu_end [76, 1875 MHz, 7301 MHz, 169.24 W, 6960 MiB, P2]
+SUMMARY (per step: median R, median C):
+  none: R 88.2 C 80.6
+  mtp2: R 81.1 C 128.3
+  mtp3: R 69.5 C 128.5
+  mtp4: R 61.1 C 129.1
+  mtp6: R 46.6 C 118.1
+  ngram: R 88.5 C 81.4
+  dflash: R 53.3 C 83.6
+  d08b: R 38.6 C 61.5
+  mtp3ng: R 69.4 C 129.3
+smoke exit 0

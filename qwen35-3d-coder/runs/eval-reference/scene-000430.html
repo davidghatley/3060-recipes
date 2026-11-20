@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Five-Piece Drum Kit</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0b0e13;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #hud {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      width: min(340px, calc(100vw - 40px));
+      padding: 18px 20px;
+      color: #f4f7fb;
+      background: linear-gradient(135deg, rgba(20, 25, 34, 0.9), rgba(10, 13, 18, 0.76));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      color: #e8b96b;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #e8b96b;
+      box-shadow: 0 0 14px rgba(232, 185, 107, 0.85);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 30px);
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    #hud p {
+      margin: 10px 0 14px;
+      color: #aeb7c5;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.09);
+      color: #d6dce5;
+      font-size: 11px;
+    }
+
+    .controls b {
+      color: #fff;
+      font-weight: 650;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: #d8dee8;
+      background: #0b0e13;
+      transition: opacity 0.4s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      margin: 0 auto 14px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #e8b96b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    #loading-text {
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 600px) {
+      #hud {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 14px 16px;
+      }
+
+      #hud p {
+        display: none;
+      }
+
+      .controls {
+        grid-template-columns: repeat(4, auto);
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div>
+      <div class="spinner"></div>
+      <div id="loading-text">Building the drum kit</div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div class="eyebrow">Interactive 3D instrument</div>
+    <h1>Five-Piece Drum Kit</h1>
+    <p>
+      Walnut shells, chrome hardware, chain-driven pedals, two rack toms,
+      floor tom, hi-hats, crash, and ride.
+    </p>
+    <div class="controls">
+      <span><b>Drag</b> orbit</span>
+      <span><b>Wheel</b> zoom</span>
+      <span><b>Right-drag</b> pan</span>
+      <span><b>R</b> reset</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0e13);
+    scene.fog = new THREE.Fog(0x0b0e13, 12, 25);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      60
+    );
+
+    // -------------------------------------------------------------------------
+    // Procedural textures and materials
+    // -------------------------------------------------------------------------
+
+    function createWoodTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 768;
+      canvas.height = 256;
+
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+      gradient.addColorStop(0, "#48251a");
+      gradient.addColorStop(0.22, "#75432b");
+      gradient.addColorStop(0.5, "#5b3021");
+      gradient.addColorStop(0.76, "#7a452c");
+      gradient.addColorStop(1, "#3d2018");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 180; i++) {
+        const x = Math.random() * canvas.width;
+        const width = 0.5 + Math.random() * 2.2;
+        const alpha = 0.025 + Math.random() * 0.09;
+
+        ctx.strokeStyle = `rgba(${Math.random() > 0.45 ? "25,10,5" : "210,145,83"},${alpha})`;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        ctx.moveTo(x, -20);
+
+        for (let y = 0; y <= canvas.height + 20; y += 16) {
+          ctx.lineTo(
+            x + Math.sin(y * 0.025 + i) * (2 + Math.random() * 4),
+            y
+          );
+        }
+
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 28; i++) {
+        ctx.strokeStyle = `rgba(25,9,4,${0.08 + Math.random() * 0.12})`;
+        ctx.lineWidth = 1 + Math.random() * 2;
+        const y = Math.random() * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(
+          canvas.width * 0.25,
+          y + Math.random() * 16 - 8,
+          canvas.width * 0.7,
+          y + Math.random() * 16 - 8,
+          canvas.width,
+          y
+        );
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2.4, 1);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function createHeadTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#eeeae0";
+      ctx.fillRect(0, 0, 256, 256);
+
+      const image = ctx.getImageData(0, 0, 256, 256);
+      for (let i = 0; i < image.data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 15;
+        image.data[i] += noise;
+        image.data[i + 1] += noise;
+        image.data[i + 2] += noise;
+      }
+      ctx.putImageData(image, 0, 0);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 2);
+      return texture;
+    }
+
+    function createLogoTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 160;
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#171717";
+      ctx.font = "900 72px Arial";
+      ctx.fillText("FIVE", 256, 66);
+      ctx.font = "600 23px Arial";
+      ctx.letterSpacing = "8px";
+      ctx.fillText("DRUM WORKS", 256, 124);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function createStudioEnvironment() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 512);
+      gradient.addColorStop(0, "#596779");
+      gradient.addColorStop(0.42, "#27313e");
+      gradient.addColorStop(0.72, "#121820");
+      gradient.addColorStop(1, "#07090d");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      const panels = [
+        [70, 60, 210, 310, "#d9e8ff"],
+        [410, 95, 150, 260, "#fff0cf"],
+        [755, 50, 200, 300, "#c4d9f4"],
+        [250, 280, 420, 80, "#9caec0"]
+      ];
+
+      for (const [x, y, w, h, color] of panels) {
+        const panelGradient = ctx.createRadialGradient(
+          x + w / 2,
+          y + h / 2,
+          10,
+          x + w / 2,
+          y + h / 2,
+          Math.max(w, h)
+        );
+        panelGradient.addColorStop(0, color);
+        panelGradient.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = panelGradient;
+        ctx.fillRect(x - 80, y - 80, w + 160, h + 160);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      const target = pmrem.fromEquirectangular(texture);
+      scene.environment = target.texture;
+      texture.dispose();
+      pmrem.dispose();
+    }
+
+    createStudioEnvironment();
+
+    const woodTexture = createWoodTexture();
+    const headTexture = createHeadTexture();
+    const logoTexture = createLogoTexture();
+
+    const materials = {
+      shell: new THREE.MeshStandardMaterial({
+        map: woodTexture,
+        color: 0xb48a70,
+        roughness: 0.34,
+        metalness: 0.06
+      }),
+      interior: new THREE.MeshStandardMaterial({
+        color: 0x24120d,
+        roughness: 0.8,
+        side: THREE.BackSide
+      }),
+      head: new THREE.MeshStandardMaterial({
+        map: headTexture,
+        color: 0xfffdf4,
+        roughness: 0.78,
+        metalness: 0
+      }),
+      chrome: new THREE.MeshStandardMaterial({
+        color: 0xdce3eb,
+        metalness: 0.96,
+        roughness: 0.2
+      }),
+      darkChrome: new THREE.MeshStandardMaterial({
+        color: 0x323841,
+        metalness: 0.85,
+        roughness: 0.28
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x101216,
+        roughness: 0.7,
+        metalness: 0.08
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x090a0c,
+        roughness: 0.95
+      }),
+      brass: new THREE.MeshStandardMaterial({
+        color: 0xc48a31,
+        metalness: 0.86,
+        roughness: 0.26
+      }),
+      cymbal: new THREE.MeshStandardMaterial({
+        color: 0xd2a649,
+        metalness: 0.92,
+        roughness: 0.3,
+        side: THREE.DoubleSide
+      }),
+      cymbalGroove: new THREE.MeshStandardMaterial({
+        color: 0x8a5c18,
+        metalness: 0.85,
+        roughness: 0.42,
+        transparent: true,
+        opacity: 0.55
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xb72e32,
+        metalness: 0.48,
+        roughness: 0.3
+      }),
+      logo: new THREE.MeshBasicMaterial({
+        map: logoTexture,
+        transparent: true,
+        depthWrite: false
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xc8dcff, 0x242018, 1.35));
+
+    const keyLight = new THREE.DirectionalLight(0xfff2dc, 3.7);
+    keyLight.position.set(4.5, 7.5, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -5;
+    keyLight.shadow.camera.right = 5;
+    keyLight.shadow.camera.top = 5;
+    keyLight.shadow.camera.bottom = -5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.SpotLight(
+      0x7eb8ff,
+      75,
+      18,
+      Math.PI / 5,
+      0.55,
+      1.2
+    );
+    rimLight.position.set(-4.5, 5.7, -3.8);
+    rimLight.target.position.set(0, 1, 0);
+    scene.add(rimLight, rimLight.target);
+
+    const warmFill = new THREE.PointLight(0xffa95c, 18, 9, 1.7);
+    warmFill.position.set(2.8, 2.4, 3.4);
+    scene.add(warmFill);
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+    const X_AXIS = new THREE.Vector3(1, 0, 0);
+
+    function vec(x, y, z) {
+      return new THREE.Vector3(x, y, z);
+    }
+
+    function mesh(geometry, material, castShadow = true, receiveShadow = true) {
+      const object = new THREE.Mesh(geometry, material);
+      object.castShadow = castShadow;
+      object.receiveShadow = receiveShadow;
+      return object;
+    }
+
+    function rod(a, b, radius, material = materials.chrome, radialSegments = 12) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+      const object = mesh(
+        new THREE.CylinderGeometry(radius, radius, length, radialSegments),
+        material
+      );
+      object.position.copy(a).add(b).multiplyScalar(0.5);
+      object.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      return object;
+    }
+
+    function addRubberFoot(parent, position) {
+      const foot = mesh(
+        new THREE.SphereGeometry(0.065, 16, 10),
+        materials.rubber
+      );
+      foot.scale.set(1, 0.42, 1);
+      foot.position.copy(position);
+      parent.add(foot);
+    }
+
+    function createTripod(parent, center, radius, attachHeight, tubeRadius = 0.026) {
+      const startAngle = 0.2;
+
+      for (let i = 0; i < 3; i++) {
+        const angle = startAngle + (i / 3) * Math.PI * 2;
+        const attach = vec(
+          center.x + Math.sin(angle) * radius * 0.42,
+          attachHeight,
+          center.z + Math.cos(angle) * radius * 0.42
+        );
+        const foot = vec(
+          center.x + Math.sin(angle) * radius,
+          0.055,
+          center.z + Math.cos(angle) * radius
+        );
+
+        parent.add(rod(attach, foot, tubeRadius));
+        addRubberFoot(parent, foot);
+      }
+    }
+
+    function createChain(from, to, links = 18) {
+      const group = new THREE.Group();
+      const direction = new THREE.Vector3().subVectors(to, from);
+      const length = direction.length();
+      direction.normalize();
+
+      const baseQuaternion = new THREE.Quaternion().setFromUnitVectors(
+        X_AXIS,
+        direction
+      );
+
+      for (let i = 0; i < links; i++) {
+        const t = (i + 0.5) / links;
+        const link = mesh(
+          new THREE.TorusGeometry(0.018, 0.0048, 6, 12),
+          materials.darkChrome
+        );
+
+        link.position.copy(from).lerp(to, t);
+        link.position.y -= Math.sin(t * Math.PI) * 0.025;
+
+        const twist = new THREE.Quaternion().setFromAxisAngle(
+          X_AXIS,
+          i % 2 ? Math.PI / 2 : 0
+        );
+        link.quaternion.copy(baseQuaternion).multiply(twist);
+        link.scale.set(1.42, 0.72, 1);
+        group.add(link);
+      }
+
+      return group;
+    }
+
+    // -------------------------------------------------------------------------
+    // Stage
+    // -------------------------------------------------------------------------
+
+    const ground = mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x11151c,
+        roughness: 0.9,
+        metalness: 0.03
+      }),
+      false,
+      true
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.018;
+    scene.add(ground);
+
+    const rug = mesh(
+      new THREE.CylinderGeometry(2.55, 2.55, 0.035, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x172637,
+        roughness: 0.96
+      }),
+      false,
+      true
+    );
+    rug.scale.z = 0.78;
+    rug.position.set(0, 0.002, 0.05);
+    scene.add(rug);
+
+    const rugBorder = mesh(
+      new THREE.TorusGeometry(2.55, 0.014, 8, 128),
+      new THREE.MeshStandardMaterial({
+        color: 0x84603c,
+        roughness: 0.88
+      }),
+      false,
+      true
+    );
+    rugBorder.rotation.x = Math.PI / 2;
+    rugBorder.scale.z = 0.78;
+    rugBorder.position.set(0, 0.022, 0.05);
+    scene.add(rugBorder);
+
+    // -------------------------------------------------------------------------
+    // Drum construction
+    // -------------------------------------------------------------------------
+
+    function createDrum(radius, depth, options = {}) {
+      const group = new THREE.Group();
+      const lugCount = options.lugs ?? 8;
+
+      const shell = mesh(
+        new THREE.CylinderGeometry(radius, radius, depth, 64, 1, true),
+        materials.shell
+      );
+      group.add(shell);
+
+      const innerShell = mesh(
+        new THREE.CylinderGeometry(radius - 0.012, radius - 0.012, depth - 0.025, 64, 1, true),
+        materials.interior,
+        false,
+        true
+      );
+      group.add(innerShell);
+
+      const topHead = mesh(
+        new THREE.CylinderGeometry(radius - 0.028, radius - 0.028, 0.016, 64),
+        materials.head
+      );
+      topHead.position.y = depth / 2;
+      group.add(topHead);
+
+      const bottomHead = mesh(
+        new THREE.CylinderGeometry(radius - 0.028, radius - 0.028, 0.016, 64),
+        materials.head
+      );
+      bottomHead.position.y = -depth / 2;
+      group.add(bottomHead);
+
+      for (const y of [-depth / 2, depth / 2]) {
+        const hoop = mesh(
+          new THREE.TorusGeometry(radius + 0.008, 0.026, 10, 72),
+          materials.chrome
+        );
+        hoop.rotation.x = Math.PI / 2;
+        hoop.position.y = y;
+        group.add(hoop);
+
+        const innerHoop = mesh(
+          new THREE.TorusGeometry(radius - 0.02, 0.009, 6, 72),
+          materials.darkChrome
+        );
+        innerHoop.rotation.x = Math.PI / 2;
+        innerHoop.position.y = y + Math.sign(y) * 0.018;
+        group.add(innerHoop);
+      }
+
+      for (let i = 0; i < lugCount; i++) {
+        const angle = (i / lugCount) * Math.PI * 2;
+        const radialX = Math.sin(angle) * radius;
+        const radialZ = Math.cos(angle) * radius;
+
+        for (const y of [-depth * 0.28, depth * 0.28]) {
+          const lug = mesh(
+            new THREE.CylinderGeometry(0.034, 0.034, 0.13, 12),
+            materials.chrome
+          );
+          lug.position.set(radialX, y, radialZ);
+          group.add(lug);
+
+          const tensionRod = mesh(
+            new THREE.CylinderGeometry(0.009, 0.009, depth * 0.29, 8),
+            materials.darkChrome
+          );
+          tensionRod.position.set(
+            radialX * 1.025,
+            y + Math.sign(y) * depth * 0.14,
+            radialZ * 1.025
+          );
+          group.add(tensionRod);
+        }
+      }
+
+      return group;
+    }
+
+    // Bass drum, rotated so its axis runs front-to-back.
+    const bassDrum = createDrum(0.73, 0.79, { lugs: 10 });
+    bassDrum.position.set(0, 0.79, -0.56);
+    bassDrum.rotation.x = Math.PI / 2;
+    scene.add(bassDrum);
+
+    const bassBadge = mesh(
+      new THREE.CircleGeometry(0.205, 64),
+      new THREE.MeshBasicMaterial({ color: 0x191919 }),
+      false,
+      false
+    );
+    bassBadge.rotation.x = -Math.PI / 2;
+    bassBadge.position.y = 0.409;
+    bassDrum.add(bassBadge);
+
+    const bassLogo = mesh(
+      new THREE.PlaneGeometry(0.33, 0.105),
+      materials.logo,
+      false,
+      false
+    );
+    bassLogo.rotation.x = -Math.PI / 2;
+    bassLogo.position.y = 0.412;
+    bassDrum.add(bassLogo);
+
+    // Two bass-drum spurs.
+    for (const side of [-1, 1]) {
+      const attach = vec(side * 0.61, 0.38, -0.56);
+      const foot = vec(side * 0.98, 0.065, -0.44);
+      scene.add(rod(attach, foot, 0.031));
+      addRubberFoot(scene, foot);
+
+      const collar = mesh(
+        new THREE.CylinderGeometry(0.052, 0.052, 0.13, 14),
+        materials.darkChrome
+      );
+      collar.position.copy(attach);
+      collar.rotation.z = Math.PI / 2;
+      scene.add(collar);
+    }
+
+    // Snare drum.
+    const snare = createDrum(0.46, 0.23, { lugs: 10 });
+    snare.position.set(0.74, 0.94, 0.61);
+    snare.rotation.y = -0.08;
+    scene.add(snare);
+
+    const snareBasket = mesh(
+      new THREE.TorusGeometry(0.35, 0.018, 8, 48),
+      materials.chrome
+    );
+    snareBasket.rotation.x = Math.PI / 2;
+    snareBasket.position.set(0.74, 0.73, 0.61);
+    scene.add(snareBasket);
+
+    createTripod(scene, vec(0.74, 0, 0.61), 0.63, 0.76, 0.024);
+
+    const throwOff = mesh(
+      new THREE.BoxGeometry(0.1, 0.12, 0.055),
+      materials.chrome
+    );
+    throwOff.position.set(1.205, 0.94, 0.61);
+    scene.add(throwOff);
+
+    // Snare wires.
+    for (let i = 0; i < 15; i++) {
+      const z = -0.17 + (i / 14) * 0.34;
+      scene.add(
+        rod(
+          vec(0.45, 0.812, 0.61 + z),
+          vec(1.02, 0.812, 0.61 + z),
+          0.0032,
+          materials.chrome,
+          6
+        )
+      );
+    }
+
+    // Two rack toms.
+    const rackTomLeft = createDrum(0.4, 0.35, { lugs: 8 });
+    rackTomLeft.position.set(-0.4, 1.56, -0.46);
+    rackTomLeft.rotation.x = 0.13;
+    rackTomLeft.rotation.z = -0.035;
+    scene.add(rackTomLeft);
+
+    const rackTomRight = createDrum(0.35, 0.32, { lugs: 8 });
+    rackTomRight.position.set(0.43, 1.64, -0.4);
+    rackTomRight.rotation.x = 0.11;
+    rackTomRight.rotation.z = 0.035;
+    scene.add(rackTomRight);
+
+    // Rack mounting post, cross-arm, and clamps.
+    scene.add(
+      rod(vec(0, 0.54, -0.82), vec(0, 1.5, -0.78), 0.038, materials.darkChrome)
+    );
+    scene.add(
+      rod(vec(0, 1.34, -0.78), vec(-0.4, 1.37, -0.48), 0.027)
+    );
+    scene.add(
+      rod(vec(0, 1.34, -0.78), vec(0.43, 1.46, -0.43), 0.027)
+    );
+
+    const leftClamp = mesh(
+      new THREE.SphereGeometry(0.065, 16, 12),
+      materials.darkChrome
+    );
+    leftClamp.position.set(-0.4, 1.37, -0.48);
+    scene.add(leftClamp);
+
+    const rightClamp = mesh(
+      new THREE.SphereGeometry(0.065, 16, 12),
+      materials.darkChrome
+    );
+    rightClamp.position.set(0.43, 1.46, -0.43);
+    scene.add(rightClamp);
+
+    // Floor tom on three legs.
+    const floorTom = createDrum(0.52, 0.68, { lugs: 10 });
+    floorTom.position.set(-1.18, 1.03, -0.58);
+    floorTom.rotation.x = 0.07;
+    floorTom.rotation.z = -0.035;
+    scene.add(floorTom);
+
+    for (let i = 0; i < 3; i++) {
+      const angle = 0.3 + (i / 3) * Math.PI * 2;
+      const attach = vec(
+        -1.18 + Math.sin(angle) * 0.38,
+        0.72,
+        -0.58 + Math.cos(angle) * 0.38
+      );
+      const foot = vec(
+        -1.18 + Math.sin(angle) * 0.68,
+        0.055,
+        -0.58 + Math.cos(angle) * 0.68
+      );
+      scene.add(rod(attach, foot, 0.027));
+      addRubberFoot(scene, foot);
+    }
+
+    // -------------------------------------------------------------------------
+    // Pedals
+    // -------------------------------------------------------------------------
+
+    function createPedal(x, z, accentMaterial, width = 0.29) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+
+      const base = mesh(
+        new THREE.BoxGeometry(width + 0.15, 0.045, 0.2),
+        materials.darkChrome
+      );
+      base.position.set(0, 0.045, 0);
+      group.add(base);
+
+      const board = mesh(
+        new THREE.BoxGeometry(width, 0.036, 0.5),
+        accentMaterial
+      );
+      board.position.set(0, 0.102, 0.2);
+      board.rotation.x = -0.12;
+      group.add(board);
+
+      for (let i = 0; i < 5; i++) {
+        const grip = mesh(
+          new THREE.BoxGeometry(width * 0.76, 0.008, 0.014),
+          materials.rubber
+        );
+        grip.position.set(0, 0.143 + i * 0.004, 0.075 + i * 0.055);
+        grip.rotation.x = -0.12;
+        group.add(grip);
+      }
+
+      const hinge = mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, width + 0.12, 18),
+        materials.chrome
+      );
+      hinge.rotation.z = Math.PI / 2;
+      hinge.position.set(0, 0.13, -0.035);
+      group.add(hinge);
+
+      for (const side of [-1, 1]) {
+        group.add(
+          rod(
+            vec(side * (width * 0.5 + 0.035), 0.075, -0.05),
+            vec(side * (width * 0.5 + 0.035), 0.075, 0.42),
+            0.012,
+            materials.chrome
+          )
+        );
+      }
+
+      const chainAnchor = mesh(
+        new THREE.SphereGeometry(0.033, 12, 8),
+        materials.chrome
+      );
+      chainAnchor.position.set(0, 0.16, -0.065);
+      group.add(chainAnchor);
+
+      scene.add(group);
+      return group;
+    }
+
+    // Bass-drum foot pedal and beater.
+    const bassPedal = createPedal(0, 0.39, materials.red, 0.31);
+    scene.add(
+      createChain(
+        vec(0, 0.16, 0.325),
+        vec(0, 0.57, -0.13),
+        19
+      )
+    );
+
+    scene.add(
+      rod(
+        vec(-0.15, 0.59, -0.13),
+        vec(0.15, 0.59, -0.13),
+        0.032,
+        materials.chrome
+      )
+    );
+
+    scene.add(
+      rod(
+        vec(0, 0.59, -0.13),
+        vec(0, 0.51, 0.09),
+        0.017,
+        materials.chrome
+      )
+    );
+
+    const bassBeater = mesh(
+      new THREE.SphereGeometry(0.085, 18, 12),
+      materials.head
+    );
+    bassBeater.scale.set(1, 1.25, 1);
+    bassBeater.position.set(0, 0.5, 0.095);
+    scene.add(bassBeater);
+
+    // Hi-hat stand, pedal, chain, clutch, and beater.
+    const hiHatX = -1.72;
+    const hiHatZ = 0.61;
+
+    createTripod(scene, vec(hiHatX, 0, hiHatZ), 0.49, 0.25, 0.021);
+
+    scene.add(
+      rod(
+        vec(hiHatX, 0.16, hiHatZ),
+        vec(hiHatX, 1.2, hiHatZ),
+        0.028,
+        materials.chrome
+      )
+    );
+
+    const hiHatPedal = createPedal(hiHatX, 1.04, materials.brass, 0.27);
+
+    scene.add(
+      createChain(
+        vec(hiHatX, 0.16, 0.975),
+        vec(hiHatX, 1.015, hiHatZ),
+        25
+      )
+    );
+
+    const clutch = mesh(
+      new THREE.CylinderGeometry(0.065, 0.065, 0.12, 18),
+      materials.darkChrome
+    );
+    clutch.position.set(hiHatX, 0.99, hiHatZ);
+    scene.add(clutch);
+
+    scene.add(
+      rod(
+        vec(hiHatX, 0.97, hiHatZ),
+        vec(hiHatX - 0.28, 1.11, hiHatZ),
+        0.012,
+        materials.chrome
+      )
+    );
+
+    const hiHatFelt = mesh(
+      new THREE.SphereGeometry(0.047, 14, 10),
+      materials.head
+    );
+    hiHatFelt.scale.set(1, 1.35, 1);
+    hiHatFelt.position.set(hiHatX - 0.28, 1.11, hiHatZ);
+    scene.add(hiHatFelt);
+
+    // -------------------------------------------------------------------------
+    // Cymbals
+    // -------------------------------------------------------------------------
+
+    const cymbalProfile = [
+      [0.0, 0.075],
+      [0.035, 0.073],
+      [0.075, 0.063],
+      [0.12, 0.047],
+      [0.22, 0.029],
+      [0.48, 0.018],
+      [1.0, 0.009],
+      [1.0, -0.009],
+      [0.48, -0.006],
+      [0.22, 0.006],
+      [0.12, 0.025],
+      [0.075, 0.041],
+      [0.035, 0.052],
+      [0.0, 0.056]
+    ];
+
+    function getCymbalTopHeight(normalizedRadius) {
+      for (let i = 1; i < cymbalProfile.length; i++) {
+        const [r0, y0] = cymbalProfile[i - 1];
+        const [r1, y1] = cymbalProfile[i];
+
+        if (normalizedRadius >= r0 && normalizedRadius <= r1) {
+          const t = (normalizedRadius - r0) / Math.max(0.0001, r1 - r0);
+          return THREE.MathUtils.lerp(y0, y1, t);
+        }
+      }
+      return 0.01;
+    }
+
+    function createCymbal(radius) {
+      const group = new THREE.Group();
+
+      const points = cymbalProfile.map(
+        ([r, y]) => new THREE.Vector2(r * radius, y * radius)
+      );
+
+      const cymbal = mesh(
+        new THREE.LatheGeometry(points, 96),
+        materials.cymbal
+      );
+      group.add(cymbal);
+
+      // Fine concentric lathe marks.
+      for (let i = 0; i < 16; i++) {
+        const normalizedRadius = 0.17 + (i / 15) * 0.76;
+        const groove = mesh(
+          new THREE.TorusGeometry(normalizedRadius * radius, 0.0012, 4, 96),
+          materials.cymbalGroove,
+          false,
+          true
+        );
+        groove.rotation.x = Math.PI / 2;
+        groove.position.y =
+          getCymbalTopHeight(normalizedRadius) * radius + 0.001;
+        group.add(groove);
+      }
+
+      const bellRim = mesh(
+        new THREE.TorusGeometry(radius * 0.112, 0.0023, 5, 64),
+        materials.cymbalGroove,
+        false,
+        true
+      );
+      bellRim.rotation.x = Math.PI / 2;
+      bellRim.position.y = radius * 0.055;
+      group.add(bellRim);
+
+      const wingNut = mesh(
+        new THREE.CylinderGeometry(
+          radius * 0.045,
+          radius * 0.045,
+          radius * 0.07,
+          12
+        ),
+        materials.chrome
+      );
+      wingNut.position.y = -radius * 0.035;
+      group.add(wingNut);
+
+      return group;
+    }
+
+    // Paired hi-hat cymbals.
+    const hiHatLower = createCymbal(0.43);
+    hiHatLower.position.set(hiHatX, 1.15, hiHatZ);
+    hiHatLower.rotation.z = -0.018;
+    scene.add(hiHatLower);
+
+    const hiHatUpper = createCymbal(0.43);
+    hiHatUpper.position.set(hiHatX, 1.205, hiHatZ);
+    hiHatUpper.rotation.z = 0.022;
+    hiHatUpper.rotation.x = -0.012;
+    scene.add(hiHatUpper);
+
+    const hiHatStandTop = mesh(
+      new THREE.CylinderGeometry(0.037, 0.037, 0.16, 16),
+      materials.chrome
+    );
+    hiHatStandTop.position.set(hiHatX, 1.245, hiHatZ);
+    scene.add(hiHatStandTop);
+
+    // -------------------------------------------------------------------------
+    // Crash and ride boom stands
+    // -------------------------------------------------------------------------
+
+    function createBoomStand({
+      baseX,
+      baseZ,
+      mastHeight,
+      end,
+      radius,
+      tiltX,
+      tiltZ
+    }) {
+      createTripod(
+        scene,
+        vec(baseX, 0, baseZ),
+        0.58,
+        0.31,
+        0.025
+      );
+
+      scene.add(
+        rod(
+          vec(baseX, 0.18, baseZ),
+          vec(baseX, mastHeight, baseZ),
+          0.036,
+          materials.chrome
+        )
+      );
+
+      const mastCollar = mesh(
+        new THREE.CylinderGeometry(0.065, 0.065, 0.13, 18),
+        materials.darkChrome
+      );
+      mastCollar.position.set(baseX, mastHeight - 0.03, baseZ);
+      scene.add(mastCollar);
+
+      const boomEnd = end.clone().add(vec(0, -0.07, 0));
+      scene.add(
+        rod(
+          vec(baseX, mastHeight, baseZ),
+          boomEnd,
+          0.028,
+          materials.chrome
+        )
+      );
+
+      const sleeveStart = vec(baseX, mastHeight, baseZ);
+      const sleeveDirection = boomEnd.clone().sub(sleeveStart).normalize();
+      const sleeveEnd = sleeveStart.clone().addScaledVector(sleeveDirection, 0.35);
+
+      scene.add(
+        rod(
+          sleeveStart,
+          sleeveEnd,
+          0.049,
+          materials.darkChrome
+        )
+      );
+
+      const tilter = mesh(
+        new THREE.SphereGeometry(0.065, 16, 12),
+        materials.darkChrome
+      );
+      tilter.position.copy(sleeveStart).addScaledVector(sleeveDirection, 0.28);
+      scene.add(tilter);
+
+      const cymbal = createCymbal(radius);
+      cymbal.position.copy(end);
+      cymbal.rotation.x = tiltX;
+      cymbal.rotation.z = tiltZ;
+      scene.add(cymbal);
+
+      return cymbal;
+    }
+
+    createBoomStand({
+      baseX: -2.18,
+      baseZ: -0.62,
+      mastHeight: 1.55,
+      end: vec(-1.63, 2.08, -0.2),
+      radius: 0.68,
+      tiltX: -0.08,
+      tiltZ: 0.11
+    });
+
+    createBoomStand({
+      baseX: 2.13,
+      baseZ: -0.55,
+      mastHeight: 1.53,
+      end: vec(1.55, 2.02, -0.17),
+      radius: 0.74,
+      tiltX: 0.055,
+      tiltZ: -0.1
+    });
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no addons or examples modules
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      target: new THREE.Vector3(0, 1.08, 0),
+      radius: 8.2,
+      phi: 1.19,
+      theta: 0.55,
+      dragging: false,
+      panning: false,
+      lastX: 0,
+      lastY: 0,
+      moved: false
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(controls.phi);
+      camera.position.set(
+        controls.target.x + controls.radius * sinPhi * Math.sin(controls.theta),
+        controls.target.y + controls.radius * Math.cos(controls.phi),
+        controls.target.z + controls.radius * sinPhi * Math.cos(controls.theta)
+      );
+      camera.lookAt(controls.target);
+    }
+
+    function resetCamera() {
+      controls.target.set(0, 1.08, 0);
+      controls.radius = 8.2;
+      controls.phi = 1.19;
+      controls.theta = 0.55;
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("contextmenu", event => {
+      event.preventDefault();
+    });
+
+    renderer.domElement.addEventListener("pointerdown", event => {
+      controls.dragging = true;
+      controls.panning = event.button === 2 || event.shiftKey;
+      controls.lastX = event.clientX;
+      controls.lastY = event.clientY;
+      controls.moved = false;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", event => {
+      if (!controls.dragging) return;
+
+      const dx = event.clientX - controls.lastX;
+      const dy = event.clientY - controls.lastY;
+      controls.lastX = event.clientX;
+      controls.lastY = event.clientY;
+
+      if (Math.abs(dx) + Math.abs(dy) > 1) {
+        controls.moved = true;
+      }
+
+      if (controls.panning) {
+        const right = new THREE.Vector3(
+          Math.cos(controls.theta),
+          0,
+          -Math.sin(controls.theta)
+        );
+        const up = new THREE.Vector3(0, 1, 0);
+
+        controls.target.addScaledVector(right, -dx * 0.007);
+        controls.target.addScaledVector(up, dy * 0.005);
+      } else {
+        controls.theta -= dx * 0.005;
+        controls.phi -= dy * 0.005;
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi,
+          0.3,
+          Math.PI / 2 - 0.045
+        );
+      }
+
+      updateCamera();
+    });
+
+    function endPointer(event) {
+      controls.dragging = false;
+      controls.panning = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endPointer);
+    renderer.domElement.addEventListener("pointercancel", endPointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        controls.radius *= Math.exp(event.deltaY * 0.001);
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius,
+          3.8,
+          15
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", event => {
+      const key = event.key.toLowerCase();
+
+      if (key === "r") {
+        resetCamera();
+      } else if (key === "arrowleft") {
+        controls.theta -= 0.08;
+        updateCamera();
+      } else if (key === "arrowright") {
+        controls.theta += 0.08;
+        updateCamera();
+      } else if (key === "arrowup") {
+        controls.phi = Math.max(0.3, controls.phi - 0.06);
+        updateCamera();
+      } else if (key === "arrowdown") {
+        controls.phi = Math.min(Math.PI / 2 - 0.045, controls.phi + 0.06);
+        updateCamera();
+      } else if (key === "+" || key === "=") {
+        controls.radius = Math.max(3.8, controls.radius - 0.35);
+        updateCamera();
+      } else if (key === "-") {
+        controls.radius = Math.min(15, controls.radius + 0.35);
+        updateCamera();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    // -------------------------------------------------------------------------
+    // Render loop
+    // -------------------------------------------------------------------------
+
+    updateCamera();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+
+    requestAnimationFrame(() => {
+      const loading = document.getElementById("loading");
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 450);
+    });
+  </script>
+</body>
+</html>

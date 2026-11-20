@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock-Cut Buddhist Monastery Terrace</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #aebfc0;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 22px;
+      left: 24px;
+      z-index: 10;
+      max-width: min(430px, calc(100vw - 48px));
+      padding: 16px 19px;
+      color: #f5ead5;
+      background: linear-gradient(135deg, rgba(35, 29, 24, 0.84), rgba(54, 39, 29, 0.62));
+      border: 1px solid rgba(238, 218, 183, 0.28);
+      border-radius: 3px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    .title-card h1 {
+      margin: 0 0 7px;
+      font-size: clamp(19px, 2.2vw, 29px);
+      font-weight: 500;
+      letter-spacing: 0.025em;
+    }
+
+    .title-card p {
+      margin: 0;
+      color: rgba(245, 234, 213, 0.78);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.55;
+      letter-spacing: 0.035em;
+    }
+
+    .controls {
+      position: fixed;
+      right: 20px;
+      bottom: 18px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      padding: 9px 13px;
+      color: #f4ead8;
+      background: rgba(37, 31, 27, 0.78);
+      border: 1px solid rgba(238, 218, 183, 0.3);
+      border-radius: 3px;
+      font: 12px Arial, Helvetica, sans-serif;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(73, 58, 43, 0.9);
+    }
+
+    .hint {
+      position: fixed;
+      left: 24px;
+      bottom: 20px;
+      z-index: 10;
+      color: rgba(245, 234, 213, 0.8);
+      font: 11px Arial, Helvetica, sans-serif;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: #f2e6d3;
+      background: #392f27;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      transition: opacity 0.5s ease;
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        top: 12px;
+        left: 12px;
+        padding: 12px 14px;
+      }
+
+      .title-card p {
+        max-width: 270px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .controls {
+        right: 12px;
+        bottom: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <div class="title-card">
+    <h1>Cliffside Monastery</h1>
+    <p>
+      Four levels of rock-cut cells rise along the temple cliff.
+      A central assembly hall commands the upper terrace.
+    </p>
+  </div>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <div class="controls">
+    <button id="zoomIn" type="button">+</button>
+    <button id="zoomOut" type="button">−</button>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <div id="loading">CUTTING THE CLIFF…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const sceneHost = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute("aria-label", "Interactive 3D Buddhist monastery terrace");
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xaebfc0);
+    scene.fog = new THREE.Fog(0xaebfc0, 38, 92);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      160
+    );
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const materials = {
+      cliff: new THREE.MeshStandardMaterial({
+        color: 0x6f5947,
+        roughness: 0.98,
+        metalness: 0,
+        flatShading: true
+      }),
+      terrace: new THREE.MeshStandardMaterial({
+        color: 0x9a765c,
+        roughness: 0.94
+      }),
+      walkway: new THREE.MeshStandardMaterial({
+        color: 0xb08a69,
+        roughness: 0.9
+      }),
+      facade: new THREE.MeshStandardMaterial({
+        color: 0x896850,
+        roughness: 0.96
+      }),
+      stair: new THREE.MeshStandardMaterial({
+        color: 0xa17d60,
+        roughness: 0.93
+      }),
+      dark: new THREE.MeshStandardMaterial({
+        color: 0x211b17,
+        roughness: 1
+      }),
+      column: new THREE.MeshStandardMaterial({
+        color: 0xb08b68,
+        roughness: 0.82
+      }),
+      roof: new THREE.MeshStandardMaterial({
+        color: 0x683f32,
+        roughness: 0.8,
+        metalness: 0.03
+      }),
+      stupa: new THREE.MeshStandardMaterial({
+        color: 0xa98664,
+        roughness: 0.88
+      }),
+      ground: new THREE.MeshStandardMaterial({
+        color: 0x8d8068,
+        roughness: 1
+      })
+    };
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    const hemisphere = new THREE.HemisphereLight(0xd8e5e3, 0x65503b, 2.0);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xffd39a, 3.2);
+    sun.position.set(-13, 20, 15);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -25;
+    sun.shadow.camera.right = 25;
+    sun.shadow.camera.top = 22;
+    sun.shadow.camera.bottom = -12;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 65;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9fc5d0, 0.65);
+    fill.position.set(15, 8, -12);
+    scene.add(fill);
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+
+    function addMesh(geometry, material, position, castShadow = true, receiveShadow = true) {
+      const mesh = new THREE.Mesh(geometry, material);
+      if (position) mesh.position.copy(position);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = receiveShadow;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function addBox(size, position, material, castShadow = true, receiveShadow = true) {
+      return addMesh(
+        new THREE.BoxGeometry(size.x, size.y, size.z),
+        material,
+        position,
+        castShadow,
+        receiveShadow
+      );
+    }
+
+    function addCylinder(radiusTop, radiusBottom, height, position, material, segments = 12) {
+      return addMesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+        material,
+        position
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground and irregular cliff face
+    // ---------------------------------------------------------------------
+
+    const ground = addMesh(
+      new THREE.PlaneGeometry(110, 110),
+      materials.ground,
+      new THREE.Vector3(0, -0.03, 0),
+      false,
+      true
+    );
+    ground.rotation.x = -Math.PI / 2;
+
+    // A broad approach path leads toward the monastery.
+    addBox(
+      new THREE.Vector3(12, 0.08, 15),
+      new THREE.Vector3(0, 0.015, 8.5),
+      materials.walkway,
+      false,
+      true
+    );
+
+    const cliffPoints = [
+      [-14.2, 0],
+      [-13.6, 2.2],
+      [-14.6, 5.0],
+      [-13.2, 8.0],
+      [-15.0, 11.0],
+      [-12.0, 13.1],
+      [12.0, 13.1],
+      [15.0, 11.0],
+      [13.1, 8.0],
+      [14.5, 5.0],
+      [13.5, 2.2],
+      [14.0, 0]
+    ];
+
+    const cliffShape = new THREE.Shape();
+    cliffShape.moveTo(cliffPoints[0][0], cliffPoints[0][1]);
+    for (let i = 1; i < cliffPoints.length; i++) {
+      cliffShape.lineTo(cliffPoints[i][0], cliffPoints[i][1]);
+    }
+    cliffShape.closePath();
+
+    const cliffGeometry = new THREE.ExtrudeGeometry(cliffShape, {
+      depth: 3,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.32,
+      bevelThickness: 0.25,
+      steps: 1
+    });
+
+    addMesh(
+      cliffGeometry,
+      materials.cliff,
+      new THREE.Vector3(0, 0, -3.2)
+    );
+
+    // Rough rock buttresses and broken edges around the cliff.
+    const rockChunks = [
+      [-11.7, 4.2, -0.3, 2.8, 4.6, 2.0],
+      [-8.4, 6.8, -0.4, 1.8, 3.8, 1.7],
+      [8.7, 7.0, -0.3, 2.0, 4.0, 1.8],
+      [12.0, 4.8, -0.2, 2.8, 4.0, 2.2],
+      [-12.8, 9.0, -0.1, 2.3, 2.8, 2.0],
+      [12.8, 9.2, -0.1, 2.4, 2.8, 2.0]
+    ];
+
+    for (const [x, y, z, sx, sy, sz] of rockChunks) {
+      const rock = addMesh(
+        new THREE.DodecahedronGeometry(1, 0),
+        materials.cliff
+      );
+      rock.position.set(x, y, z);
+      rock.scale.set(sx, sy, sz);
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+    }
+
+    // ---------------------------------------------------------------------
+    // Four terrace levels
+    // ---------------------------------------------------------------------
+
+    const levelTops = [0.45, 3.30, 6.15, 9.00];
+    const cavePositions = [-9.0, -7.45, -5.9, 5.9, 7.45, 9.0];
+    const caveWidth = 1.35;
+    const caveHeight = 1.65;
+    const caveRadius = caveWidth / 2;
+    const caveSpring = caveHeight - caveRadius;
+
+    const caveShape = new THREE.Shape();
+    caveShape.moveTo(-caveRadius, 0);
+    caveShape.lineTo(caveRadius, 0);
+    caveShape.lineTo(caveRadius, caveSpring);
+    caveShape.absarc(0, caveSpring, caveRadius, 0, Math.PI, false);
+    caveShape.lineTo(-caveRadius, 0);
+    caveShape.closePath();
+
+    const caveGeometry = new THREE.ExtrudeGeometry(caveShape, {
+      depth: 0.12,
+      bevelEnabled: true,
+      bevelSegments: 1,
+      bevelSize: 0.035,
+      bevelThickness: 0.035,
+      curveSegments: 10
+    });
+
+    const archGeometry = new THREE.TorusGeometry(
+      caveRadius + 0.065,
+      0.075,
+      6,
+      16,
+      Math.PI
+    );
+
+    const columnTransforms = [];
+    const columnGeometry = new THREE.CylinderGeometry(0.14, 0.17, 1, 10);
+    const columnBaseGeometry = new THREE.BoxGeometry(0.46, 0.16, 0.46);
+    const columnCapitalGeometry = new THREE.BoxGeometry(0.52, 0.16, 0.52);
+    const columnDummy = new THREE.Object3D();
+
+    function addColumn(x, baseY, z) {
+      columnTransforms.push({
+        x,
+        y: baseY + 0.5,
+        z,
+        sx: 0.34,
+        sy: 1,
+        sz: 0.34
+      });
+    }
+
+    for (let level = 0; level < levelTops.length; level++) {
+      const top = levelTops[level];
+
+      // Main terrace platform.
+      addBox(
+        new THREE.Vector3(25.5, 0.45, 4.0),
+        new THREE.Vector3(0, top - 0.225, 0.3),
+        materials.terrace
+      );
+
+      // Lighter central processional strip.
+      addBox(
+        new THREE.Vector3(8.3, 0.08, 3.15),
+        new THREE.Vector3(0, top + 0.025, 0.35),
+        materials.walkway,
+        false,
+        true
+      );
+
+      // Stepped rock facade.
+      addBox(
+        new THREE.Vector3(25.2, 2.1, 0.7),
+        new THREE.Vector3(0, top + 1.05, 0.05),
+        materials.facade
+      );
+
+      // Horizontal course line beneath the upper edge.
+      addBox(
+        new THREE.Vector3(25.2, 0.10, 0.12),
+        new THREE.Vector3(0, top + 1.78, 0.43),
+        materials.cliff
+      );
+
+      let hasCave = true;
+
+      cavePositions.forEach((x, index) => {
+        if (level === 2 && index >= 2 && index < 5) {
+          hasCave = false;
+          return;
+        }
+
+        const baseY = top + 0.12;
+
+        // Recessed, dark arched cave opening.
+        const panel = addMesh(
+          caveGeometry,
+          materials.dark,
+          new THREE.Vector3(x, baseY, 0.43)
+        );
+        panel.castShadow = false;
+
+        // Stone arch surround.
+        const arch = addMesh(
+          archGeometry,
+          materials.facade,
+          new THREE.Vector3(x, baseY + caveSpring, 0.61)
+        );
+
+        // Vertical jambs.
+        addBox(
+          new THREE.Vector3(0.13, caveSpring, 0.18),
+          new THREE.Vector3(x - caveRadius, baseY + caveSpring / 2, 0.61),
+          materials.facade
+        );
+        addBox(
+          new THREE.Vector3(0.13, caveSpring, 0.18),
+          new THREE.Vector3(x + caveRadius, baseY + caveSpring / 2, 0.61),
+          materials.facade
+        );
+
+        // Narrow projecting ledge at the top of each cell.
+        addBox(
+          new THREE.Vector3(1.58, 0.17, 0.76),
+          new THREE.Vector3(x, top + 1.53, 0.84),
+          materials.terrace
+        );
+
+        if (hasCave) {
+          addColumn(x, top + 0.14, 0.63);
+        }
+      });
+
+      // Instanced columns and capitals for all cave rows and the assembly hall.
+      const columns = new THREE.InstancedMesh(
+        columnGeometry,
+        materials.column,
+        columnTransforms.length
+      );
+      const capitals = new THREE.InstancedMesh(
+        columnBaseGeometry,
+        materials.column,
+        columnTransforms.length
+      );
+      const capitalTop = new THREE.InstancedMesh(
+        columnCapitalGeometry,
+        materials.column,
+        columnTransforms.length
+      );
+
+      columnTransforms.forEach((transform, index) => {
+        columnDummy.position.set(transform.x, transform.y, transform.z);
+        columnDummy.scale.set(transform.sx, transform.sy, transform.sz);
+        columnDummy.updateMatrix();
+        columns.setMatrixAt(index, columnDummy.matrix);
+
+        columnDummy.position.y = top + 0.16;
+        columnDummy.scale.set(1, 1, 1);
+        columnDummy.updateMatrix();
+        capitals.setMatrixAt(index, columnDummy.matrix);
+
+        columnDummy.position.y = top + 1.94;
+        columnDummy.scale.set(1, 1, 1);
+        columnDummy.updateMatrix();
+        capitalTop.setMatrixAt(index, columnDummy.matrix);
+      });
+
+      for (const mesh of [columns, capitals, capitalTop]) {
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      // Low front parapet, interrupted by the zigzag stairways.
+      addBox(
+        new THREE.Vector3(2.25, 0.64, 0.56),
+        new THREE.Vector3(-10.37, top + 0.32, 2.05),
+        materials.facade
+      );
+      addBox(
+        new THREE.Vector3(2.30, 0.12, 0.62),
+        new THREE.Vector3(-10.37, top + 0.69, 2.05),
+        materials.terrace
+      );
+      addBox(
+        new THREE.Vector3(2.25, 0.64, 0.56),
+        new THREE.Vector3(10.37, top + 0.32, 2.05),
+        materials.facade
+      );
+      addBox(
+        new THREE.Vector3(2.30, 0.12, 0.62),
+        new THREE.Vector3(10.37, top + 0.69, 2.05),
+        materials.terrace
+      );
+
+      // Parapet follows the side contour of the cliff.
+      addBox(
+        new THREE.Vector3(0.56, 0.64, 2.25),
+        new THREE.Vector3(-12.55, top + 0.32, 0.15),
+        materials.facade
+      );
+      addBox(
+        new THREE.Vector3(0.62, 0.12, 2.30),
+        new THREE.Vector3(-12.55, top + 0.69, 0.15),
+        materials.terrace
+      );
+      addBox(
+        new THREE.Vector3(0.56, 0.64, 2.25),
+        new THREE.Vector3(12.55, top + 0.32, 0.15),
+        materials.facade
+      );
+      addBox(
+        new THREE.Vector3(0.62, 0.12, 2.30),
+        new THREE.Vector3(12.55, top + 0.69, 0.15),
+        materials.terrace
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Central assembly hall on the upper middle terrace
+    // ---------------------------------------------------------------------
+
+    const hallTop = levelTops[2];
+
+    addBox(
+      new THREE.Vector3(13.0, 0.46, 4.05),
+      new THREE.Vector3(0, hallTop - 0.23, 0.3),
+      materials.terrace
+    );
+
+    addBox(
+      new THREE.Vector3(12.0, 2.1, 0.72),
+      new THREE.Vector3(0, hallTop + 1.05, 0.08),
+      materials.facade
+    );
+
+    // Recessed central doorway.
+    addBox(
+      new THREE.Vector3(1.55, 1.55, 0.13),
+      new THREE.Vector3(0, hallTop + 0.92, 0.48),
+      materials.dark
+    );
+
+    // Six prominent facade columns.
+    for (const x of [-4.7, -2.85, -1, 1, 2.85, 4.7]) {
+      addColumn(x, hallTop + 0.16, 0.68);
+    }
+
+    // Entablature and roof.
+    addBox(
+      new THREE.Vector3(12.15, 0.42, 0.92),
+      new THREE.Vector3(0, hallTop + 2.16, 0.55),
+      materials.column
+    );
+
+    addBox(
+      new THREE.Vector3(12.45, 0.18, 1.02),
+      new THREE.Vector3(0, hallTop + 2.40, 0.55),
+      materials.roof
+    );
+
+    const hallRoof = addMesh(
+      new THREE.ConeGeometry(6.8, 1.15, 4),
+      materials.roof,
+      new THREE.Vector3(0, hallTop + 3.00, 0.55)
+    );
+    hallRoof.rotation.y = Math.PI / 4;
+
+    addCylinder(
+      0.11,
+      0.16,
+      0.38,
+      new THREE.Vector3(0, hallTop + 3.65, 0.55),
+      materials.roof,
+      10
+    );
+
+    // ---------------------------------------------------------------------
+    // Zigzag rock-cut stairways between the four levels
+    // ---------------------------------------------------------------------
+
+    function addStairFlight(x1, x2, y1, y2, z, count) {
+      const run = (x2 - x1) / count;
+      const rise = (y2 - y1) / count;
+
+      for (let i = 0; i < count; i++) {
+        const t = (i + 1) / count;
+        const top = THREE.MathUtils.lerp(y1, y2, t);
+        const height = top - y1 + 0.10;
+
+        addBox(
+          new THREE.Vector3(run * 1.12, height, 0.94),
+          new THREE.Vector3(
+            x1 + (i + 0.5) * run,
+            y1 + height / 2,
+            z
+          ),
+          materials.stair
+        );
+      }
+
+      // Diagonal stringers give the stairways a carved, supported appearance.
+      const direction = new THREE.Vector3(x2 - x1, y2 - y1, 0);
+      const length = direction.length();
+      const angle = Math.atan2(direction.y, direction.x);
+
+      for (const offset of [-0.34, 0.34]) {
+        const stringer = addMesh(
+          new THREE.BoxGeometry(length, 0.18, 0.28),
+          materials.cliff
+        );
+        stringer.position.set(
+          (x1 + x2) / 2,
+          (y1 + y2) / 2,
+          z + offset
+        );
+        stringer.rotation.z = angle;
+      }
+    }
+
+    for (let i = 0; i < levelTops.length - 1; i++) {
+      const lower = levelTops[i];
+      const upper = levelTops[i + 1];
+      const middle = (lower + upper) / 2;
+
+      // Two diagonal flights meet at a small central landing.
+      addStairFlight(-8.0, 0, lower, middle, 1.45, 11);
+      addStairFlight(0, 8.0, middle, upper, 1.45, 11);
+      addBox(
+        new THREE.Vector3(1.45, 0.20, 1.02),
+        new THREE.Vector3(0, middle - 0.08, 1.45),
+        materials.stair
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Small stupas at the outer edges of the monastery
+    // ---------------------------------------------------------------------
+
+    function createStupa(x, y, z, scale = 1) {
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.scale.setScalar(scale);
+
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(1.45, 0.25, 1.45),
+        materials.terrace
+      );
+      base.position.y = 0.125;
+      base.castShadow = true;
+      base.receiveShadow = true;
+      group.add(base);
+
+      const drum = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.48, 0.58, 0.48, 16),
+        materials.stupa
+      );
+      drum.position.y = 0.48;
+      drum.castShadow = true;
+      drum.receiveShadow = true;
+      group.add(drum);
+
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.57,
+          24,
+          12,
+          0,
+          Math.PI * 2,
+          0,
+          Math.PI / 2
+        ),
+        materials.stupa
+      );
+      dome.position.y = 0.87;
+      dome.castShadow = true;
+      dome.receiveShadow = true;
+      group.add(dome);
+
+      const harmika = new THREE.Mesh(
+        new THREE.BoxGeometry(0.72, 0.34, 0.72),
+        materials.stupa
+      );
+      harmika.position.y = 1.40;
+      harmika.castShadow = true;
+      group.add(harmika);
+
+      const spire = new THREE.Mesh(
+        new THREE.ConeGeometry(0.20, 0.88, 10),
+        materials.stupa
+      );
+      spire.position.y = 1.82;
+      spire.castShadow = true;
+      group.add(spire);
+
+      scene.add(group);
+    }
+
+    createStupa(-12.05, levelTops[0], 0.25, 0.92);
+    createStupa(12.05, levelTops[0], 0.25, 0.92);
+    createStupa(-12.05, levelTops[3], 0.25, 1.02);
+    createStupa(12.05, levelTops[3], 0.25, 1.02);
+
+    // ---------------------------------------------------------------------
+    // Subtle airborne dust
+    // ---------------------------------------------------------------------
+
+    const dustCount = 180;
+    const dustPositions = new Float32Array(dustCount * 3);
+
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * 34;
+      dustPositions[i * 3 + 1] = 0.5 + Math.random() * 11;
+      dustPositions[i * 3 + 2] = -0.5 + Math.random() * 16;
+    }
+
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(dustPositions, 3)
+    );
+
+    const dust = new THREE.Points(
+      dustGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffe3ad,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      })
+    );
+    scene.add(dust);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls, implemented without external addons
+    // ---------------------------------------------------------------------
+
+    const cameraTarget = new THREE.Vector3(0, 4.2, 0);
+    const cameraSpherical = new THREE.Spherical(35, 1.18, 0.48);
+
+    function updateCamera() {
+      camera.position.setFromSpherical(cameraSpherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetView() {
+      cameraSpherical.set(35, 1.18, 0.48);
+      cameraTarget.set(0, 4.2, 0);
+      updateCamera();
+    }
+
+    updateCamera();
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      cameraSpherical.theta -= deltaX * 0.005;
+      cameraSpherical.phi = THREE.MathUtils.clamp(
+        cameraSpherical.phi - deltaY * 0.005,
+        0.28,
+        1.48
+      );
+
+      updateCamera();
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event.pointerId !== undefined &&
+          renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", stopDragging);
+    renderer.domElement.addEventListener("pointercancel", stopDragging);
+
+    renderer.domElement.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      cameraSpherical.radius = THREE.MathUtils.clamp(
+        cameraSpherical.radius * Math.exp(event.deltaY * 0.001),
+        17,
+        58
+      );
+      updateCamera();
+    }, { passive: false });
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      cameraSpherical.radius = Math.max(17, cameraSpherical.radius * 0.86);
+      updateCamera();
+    });
+
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      cameraSpherical.radius = Math.min(58, cameraSpherical.radius * 1.16);
+      updateCamera();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") {
+        resetView();
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and render loop
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const clock = new THREE.Clock();
+
+    renderer.setAnimationLoop(() => {
+      const elapsed = clock.getElapsedTime();
+
+      dust.rotation.y = elapsed * 0.008;
+      dust.position.y = Math.sin(elapsed * 0.18) * 0.08;
+
+      renderer.render(scene, camera);
+    });
+
+    loading.style.opacity = "0";
+    setTimeout(() => loading.remove(), 550);
+  </script>
+</body>
+</html>

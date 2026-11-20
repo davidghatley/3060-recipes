@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dovetailed Drawer Box</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --cream: #eadbc5;
+      --muted: #b8a894;
+      --gold: #c99557;
+      --panel: rgba(23, 19, 15, 0.78);
+      --line: rgba(226, 198, 156, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #171410;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+                   BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #app,
+    #app canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app canvas {
+      display: block;
+      touch-action: none;
+      outline: none;
+    }
+
+    .title-block {
+      position: fixed;
+      top: clamp(22px, 4vw, 46px);
+      left: clamp(22px, 4vw, 52px);
+      z-index: 5;
+      max-width: min(490px, calc(100vw - 44px));
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.23em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: 0.025em;
+    }
+
+    .subtitle strong {
+      color: #dfcbb2;
+      font-weight: 550;
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 6;
+      right: clamp(16px, 3vw, 34px);
+      bottom: clamp(16px, 3vw, 30px);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: var(--cream);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      background: rgba(63, 48, 34, 0.9);
+      border-color: rgba(224, 181, 125, 0.48);
+      transform: translateY(-1px);
+    }
+
+    button[aria-pressed="false"] {
+      color: var(--muted);
+    }
+
+    .hint {
+      position: fixed;
+      z-index: 5;
+      left: clamp(22px, 4vw, 52px);
+      bottom: clamp(22px, 3vw, 32px);
+      color: rgba(219, 203, 181, 0.55);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .label {
+      position: fixed;
+      z-index: 4;
+      padding: 7px 10px;
+      border: 1px solid rgba(219, 181, 129, 0.28);
+      border-radius: 3px;
+      color: #e7d5bb;
+      background: rgba(25, 20, 15, 0.8);
+      backdrop-filter: blur(8px);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(15px, -50%);
+      transition: opacity 120ms ease;
+    }
+
+    .label::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -22px;
+      width: 22px;
+      height: 1px;
+      background: rgba(219, 181, 129, 0.55);
+    }
+
+    .label::after {
+      content: "";
+      position: absolute;
+      top: calc(50% - 2px);
+      left: -26px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #d2a46d;
+      box-shadow: 0 0 8px rgba(210, 164, 109, 0.65);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      color: #d9c7ac;
+      background: #171410;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: opacity 450ms ease, visibility 450ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 650px) {
+      .subtitle {
+        max-width: 320px;
+        font-size: 11px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .label {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <header class="title-block">
+    <p class="eyebrow">Exploded joinery study</p>
+    <h1>Dovetailed<br>Drawer Box</h1>
+    <p class="subtitle">
+      <strong>Alternating pins and flared tails</strong> lock the four hardwood
+      walls together. The bottom is seated in a routed groove, while the
+      decorative false front is shown pulled forward.
+    </p>
+  </header>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <div class="controls">
+    <button id="explodeButton" aria-pressed="true">Assemble false front</button>
+    <button id="labelsButton" aria-pressed="true">Hide labels</button>
+    <button id="resetButton">Reset view</button>
+  </div>
+
+  <div id="dovetailLabel" class="label">Dovetail pins & tails</div>
+  <div id="grooveLabel" class="label">Grooved base</div>
+  <div id="falseLabel" class="label">False front</div>
+
+  <div id="loading">Preparing the workshop…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+
+    const app = document.getElementById("app");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.13;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    app.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x171410);
+    scene.fog = new THREE.Fog(0x171410, 8.5, 19);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const cameraTarget = new THREE.Vector3(0.05, 0.83, 0.2);
+    const desired = {
+      radius: 6.55,
+      theta: 0.72,
+      phi: 1.13
+    };
+
+    const current = {
+      radius: desired.radius,
+      theta: desired.theta,
+      phi: desired.phi
+    };
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        current.radius,
+        current.phi,
+        current.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xd8c6aa, 0x241b14, 1.75));
+
+    const keyLight = new THREE.DirectionalLight(0xffdfb4, 3.4);
+    keyLight.position.set(4.8, 7.2, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -5;
+    keyLight.shadow.camera.right = 5;
+    keyLight.shadow.camera.top = 5;
+    keyLight.shadow.camera.bottom = -5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 18;
+    keyLight.shadow.bias = -0.0003;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x9cb9d6, 1.05);
+    fillLight.position.set(-5, 3.2, 2.2);
+    scene.add(fillLight);
+
+    const warmLight = new THREE.PointLight(0xffb36d, 23, 8, 2);
+    warmLight.position.set(-3.2, 3.8, 2.8);
+    scene.add(warmLight);
+
+    // ------------------------------------------------------------
+    // Procedural hardwood textures
+    // ------------------------------------------------------------
+
+    function makeWoodTexture(baseDark, baseLight, seed = 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+
+      let randomSeed = seed >>> 0;
+      function random() {
+        randomSeed =
+          (randomSeed * 1664525 + 1013904223) >>> 0;
+        return randomSeed / 4294967296;
+      }
+
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, baseDark);
+      gradient.addColorStop(0.32, baseLight);
+      gradient.addColorStop(0.58, baseDark);
+      gradient.addColorStop(0.8, baseLight);
+      gradient.addColorStop(1, baseDark);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Long vertical grain fibers.
+      for (let i = 0; i < 260; i++) {
+        const x = random() * width;
+        const amplitude = 1.5 + random() * 9;
+        const frequency = 0.006 + random() * 0.018;
+        const phase = random() * Math.PI * 2;
+        const dark = random() > 0.43;
+
+        ctx.beginPath();
+
+        for (let y = -10; y <= height + 10; y += 8) {
+          const xx =
+            x +
+            Math.sin(y * frequency + phase) * amplitude +
+            Math.sin(y * 0.003 + phase) * 4;
+
+          if (y === -10) ctx.moveTo(xx, y);
+          else ctx.lineTo(xx, y);
+        }
+
+        ctx.strokeStyle = dark
+          ? `rgba(25, 10, 4, ${0.035 + random() * 0.12})`
+          : `rgba(255, 211, 151, ${0.02 + random() * 0.075})`;
+
+        ctx.lineWidth = 0.35 + random() * 1.6;
+        ctx.stroke();
+      }
+
+      // Broad cathedral grain.
+      for (let i = 0; i < 14; i++) {
+        const x = random() * width;
+        const y = random() * height;
+        const spread = 35 + random() * 95;
+
+        ctx.beginPath();
+        ctx.moveTo(x - spread, -20);
+        ctx.bezierCurveTo(
+          x - spread * 0.65,
+          y - 100,
+          x - spread * 0.22,
+          y + 120,
+          x,
+          height + 20
+        );
+        ctx.bezierCurveTo(
+          x + spread * 0.22,
+          y + 120,
+          x + spread * 0.65,
+          y - 100,
+          x + spread,
+          -20
+        );
+
+        ctx.strokeStyle = `rgba(32, 13, 5, ${0.045 + random() * 0.07})`;
+        ctx.lineWidth = 1 + random() * 2.4;
+        ctx.stroke();
+      }
+
+      // Small pores and flecks.
+      for (let i = 0; i < 1200; i++) {
+        const x = random() * width;
+        const y = random() * height;
+        const length = 0.5 + random() * 4;
+
+        ctx.strokeStyle = `rgba(20, 8, 3, ${0.025 + random() * 0.085})`;
+        ctx.lineWidth = 0.35 + random() * 0.8;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + (random() - 0.5) * 1.5, y + length);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+
+      return texture;
+    }
+
+    function repeatedTexture(source, x, y, rotation = 0) {
+      const texture = source.clone();
+      texture.repeat.set(x, y);
+      texture.rotation = rotation;
+      texture.center.set(0.5, 0.5);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    const drawerWoodTexture = makeWoodTexture(
+      "#3b2116",
+      "#865031",
+      17
+    );
+
+    const falseFrontTexture = makeWoodTexture(
+      "#5b2f1d",
+      "#a9683d",
+      43
+    );
+
+    const lighterWoodTexture = makeWoodTexture(
+      "#4b2c1d",
+      "#9a6039",
+      91
+    );
+
+    function woodMaterial(texture, roughness = 0.48) {
+      return new THREE.MeshPhysicalMaterial({
+        map: texture,
+        color: 0xffffff,
+        roughness,
+        metalness: 0,
+        clearcoat: 0.08,
+        clearcoatRoughness: 0.7
+      });
+    }
+
+    const sideMaterial = woodMaterial(
+      repeatedTexture(drawerWoodTexture, 0.55, 0.78),
+      0.5
+    );
+
+    const frontMaterial = woodMaterial(
+      repeatedTexture(drawerWoodTexture, 2.2, 0.92),
+      0.46
+    );
+
+    const tailMaterial = woodMaterial(
+      repeatedTexture(lighterWoodTexture, 0.52, 1.15),
+      0.52
+    );
+
+    const baseMaterial = woodMaterial(
+      repeatedTexture(drawerWoodTexture, 2.7, 1.45),
+      0.57
+    );
+
+    const falseFrameMaterial = woodMaterial(
+      repeatedTexture(falseFrontTexture, 1.65, 0.82),
+      0.42
+    );
+
+    const falseVeneerMaterial = woodMaterial(
+      repeatedTexture(lighterWoodTexture, 1.45, 0.72, 0.04),
+      0.39
+    );
+
+    const grooveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x24140d,
+      roughness: 0.78,
+      metalness: 0
+    });
+
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x27231f,
+      roughness: 0.92,
+      metalness: 0.02
+    });
+
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x191611,
+      roughness: 0.94,
+      metalness: 0
+    });
+
+    const brassMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb6884f,
+      roughness: 0.28,
+      metalness: 0.78
+    });
+
+    const steelMaterial = new THREE.MeshStandardMaterial({
+      color: 0x46413a,
+      roughness: 0.33,
+      metalness: 0.82
+    });
+
+    // ------------------------------------------------------------
+    // Model dimensions
+    // ------------------------------------------------------------
+
+    const innerWidth = 3.1;
+    const outerDepth = 2.45;
+    const sideThickness = 0.22;
+    const frontThickness = 0.18;
+    const wallBottom = 0.18;
+    const wallHeight = 1.35;
+    const wallTop = wallBottom + wallHeight;
+    const frontZ = outerDepth / 2;
+    const backZ = -outerDepth / 2;
+    const outerSideX = innerWidth / 2 + sideThickness;
+
+    const tailCenters = [0.45, 0.70, 0.95, 1.20];
+    const tailNarrow = 0.075;
+    const tailWide = 0.19;
+    const tailDepth = 0.17;
+
+    const drawer = new THREE.Group();
+    scene.add(drawer);
+
+    function meshWithMaterial(geometry, material) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // ------------------------------------------------------------
+    // Dovetailed side boards
+    //
+    // The side profile contains open sockets at the front and rear.
+    // Tails from the front and back walls pass through those sockets,
+    // while the remaining narrow sections form the side pins.
+    // ------------------------------------------------------------
+
+    const sideShape = new THREE.Shape();
+    sideShape.moveTo(backZ, wallBottom);
+
+    // Rear sockets, moving upward.
+    for (const center of tailCenters) {
+      sideShape.lineTo(backZ, center - tailNarrow / 2);
+      sideShape.lineTo(
+        backZ + tailDepth,
+        center - tailWide / 2
+      );
+      sideShape.lineTo(
+        backZ + tailDepth,
+        center + tailWide / 2
+      );
+      sideShape.lineTo(backZ, center + tailNarrow / 2);
+    }
+
+    sideShape.lineTo(backZ, wallTop);
+    sideShape.lineTo(frontZ, wallTop);
+
+    // Front sockets, moving downward.
+    for (let i = tailCenters.length - 1; i >= 0; i--) {
+      const center = tailCenters[i];
+      sideShape.lineTo(frontZ, center + tailNarrow / 2);
+      sideShape.lineTo(
+        frontZ - tailDepth,
+        center + tailWide / 2
+      );
+      sideShape.lineTo(
+        frontZ - tailDepth,
+        center - tailWide / 2
+      );
+      sideShape.lineTo(frontZ, center - tailNarrow / 2);
+    }
+
+    sideShape.lineTo(frontZ, wallBottom);
+    sideShape.closePath();
+
+    const rawSideGeometry = new THREE.ExtrudeGeometry(sideShape, {
+      depth: sideThickness,
+      steps: 1,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.007,
+      bevelThickness: 0.007,
+      curveSegments: 1
+    });
+
+    const rightSideGeometry = rawSideGeometry.clone();
+    rightSideGeometry.rotateY(-Math.PI / 2);
+
+    const leftSideGeometry = rawSideGeometry.clone();
+    leftSideGeometry.rotateY(Math.PI / 2);
+
+    const rightSide = meshWithMaterial(
+      rightSideGeometry,
+      sideMaterial
+    );
+    rightSide.position.x = outerSideX;
+    drawer.add(rightSide);
+
+    const leftSide = meshWithMaterial(
+      leftSideGeometry,
+      sideMaterial
+    );
+    leftSide.position.x = -outerSideX;
+    drawer.add(leftSide);
+
+    // Front and back walls.
+    const frontWall = meshWithMaterial(
+      new THREE.BoxGeometry(
+        innerWidth,
+        wallHeight,
+        frontThickness
+      ),
+      frontMaterial
+    );
+
+    frontWall.position.set(
+      0,
+      wallBottom + wallHeight / 2,
+      frontZ - frontThickness / 2
+    );
+    drawer.add(frontWall);
+
+    const backWall = meshWithMaterial(
+      new THREE.BoxGeometry(
+        innerWidth,
+        wallHeight,
+        frontThickness
+      ),
+      frontMaterial
+    );
+
+    backWall.position.set(
+      0,
+      wallBottom + wallHeight / 2,
+      backZ + frontThickness / 2
+    );
+    drawer.add(backWall);
+
+    // ------------------------------------------------------------
+    // Flared tails
+    // ------------------------------------------------------------
+
+    function makeTailGeometry(points, direction) {
+      const shape = new THREE.Shape();
+
+      points.forEach(([z, y], index) => {
+        const localX = direction > 0 ? z : -z;
+
+        if (index === 0) shape.moveTo(localX, y);
+        else shape.lineTo(localX, y);
+      });
+
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: sideThickness + 0.014,
+        steps: 1,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: 0.004,
+        bevelThickness: 0.004,
+        curveSegments: 1
+      });
+
+      geometry.rotateY(
+        direction > 0 ? -Math.PI / 2 : Math.PI / 2
+      );
+
+      return geometry;
+    }
+
+    function addTail(points, direction) {
+      const tail = meshWithMaterial(
+        makeTailGeometry(points, direction),
+        tailMaterial
+      );
+
+      tail.position.x =
+        direction *
+        (outerSideX + 0.014);
+
+      drawer.add(tail);
+      return tail;
+    }
+
+    for (const center of tailCenters) {
+      const frontTailPoints = [
+        [frontZ, center + tailNarrow / 2],
+        [frontZ - tailDepth, center + tailWide / 2],
+        [frontZ - tailDepth, center - tailWide / 2],
+        [frontZ, center - tailNarrow / 2]
+      ];
+
+      const backTailPoints = [
+        [backZ, center - tailNarrow / 2],
+        [backZ + tailDepth, center - tailWide / 2],
+        [backZ + tailDepth, center + tailWide / 2],
+        [backZ, center + tailNarrow / 2]
+      ];
+
+      addTail(frontTailPoints, 1);
+      addTail(frontTailPoints, -1);
+      addTail(backTailPoints, 1);
+      addTail(backTailPoints, -1);
+    }
+
+    // ------------------------------------------------------------
+    // Groove and bottom panel
+    // ------------------------------------------------------------
+
+    const grooveDepth = 0.055;
+    const innerDepth = outerDepth - frontThickness * 2;
+    const baseThickness = 0.1;
+    const baseY = 0.29;
+
+    const baseWidth =
+      innerWidth - grooveDepth * 2;
+
+    const baseDepth =
+      innerDepth - grooveDepth * 2;
+
+    const bottom = meshWithMaterial(
+      new THREE.BoxGeometry(
+        baseWidth,
+        baseThickness,
+        baseDepth
+      ),
+      baseMaterial
+    );
+
+    bottom.position.set(0, baseY, 0);
+    drawer.add(bottom);
+
+    // Dark recessed strips suggest the routed groove around the base.
+    for (const direction of [-1, 1]) {
+      const groove = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          0.065,
+          0.07,
+          innerDepth - 0.05
+        ),
+        grooveMaterial
+      );
+
+      groove.position.set(
+        direction * (innerWidth / 2 - 0.026),
+        0.34,
+        0
+      );
+
+      groove.receiveShadow = true;
+      drawer.add(groove);
+    }
+
+    for (const direction of [-1, 1]) {
+      const groove = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          innerWidth - 0.09,
+          0.07,
+          0.065
+        ),
+        grooveMaterial
+      );
+
+      groove.position.set(
+        0,
+        0.34,
+        direction *
+          (outerDepth / 2 - frontThickness - 0.026)
+      );
+
+      groove.receiveShadow = true;
+      drawer.add(groove);
+    }
+
+    // ------------------------------------------------------------
+    // False front
+    // ------------------------------------------------------------
+
+    function roundedRectangle(width, height, radius) {
+      const shape = new THREE.Shape();
+      const x = -width / 2;
+      const y = -height / 2;
+
+      shape.moveTo(x + radius, y);
+      shape.lineTo(x + width - radius, y);
+      shape.quadraticCurveTo(
+        x + width, y,
+        x + width, y + radius
+      );
+      shape.lineTo(x + width, y + height - radius);
+      shape.quadraticCurveTo(
+        x + width, y + height,
+        x + width - radius, y + height
+      );
+      shape.lineTo(x + radius, y + height);
+      shape.quadraticCurveTo(
+        x, y + height,
+        x, y + height - radius
+      );
+      shape.lineTo(x, y + radius);
+      shape.quadraticCurveTo(
+        x, y,
+        x + radius, y
+      );
+
+      return shape;
+    }
+
+    function roundedPanel(
+      width,
+      height,
+      depth,
+      radius,
+      material
+    ) {
+      const geometry = new THREE.ExtrudeGeometry(
+        roundedRectangle(width, height, radius),
+        {
+          depth,
+          steps: 1,
+          bevelEnabled: true,
+          bevelSegments: 3,
+          bevelSize: 0.012,
+          bevelThickness: 0.012,
+          curveSegments: 8
+        }
+      );
+
+      geometry.translate(0, 0, -depth / 2);
+
+      return meshWithMaterial(geometry, material);
+    }
+
+    const falseFront = new THREE.Group();
+    const falseWidth = 3.86;
+    const falseHeight = 1.72;
+    const falseDepth = 0.17;
+
+    const falsePanel = roundedPanel(
+      falseWidth,
+      falseHeight,
+      falseDepth,
+      0.055,
+      falseFrameMaterial
+    );
+
+    falseFront.add(falsePanel);
+
+    const raisedVeneer = roundedPanel(
+      falseWidth - 0.4,
+      falseHeight - 0.4,
+      0.026,
+      0.035,
+      falseVeneerMaterial
+    );
+
+    raisedVeneer.position.z = 0.098;
+    falseFront.add(raisedVeneer);
+
+    falseFront.position.set(
+      0,
+      1.03,
+      frontZ + 0.1
+    );
+
+    scene.add(falseFront);
+
+    // ------------------------------------------------------------
+    // Exploded screws
+    // ------------------------------------------------------------
+
+    const screwGroup = new THREE.Group();
+    scene.add(screwGroup);
+
+    function addScrew(x, y) {
+      const shaft = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.032, 0.032, 0.25, 18),
+        steelMaterial
+      );
+
+      shaft.rotation.x = Math.PI / 2;
+      shaft.position.set(x, y, frontZ + 0.27);
+      shaft.castShadow = true;
+      screwGroup.add(shaft);
+
+      const head = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.071, 0.071, 0.042, 24),
+        brassMaterial
+      );
+
+      head.rotation.x = Math.PI / 2;
+      head.position.set(x, y, frontZ + 0.415);
+      head.castShadow = true;
+      screwGroup.add(head);
+
+      const slot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.086, 0.013, 0.009),
+        new THREE.MeshStandardMaterial({
+          color: 0x211b14,
+          roughness: 0.55,
+          metalness: 0.25
+        })
+      );
+
+      slot.position.set(x, y, frontZ + 0.438);
+      slot.rotation.z = x > 0 ? 0.55 : -0.4;
+      screwGroup.add(slot);
+    }
+
+    addScrew(-0.78, 0.76);
+    addScrew(0.78, 0.76);
+
+    // ------------------------------------------------------------
+    // Display platform
+    // ------------------------------------------------------------
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      floorMaterial
+    );
+
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.01;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const platform = meshWithMaterial(
+      new THREE.BoxGeometry(5.35, 0.16, 4.65),
+      stoneMaterial
+    );
+
+    platform.position.set(0, 0.075, 0.42);
+    platform.castShadow = false;
+    scene.add(platform);
+
+    // ------------------------------------------------------------
+    // Labels
+    // ------------------------------------------------------------
+
+    const dovetailLabel = document.getElementById("dovetailLabel");
+    const grooveLabel = document.getElementById("grooveLabel");
+    const falseLabel = document.getElementById("falseLabel");
+
+    let labelsVisible = true;
+
+    function placeLabel(element, worldPosition) {
+      if (!labelsVisible) {
+        element.style.opacity = "0";
+        return;
+      }
+
+      const projected = worldPosition.clone().project(camera);
+      const visible =
+        projected.z > -1 &&
+        projected.z < 1 &&
+        Math.abs(projected.x) < 1.08 &&
+        Math.abs(projected.y) < 1.08;
+
+      element.style.opacity = visible ? "1" : "0";
+
+      if (!visible) return;
+
+      element.style.left =
+        ((projected.x * 0.5 + 0.5) * window.innerWidth) + "px";
+
+      element.style.top =
+        ((-projected.y * 0.5 + 0.5) * window.innerHeight) + "px";
+    }
+
+    function updateLabels() {
+      placeLabel(
+        dovetailLabel,
+        new THREE.Vector3(
+          outerSideX + 0.03,
+          0.96,
+          frontZ - 0.015
+        )
+      );
+
+      placeLabel(
+        grooveLabel,
+        new THREE.Vector3(-0.92, 0.355, 0.45)
+      );
+
+      falseFront.updateWorldMatrix(true, false);
+
+      const falseAnchor = falseFront.localToWorld(
+        new THREE.Vector3(-1.18, 0.61, 0.11)
+      );
+
+      placeLabel(falseLabel, falseAnchor);
+    }
+
+    // ------------------------------------------------------------
+    // Direct camera controls — no addons
+    // ------------------------------------------------------------
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", event => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", event => {
+      if (!dragging) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      desired.theta -= dx * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - dy * 0.005,
+        0.34,
+        1.46
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+
+      if (
+        event.pointerId !== undefined &&
+        renderer.domElement.hasPointerCapture(event.pointerId)
+      ) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          4.2,
+          10
+        );
+      },
+      { passive: false }
+    );
+
+    function resetCamera() {
+      desired.radius = 6.55;
+      desired.theta = 0.72;
+      desired.phi = 1.13;
+    }
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    document.getElementById("resetButton").addEventListener(
+      "click",
+      resetCamera
+    );
+
+    // ------------------------------------------------------------
+    // False-front exploded / assembled control
+    // ------------------------------------------------------------
+
+    const explodeButton = document.getElementById("explodeButton");
+    const labelsButton = document.getElementById("labelsButton");
+
+    let exploded = true;
+    let explosionAmount = 1;
+    let explosionTarget = 1;
+
+    explodeButton.addEventListener("click", () => {
+      exploded = !exploded;
+      explosionTarget = exploded ? 1 : 0;
+
+      explodeButton.setAttribute(
+        "aria-pressed",
+        String(exploded)
+      );
+
+      explodeButton.textContent = exploded
+        ? "Assemble false front"
+        : "Explode false front";
+    });
+
+    labelsButton.addEventListener("click", () => {
+      labelsVisible = !labelsVisible;
+
+      labelsButton.setAttribute(
+        "aria-pressed",
+        String(labelsVisible)
+      );
+
+      labelsButton.textContent = labelsVisible
+        ? "Hide labels"
+        : "Show labels";
+    });
+
+    // ------------------------------------------------------------
+    // Resize and animation
+    // ------------------------------------------------------------
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 2)
+      );
+
+      renderer.setSize(width, height);
+    }
+
+    window.addEventListener("resize", resize);
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      current.radius +=
+        (desired.radius - current.radius) * 0.085;
+
+      current.theta +=
+        (desired.theta - current.theta) * 0.085;
+
+      current.phi +=
+        (desired.phi - current.phi) * 0.085;
+
+      updateCamera();
+
+      explosionAmount +=
+        (explosionTarget - explosionAmount) * 0.075;
+
+      falseFront.position.x =
+        -0.52 * explosionAmount;
+
+      falseFront.position.z =
+        frontZ + 0.1 + 0.58 * explosionAmount;
+
+      falseFront.rotation.y =
+        -0.065 * explosionAmount;
+
+      screwGroup.visible = explosionAmount > 0.12;
+      screwGroup.position.z =
+        0.06 * explosionAmount;
+
+      renderer.render(scene, camera);
+      updateLabels();
+    }
+
+    animate();
+
+    requestAnimationFrame(() => {
+      document.getElementById("loading").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

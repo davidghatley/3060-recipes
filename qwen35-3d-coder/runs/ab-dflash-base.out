@@ -1,0 +1,26 @@
+session dflash-base order ['base-none', 'base-dflash', 'ft-dflash', 'base-none'] at 2026-11-19 11:53:44; gpu 59, 330 MHz, 7301 MHz, 41.03 W, 1395 MiB, P2
+  [base-none] R scene-000048 ctx=87 n=512 81.34 tok/s draft None/None
+  [base-none] C scene-000048 ctx=9964 n=512 75.22 tok/s draft None/None
+  [base-none] R scene-000705 ctx=93 n=512 81.15 tok/s draft None/None
+  [base-none] C scene-000705 ctx=11732 n=512 74.42 tok/s draft None/None
+step 0 base-none: decode median 78.2 (R 81.2, C 74.8) load 3.0s gpu_end [77, 1845 MHz, 7301 MHz, 169.57 W, 6654 MiB, P2]
+  [base-dflash] R scene-000048 ctx=87 n=512 97.88 tok/s draft 326/2733
+  [base-dflash] C scene-000048 ctx=9964 n=512 99.63 tok/s draft 340/2542
+  [base-dflash] R scene-000705 ctx=93 n=512 92.95 tok/s draft 315/2900
+  [base-dflash] C scene-000705 ctx=11732 n=512 97.19 tok/s draft 336/2555
+step 1 base-dflash: decode median 97.5 (R 95.4, C 98.4) load 1.5s gpu_end [75, 1882 MHz, 7301 MHz, 157.81 W, 9620 MiB, P2]
+  [ft-dflash] R scene-000048 ctx=87 n=512 57.33 tok/s draft 182/4840
+  [ft-dflash] C scene-000048 ctx=9964 n=512 135.52 tok/s draft 383/1891
+  [ft-dflash] R scene-000705 ctx=93 n=512 61.24 tok/s draft 203/4556
+  [ft-dflash] C scene-000705 ctx=11732 n=512 140.82 tok/s draft 389/1818
+step 2 ft-dflash: decode median 98.4 (R 59.3, C 138.2) load 1.5s gpu_end [75, 1882 MHz, 7301 MHz, 158.46 W, 9312 MiB, P2]
+  [base-none] R scene-000048 ctx=87 n=512 81.4 tok/s draft None/None
+  [base-none] C scene-000048 ctx=9964 n=512 75.53 tok/s draft None/None
+  [base-none] R scene-000705 ctx=93 n=512 81.4 tok/s draft None/None
+  [base-none] C scene-000705 ctx=11732 n=512 74.4 tok/s draft None/None
+step 3 base-none: decode median 78.5 (R 81.4, C 75.0) load 1.0s gpu_end [78, 1845 MHz, 7301 MHz, 169.67 W, 6654 MiB, P2]
+SUMMARY (per step: median R, median C):
+  base-none: R 81.2 C 74.8  R 81.4 C 75.0
+  base-dflash: R 95.4 C 98.4
+  ft-dflash: R 59.3 C 138.2
+dflash-base exit 0
