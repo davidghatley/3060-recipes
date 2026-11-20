@@ -1,7 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import tlJson from '../timeline.json';
-import {TypeOn, arrive, carry} from '../house';
+import {CHIP, Glyph, TypeOn, arrive, carry, cells, on} from '../house';
 import {Arr, Body, Mark, setTheme, type Theme, CellBar, CellColumns, Chrome, D, LinePlot, Lab, P, Px, S, count, fmt, mono, pct, show, times, useFonts3, useV} from './kit';
 
 // Flint launch, v3. Two directions on one timeline and one data file:
@@ -454,6 +454,32 @@ const Run: React.FC<SceneP> = ({t, x}) => {
   );
 };
 
+// ---------- the dh card (same close as the selfheal video) ----------
+
+const DH = ['...X...', '...X...', '...X...', 'XXXXXXX', 'X..X..X', 'X..X..X', 'XXXX..X'];
+const DhMark: React.FC<{cell: number; n?: number}> = ({cell, n = 99}) => {
+  const pts = DH.flatMap((r, y) => [...r].map((ch, x) => (ch === 'X' ? [x, y] : null)).filter(Boolean)) as number[][];
+  // the stem first, top down, then the bowl and the shoulder
+  pts.sort((a, b) => (a[0] === 3 && b[0] !== 3 ? -1 : b[0] === 3 && a[0] !== 3 ? 1 : a[1] - b[1] || a[0] - b[0]));
+  return <svg width={cell * 7} height={cell * 7} shapeRendering="crispEdges">{pts.slice(0, n).map(([x, y]) => <rect key={`${x}-${y}`} x={x * cell} y={y * cell} width={cell} height={cell} fill={P.ink} />)}</svg>;
+};
+const DhCard: React.FC<{t: number}> = ({t}) => {
+  const t0 = tl.end.dh;
+  return (
+    <AbsoluteFill style={{background: P.paper, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 56}}>
+      <DhMark cell={48} n={cells(t, t0, 21, 0.05)} />
+      <div style={{textAlign: 'center', opacity: on(t, t0 + 1.2) ? 1 : 0}}>
+        <div style={{fontFamily: '"Hoop", sans-serif', fontWeight: 700, fontSize: 56, lineHeight: '64px', color: P.ink}}>David Hatley</div>
+        <div style={{fontFamily: '"IBM Plex Mono", monospace', fontSize: 28, lineHeight: '36px', letterSpacing: '0.04em', color: P.muted, marginTop: 12}}>design · AI/ML · generative tools</div>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 48}}>
+          <Glyph rows={CHIP} cell={6} />
+          <span style={{fontFamily: '"IBM Plex Mono", monospace', fontSize: 28, lineHeight: '36px', color: P.ink}}>github.com/davidghatley/3060-recipes</span>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 // ---------- composition ----------
 
 const SCENES: [string, React.FC<SceneP>][] = [['hook', Hook], ['bench', Bench], ['flags', Flags], ['ctx', Ctx], ['cache', Cache], ['run', Run]];
@@ -461,6 +487,7 @@ const Launch: React.FC<{x: Variant; theme?: Theme}> = ({x, theme = 'light'}) => 
   setTheme(theme);
   useFonts3();
   const t = useCurrentFrame() / FPS;
+  if (t >= tl.end.dh) return <DhCard t={t} />;
   const idx = SCENES.reduce((acc, [k], i) => (t >= tl[k].in ? i : acc), 0);
   const Scene = SCENES[idx][1];
   return (

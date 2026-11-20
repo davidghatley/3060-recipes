@@ -42,6 +42,7 @@ const FACES = [
   ['IBM Plex Mono', 'IBMPlexMono-normal-400.woff2', '400'],
   ['IBM Plex Mono', 'IBMPlexMono-normal-600.woff2', '600'],
   ['Stem 7', 'Stem7-Regular.woff2', '400'],
+  ['Hoop', 'Hoop-Bold.woff2', '700'],
 ] as const;
 export const useFonts3 = () => {
   const [handle] = useState(() => delayRender('fonts-v3'));
