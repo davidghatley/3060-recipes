@@ -1,0 +1,61 @@
+{
+ "status": "draft",
+ "missing": [
+  "baseline_tps",
+  "tuned_tps",
+  "speedup",
+  "prefill_tps",
+  "ctx",
+  "vram_gib",
+  "quant",
+  "kld",
+  "flags"
+ ],
+ "matched": {},
+ "src": "none yet (../promo-data.json missing or empty)",
+ "model": {
+  "name": "Inkling-2-Mini",
+  "maker": "Thinking Machines",
+  "total_b": 26.4,
+  "active_b": 3.4,
+  "loop_first": 6,
+  "loop_last": 17,
+  "loop_times": 3,
+  "layers": 24,
+  "attention": "sliding + global",
+  "ctx_max": "1M",
+  "inputs": "text + image",
+  "license": "Apache-2.0",
+  "needs_gb": 32,
+  "src": "Thinking Machines model card (Inkling-2-Mini, 2026-11-20); 24 physical layers from the GGUF header (../THEORY.md)"
+ },
+ "hw": {
+  "gpu": "RTX 3060 12 GB",
+  "cpu": "i5-12500",
+  "ram": "62 GB DDR5"
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "pr": "#32694",
+  "pr_author": "pcuenca",
+  "build": null
+ },
+ "run": {
+  "baseline_tps": null,
+  "tuned_tps": null,
+  "speedup": null,
+  "prefill_tps": null,
+  "baseline_prefill_tps": null,
+  "prefill_prompt": null,
+  "ctx": null,
+  "vram_gib": null,
+  "ram_gib": null,
+  "quant": null,
+  "gguf": null,
+  "file_gb": null,
+  "kld": null,
+  "kld_ref": null,
+  "flags": null,
+  "cmd": null
+ }
+}
