@@ -31,8 +31,11 @@ Two things in stock master matter for this model:
 ```bash
 # 1. weights (pinned): ggml-org/Inkling-2-Mini-GGUF @ db61c5b4 -> /mnt/models/llm/inkling-2-mini/
 #    Inkling-2-Mini-IQ4_NL.gguf, mmproj-Inkling-2-Mini-Q8_0.gguf (optional), Inkling-2-Mini-Q8_0.gguf (KLD reference)
-# 2. engine: llama.cpp master 29b52d398 + branch inkling-loop-scale-fix (3 commits), CUDA build for sm_86
-/mnt/scratch/llama.cpp/build-master.sh /mnt/scratch/llama.cpp/src-inkfix /mnt/scratch/llama.cpp/inkfix-4c836a8eb
+# 2. engine: llama.cpp master 29b52d398 + the 3 commits in patches/, CUDA build for sm_86
+git clone https://github.com/ggml-org/llama.cpp && cd llama.cpp && git checkout 29b52d398
+git am /path/to/3060-recipes/inkling-2-mini/patches/*.patch
+cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=86 && cmake --build build -j --target llama-server
+#    (this box: /mnt/scratch/llama.cpp/build-master.sh /mnt/scratch/llama.cpp/src-inkfix /mnt/scratch/llama.cpp/inkfix-4c836a8eb)
 # 3. serve (through gpu_run, OpenAI-compatible on 127.0.0.1:8085)
 ./serve.sh
 ```
