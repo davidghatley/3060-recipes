@@ -1,0 +1,21 @@
+diff --git i/decider/serve.py w/decider/serve.py
+index ac28904..883bdbf 100644
+--- i/decider/serve.py
++++ w/decider/serve.py
+@@ -120,7 +120,7 @@ async def batcher():
+ @app.on_event("startup")
+ async def _start():
+     global eng, queue
+-    eng = Engine(MODEL, compile=COMPILE, fp8=FP8, conv_patch=COMPILE); print("[serve] engine", eng.cfg, flush=True)
++    eng = Engine(MODEL, compile=COMPILE, fp8=FP8, conv_patch=COMPILE, use_graphs=os.environ.get("DECIDER_GRAPHS", "1") == "1"); print("[serve] engine", eng.cfg, flush=True)
+     import json
+     global MODEL_NAME, TEMP
+     try: cfg = json.load(open(os.path.join(MODEL, "decider_config.json")))
+@@ -145,6 +145,7 @@ async def _start():
+             print(f"[serve] preloaded schema with {h.nq} rows, prefix {sum(h.tps)} tokens, graphs ready in {t:.0f}s", flush=True)
+     shapes = [(B, T) for B in (1, 2, 4, 8, 16, 32) for T in T_BUCKETS if T <= eng.max_ctx + 256]
+     if MAX_BATCH > 32: shapes += [(64, T) for T in T_BUCKETS if T <= 512]
++    if not eng.use_graphs: shapes = []
+     t = eng.warmup(shapes); print(f"[serve] captured {len(shapes)} graphs in {t:.0f}s", flush=True)
+     queue = asyncio.Queue()
+     asyncio.create_task(batcher())

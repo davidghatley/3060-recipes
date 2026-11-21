@@ -1,0 +1,2615 @@
+{
+ "source": "huggingface.co/spaces/multimodalart/jev-decision-index data/index.json",
+ "space_commit": "4ee57a1610e0547634ba0ec11990d10122672191",
+ "generated_utc": "2026-11-19T14:42:56Z",
+ "calibration_note": "32 benchmarks with a per-field right or wrong answer (ToolRet, BRIGHT and RouterBench excluded), each weighted equally; a 1-in-6 sample of requests; confidence is the probability placed on the chosen option. Rows an entrant trained on count as wrong here too.",
+ "benchmarks": {
+  "1": {
+   "dataset": "BFCL",
+   "metric": "case exact accuracy",
+   "group": "tools",
+   "gold": 1.2,
+   "chance": 0.2592
+  },
+  "2": {
+   "dataset": "ToolRet",
+   "metric": "nDCG@10",
+   "group": "tools",
+   "gold": null,
+   "chance": 0.1341
+  },
+  "3": {
+   "dataset": "API-Bank",
+   "metric": "accuracy",
+   "group": "tools",
+   "gold": 1.2,
+   "chance": 0.0189
+  },
+  "4": {
+   "dataset": "BANKING77",
+   "metric": "macro-F1",
+   "group": "retrieval",
+   "gold": 1.2,
+   "chance": 0.0127
+  },
+  "5": {
+   "dataset": "CLINC150+OOS",
+   "metric": "macro-F1",
+   "group": "retrieval",
+   "gold": 1.2,
+   "chance": 0.006
+  },
+  "6": {
+   "dataset": "RouterBench",
+   "metric": "selected quality (quality objective)",
+   "group": "tools",
+   "gold": null,
+   "chance": 0.5735
+  },
+  "7": {
+   "dataset": "MiniWoB++",
+   "metric": "episode success",
+   "group": "tools",
+   "gold": null,
+   "chance": null
+  },
+  "9": {
+   "dataset": "Home appliance simulator",
+   "metric": "case exact accuracy",
+   "group": "tools",
+   "gold": null,
+   "chance": 0
+  },
+  "10": {
+   "dataset": "SGD/SGD-X",
+   "metric": "macro-F1",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.399
+  },
+  "11": {
+   "dataset": "ContractNLI",
+   "metric": "macro-F1",
+   "group": "language",
+   "gold": null,
+   "chance": 0.3085
+  },
+  "12": {
+   "dataset": "ANLI",
+   "metric": "macro-F1",
+   "group": "language",
+   "gold": 1.2,
+   "chance": 0.3324
+  },
+  "13": {
+   "dataset": "Boxoban",
+   "metric": "episode success",
+   "group": "games",
+   "gold": null,
+   "chance": null
+  },
+  "15": {
+   "dataset": "RTFM",
+   "metric": "episode success",
+   "group": "games",
+   "gold": null,
+   "chance": null
+  },
+  "16": {
+   "dataset": "ScienceWorld",
+   "metric": "episode success",
+   "group": "tools",
+   "gold": null,
+   "chance": null
+  },
+  "17": {
+   "dataset": "Hanabi",
+   "metric": "episode success",
+   "group": "games",
+   "gold": null,
+   "chance": null
+  },
+  "19": {
+   "dataset": "Codenames",
+   "metric": "episode success",
+   "group": "games",
+   "gold": null,
+   "chance": null
+  },
+  "20": {
+   "dataset": "BPoMP",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.5
+  },
+  "21": {
+   "dataset": "Humicroedit",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.5
+  },
+  "22": {
+   "dataset": "POP909-CL",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.0078
+  },
+  "23": {
+   "dataset": "cfcolor",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.5
+  },
+  "24": {
+   "dataset": "MMLU",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.25
+  },
+  "25": {
+   "dataset": "GPQA Diamond",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": 1.2,
+   "chance": 0.25
+  },
+  "26": {
+   "dataset": "ARC-Easy",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.2502
+  },
+  "27": {
+   "dataset": "ARC-Challenge",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.2502
+  },
+  "28": {
+   "dataset": "WinoGrande",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": 1.2,
+   "chance": 0.5
+  },
+  "29": {
+   "dataset": "HellaSwag",
+   "metric": "accuracy",
+   "group": "language",
+   "gold": 1.2,
+   "chance": 0.25
+  },
+  "30": {
+   "dataset": "GSM8K",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.175
+  },
+  "31": {
+   "dataset": "ChessBench",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.0819
+  },
+  "32": {
+   "dataset": "MuSR",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.371
+  },
+  "33": {
+   "dataset": "SATA-Bench",
+   "metric": "case exact accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.0131
+  },
+  "36": {
+   "dataset": "BRIGHT",
+   "metric": "nDCG@10",
+   "group": "retrieval",
+   "gold": 1.2,
+   "chance": 0.116
+  },
+  "37": {
+   "dataset": "Amazon ESCI",
+   "metric": "macro-F1",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.2027
+  },
+  "38": {
+   "dataset": "ACOS",
+   "metric": "per-review F1",
+   "group": "language",
+   "gold": null,
+   "chance": 0.031
+  },
+  "39": {
+   "dataset": "FinEntity",
+   "metric": "macro-F1",
+   "group": "language",
+   "gold": null,
+   "chance": 0.3201
+  },
+  "40": {
+   "dataset": "iSarcasmEval",
+   "metric": "Sarcasm F1 \u00b7 track A, English",
+   "group": "language",
+   "gold": null,
+   "chance": 0.2227
+  },
+  "41": {
+   "dataset": "VAST",
+   "metric": "macro-F1",
+   "group": "language",
+   "gold": null,
+   "chance": 0.3333
+  },
+  "42": {
+   "dataset": "NLI4CT",
+   "metric": "macro-F1",
+   "group": "language",
+   "gold": null,
+   "chance": 0.486
+  },
+  "43": {
+   "dataset": "CRUXEval",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.3697
+  },
+  "44": {
+   "dataset": "CLadder",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.5
+  },
+  "45": {
+   "dataset": "HLE",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": 1.2,
+   "chance": 0.1641
+  },
+  "50": {
+   "dataset": "Habermas Machine",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.311
+  },
+  "51": {
+   "dataset": "OpenBookQA",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.25
+  },
+  "52": {
+   "dataset": "CommonsenseQA",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": null,
+   "chance": 0.2
+  },
+  "53": {
+   "dataset": "Support-ticket calibration",
+   "metric": "accuracy",
+   "group": "tools",
+   "gold": null,
+   "chance": null
+  },
+  "54": {
+   "dataset": "Phishing difficulty gradient",
+   "metric": "accuracy",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.5
+  },
+  "55": {
+   "dataset": "Email spam classification",
+   "metric": "accuracy",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.5
+  },
+  "56": {
+   "dataset": "PhishNChips phishing decisions",
+   "metric": "accuracy",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.5
+  },
+  "57": {
+   "dataset": "MMLU-Pro",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": 1.2,
+   "chance": 0.1109
+  },
+  "58": {
+   "dataset": "BBH",
+   "metric": "accuracy",
+   "group": "knowledge",
+   "gold": 1.2,
+   "chance": 0.3101
+  },
+  "59": {
+   "dataset": "RAGTruth",
+   "metric": "F1 on hallucinated class",
+   "group": "language",
+   "gold": null,
+   "chance": 0.5177
+  },
+  "61": {
+   "dataset": "HoVer",
+   "metric": "accuracy",
+   "group": "retrieval",
+   "gold": null,
+   "chance": 0.5
+  },
+  "62": {
+   "dataset": "When2Call",
+   "metric": "accuracy",
+   "group": "tools",
+   "gold": null,
+   "chance": 0.25
+  },
+  "64": {
+   "dataset": "New Yorker",
+   "metric": "accuracy",
+   "group": "arts",
+   "gold": null,
+   "chance": 0.2
+  }
+ },
+ "panel": {
+  "knowledge": [
+   25,
+   30,
+   31,
+   32,
+   33,
+   43,
+   44,
+   45,
+   57,
+   58,
+   28
+  ],
+  "language": [
+   11,
+   12,
+   29,
+   38,
+   39,
+   40,
+   41,
+   42,
+   59
+  ],
+  "retrieval": [
+   4,
+   5,
+   36,
+   37,
+   56,
+   61
+  ],
+  "tools": [
+   1,
+   2,
+   3,
+   9,
+   62
+  ],
+  "arts": [
+   20,
+   21,
+   22,
+   23,
+   50,
+   64
+  ],
+  "games": []
+ },
+ "jev": {
+  "name": "Jev 1.14",
+  "version": "jev-1.14.0",
+  "calibration": {
+   "acc": 0.7431,
+   "conf": 0.8165,
+   "ece": 0.0799,
+   "brier": 0.3567,
+   "over95": 0.0265,
+   "n": 34411
+  },
+  "latency_ms": {
+   "median": 196,
+   "p95": 296.8,
+   "note": "Hosted API, network round-trip from our lab: one sequential HTTPS client on the latency-v1 sample. Not comparable to the on-card single-process figures."
+  },
+  "v03": {
+   "engine": "jev",
+   "pub": 60.7,
+   "same_skills": 59.28,
+   "new_domains": 48.26,
+   "v": 60.24,
+   "lab": false,
+   "jev": true,
+   "rank_v": 71,
+   "rank_pub": 98,
+   "name": "Jev 1.14",
+   "eq": {
+    "S": 58.91,
+    "O": 62.24
+   },
+   "rank_tie": 13,
+   "tied": true,
+   "parts": {
+    "public": 0,
+    "same_skills": 35.34,
+    "new_domains": 24.9
+   }
+  }
+ },
+ "controls": [
+  {
+   "engine": "kev-4b-r10",
+   "name": "Kev 4B r10",
+   "model_url": "https://huggingface.co/jaredpalmer/kev-4b",
+   "base_model": "Qwen/Qwen3.5-4B-Base",
+   "kind": "LoRA + head",
+   "public_index": 37.95,
+   "same_skills": 36.17,
+   "new_domains": 25.4,
+   "full": 34.93,
+   "rank_full": 206,
+   "calibration": {
+    "acc": 0.6252,
+    "conf": 0.6268,
+    "ece": 0.032,
+    "brier": 0.4847,
+    "over95": 0.0078,
+    "n": 35088,
+    "benchmarks": 32
+   },
+   "latency_ms": {
+    "median": 59.2,
+    "p95": null,
+    "mean": 74.7
+   },
+   "results": {
+    "1": {
+     "score": 0.9309,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.6098,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.5335,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.8287,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.75,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.8,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.1477,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.4776,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.6436,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.4813,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.6514,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.5441,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.0115,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.5788,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.7102,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.3776,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9722,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9027,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.7024,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.7892,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.4647,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.0886,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.5625,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.2885,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.3895,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.3972,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.0978,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.871,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.4684,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.5236,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.7458,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.4807,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.6308,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1018,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.42,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.5525,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.5068,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.6248,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.6752,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.5968,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.667,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.5227,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "decider-4b",
+   "name": "Decider 4B",
+   "model_url": "https://huggingface.co/Mapika/decider-4b",
+   "base_model": "Qwen/Qwen3.5-4B-Base",
+   "kind": "full fine-tune",
+   "public_index": 41.19,
+   "same_skills": 37.19,
+   "new_domains": 26.93,
+   "full": 36.3,
+   "rank_full": 200,
+   "calibration": {
+    "acc": 0.6488,
+    "conf": 0.7326,
+    "ece": 0.0837,
+    "brier": 0.4542,
+    "over95": 0.0178,
+    "n": 35088,
+    "benchmarks": 32
+   },
+   "latency_ms": {
+    "median": 12.6,
+    "p95": 188.5,
+    "mean": 41
+   },
+   "results": {
+    "1": {
+     "score": 0.8796,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.65,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.6043,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.7472,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.8655,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7988,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.1705,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.2003,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.7234,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.5636,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.8344,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.5967,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.1,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.6048,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.7418,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.4133,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9781,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9394,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.8074,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9399,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.4056,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.105,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.5372,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.3158,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.4545,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.4238,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.1924,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.8604,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.4207,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.5353,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.7369,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.4368,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.633,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1038,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.4063,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.578,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.5165,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.6089,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.5216,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.5627,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.7588,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.6288,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "decider-2b-fp8-http",
+   "name": "Decider 2B",
+   "model_url": "https://huggingface.co/Mapika/decider-2b",
+   "base_model": "Qwen/Qwen3.5-2B-Base",
+   "kind": "full fine-tune",
+   "public_index": 29.75,
+   "same_skills": 28.47,
+   "new_domains": 12.04,
+   "full": 23.65,
+   "rank_full": 261,
+   "calibration": {
+    "acc": 0.5859,
+    "conf": 0.663,
+    "ece": 0.0771,
+    "brier": 0.52,
+    "over95": 0.0097,
+    "n": 72594,
+    "benchmarks": 32
+   },
+   "latency_ms": {
+    "median": 8.1,
+    "p95": 134.9,
+    "mean": 40.5
+   },
+   "results": {
+    "1": {
+     "score": 0.8294,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.6312,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.3169,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.7277,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.7369,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7988,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.0341,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.4885,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.634,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.4937,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.6492,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.5993,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.0025,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.5696,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.619,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.3622,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9377,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.8515,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.6772,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.8581,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.2309,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.0988,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.5492,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.2467,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.3711,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.3468,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.0786,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.7612,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.2243,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.5104,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.6547,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.3298,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.5726,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1198,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.4218,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.5005,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.3758,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.5097,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.2835,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.5907,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.5471,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.447,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  }
+ ],
+ "top_open": [
+  {
+   "engine": "karpo-decision-31b",
+   "name": "karpo-decision-31B",
+   "model_url": "https://huggingface.co/MachinePulseAI/karpo-decision-31B",
+   "base_model": "google/gemma-4-31B-it",
+   "kind": "full fine-tune",
+   "public_index": 75.05,
+   "same_skills": 70.94,
+   "new_domains": 61.5,
+   "full": 73.86,
+   "rank_full": 1,
+   "calibration": {
+    "acc": 0.8319,
+    "conf": 0.8796,
+    "ece": 0.0477,
+    "brier": 0.2395,
+    "over95": 0.0189,
+    "n": 34411,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 94.3,
+    "p95": 585.9,
+    "mean": 249.1
+   },
+   "results": {
+    "1": {
+     "score": 0.9799,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.748,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.8799,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.9169,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.9606,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.797,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.9773,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.658,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.8363,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.8198,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.9812,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.6963,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.868,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.7216,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.9064,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.5867,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.992,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9795,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.9574,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9796,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.9541,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.3388,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.7886,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.5261,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.4806,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6472,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.6407,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.9477,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.7371,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8375,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.8663,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.9316,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.9602,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1417,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.6611,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.993,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.7908,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.9312,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8554,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.8858,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9044,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.9053,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "glide-v1.2.1-loop",
+   "name": "GLiDE 27B",
+   "model_url": "https://huggingface.co/fastino/GLiDE-27B",
+   "base_model": "Qwen/Qwen3.8-27B",
+   "kind": "full fine-tune",
+   "public_index": 72.49,
+   "same_skills": 70.07,
+   "new_domains": 61.57,
+   "full": 73.37,
+   "rank_full": 2,
+   "calibration": {
+    "acc": 0.8216,
+    "conf": 0.8335,
+    "ece": 0.0209,
+    "brier": 0.2509,
+    "over95": 0.0089,
+    "n": 34411,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 122.4,
+    "p95": 1545.1,
+    "mean": 387.6
+   },
+   "results": {
+    "1": {
+     "score": 0.9728,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.6983,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.8563,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.9083,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.9629,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.797,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 1,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.6623,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.8436,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.815,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.9834,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.6709,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.8205,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.6826,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.8906,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.5867,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.992,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9744,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.9519,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9769,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.8518,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.2484,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.8059,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.4588,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.4766,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6251,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.6398,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.9437,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.6864,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8097,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.8783,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.893,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.9238,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1856,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.6265,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.891,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.7891,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.9301,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8549,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.8805,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9124,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.8352,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "reax-1.3",
+   "name": "REAX 1.3",
+   "model_url": "https://huggingface.co/decisionmodels/REAX-1.3",
+   "base_model": null,
+   "kind": "inference technique",
+   "public_index": 73.71,
+   "same_skills": 69.29,
+   "new_domains": 61.05,
+   "full": 72.64,
+   "rank_full": 3,
+   "calibration": {
+    "acc": 0.8195,
+    "conf": 0.8373,
+    "ece": 0.0179,
+    "brier": 0.2477,
+    "over95": 0.0092,
+    "n": 34406,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 245.9,
+    "p95": 2683.7,
+    "mean": 790.4
+   },
+   "results": {
+    "1": {
+     "score": 0.9799,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.7204,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.8858,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.9241,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.9604,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7961,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 1,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.4816,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.8533,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.8034,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.987,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.6819,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.7895,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.7012,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.9058,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.6327,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9937,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9812,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.9621,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9848,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.9276,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.3006,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.8005,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.4248,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.5177,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6299,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.6431,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.9518,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.6538,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8299,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.878,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.9368,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.9502,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1597,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.6307,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.8665,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.794,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.9444,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8398,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.89,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9124,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.8864,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "logits-sigma-1-duo",
+   "name": "Logits Sigma-1 Duo",
+   "model_url": "https://huggingface.co/logitshq/Logits-Sigma-1-Duo",
+   "base_model": null,
+   "kind": "inference technique",
+   "public_index": 72.93,
+   "same_skills": 68.47,
+   "new_domains": 61.34,
+   "full": 72.28,
+   "rank_full": 4,
+   "calibration": {
+    "acc": 0.8192,
+    "conf": 0.8054,
+    "ece": 0.0269,
+    "brier": 0.2468,
+    "over95": 0.0041,
+    "n": 34411,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 368.3,
+    "p95": 2642.4,
+    "mean": 906.3
+   },
+   "results": {
+    "1": {
+     "score": 0.9805,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.7193,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.872,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.9398,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.9682,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7951,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 1,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.58,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.8549,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.7891,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.9854,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.6865,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.7875,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.7054,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.8987,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.5714,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9933,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9787,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.9574,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9838,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.8946,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.2964,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.7952,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.4,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.5132,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6286,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.6476,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.9481,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.6132,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8363,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.8692,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.9088,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.9496,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1796,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.639,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.8585,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.7798,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.9354,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8359,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.8938,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9118,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.8636,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "knowline-31b-gen2",
+   "name": "KnowLine 31B Gen2",
+   "model_url": "https://huggingface.co/PelaAI/KnowLine-31B-Gen2",
+   "base_model": "google/gemma-4-31B-it",
+   "kind": "LoRA",
+   "public_index": 73,
+   "same_skills": 67.94,
+   "new_domains": 61.92,
+   "full": 72.25,
+   "rank_full": 5,
+   "calibration": {
+    "acc": 0.8162,
+    "conf": 0.836,
+    "ece": 0.0211,
+    "brier": 0.245,
+    "over95": 0.0082,
+    "n": 34411,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 205,
+    "p95": 2259.7,
+    "mean": 512.9
+   },
+   "results": {
+    "1": {
+     "score": 0.9787,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.7147,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.8937,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.877,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.9523,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7994,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.9886,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.6803,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.8334,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.8141,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.99,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.7066,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.825,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.7066,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.8978,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.5408,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9924,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9804,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.9503,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9706,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.9386,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.3238,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.7207,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.4448,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.5024,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6074,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.5439,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.9294,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.6974,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8184,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.8767,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.9386,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.9388,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1497,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.6193,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.9775,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.7589,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.9317,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8359,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.879,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9242,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.8712,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  },
+  {
+   "engine": "copernicus-31b",
+   "name": "Copernicus-31B",
+   "model_url": "https://huggingface.co/Poindexter-Labs/Copernicus-31B",
+   "base_model": "google/gemma-4-31B-it",
+   "kind": "full fine-tune",
+   "public_index": 70.37,
+   "same_skills": 67.58,
+   "new_domains": 62.09,
+   "full": 72.11,
+   "rank_full": 6,
+   "calibration": {
+    "acc": 0.7946,
+    "conf": 0.7946,
+    "ece": 0.018,
+    "brier": 0.2693,
+    "over95": 0.0054,
+    "n": 34406,
+    "benchmarks": 31
+   },
+   "latency_ms": {
+    "median": 154.8,
+    "p95": 1888.7,
+    "mean": 421.6
+   },
+   "results": {
+    "1": {
+     "score": 0.9817,
+     "metric": "case exact accuracy",
+     "requests": 1694
+    },
+    "2": {
+     "score": 0.6828,
+     "metric": "nDCG@10",
+     "requests": 685
+    },
+    "3": {
+     "score": 0.8858,
+     "metric": "accuracy",
+     "requests": 508
+    },
+    "4": {
+     "score": 0.8498,
+     "metric": "macro-F1",
+     "requests": 3080
+    },
+    "5": {
+     "score": 0.947,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "6": {
+     "score": 0.7994,
+     "metric": "selected quality (quality objective)",
+     "requests": 10000
+    },
+    "9": {
+     "score": 0.8523,
+     "metric": "case exact accuracy",
+     "requests": 88
+    },
+    "10": {
+     "score": 0.4022,
+     "metric": "macro-F1",
+     "requests": 2500
+    },
+    "11": {
+     "score": 0.7855,
+     "metric": "macro-F1",
+     "requests": 123
+    },
+    "12": {
+     "score": 0.8095,
+     "metric": "macro-F1",
+     "requests": 3200
+    },
+    "20": {
+     "score": 0.974,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "21": {
+     "score": 0.6804,
+     "metric": "accuracy",
+     "requests": 2628
+    },
+    "22": {
+     "score": 0.741,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "23": {
+     "score": 0.6772,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "24": {
+     "score": 0.8981,
+     "metric": "accuracy",
+     "requests": 14033
+    },
+    "25": {
+     "score": 0.6122,
+     "metric": "accuracy",
+     "requests": 196
+    },
+    "26": {
+     "score": 0.9924,
+     "metric": "accuracy",
+     "requests": 2376
+    },
+    "27": {
+     "score": 0.9795,
+     "metric": "accuracy",
+     "requests": 1172
+    },
+    "28": {
+     "score": 0.944,
+     "metric": "accuracy",
+     "requests": 1267
+    },
+    "29": {
+     "score": 0.9648,
+     "metric": "accuracy",
+     "requests": 10042
+    },
+    "30": {
+     "score": 0.9295,
+     "metric": "accuracy (4- and 10-choice)",
+     "requests": 2638
+    },
+    "31": {
+     "score": 0.2944,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "32": {
+     "score": 0.7221,
+     "metric": "accuracy",
+     "requests": 752
+    },
+    "33": {
+     "score": 0.4,
+     "metric": "case exact accuracy",
+     "requests": 1650
+    },
+    "36": {
+     "score": 0.4952,
+     "metric": "nDCG@10",
+     "requests": 220
+    },
+    "37": {
+     "score": 0.6278,
+     "metric": "macro-F1",
+     "requests": 5000
+    },
+    "38": {
+     "score": 0.4065,
+     "metric": "per-review F1",
+     "requests": 1565
+    },
+    "39": {
+     "score": 0.935,
+     "metric": "macro-F1",
+     "requests": 979
+    },
+    "40": {
+     "score": 0.6888,
+     "metric": "Sarcasm F1 \u00b7 track A, English",
+     "requests": 4600
+    },
+    "41": {
+     "score": 0.8152,
+     "metric": "macro-F1",
+     "requests": 3006
+    },
+    "42": {
+     "score": 0.8677,
+     "metric": "macro-F1",
+     "requests": 5500
+    },
+    "43": {
+     "score": 0.9404,
+     "metric": "accuracy",
+     "requests": 570
+    },
+    "44": {
+     "score": 0.912,
+     "metric": "accuracy",
+     "requests": 5000
+    },
+    "45": {
+     "score": 0.1317,
+     "metric": "accuracy",
+     "requests": 501
+    },
+    "50": {
+     "score": 0.5597,
+     "metric": "accuracy",
+     "requests": 1676
+    },
+    "56": {
+     "score": 0.9525,
+     "metric": "accuracy",
+     "requests": 2000
+    },
+    "57": {
+     "score": 0.7674,
+     "metric": "accuracy",
+     "requests": 12032
+    },
+    "58": {
+     "score": 0.8918,
+     "metric": "accuracy",
+     "requests": 5507
+    },
+    "59": {
+     "score": 0.8265,
+     "metric": "F1 on hallucinated class",
+     "requests": 2700
+    },
+    "61": {
+     "score": 0.861,
+     "metric": "accuracy",
+     "requests": 4000
+    },
+    "62": {
+     "score": 0.9028,
+     "metric": "accuracy",
+     "requests": 3652
+    },
+    "64": {
+     "score": 0.8504,
+     "metric": "accuracy",
+     "requests": 528
+    }
+   }
+  }
+ ]
+}
