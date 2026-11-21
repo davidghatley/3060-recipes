@@ -1,0 +1,3 @@
+ctx=65536 ub=128 --no-op-offload :: CUDA0 KV buffer size =  2048.00 MiB;CUDA0 KV buffer size =   200.00 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1247.55 MiB;CUDA_Host compute buffer size =    69.19 MiB;
+ctx=65536 ub=512 --no-op-offload :: CUDA0 KV buffer size =  2048.00 MiB;CUDA0 KV buffer size =   240.00 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  4990.72 MiB;CUDA_Host compute buffer size =   273.27 MiB;
+ctx=16384 ub=512  :: CUDA0 KV buffer size =   512.00 MiB;CUDA0 KV buffer size =   240.00 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  7980.35 MiB;CUDA_Host compute buffer size =    61.52 MiB;

@@ -1,0 +1,5 @@
+{"id": "best", "serve": "serve.sh (defaults)", "build": "/mnt/scratch/llama.cpp/inkfix-4c836a8eb (branch inkling-loop-scale-fix @ 6aafbc7d2 on master 29b52d398)",
+ "model": "/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf (ggml-org @ db61c5b4)",
+ "flags": "-ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 128 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "env": {"GPU_RUN_MEM": "44G"},
+ "server": {"decode_0k": 29.0, "decode_32k": 23.7, "decode_62k": 20.2, "prefill_8k": 144.6, "prefill_32k": 123.3, "needles": "3/3 @32k, 3/3 @62k", "vram_mib": 10634}}

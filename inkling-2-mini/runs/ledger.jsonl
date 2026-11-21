@@ -1,0 +1,31 @@
+{"label": "tuned-iq4nl-64k", "case": "pp-8k", "t": 1795227515.8105364, "vram_mib": 11685, "prompt_n": 7995, "prefill_tps": 145.5, "ttft_s": 54.97}
+{"label": "tuned-iq4nl-64k", "case": "pp-8k", "t": 1795227571.8653328, "vram_mib": 11685, "prompt_n": 8007, "prefill_tps": 143.8, "ttft_s": 55.69}
+{"label": "tuned-iq4nl-64k", "case": "pp-8k-med", "t": 1795227571.8773682, "vram_mib": 11685, "prefill_tps": 144.6}
+{"label": "tuned-iq4nl-64k", "case": "pp-32k", "t": 1795227831.355298, "vram_mib": 11715, "prompt_n": 32237, "prefill_tps": 124.5, "ttft_s": 258.96}
+{"label": "tuned-iq4nl-64k", "case": "pp-32k", "t": 1795228094.1399693, "vram_mib": 11745, "prompt_n": 32013, "prefill_tps": 122.1, "ttft_s": 262.21}
+{"label": "tuned-iq4nl-64k", "case": "pp-32k-med", "t": 1795228094.1522505, "vram_mib": 11745, "prefill_tps": 123.3}
+{"label": "tuned-iq4nl-64k", "case": "code-0k", "t": 1795228112.6592197, "vram_mib": 11745, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.1, "finish": "length", "content_chars": 175, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-0k", "t": 1795228126.1517398, "vram_mib": 11745, "gen_n": 353, "prompt_n": 72, "decode_tps": 27.5, "finish": "stop", "content_chars": 479, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-0k", "t": 1795228144.4057913, "vram_mib": 11715, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.0, "finish": "length", "content_chars": 664, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-0k-med", "t": 1795228144.417926, "vram_mib": 11715, "decode_tps": 29.0, "min": 27.5, "max": 29.1, "max_loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-32k", "t": 1795228426.8315418, "vram_mib": 11745, "gen_n": 512, "prompt_n": 32053, "decode_tps": 23.7, "finish": "length", "content_chars": 83, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-32k", "t": 1795228450.1617625, "vram_mib": 11715, "gen_n": 512, "prompt_n": 32061, "decode_tps": 23.7, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-32k", "t": 1795228470.869385, "vram_mib": 11715, "gen_n": 457, "prompt_n": 32049, "decode_tps": 23.7, "finish": "stop", "content_chars": 897, "loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "code-32k-med", "t": 1795228470.8854144, "vram_mib": 11715, "decode_tps": 23.7, "min": 23.7, "max": 23.7, "max_loop": 0.0}
+{"label": "tuned-iq4nl-64k", "case": "needle-32k", "t": 1795228743.8897285, "vram_mib": 11695, "prompt_n": 32094, "found": "3/3", "prefill_tps": 125.0, "decode_tps": 23.7, "answer": "429HR1R4 | X5G60KHJ | D7O7P9N2"}
+{"label": "tuned-iq4nl-64k", "case": "needle-62k", "t": 1795229362.443711, "vram_mib": 11715, "prompt_n": 61947, "found": "3/3", "prefill_tps": 103.1, "decode_tps": 20.2, "answer": "L29CGPX4 | GEW1QYFO | LDITIF4V"}
+{"label": "baseline-cpu-64k", "case": "pp-8k", "t": 1795229605.6639926, "vram_mib": 11293, "prompt_n": 7997, "prefill_tps": 39.3, "ttft_s": 203.51}
+{"label": "baseline-cpu-64k", "case": "pp-8k", "t": 1795229811.6107328, "vram_mib": 11293, "prompt_n": 8007, "prefill_tps": 39.0, "ttft_s": 205.39}
+{"label": "baseline-cpu-64k", "case": "pp-8k-med", "t": 1795229811.6229117, "vram_mib": 11293, "prefill_tps": 39.1}
+{"label": "baseline-cpu-64k", "case": "code-0k", "t": 1795229842.7347538, "vram_mib": 11303, "gen_n": 512, "prompt_n": 64, "decode_tps": 17.5, "finish": "length", "content_chars": 472, "loop": 0.04}
+{"label": "baseline-cpu-64k", "case": "code-0k", "t": 1795229868.465837, "vram_mib": 11303, "gen_n": 408, "prompt_n": 72, "decode_tps": 16.8, "finish": "stop", "content_chars": 493, "loop": 0.0}
+{"label": "baseline-cpu-64k", "case": "code-0k", "t": 1795229898.995022, "vram_mib": 11313, "gen_n": 512, "prompt_n": 60, "decode_tps": 17.5, "finish": "length", "content_chars": 688, "loop": 0.0}
+{"label": "baseline-cpu-64k", "case": "code-0k-med", "t": 1795229899.0069838, "vram_mib": 11313, "decode_tps": 17.5, "min": 16.8, "max": 17.5, "max_loop": 0.04}
+{"label": "ctx128k-core10-nopo", "case": "pp-8k", "t": 1795230427.2160869, "vram_mib": 11527, "prompt_n": 7996, "prefill_tps": 85.9, "ttft_s": 93.12}
+{"label": "ctx128k-core10-nopo", "case": "pp-8k", "t": 1795230522.4721904, "vram_mib": 11497, "prompt_n": 8008, "prefill_tps": 84.4, "ttft_s": 94.84}
+{"label": "ctx128k-core10-nopo", "case": "pp-8k-med", "t": 1795230522.4883368, "vram_mib": 11497, "prefill_tps": 85.2}
+{"label": "ctx128k-core10-nopo", "case": "code-0k", "t": 1795230538.16804, "vram_mib": 11497, "gen_n": 388, "prompt_n": 64, "decode_tps": 26.2, "finish": "stop", "content_chars": 626, "loop": 0.0}
+{"label": "ctx128k-core10-nopo", "case": "code-0k", "t": 1795230558.5331986, "vram_mib": 11497, "gen_n": 512, "prompt_n": 72, "decode_tps": 26.0, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "ctx128k-core10-nopo", "case": "code-0k-med", "t": 1795230558.5491998, "vram_mib": 11497, "decode_tps": 26.1, "min": 26.0, "max": 26.2, "max_loop": 0.0}
+{"label": "ctx128k-core10-nopo", "case": "needle-64k", "t": 1795231527.9718196, "vram_mib": 11557, "prompt_n": 64219, "found": "3/3", "prefill_tps": 68.5, "decode_tps": 18.7, "answer": "LWKMO3BH | ZAPD1FI3 | ITYL8IS3"}
+{"label": "ctx128k-core10-nopo", "case": "needle-124k", "t": 1795233760.3432891, "vram_mib": 11557, "prompt_n": 124216, "found": "3/3", "prefill_tps": 56.2, "decode_tps": 14.6, "answer": "W9UFWLLQ | P0EOQ52T | XX6SKBMU"}

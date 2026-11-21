@@ -1,0 +1,29 @@
+{
+ "model": "Inkling-2-Mini (26.4B MoE, 3.4B active, looped core x3)",
+ "baseline_tok_s": 17.5,
+ "tuned_tok_s": 29.0,
+ "speedup": 1.66,
+ "prefill_tok_s": 145,
+ "context": 65536,
+ "vram_gib": 10.4,
+ "quant": "IQ4_NL (ggml-org)",
+ "kld": 0.0085,
+ "kld_ref": "Q8_0 (ggml-org), wikitext-2 + code, 24x512 tokens each",
+ "flags": [
+  "-ot \"blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU\"",
+  "-ctk q8_0 -ctv q8_0",
+  "-ub 128 -b 2048",
+  "-c 65536",
+  "-fa on",
+  "-t 6"
+ ],
+ "gguf": "ggml-org/Inkling-2-Mini-GGUF Inkling-2-Mini-IQ4_NL.gguf @ db61c5b4",
+ "cmd": "inkling-2-mini/serve.sh",
+ "build": "llama.cpp master 29b52d398 + inkfix (loop-pass expert scales, F16 relative-bias mask), CUDA 12.9, sm_86",
+ "status": "final: llama-server at 64k, needles 3/3 at 32k and 62k; 128k profile passes needles at 64k and 124k",
+ "context_stretch": 131072,
+ "decode_32k_tok_s": 23.7,
+ "prefill_32k_tok_s": 123.3,
+ "kld_nvfp4": 0.0029,
+ "baseline_prefill_tok_s": 39.1
+}

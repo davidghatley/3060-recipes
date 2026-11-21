@@ -1,0 +1,2 @@
+{"id": "02-core-q8kv-ub128-opon", "from": "01-core-nopo", "change": "q8_0 KV + ub 128 (to fit 64k), op offload back on", "build": "master-29b52d398",
+ "flags": "-ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' -ctk q8_0 -ctv q8_0 -ub 128 -b 2048 --fit off -fa on -t 6", "result": "pp2048 175.3 vs 131.6 nopo, tg 29.40 both: accept"}

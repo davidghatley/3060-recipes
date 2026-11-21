@@ -1,0 +1,2 @@
+{"id": "01-core-nopo", "from": "00-baseline", "change": "loop-core experts (6-17) on GPU; --no-op-offload to fit", "build": "master-29b52d398",
+ "flags": "-ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' --no-op-offload --fit off -fa on -t 6 -ub 512", "result": "tg64 29.67 (controls 17.61/17.60): accept"}

@@ -1,0 +1,13 @@
+master-29b52d398 ub=512 opoff-on :: [1]nan,[2]nan,[3]nan, 
+master-29b52d398 ub=64 opoff-on :: [1]nan,[2]nan,[3]nan, 
+master-29b52d398 ub=512 --no-op-offload :: [1]5.3174,[2]6.5490,[3]6.0074, Final estimate: PPL = 6.0074 +/- 0.55038 
+master-29b52d398 ub=64 --no-op-offload :: [1]5.3359,[2]6.5903,[3]6.0415, Final estimate: PPL = 6.0415 +/- 0.55438 
+inkfix-4c836a8eb ub=512 opoff-on :: [1]nan,[2]nan,[3]nan, 
+inkfix-4c836a8eb ub=64 opoff-on :: [1]nan,[2]nan,[3]nan, 
+inkfix-4c836a8eb ub=512 --no-op-offload :: [1]5.3174,[2]6.5490,[3]6.0074, Final estimate: PPL = 6.0074 +/- 0.55038 
+inkfix-4c836a8eb ub=64 --no-op-offload :: [1]5.3359,[2]6.5903,[3]6.0415, Final estimate: PPL = 6.0415 +/- 0.55438 
+core-nopo :: [1]5.3186,[2]6.5594,[3]6.0131, Final estimate: PPL = 6.0131 +/- 0.55171  
+core-opon :: [1]5.3475,[2]6.5720,[3]6.0297, Final estimate: PPL = 6.0297 +/- 0.55287  
+q8gpu-opon ::  0.00.955.266 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6758.23 MiB on device 0: cudaMalloc failed: out of memory
+q8gpu-nopo :: [1]5.3214,[2]6.5511,[3]6.0122, Final estimate: PPL = 6.0122 +/- 0.55120  
+iq4gpu20-opon :: [1]nan,[2]nan,[3]nan,  

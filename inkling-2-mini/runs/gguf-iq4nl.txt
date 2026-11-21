@@ -1,0 +1,90 @@
+  general.architecture = inkling2_loop
+  general.name = Inkling 2 Mini
+  inkling2_loop.block_count = 24
+  inkling2_loop.context_length = 1048576
+  inkling2_loop.embedding_length = 2304
+  inkling2_loop.feed_forward_length = 1152
+  inkling2_loop.attention.head_count = [24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24]
+  inkling2_loop.attention.head_count_kv = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+  inkling2_loop.attention.layer_norm_rms_epsilon = 9.999999974752427e-07
+  inkling2_loop.expert_count = 128
+  inkling2_loop.expert_used_count = 8
+  inkling2_loop.attention.key_length = 128
+  inkling2_loop.attention.value_length = 128
+  inkling2_loop.vocab_size = 201024
+  inkling2_loop.vocab_size_unpadded = 200058
+  inkling2_loop.expert_feed_forward_length = 1152
+  inkling2_loop.attention.key_length_swa = 128
+  inkling2_loop.attention.value_length_swa = 128
+  inkling2_loop.rope.dimension_count = 0
+  inkling2_loop.attention.sliding_window = 1024
+  inkling2_loop.attention.sliding_window_pattern = [True, True, True, True, True, False, True, True, True, True, True, False, True, True, True, True, True, False, True, True, True, True, True, False]
+  inkling2_loop.shortconv.l_cache = 4
+  inkling2_loop.expert_weights_scale = 8.0
+  inkling2_loop.activation.situ_beta = 4.0
+  inkling2_loop.activation.situ_linear_beta = 25.0
+  inkling2_loop.attn_res.block_size = 6
+  inkling2_loop.final_logit_softcapping = 30.0
+  inkling2_loop.attention.relative_length = 16
+  inkling2_loop.attention.relative_extent = 1024
+  inkling2_loop.attention.qk_clip = 22.627416610717773
+  inkling2_loop.attention.relative_clip = 8.0
+  inkling2_loop.attention.log_scale_floor = 8192
+  inkling2_loop.attention.log_scale_alpha = 0.10000000149011612
+  inkling2_loop.loop.start = 6
+  inkling2_loop.loop.end = 18
+  inkling2_loop.loop.count = 3
+  inkling2_loop.loop.gate_rank = 64
+  inkling2_loop.loop.varying = False
+experts         14.713 GiB  ['IQ4_NL', 'Q8_0']
+layer-dense      0.750 GiB  ['F32', 'Q8_0']
+output           0.458 GiB  ['Q8_0']
+token_embd       0.458 GiB  ['Q8_0']
+router           0.026 GiB  ['F32']
+output_norm      0.000 GiB  ['F32']
+output_res_query   0.000 GiB  ['F32']
+token_embd_norm   0.000 GiB  ['F32']
+total           16.406 GiB
+experts per layer (MiB): {0: 547, 1: 547, 2: 547, 3: 547, 4: 547, 5: 547, 6: 547, 7: 547, 8: 547, 9: 547, 10: 547, 11: 547, 12: 547, 13: 547, 14: 547, 15: 547, 16: 547, 17: 547, 18: 547, 19: 547, 20: 1033, 21: 1033, 22: 1033, 23: 1033}
+  blk.0.ffn_down_exps.weight IQ4_NL [np.uint64(1152), np.uint64(2304), np.uint64(128)] 182.2 MiB
+  blk.0.ffn_gate_up_exps.weight IQ4_NL [np.uint64(2304), np.uint64(2304), np.uint64(128)] 364.5 MiB
+    output.weight Q8_0 [np.uint64(2304), np.uint64(201024)]
+    output_norm.weight F32 [np.uint64(2304)]
+    output_res_query.weight F32 [np.uint64(2304)]
+    token_embd.weight Q8_0 [np.uint64(2304), np.uint64(201024)]
+    token_embd_norm.weight F32 [np.uint64(2304)]
+    blk.6.attn_gate.weight Q8_0 [np.uint64(2304), np.uint64(3072)]
+    blk.6.attn_k.weight Q8_0 [np.uint64(2304), np.uint64(1024)]
+    blk.6.attn_k_conv.weight F32 [np.uint64(4), np.uint64(1024)]
+    blk.6.attn_norm.weight F32 [np.uint64(2304)]
+    blk.6.attn_output.weight Q8_0 [np.uint64(3072), np.uint64(2304)]
+    blk.6.attn_post_conv.weight F32 [np.uint64(4), np.uint64(2304)]
+    blk.6.attn_q.weight Q8_0 [np.uint64(2304), np.uint64(3072)]
+    blk.6.attn_q_clip.weight F32 [np.uint64(128), np.uint64(24)]
+    blk.6.attn_rel.weight Q8_0 [np.uint64(2304), np.uint64(384)]
+    blk.6.attn_rel_bias.weight F32 [np.uint64(16), np.uint64(1024)]
+    blk.6.attn_rel_clip.weight F32 [np.uint64(16), np.uint64(24)]
+    blk.6.attn_res_query.weight F32 [np.uint64(2304)]
+    blk.6.attn_sink_proj.weight Q8_0 [np.uint64(2304), np.uint64(24)]
+    blk.6.attn_v.weight Q8_0 [np.uint64(2304), np.uint64(1024)]
+    blk.6.attn_v_conv.weight F32 [np.uint64(4), np.uint64(1024)]
+    blk.6.exp_probs_b.bias F32 [np.uint64(128)]
+    blk.6.ffn_down_exps.weight IQ4_NL [np.uint64(1152), np.uint64(2304), np.uint64(128)]
+    blk.6.ffn_gate_inp.weight F32 [np.uint64(2304), np.uint64(128)]
+    blk.6.ffn_gate_up_exps.weight IQ4_NL [np.uint64(2304), np.uint64(2304), np.uint64(128)]
+    blk.6.ffn_norm.weight F32 [np.uint64(2304)]
+    blk.6.ffn_post_conv.weight F32 [np.uint64(4), np.uint64(2304)]
+    blk.6.ffn_res_query.weight F32 [np.uint64(2304)]
+    blk.6.loop_ffn_ctrl_down.weight F32 [np.uint64(4608), np.uint64(64)]
+    blk.6.loop_ffn_ctrl_forget.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_ffn_ctrl_gain.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_k_ctrl_down.weight F32 [np.uint64(4608), np.uint64(64)]
+    blk.6.loop_k_ctrl_forget.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_k_ctrl_gain.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_msg_query.weight F32 [np.uint64(2304), np.uint64(4)]
+    blk.6.loop_q_ctrl_down.weight F32 [np.uint64(4608), np.uint64(64)]
+    blk.6.loop_q_ctrl_forget.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_q_ctrl_gain.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_v_ctrl_down.weight F32 [np.uint64(4608), np.uint64(64)]
+    blk.6.loop_v_ctrl_forget.weight F32 [np.uint64(64), np.uint64(2304)]
+    blk.6.loop_v_ctrl_gain.weight F32 [np.uint64(64), np.uint64(2304)]

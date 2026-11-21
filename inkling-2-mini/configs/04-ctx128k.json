@@ -1,0 +1,2 @@
+{"id": "04-ctx128k", "from": "02-core-q8kv-ub128-opon", "change": "128k: core layers 16-17 back to RAM, ub 64, --no-op-offload (NaN otherwise)", "build": "inkfix-4c836a8eb (6aafbc7d2)",
+ "env": {"INK_OT": "blk\\.([0-5]|1[6-9]|2[0-3])\\.ffn_.*_exps=CPU", "INK_CONTEXT": 131072, "INK_UBATCH": 64}, "extra": "--no-op-offload"}

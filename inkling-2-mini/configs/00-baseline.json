@@ -1,0 +1,4 @@
+{"id": "00-baseline", "build": "master-29b52d398", "model": "Inkling-2-Mini-IQ4_NL.gguf",
+ "env": {"INK_PLACEMENT": "cpu", "INK_KV": "f16", "INK_UBATCH": 512, "INK_THREADS": 6, "GPU_RUN_MEM": "44G"},
+ "flags": "-ngl 99 -ot exps=CPU --fit off -np 1 -fa on -ctk f16 -ctv f16 -t 6 -b 512 -ub 512",
+ "note": "brief's baseline: every routed expert in RAM. Context set per test (64k target; does not fit with the 8.4 GB compute buffer, see PLAN #1)."}

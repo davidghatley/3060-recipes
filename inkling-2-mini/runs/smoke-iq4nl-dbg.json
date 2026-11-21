@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 136,
+  "reasoning_head": "The user asks to reply with exactly \"ok\". Need final exactly ok, no extra. Ensure no additional punctuation. Case-sensitive: \"ok\". Done.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 18,
+   "prompt_ms": 648.67,
+   "prompt_per_token_ms": 36.04,
+   "prompt_per_second": 27.75,
+   "predicted_n": 43,
+   "predicted_ms": 2448.89,
+   "predicted_per_token_ms": 58.31,
+   "predicted_per_second": 17.15
+  },
+  "wall_s": 3.1
+ },
+ "math": {
+  "content": "391",
+  "reasoning_chars": 115,
+  "reasoning_head": "The user wants 17*23. Compute: 17*20=340, 17*3=51, total 391. Need answer just number. No extra. Final only number.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 29,
+   "prompt_ms": 907.64,
+   "prompt_per_token_ms": 31.3,
+   "prompt_per_second": 31.95,
+   "predicted_n": 48,
+   "predicted_ms": 2696.97,
+   "predicted_per_token_ms": 57.38,
+   "predicted_per_second": 17.43
+  },
+  "wall_s": 3.61
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = ''.join(ch.lower() for ch in s if ch.isalnum())\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 511,
+  "reasoning_head": "The user wants a Python function is_palindrome(s) that ignores case and non-alphanumerics. Output only one code block. Need produce final with only code block. Need ensure function cleans string: keep alnum, lower. Use str.isalnum. Implementation: def is_palindrome(s): cleaned=''.join(ch.lower() for",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 33,
+   "prompt_ms": 928.62,
+   "prompt_per_token_ms": 28.14,
+   "prompt_per_second": 35.54,
+   "predicted_n": 191,
+   "predicted_ms": 10872.91,
+   "predicted_per_token_ms": 57.23,
+   "predicted_per_second": 17.47
+  },
+  "wall_s": 11.81
+ },
+ "image": {
+  "content": "????????????????????????????????????????????????",
+  "finish": "length",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 68,
+   "prompt_ms": 1064.73,
+   "prompt_per_token_ms": 15.66,
+   "prompt_per_second": 63.87,
+   "predicted_n": 48,
+   "predicted_ms": 2679.77,
+   "predicted_per_token_ms": 57.02,
+   "predicted_per_second": 17.54
+  },
+  "wall_s": 3.76
+ }
+}

@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 196,
+  "reasoning_head": "The user asks to reply with exactly \"ok\". Need final exactly ok. Ensure no extra words. Since they demand exactly, final should be \"ok\". No need to mention anything else. Final channel exactly ok.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 18,
+   "prompt_ms": 431.46,
+   "prompt_per_token_ms": 23.97,
+   "prompt_per_second": 41.72,
+   "predicted_n": 53,
+   "predicted_ms": 1921.12,
+   "predicted_per_token_ms": 36.94,
+   "predicted_per_second": 27.07
+  },
+  "wall_s": 2.36
+ },
+ "math": {
+  "content": "391",
+  "reasoning_chars": 101,
+  "reasoning_head": "The user wants just the number. Compute 17*23: 17*20=340, 17*3=51, total 391. Need final only number.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 29,
+   "prompt_ms": 472.43,
+   "prompt_per_token_ms": 16.29,
+   "prompt_per_second": 61.38,
+   "predicted_n": 44,
+   "predicted_ms": 1567.15,
+   "predicted_per_token_ms": 36.45,
+   "predicted_per_second": 27.44
+  },
+  "wall_s": 2.04
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = ''.join(c.lower() for c in s if c.isalnum())\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 304,
+  "reasoning_head": "The user wants a Python function is_palindrome(s) that ignores case and non-alphanumerics. Output only one code block. Need final only code block, no extra text. Implement function: filter chars with isalnum and lower, compare to reversed. Use str.isalnum. Code only. Ensure only one code block in fi",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 33,
+   "prompt_ms": 441.33,
+   "prompt_per_token_ms": 13.37,
+   "prompt_per_second": 74.77,
+   "predicted_n": 128,
+   "predicted_ms": 4620.0,
+   "predicted_per_token_ms": 36.38,
+   "predicted_per_second": 27.49
+  },
+  "wall_s": 5.07
+ },
+ "image": {
+  "content": "A vertically split red-and-blue rectangle with a white square centered across the dividing line.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 68,
+   "prompt_ms": 856.56,
+   "prompt_per_token_ms": 12.6,
+   "prompt_per_second": 79.39,
+   "predicted_n": 84,
+   "predicted_ms": 3022.79,
+   "predicted_per_token_ms": 36.42,
+   "predicted_per_second": 27.46
+  },
+  "wall_s": 3.89
+ }
+}

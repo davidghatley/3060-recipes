@@ -1,0 +1,4300 @@
+
+# ==== difflib.py
+"""
+Module difflib -- helpers for computing deltas between objects.
+
+Function get_close_matches(word, possibilities, n=3, cutoff=0.6):
+    Use SequenceMatcher to return list of the best "good enough" matches.
+
+Function context_diff(a, b):
+    For two lists of strings, return a delta in context diff format.
+
+Function ndiff(a, b):
+    Return a delta: the difference between `a` and `b` (lists of strings).
+
+Function restore(delta, which):
+    Return one of the two sequences that generated an ndiff delta.
+
+Function unified_diff(a, b):
+    For two lists of strings, return a delta in unified diff format.
+
+Class SequenceMatcher:
+    A flexible class for comparing pairs of sequences of any type.
+
+Class Differ:
+    For producing human-readable deltas from sequences of lines of text.
+
+Class HtmlDiff:
+    For producing HTML side by side comparison with change highlights.
+"""
+
+__all__ = ['get_close_matches', 'ndiff', 'restore', 'SequenceMatcher',
+           'Differ','IS_CHARACTER_JUNK', 'IS_LINE_JUNK', 'context_diff',
+           'unified_diff', 'diff_bytes', 'HtmlDiff', 'Match']
+
+from heapq import nlargest as _nlargest
+from collections import namedtuple as _namedtuple
+from types import GenericAlias
+
+Match = _namedtuple('Match', 'a b size')
+
+def _calculate_ratio(matches, length):
+    if length:
+        return 2.0 * matches / length
+    return 1.0
+
+class SequenceMatcher:
+
+    """
+    SequenceMatcher is a flexible class for comparing pairs of sequences of
+    any type, so long as the sequence elements are hashable.  The basic
+    algorithm predates, and is a little fancier than, an algorithm
+    published in the late 1980's by Ratcliff and Obershelp under the
+    hyperbolic name "gestalt pattern matching".  The basic idea is to find
+    the longest contiguous matching subsequence that contains no "junk"
+    elements (R-O doesn't address junk).  The same idea is then applied
+    recursively to the pieces of the sequences to the left and to the right
+    of the matching subsequence.  This does not yield minimal edit
+    sequences, but does tend to yield matches that "look right" to people.
+
+    SequenceMatcher tries to compute a "human-friendly diff" between two
+    sequences.  Unlike e.g. UNIX(tm) diff, the fundamental notion is the
+    longest *contiguous* & junk-free matching subsequence.  That's what
+    catches peoples' eyes.  The Windows(tm) windiff has another interesting
+    notion, pairing up elements that appear uniquely in each sequence.
+    That, and the method here, appear to yield more intuitive difference
+    reports than does diff.  This method appears to be the least vulnerable
+    to syncing up on blocks of "junk lines", though (like blank lines in
+    ordinary text files, or maybe "<P>" lines in HTML files).  That may be
+    because this is the only method of the 3 that has a *concept* of
+    "junk" <wink>.
+
+    Example, comparing two strings, and considering blanks to be "junk":
+
+    >>> s = SequenceMatcher(lambda x: x == " ",
+    ...                     "private Thread currentThread;",
+    ...                     "private volatile Thread currentThread;")
+    >>>
+
+    .ratio() returns a float in [0, 1], measuring the "similarity" of the
+    sequences.  As a rule of thumb, a .ratio() value over 0.6 means the
+    sequences are close matches:
+
+    >>> print(round(s.ratio(), 2))
+    0.87
+    >>>
+
+    If you're only interested in where the sequences match,
+    .get_matching_blocks() is handy:
+
+    >>> for block in s.get_matching_blocks():
+    ...     print("a[%d] and b[%d] match for %d elements" % block)
+    a[0] and b[0] match for 8 elements
+    a[8] and b[17] match for 21 elements
+    a[29] and b[38] match for 0 elements
+
+    Note that the last tuple returned by .get_matching_blocks() is always a
+    dummy, (len(a), len(b), 0), and this is the only case in which the last
+    tuple element (number of elements matched) is 0.
+
+    If you want to know how to change the first sequence into the second,
+    use .get_opcodes():
+
+    >>> for opcode in s.get_opcodes():
+    ...     print("%6s a[%d:%d] b[%d:%d]" % opcode)
+     equal a[0:8] b[0:8]
+    insert a[8:8] b[8:17]
+     equal a[8:29] b[17:38]
+
+    See the Differ class for a fancy human-friendly file differencer, which
+    uses SequenceMatcher both to compare sequences of lines, and to compare
+    sequences of characters within similar (near-matching) lines.
+
+    See also function get_close_matches() in this module, which shows how
+    simple code building on SequenceMatcher can be used to do useful work.
+
+    Timing:  Basic R-O is cubic time worst case and quadratic time expected
+    case.  SequenceMatcher is quadratic time for the worst case and has
+    expected-case behavior dependent in a complicated way on how many
+    elements the sequences have in common; best case time is linear.
+    """
+
+    def __init__(self, isjunk=None, a='', b='', autojunk=True):
+        """Construct a SequenceMatcher.
+
+        Optional arg isjunk is None (the default), or a one-argument
+        function that takes a sequence element and returns true iff the
+        element is junk.  None is equivalent to passing "lambda x: 0", i.e.
+        no elements are considered to be junk.  For example, pass
+            lambda x: x in " \\t"
+        if you're comparing lines as sequences of characters, and don't
+        want to synch up on blanks or hard tabs.
+
+        Optional arg a is the first of two sequences to be compared.  By
+        default, an empty string.  The elements of a must be hashable.  See
+        also .set_seqs() and .set_seq1().
+
+        Optional arg b is the second of two sequences to be compared.  By
+        default, an empty string.  The elements of b must be hashable. See
+        also .set_seqs() and .set_seq2().
+
+        Optional arg autojunk should be set to False to disable the
+        "automatic junk heuristic" that treats popular elements as junk
+        (see module documentation for more information).
+        """
+
+        # Members:
+        # a
+        #      first sequence
+        # b
+        #      second sequence; differences are computed as "what do
+        #      we need to do to 'a' to change it into 'b'?"
+        # b2j
+        #      for x in b, b2j[x] is a list of the indices (into b)
+        #      at which x appears; junk and popular elements do not appear
+        # fullbcount
+        #      for x in b, fullbcount[x] == the number of times x
+        #      appears in b; only materialized if really needed (used
+        #      only for computing quick_ratio())
+        # matching_blocks
+        #      a list of (i, j, k) triples, where a[i:i+k] == b[j:j+k];
+        #      ascending & non-overlapping in i and in j; terminated by
+        #      a dummy (len(a), len(b), 0) sentinel
+        # opcodes
+        #      a list of (tag, i1, i2, j1, j2) tuples, where tag is
+        #      one of
+        #          'replace'   a[i1:i2] should be replaced by b[j1:j2]
+        #          'delete'    a[i1:i2] should be deleted
+        #          'insert'    b[j1:j2] should be inserted
+        #          'equal'     a[i1:i2] == b[j1:j2]
+        # isjunk
+        #      a user-supplied function taking a sequence element and
+        #      returning true iff the element is "junk" -- this has
+        #      subtle but helpful effects on the algorithm, which I'll
+        #      get around to writing up someday <0.9 wink>.
+        #      DON'T USE!  Only __chain_b uses this.  Use "in self.bjunk".
+        # bjunk
+        #      the items in b for which isjunk is True.
+        # bpopular
+        #      nonjunk items in b treated as junk by the heuristic (if used).
+
+        self.isjunk = isjunk
+        self.a = self.b = None
+        self.autojunk = autojunk
+        self.set_seqs(a, b)
+
+    def set_seqs(self, a, b):
+        """Set the two sequences to be compared.
+
+        >>> s = SequenceMatcher()
+        >>> s.set_seqs("abcd", "bcde")
+        >>> s.ratio()
+        0.75
+        """
+
+        self.set_seq1(a)
+        self.set_seq2(b)
+
+    def set_seq1(self, a):
+        """Set the first sequence to be compared.
+
+        The second sequence to be compared is not changed.
+
+        >>> s = SequenceMatcher(None, "abcd", "bcde")
+        >>> s.ratio()
+        0.75
+        >>> s.set_seq1("bcde")
+        >>> s.ratio()
+        1.0
+        >>>
+
+        SequenceMatcher computes and caches detailed information about the
+        second sequence, so if you want to compare one sequence S against
+        many sequences, use .set_seq2(S) once and call .set_seq1(x)
+        repeatedly for each of the other sequences.
+
+        See also set_seqs() and set_seq2().
+        """
+
+        if a is self.a:
+            return
+        self.a = a
+        self.matching_blocks = self.opcodes = None
+
+    def set_seq2(self, b):
+        """Set the second sequence to be compared.
+
+        The first sequence to be compared is not changed.
+
+        >>> s = SequenceMatcher(None, "abcd", "bcde")
+        >>> s.ratio()
+        0.75
+        >>> s.set_seq2("abcd")
+        >>> s.ratio()
+        1.0
+        >>>
+
+        SequenceMatcher computes and caches detailed information about the
+        second sequence, so if you want to compare one sequence S against
+        many sequences, use .set_seq2(S) once and call .set_seq1(x)
+        repeatedly for each of the other sequences.
+
+        See also set_seqs() and set_seq1().
+        """
+
+        if b is self.b:
+            return
+        self.b = b
+        self.matching_blocks = self.opcodes = None
+        self.fullbcount = None
+        self.__chain_b()
+
+    # For each element x in b, set b2j[x] to a list of the indices in
+    # b where x appears; the indices are in increasing order; note that
+    # the number of times x appears in b is len(b2j[x]) ...
+    # when self.isjunk is defined, junk elements don't show up in this
+    # map at all, which stops the central find_longest_match method
+    # from starting any matching block at a junk element ...
+    # b2j also does not contain entries for "popular" elements, meaning
+    # elements that account for more than 1 + 1% of the total elements, and
+    # when the sequence is reasonably large (>= 200 elements); this can
+    # be viewed as an adaptive notion of semi-junk, and yields an enormous
+    # speedup when, e.g., comparing program files with hundreds of
+    # instances of "return NULL;" ...
+    # note that this is only called when b changes; so for cross-product
+    # kinds of matches, it's best to call set_seq2 once, then set_seq1
+    # repeatedly
+
+    def __chain_b(self):
+        # Because isjunk is a user-defined (not C) function, and we test
+        # for junk a LOT, it's important to minimize the number of calls.
+        # Before the tricks described here, __chain_b was by far the most
+        # time-consuming routine in the whole module!  If anyone sees
+        # Jim Roskind, thank him again for profile.py -- I never would
+        # have guessed that.
+        # The first trick is to build b2j ignoring the possibility
+        # of junk.  I.e., we don't call isjunk at all yet.  Throwing
+        # out the junk later is much cheaper than building b2j "right"
+        # from the start.
+        b = self.b
+        self.b2j = b2j = {}
+
+        for i, elt in enumerate(b):
+            indices = b2j.setdefault(elt, [])
+            indices.append(i)
+
+        # Purge junk elements
+        self.bjunk = junk = set()
+        isjunk = self.isjunk
+        if isjunk:
+            for elt in b2j.keys():
+                if isjunk(elt):
+                    junk.add(elt)
+            for elt in junk: # separate loop avoids separate list of keys
+                del b2j[elt]
+
+        # Purge popular elements that are not junk
+        self.bpopular = popular = set()
+        n = len(b)
+        if self.autojunk and n >= 200:
+            ntest = n // 100 + 1
+            for elt, idxs in b2j.items():
+                if len(idxs) > ntest:
+                    popular.add(elt)
+            for elt in popular: # ditto; as fast for 1% deletion
+                del b2j[elt]
+
+    def find_longest_match(self, alo=0, ahi=None, blo=0, bhi=None):
+        """Find longest matching block in a[alo:ahi] and b[blo:bhi].
+
+        By default it will find the longest match in the entirety of a and b.
+
+        If isjunk is not defined:
+
+        Return (i,j,k) such that a[i:i+k] is equal to b[j:j+k], where
+            alo <= i <= i+k <= ahi
+            blo <= j <= j+k <= bhi
+        and for all (i',j',k') meeting those conditions,
+            k >= k'
+            i <= i'
+            and if i == i', j <= j'
+
+        In other words, of all maximal matching blocks, return one that
+        starts earliest in a, and of all those maximal matching blocks that
+        start earliest in a, return the one that starts earliest in b.
+
+        >>> s = SequenceMatcher(None, " abcd", "abcd abcd")
+        >>> s.find_longest_match(0, 5, 0, 9)
+        Match(a=0, b=4, size=5)
+
+        If isjunk is defined, first the longest matching block is
+        determined as above, but with the additional restriction that no
+        junk element appears in the block.  Then that block is extended as
+        far as possible by matching (only) junk elements on both sides.  So
+        the resulting block never matches on junk except as identical junk
+        happens to be adjacent to an "interesting" match.
+
+        Here's the same example as before, but considering blanks to be
+        junk.  That prevents " abcd" from matching the " abcd" at the tail
+        end of the second sequence directly.  Instead only the "abcd" can
+        match, and matches the leftmost "abcd" in the second sequence:
+
+        >>> s = SequenceMatcher(lambda x: x==" ", " abcd", "abcd abcd")
+        >>> s.find_longest_match(0, 5, 0, 9)
+        Match(a=1, b=0, size=4)
+
+        If no blocks match, return (alo, blo, 0).
+
+        >>> s = SequenceMatcher(None, "ab", "c")
+        >>> s.find_longest_match(0, 2, 0, 1)
+        Match(a=0, b=0, size=0)
+        """
+
+        # CAUTION:  stripping common prefix or suffix would be incorrect.
+        # E.g.,
+        #    ab
+        #    acab
+        # Longest matching block is "ab", but if common prefix is
+        # stripped, it's "a" (tied with "b").  UNIX(tm) diff does so
+        # strip, so ends up claiming that ab is changed to acab by
+        # inserting "ca" in the middle.  That's minimal but unintuitive:
+        # "it's obvious" that someone inserted "ac" at the front.
+        # Windiff ends up at the same place as diff, but by pairing up
+        # the unique 'b's and then matching the first two 'a's.
+
+        a, b, b2j, isbjunk = self.a, self.b, self.b2j, self.bjunk.__contains__
+        if ahi is None:
+            ahi = len(a)
+        if bhi is None:
+            bhi = len(b)
+        besti, bestj, bestsize = alo, blo, 0
+        # find longest junk-free match
+        # during an iteration of the loop, j2len[j] = length of longest
+        # junk-free match ending with a[i-1] and b[j]
+        j2len = {}
+        nothing = []
+        for i in range(alo, ahi):
+            # look at all instances of a[i] in b; note that because
+            # b2j has no junk keys, the loop is skipped if a[i] is junk
+            j2lenget = j2len.get
+            newj2len = {}
+            for j in b2j.get(a[i], nothing):
+                # a[i] matches b[j]
+                if j < blo:
+                    continue
+                if j >= bhi:
+                    break
+                k = newj2len[j] = j2lenget(j-1, 0) + 1
+                if k > bestsize:
+                    besti, bestj, bestsize = i-k+1, j-k+1, k
+            j2len = newj2len
+
+        # Extend the best by non-junk elements on each end.  In particular,
+        # "popular" non-junk elements aren't in b2j, which greatly speeds
+        # the inner loop above, but also means "the best" match so far
+        # doesn't contain any junk *or* popular non-junk elements.
+        while besti > alo and bestj > blo and \
+              not isbjunk(b[bestj-1]) and \
+              a[besti-1] == b[bestj-1]:
+            besti, bestj, bestsize = besti-1, bestj-1, bestsize+1
+        while besti+bestsize < ahi and bestj+bestsize < bhi and \
+              not isbjunk(b[bestj+bestsize]) and \
+              a[besti+bestsize] == b[bestj+bestsize]:
+            bestsize += 1
+
+        # Now that we have a wholly interesting match (albeit possibly
+        # empty!), we may as well suck up the matching junk on each
+        # side of it too.  Can't think of a good reason not to, and it
+        # saves post-processing the (possibly considerable) expense of
+        # figuring out what to do with it.  In the case of an empty
+        # interesting match, this is clearly the right thing to do,
+        # because no other kind of match is possible in the regions.
+        while besti > alo and bestj > blo and \
+              isbjunk(b[bestj-1]) and \
+              a[besti-1] == b[bestj-1]:
+            besti, bestj, bestsize = besti-1, bestj-1, bestsize+1
+        while besti+bestsize < ahi and bestj+bestsize < bhi and \
+              isbjunk(b[bestj+bestsize]) and \
+              a[besti+bestsize] == b[bestj+bestsize]:
+            bestsize = bestsize + 1
+
+        return Match(besti, bestj, bestsize)
+
+    def get_matching_blocks(self):
+        """Return list of triples describing matching subsequences.
+
+        Each triple is of the form (i, j, n), and means that
+        a[i:i+n] == b[j:j+n].  The triples are monotonically increasing in
+        i and in j.  New in Python 2.5, it's also guaranteed that if
+        (i, j, n) and (i', j', n') are adjacent triples in the list, and
+        the second is not the last triple in the list, then i+n != i' or
+        j+n != j'.  IOW, adjacent triples never describe adjacent equal
+        blocks.
+
+        The last triple is a dummy, (len(a), len(b), 0), and is the only
+        triple with n==0.
+
+        >>> s = SequenceMatcher(None, "abxcd", "abcd")
+        >>> list(s.get_matching_blocks())
+        [Match(a=0, b=0, size=2), Match(a=3, b=2, size=2), Match(a=5, b=4, size=0)]
+        """
+
+        if self.matching_blocks is not None:
+            return self.matching_blocks
+        la, lb = len(self.a), len(self.b)
+
+        # This is most naturally expressed as a recursive algorithm, but
+        # at least one user bumped into extreme use cases that exceeded
+        # the recursion limit on their box.  So, now we maintain a list
+        # ('queue`) of blocks we still need to look at, and append partial
+        # results to `matching_blocks` in a loop; the matches are sorted
+        # at the end.
+        queue = [(0, la, 0, lb)]
+        matching_blocks = []
+        while queue:
+            alo, ahi, blo, bhi = queue.pop()
+            i, j, k = x = self.find_longest_match(alo, ahi, blo, bhi)
+            # a[alo:i] vs b[blo:j] unknown
+            # a[i:i+k] same as b[j:j+k]
+            # a[i+k:ahi] vs b[j+k:bhi] unknown
+            if k:   # if k is 0, there was no matching block
+                matching_blocks.append(x)
+                if alo < i and blo < j:
+                    queue.append((alo, i, blo, j))
+                if i+k < ahi and j+k < bhi:
+                    queue.append((i+k, ahi, j+k, bhi))
+        matching_blocks.sort()
+
+        # It's possible that we have adjacent equal blocks in the
+        # matching_blocks list now.  Starting with 2.5, this code was added
+        # to collapse them.
+        i1 = j1 = k1 = 0
+        non_adjacent = []
+        for i2, j2, k2 in matching_blocks:
+            # Is this block adjacent to i1, j1, k1?
+            if i1 + k1 == i2 and j1 + k1 == j2:
+                # Yes, so collapse them -- this just increases the length of
+                # the first block by the length of the second, and the first
+                # block so lengthened remains the block to compare against.
+                k1 += k2
+            else:
+                # Not adjacent.  Remember the first block (k1==0 means it's
+                # the dummy we started with), and make the second block the
+                # new block to compare against.
+                if k1:
+                    non_adjacent.append((i1, j1, k1))
+                i1, j1, k1 = i2, j2, k2
+        if k1:
+            non_adjacent.append((i1, j1, k1))
+
+        non_adjacent.append( (la, lb, 0) )
+        self.matching_blocks = list(map(Match._make, non_adjacent))
+        return self.matching_blocks
+
+    def get_opcodes(self):
+        """Return list of 5-tuples describing how to turn a into b.
+
+        Each tuple is of the form (tag, i1, i2, j1, j2).  The first tuple
+        has i1 == j1 == 0, and remaining tuples have i1 == the i2 from the
+        tuple preceding it, and likewise for j1 == the previous j2.
+
+        The tags are strings, with these meanings:
+
+        'replace':  a[i1:i2] should be replaced by b[j1:j2]
+        'delete':   a[i1:i2] should be deleted.
+                    Note that j1==j2 in this case.
+        'insert':   b[j1:j2] should be inserted at a[i1:i1].
+                    Note that i1==i2 in this case.
+        'equal':    a[i1:i2] == b[j1:j2]
+
+        >>> a = "qabxcd"
+        >>> b = "abycdf"
+        >>> s = SequenceMatcher(None, a, b)
+        >>> for tag, i1, i2, j1, j2 in s.get_opcodes():
+        ...    print(("%7s a[%d:%d] (%s) b[%d:%d] (%s)" %
+        ...           (tag, i1, i2, a[i1:i2], j1, j2, b[j1:j2])))
+         delete a[0:1] (q) b[0:0] ()
+          equal a[1:3] (ab) b[0:2] (ab)
+        replace a[3:4] (x) b[2:3] (y)
+          equal a[4:6] (cd) b[3:5] (cd)
+         insert a[6:6] () b[5:6] (f)
+        """
+
+        if self.opcodes is not None:
+            return self.opcodes
+        i = j = 0
+        self.opcodes = answer = []
+        for ai, bj, size in self.get_matching_blocks():
+            # invariant:  we've pumped out correct diffs to change
+            # a[:i] into b[:j], and the next matching block is
+            # a[ai:ai+size] == b[bj:bj+size].  So we need to pump
+            # out a diff to change a[i:ai] into b[j:bj], pump out
+            # the matching block, and move (i,j) beyond the match
+            tag = ''
+            if i < ai and j < bj:
+                tag = 'replace'
+            elif i < ai:
+                tag = 'delete'
+            elif j < bj:
+                tag = 'insert'
+            if tag:
+                answer.append( (tag, i, ai, j, bj) )
+            i, j = ai+size, bj+size
+            # the list of matching blocks is terminated by a
+            # sentinel with size 0
+            if size:
+                answer.append( ('equal', ai, i, bj, j) )
+        return answer
+
+    def get_grouped_opcodes(self, n=3):
+        """ Isolate change clusters by eliminating ranges with no changes.
+
+        Return a generator of groups with up to n lines of context.
+        Each group is in the same format as returned by get_opcodes().
+
+        >>> from pprint import pprint
+        >>> a = list(map(str, range(1,40)))
+        >>> b = a[:]
+        >>> b[8:8] = ['i']     # Make an insertion
+        >>> b[20] += 'x'       # Make a replacement
+        >>> b[23:28] = []      # Make a deletion
+        >>> b[30] += 'y'       # Make another replacement
+        >>> pprint(list(SequenceMatcher(None,a,b).get_grouped_opcodes()))
+        [[('equal', 5, 8, 5, 8), ('insert', 8, 8, 8, 9), ('equal', 8, 11, 9, 12)],
+         [('equal', 16, 19, 17, 20),
+          ('replace', 19, 20, 20, 21),
+          ('equal', 20, 22, 21, 23),
+          ('delete', 22, 27, 23, 23),
+          ('equal', 27, 30, 23, 26)],
+         [('equal', 31, 34, 27, 30),
+          ('replace', 34, 35, 30, 31),
+          ('equal', 35, 38, 31, 34)]]
+        """
+
+        codes = self.get_opcodes()
+        if not codes:
+            codes = [("equal", 0, 1, 0, 1)]
+        # Fixup leading and trailing groups if they show no changes.
+        if codes[0][0] == 'equal':
+            tag, i1, i2, j1, j2 = codes[0]
+            codes[0] = tag, max(i1, i2-n), i2, max(j1, j2-n), j2
+        if codes[-1][0] == 'equal':
+            tag, i1, i2, j1, j2 = codes[-1]
+            codes[-1] = tag, i1, min(i2, i1+n), j1, min(j2, j1+n)
+
+        nn = n + n
+        group = []
+        for tag, i1, i2, j1, j2 in codes:
+            # End the current group and start a new one whenever
+            # there is a large range with no changes.
+            if tag == 'equal' and i2-i1 > nn:
+                group.append((tag, i1, min(i2, i1+n), j1, min(j2, j1+n)))
+                yield group
+                group = []
+                i1, j1 = max(i1, i2-n), max(j1, j2-n)
+            group.append((tag, i1, i2, j1 ,j2))
+        if group and not (len(group)==1 and group[0][0] == 'equal'):
+            yield group
+
+    def ratio(self):
+        """Return a measure of the sequences' similarity (float in [0,1]).
+
+        Where T is the total number of elements in both sequences, and
+        M is the number of matches, this is 2.0*M / T.
+        Note that this is 1 if the sequences are identical, and 0 if
+        they have nothing in common.
+
+        .ratio() is expensive to compute if you haven't already computed
+        .get_matching_blocks() or .get_opcodes(), in which case you may
+        want to try .quick_ratio() or .real_quick_ratio() first to get an
+        upper bound.
+
+        >>> s = SequenceMatcher(None, "abcd", "bcde")
+        >>> s.ratio()
+        0.75
+        >>> s.quick_ratio()
+        0.75
+        >>> s.real_quick_ratio()
+        1.0
+        """
+
+        matches = sum(triple[-1] for triple in self.get_matching_blocks())
+        return _calculate_ratio(matches, len(self.a) + len(self.b))
+
+    def quick_ratio(self):
+        """Return an upper bound on ratio() relatively quickly.
+
+        This isn't defined beyond that it is an upper bound on .ratio(), and
+        is faster to compute.
+        """
+
+        # viewing a and b as multisets, set matches to the cardinality
+        # of their intersection; this counts the number of matches
+        # without regard to order, so is clearly an upper bound
+        if self.fullbcount is None:
+            self.fullbcount = fullbcount = {}
+            for elt in self.b:
+                fullbcount[elt] = fullbcount.get(elt, 0) + 1
+        fullbcount = self.fullbcount
+        # avail[x] is the number of times x appears in 'b' less the
+        # number of times we've seen it in 'a' so far ... kinda
+        avail = {}
+        availhas, matches = avail.__contains__, 0
+        for elt in self.a:
+            if availhas(elt):
+                numb = avail[elt]
+            else:
+                numb = fullbcount.get(elt, 0)
+            avail[elt] = numb - 1
+            if numb > 0:
+                matches = matches + 1
+        return _calculate_ratio(matches, len(self.a) + len(self.b))
+
+    def real_quick_ratio(self):
+        """Return an upper bound on ratio() very quickly.
+
+        This isn't defined beyond that it is an upper bound on .ratio(), and
+        is faster to compute than either .ratio() or .quick_ratio().
+        """
+
+        la, lb = len(self.a), len(self.b)
+        # can't have more matches than the number of elements in the
+        # shorter sequence
+        return _calculate_ratio(min(la, lb), la + lb)
+
+    __class_getitem__ = classmethod(GenericAlias)
+
+
+def get_close_matches(word, possibilities, n=3, cutoff=0.6):
+    """Use SequenceMatcher to return list of the best "good enough" matches.
+
+    word is a sequence for which close matches are desired (typically a
+    string).
+
+    possibilities is a list of sequences against which to match word
+    (typically a list of strings).
+
+    Optional arg n (default 3) is the maximum number of close matches to
+    return.  n must be > 0.
+
+    Optional arg cutoff (default 0.6) is a float in [0, 1].  Possibilities
+    that don't score at least that similar to word are ignored.
+
+    The best (no more than n) matches among the possibilities are returned
+    in a list, sorted by similarity score, most similar first.
+
+    >>> get_close_matches("appel", ["ape", "apple", "peach", "puppy"])
+    ['apple', 'ape']
+    >>> import keyword as _keyword
+    >>> get_close_matches("wheel", _keyword.kwlist)
+    ['while']
+    >>> get_close_matches("Apple", _keyword.kwlist)
+    []
+    >>> get_close_matches("accept", _keyword.kwlist)
+    ['except']
+    """
+
+    if not n >  0:
+        raise ValueError("n must be > 0: %r" % (n,))
+    if not 0.0 <= cutoff <= 1.0:
+        raise ValueError("cutoff must be in [0.0, 1.0]: %r" % (cutoff,))
+    result = []
+    s = SequenceMatcher()
+    s.set_seq2(word)
+    for x in possibilities:
+        s.set_seq1(x)
+        if s.real_quick_ratio() >= cutoff and \
+           s.quick_ratio() >= cutoff and \
+           s.ratio() >= cutoff:
+            result.append((s.ratio(), x))
+
+    # Move the best scorers to head of list
+    result = _nlargest(n, result)
+    # Strip scores for the best n matches
+    return [x for score, x in result]
+
+
+def _keep_original_ws(s, tag_s):
+    """Replace whitespace with the original whitespace characters in `s`"""
+    return ''.join(
+        c if tag_c == " " and c.isspace() else tag_c
+        for c, tag_c in zip(s, tag_s)
+    )
+
+
+
+class Differ:
+    r"""
+    Differ is a class for comparing sequences of lines of text, and
+    producing human-readable differences or deltas.  Differ uses
+    SequenceMatcher both to compare sequences of lines, and to compare
+    sequences of characters within similar (near-matching) lines.
+
+    Each line of a Differ delta begins with a two-letter code:
+
+        '- '    line unique to sequence 1
+        '+ '    line unique to sequence 2
+        '  '    line common to both sequences
+        '? '    line not present in either input sequence
+
+    Lines beginning with '? ' attempt to guide the eye to intraline
+    differences, and were not present in either input sequence.  These lines
+    can be confusing if the sequences contain tab characters.
+
+    Note that Differ makes no claim to produce a *minimal* diff.  To the
+    contrary, minimal diffs are often counter-intuitive, because they synch
+    up anywhere possible, sometimes accidental matches 100 pages apart.
+    Restricting synch points to contiguous matches preserves some notion of
+    locality, at the occasional cost of producing a longer diff.
+
+    Example: Comparing two texts.
+
+    First we set up the texts, sequences of individual single-line strings
+    ending with newlines (such sequences can also be obtained from the
+    `readlines()` method of file-like objects):
+
+    >>> text1 = '''  1. Beautiful is better than ugly.
+    ...   2. Explicit is better than implicit.
+    ...   3. Simple is better than complex.
+    ...   4. Complex is better than complicated.
+    ... '''.splitlines(keepends=True)
+    >>> len(text1)
+    4
+    >>> text1[0][-1]
+    '\n'
+    >>> text2 = '''  1. Beautiful is better than ugly.
+    ...   3.   Simple is better than complex.
+    ...   4. Complicated is better than complex.
+    ...   5. Flat is better than nested.
+    ... '''.splitlines(keepends=True)
+
+    Next we instantiate a Differ object:
+
+    >>> d = Differ()
+
+    Note that when instantiating a Differ object we may pass functions to
+    filter out line and character 'junk'.  See Differ.__init__ for details.
+
+    Finally, we compare the two:
+
+    >>> result = list(d.compare(text1, text2))
+
+    'result' is a list of strings, so let's pretty-print it:
+
+    >>> from pprint import pprint as _pprint
+    >>> _pprint(result)
+    ['    1. Beautiful is better than ugly.\n',
+     '-   2. Explicit is better than implicit.\n',
+     '-   3. Simple is better than complex.\n',
+     '+   3.   Simple is better than complex.\n',
+     '?     ++\n',
+     '-   4. Complex is better than complicated.\n',
+     '?            ^                     ---- ^\n',
+     '+   4. Complicated is better than complex.\n',
+     '?           ++++ ^                      ^\n',
+     '+   5. Flat is better than nested.\n']
+
+    As a single multi-line string it looks like this:
+
+    >>> print(''.join(result), end="")
+        1. Beautiful is better than ugly.
+    -   2. Explicit is better than implicit.
+    -   3. Simple is better than complex.
+    +   3.   Simple is better than complex.
+    ?     ++
+    -   4. Complex is better than complicated.
+    ?            ^                     ---- ^
+    +   4. Complicated is better than complex.
+    ?           ++++ ^                      ^
+    +   5. Flat is better than nested.
+    """
+
+    def __init__(self, linejunk=None, charjunk=None):
+        """
+        Construct a text differencer, with optional filters.
+
+        The two optional keyword parameters are for filter functions:
+
+        - `linejunk`: A function that should accept a single string argument,
+          and return true iff the string is junk. The module-level function
+          `IS_LINE_JUNK` may be used to filter out lines without visible
+          characters, except for at most one splat ('#').  It is recommended
+          to leave linejunk None; the underlying SequenceMatcher class has
+          an adaptive notion of "noise" lines that's better than any static
+          definition the author has ever been able to craft.
+
+        - `charjunk`: A function that should accept a string of length 1. The
+          module-level function `IS_CHARACTER_JUNK` may be used to filter out
+          whitespace characters (a blank or tab; **note**: bad idea to include
+          newline in this!).  Use of IS_CHARACTER_JUNK is recommended.
+        """
+
+        self.linejunk = linejunk
+        self.charjunk = charjunk
+
+    def compare(self, a, b):
+        r"""
+        Compare two sequences of lines; generate the resulting delta.
+
+        Each sequence must contain individual single-line strings ending with
+        newlines. Such sequences can be obtained from the `readlines()` method
+        of file-like objects.  The delta generated also consists of newline-
+        terminated strings, ready to be printed as-is via the writelines()
+        method of a file-like object.
+
+        Example:
+
+        >>> print(''.join(Differ().compare('one\ntwo\nthree\n'.splitlines(True),
+        ...                                'ore\ntree\nemu\n'.splitlines(True))),
+        ...       end="")
+        - one
+        ?  ^
+        + ore
+        ?  ^
+        - two
+        - three
+        ?  -
+        + tree
+        + emu
+        """
+
+        cruncher = SequenceMatcher(self.linejunk, a, b)
+        for tag, alo, ahi, blo, bhi in cruncher.get_opcodes():
+            if tag == 'replace':
+                g = self._fancy_replace(a, alo, ahi, b, blo, bhi)
+            elif tag == 'delete':
+                g = self._dump('-', a, alo, ahi)
+            elif tag == 'insert':
+                g = self._dump('+', b, blo, bhi)
+            elif tag == 'equal':
+                g = self._dump(' ', a, alo, ahi)
+            else:
+                raise ValueError('unknown tag %r' % (tag,))
+
+            yield from g
+
+    def _dump(self, tag, x, lo, hi):
+        """Generate comparison results for a same-tagged range."""
+        for i in range(lo, hi):
+            yield '%s %s' % (tag, x[i])
+
+    def _plain_replace(self, a, alo, ahi, b, blo, bhi):
+        assert alo < ahi and blo < bhi
+        # dump the shorter block first -- reduces the burden on short-term
+        # memory if the blocks are of very different sizes
+        if bhi - blo < ahi - alo:
+            first  = self._dump('+', b, blo, bhi)
+            second = self._dump('-', a, alo, ahi)
+        else:
+            first  = self._dump('-', a, alo, ahi)
+            second = self._dump('+', b, blo, bhi)
+
+        for g in first, second:
+            yield from g
+
+    def _fancy_replace(self, a, alo, ahi, b, blo, bhi):
+        r"""
+        When replacing one block of lines with another, search the blocks
+        for *similar* lines; the best-matching pair (if any) is used as a
+        synch point, and intraline difference marking is done on the
+        similar pair. Lots of work, but often worth it.
+
+        Example:
+
+        >>> d = Differ()
+        >>> results = d._fancy_replace(['abcDefghiJkl\n'], 0, 1,
+        ...                            ['abcdefGhijkl\n'], 0, 1)
+        >>> print(''.join(results), end="")
+        - abcDefghiJkl
+        ?    ^  ^  ^
+        + abcdefGhijkl
+        ?    ^  ^  ^
+        """
+        # Don't synch up unless the lines have a similarity score above
+        # cutoff. Previously only the smallest pair was handled here,
+        # and if there are many pairs with the best ratio, recursion
+        # could grow very deep, and runtime cubic. See:
+        # https://github.com/python/cpython/issues/119105
+        #
+        # Later, more pathological cases prompted removing recursion
+        # entirely.
+        cutoff = 0.74999
+        cruncher = SequenceMatcher(self.charjunk)
+        crqr = cruncher.real_quick_ratio
+        cqr = cruncher.quick_ratio
+        cr = cruncher.ratio
+
+        WINDOW = 10
+        best_i = best_j = None
+        dump_i, dump_j = alo, blo # smallest indices not yet resolved
+        for j in range(blo, bhi):
+            cruncher.set_seq2(b[j])
+            # Search the corresponding i's within WINDOW for rhe highest
+            # ratio greater than `cutoff`.
+            aequiv = alo + (j - blo)
+            arange = range(max(aequiv - WINDOW, dump_i),
+                           min(aequiv + WINDOW + 1, ahi))
+            if not arange: # likely exit if `a` is shorter than `b`
+                break
+            best_ratio = cutoff
+            for i in arange:
+                cruncher.set_seq1(a[i])
+                # Ordering by cheapest to most expensive ratio is very
+                # valuable, most often getting out early.
+                if (crqr() > best_ratio
+                      and cqr() > best_ratio
+                      and cr() > best_ratio):
+                    best_i, best_j, best_ratio = i, j, cr()
+
+            if best_i is None:
+                # found nothing to synch on yet - move to next j
+                continue
+
+            # pump out straight replace from before this synch pair
+            yield from self._fancy_helper(a, dump_i, best_i,
+                                          b, dump_j, best_j)
+            # do intraline marking on the synch pair
+            aelt, belt = a[best_i], b[best_j]
+            if aelt != belt:
+                # pump out a '-', '?', '+', '?' quad for the synched lines
+                atags = btags = ""
+                cruncher.set_seqs(aelt, belt)
+                for tag, ai1, ai2, bj1, bj2 in cruncher.get_opcodes():
+                    la, lb = ai2 - ai1, bj2 - bj1
+                    if tag == 'replace':
+                        atags += '^' * la
+                        btags += '^' * lb
+                    elif tag == 'delete':
+                        atags += '-' * la
+                    elif tag == 'insert':
+                        btags += '+' * lb
+                    elif tag == 'equal':
+                        atags += ' ' * la
+                        btags += ' ' * lb
+                    else:
+                        raise ValueError('unknown tag %r' % (tag,))
+                yield from self._qformat(aelt, belt, atags, btags)
+            else:
+                # the synch pair is identical
+                yield '  ' + aelt
+            dump_i, dump_j = best_i + 1, best_j + 1
+            best_i = best_j = None
+
+        # pump out straight replace from after the last synch pair
+        yield from self._fancy_helper(a, dump_i, ahi,
+                                      b, dump_j, bhi)
+
+    def _fancy_helper(self, a, alo, ahi, b, blo, bhi):
+        g = []
+        if alo < ahi:
+            if blo < bhi:
+                g = self._plain_replace(a, alo, ahi, b, blo, bhi)
+            else:
+                g = self._dump('-', a, alo, ahi)
+        elif blo < bhi:
+            g = self._dump('+', b, blo, bhi)
+
+        yield from g
+
+    def _qformat(self, aline, bline, atags, btags):
+        r"""
+        Format "?" output and deal with tabs.
+
+        Example:
+
+        >>> d = Differ()
+        >>> results = d._qformat('\tabcDefghiJkl\n', '\tabcdefGhijkl\n',
+        ...                      '  ^ ^  ^      ', '  ^ ^  ^      ')
+        >>> for line in results: print(repr(line))
+        ...
+        '- \tabcDefghiJkl\n'
+        '? \t ^ ^  ^\n'
+        '+ \tabcdefGhijkl\n'
+        '? \t ^ ^  ^\n'
+        """
+        atags = _keep_original_ws(aline, atags).rstrip()
+        btags = _keep_original_ws(bline, btags).rstrip()
+
+        yield "- " + aline
+        if atags:
+            yield f"? {atags}\n"
+
+        yield "+ " + bline
+        if btags:
+            yield f"? {btags}\n"
+
+# With respect to junk, an earlier version of ndiff simply refused to
+# *start* a match with a junk element.  The result was cases like this:
+#     before: private Thread currentThread;
+#     after:  private volatile Thread currentThread;
+# If you consider whitespace to be junk, the longest contiguous match
+# not starting with junk is "e Thread currentThread".  So ndiff reported
+# that "e volatil" was inserted between the 't' and the 'e' in "private".
+# While an accurate view, to people that's absurd.  The current version
+# looks for matching blocks that are entirely junk-free, then extends the
+# longest one of those as far as possible but only with matching junk.
+# So now "currentThread" is matched, then extended to suck up the
+# preceding blank; then "private" is matched, and extended to suck up the
+# following blank; then "Thread" is matched; and finally ndiff reports
+# that "volatile " was inserted before "Thread".  The only quibble
+# remaining is that perhaps it was really the case that " volatile"
+# was inserted after "private".  I can live with that <wink>.
+
+def IS_LINE_JUNK(line, pat=None):
+    r"""
+    Return True for ignorable line: if `line` is blank or contains a single '#'.
+
+    Examples:
+
+    >>> IS_LINE_JUNK('\n')
+    True
+    >>> IS_LINE_JUNK('  #   \n')
+    True
+    >>> IS_LINE_JUNK('hello\n')
+    False
+    """
+
+    if pat is None:
+        # Default: match '#' or the empty string
+        return line.strip() in '#'
+   # Previous versions used the undocumented parameter 'pat' as a
+   # match function. Retain this behaviour for compatibility.
+    return pat(line) is not None
+
+def IS_CHARACTER_JUNK(ch, ws=" \t"):
+    r"""
+    Return True for ignorable character: iff `ch` is a space or tab.
+
+    Examples:
+
+    >>> IS_CHARACTER_JUNK(' ')
+    True
+    >>> IS_CHARACTER_JUNK('\t')
+    True
+    >>> IS_CHARACTER_JUNK('\n')
+    False
+    >>> IS_CHARACTER_JUNK('x')
+    False
+    """
+
+    return ch in ws
+
+
+########################################################################
+###  Unified Diff
+########################################################################
+
+def _format_range_unified(start, stop):
+    'Convert range to the "ed" format'
+    # Per the diff spec at http://www.unix.org/single_unix_specification/
+    beginning = start + 1     # lines start numbering with one
+    length = stop - start
+    if length == 1:
+        return '{}'.format(beginning)
+    if not length:
+        beginning -= 1        # empty ranges begin at line just before the range
+    return '{},{}'.format(beginning, length)
+
+def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
+                 tofiledate='', n=3, lineterm='\n'):
+    r"""
+    Compare two sequences of lines; generate the delta as a unified diff.
+
+    Unified diffs are a compact way of showing line changes and a few
+    lines of context.  The number of context lines is set by 'n' which
+    defaults to three.
+
+    By default, the diff control lines (those with ---, +++, or @@) are
+    created with a trailing newline.  This is helpful so that inputs
+    created from file.readlines() result in diffs that are suitable for
+    file.writelines() since both the inputs and outputs have trailing
+    newlines.
+
+    For inputs that do not have trailing newlines, set the lineterm
+    argument to "" so that the output will be uniformly newline free.
+
+    The unidiff format normally has a header for filenames and modification
+    times.  Any or all of these may be specified using strings for
+    'fromfile', 'tofile', 'fromfiledate', and 'tofiledate'.
+    The modification times are normally expressed in the ISO 8601 format.
+
+    Example:
+
+    >>> for line in unified_diff('one two three four'.split(),
+    ...             'zero one tree four'.split(), 'Original', 'Current',
+    ...             '2005-01-26 23:30:50', '2010-04-02 10:20:52',
+    ...             lineterm=''):
+    ...     print(line)                 # doctest: +NORMALIZE_WHITESPACE
+    --- Original        2005-01-26 23:30:50
+    +++ Current         2010-04-02 10:20:52
+    @@ -1,4 +1,4 @@
+    +zero
+     one
+    -two
+    -three
+    +tree
+     four
+    """
+
+    _check_types(a, b, fromfile, tofile, fromfiledate, tofiledate, lineterm)
+    started = False
+    for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
+        if not started:
+            started = True
+            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{}'.format(tofiledate) if tofiledate else ''
+            yield '--- {}{}{}'.format(fromfile, fromdate, lineterm)
+            yield '+++ {}{}{}'.format(tofile, todate, lineterm)
+
+        first, last = group[0], group[-1]
+        file1_range = _format_range_unified(first[1], last[2])
+        file2_range = _format_range_unified(first[3], last[4])
+        yield '@@ -{} +{} @@{}'.format(file1_range, file2_range, lineterm)
+
+        for tag, i1, i2, j1, j2 in group:
+            if tag == 'equal':
+                for line in a[i1:i2]:
+                    yield ' ' + line
+                continue
+            if tag in {'replace', 'delete'}:
+                for line in a[i1:i2]:
+                    yield '-' + line
+            if tag in {'replace', 'insert'}:
+                for line in b[j1:j2]:
+                    yield '+' + line
+
+
+########################################################################
+###  Context Diff
+########################################################################
+
+def _format_range_context(start, stop):
+    'Convert range to the "ed" format'
+    # Per the diff spec at http://www.unix.org/single_unix_specification/
+    beginning = start + 1     # lines start numbering with one
+    length = stop - start
+    if not length:
+        beginning -= 1        # empty ranges begin at line just before the range
+    if length <= 1:
+        return '{}'.format(beginning)
+    return '{},{}'.format(beginning, beginning + length - 1)
+
+# See http://www.unix.org/single_unix_specification/
+def context_diff(a, b, fromfile='', tofile='',
+                 fromfiledate='', tofiledate='', n=3, lineterm='\n'):
+    r"""
+    Compare two sequences of lines; generate the delta as a context diff.
+
+    Context diffs are a compact way of showing line changes and a few
+    lines of context.  The number of context lines is set by 'n' which
+    defaults to three.
+
+    By default, the diff control lines (those with *** or ---) are
+    created with a trailing newline.  This is helpful so that inputs
+    created from file.readlines() result in diffs that are suitable for
+    file.writelines() since both the inputs and outputs have trailing
+    newlines.
+
+    For inputs that do not have trailing newlines, set the lineterm
+    argument to "" so that the output will be uniformly newline free.
+
+    The context diff format normally has a header for filenames and
+    modification times.  Any or all of these may be specified using
+    strings for 'fromfile', 'tofile', 'fromfiledate', and 'tofiledate'.
+    The modification times are normally expressed in the ISO 8601 format.
+    If not specified, the strings default to blanks.
+
+    Example:
+
+    >>> print(''.join(context_diff('one\ntwo\nthree\nfour\n'.splitlines(True),
+    ...       'zero\none\ntree\nfour\n'.splitlines(True), 'Original', 'Current')),
+    ...       end="")
+    *** Original
+    --- Current
+    ***************
+    *** 1,4 ****
+      one
+    ! two
+    ! three
+      four
+    --- 1,4 ----
+    + zero
+      one
+    ! tree
+      four
+    """
+
+    _check_types(a, b, fromfile, tofile, fromfiledate, tofiledate, lineterm)
+    prefix = dict(insert='+ ', delete='- ', replace='! ', equal='  ')
+    started = False
+    for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
+        if not started:
+            started = True
+            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{}'.format(tofiledate) if tofiledate else ''
+            yield '*** {}{}{}'.format(fromfile, fromdate, lineterm)
+            yield '--- {}{}{}'.format(tofile, todate, lineterm)
+
+        first, last = group[0], group[-1]
+        yield '***************' + lineterm
+
+        file1_range = _format_range_context(first[1], last[2])
+        yield '*** {} ****{}'.format(file1_range, lineterm)
+
+        if any(tag in {'replace', 'delete'} for tag, _, _, _, _ in group):
+            for tag, i1, i2, _, _ in group:
+                if tag != 'insert':
+                    for line in a[i1:i2]:
+                        yield prefix[tag] + line
+
+        file2_range = _format_range_context(first[3], last[4])
+        yield '--- {} ----{}'.format(file2_range, lineterm)
+
+        if any(tag in {'replace', 'insert'} for tag, _, _, _, _ in group):
+            for tag, _, _, j1, j2 in group:
+                if tag != 'delete':
+                    for line in b[j1:j2]:
+                        yield prefix[tag] + line
+
+def _check_types(a, b, *args):
+    # Checking types is weird, but the alternative is garbled output when
+    # someone passes mixed bytes and str to {unified,context}_diff(). E.g.
+    # without this check, passing filenames as bytes results in output like
+    #   --- b'oldfile.txt'
+    #   +++ b'newfile.txt'
+    # because of how str.format() incorporates bytes objects.
+    if a and not isinstance(a[0], str):
+        raise TypeError('lines to compare must be str, not %s (%r)' %
+                        (type(a[0]).__name__, a[0]))
+    if b and not isinstance(b[0], str):
+        raise TypeError('lines to compare must be str, not %s (%r)' %
+                        (type(b[0]).__name__, b[0]))
+    if isinstance(a, str):
+        raise TypeError('input must be a sequence of strings, not %s' %
+                        type(a).__name__)
+    if isinstance(b, str):
+        raise TypeError('input must be a sequence of strings, not %s' %
+                        type(b).__name__)
+    for arg in args:
+        if not isinstance(arg, str):
+            raise TypeError('all arguments must be str, not: %r' % (arg,))
+
+def diff_bytes(dfunc, a, b, fromfile=b'', tofile=b'',
+               fromfiledate=b'', tofiledate=b'', n=3, lineterm=b'\n'):
+    r"""
+    Compare `a` and `b`, two sequences of lines represented as bytes rather
+    than str. This is a wrapper for `dfunc`, which is typically either
+    unified_diff() or context_diff(). Inputs are losslessly converted to
+    strings so that `dfunc` only has to worry about strings, and encoded
+    back to bytes on return. This is necessary to compare files with
+    unknown or inconsistent encoding. All other inputs (except `n`) must be
+    bytes rather than str.
+    """
+    def decode(s):
+        try:
+            return s.decode('ascii', 'surrogateescape')
+        except AttributeError as err:
+            msg = ('all arguments must be bytes, not %s (%r)' %
+                   (type(s).__name__, s))
+            raise TypeError(msg) from err
+    a = list(map(decode, a))
+    b = list(map(decode, b))
+    fromfile = decode(fromfile)
+    tofile = decode(tofile)
+    fromfiledate = decode(fromfiledate)
+    tofiledate = decode(tofiledate)
+    lineterm = decode(lineterm)
+
+    lines = dfunc(a, b, fromfile, tofile, fromfiledate, tofiledate, n, lineterm)
+    for line in lines:
+        yield line.encode('ascii', 'surrogateescape')
+
+def ndiff(a, b, linejunk=None, charjunk=IS_CHARACTER_JUNK):
+    r"""
+    Compare `a` and `b` (lists of strings); return a `Differ`-style delta.
+
+    Optional keyword parameters `linejunk` and `charjunk` are for filter
+    functions, or can be None:
+
+    - linejunk: A function that should accept a single string argument and
+      return true iff the string is junk.  The default is None, and is
+      recommended; the underlying SequenceMatcher class has an adaptive
+      notion of "noise" lines.
+
+    - charjunk: A function that accepts a character (string of length
+      1), and returns true iff the character is junk. The default is
+      the module-level function IS_CHARACTER_JUNK, which filters out
+      whitespace characters (a blank or tab; note: it's a bad idea to
+      include newline in this!).
+
+    Tools/scripts/ndiff.py is a command-line front-end to this function.
+
+    Example:
+
+    >>> diff = ndiff('one\ntwo\nthree\n'.splitlines(keepends=True),
+    ...              'ore\ntree\nemu\n'.splitlines(keepends=True))
+    >>> print(''.join(diff), end="")
+    - one
+    ?  ^
+    + ore
+    ?  ^
+    - two
+    - three
+    ?  -
+    + tree
+    + emu
+    """
+    return Differ(linejunk, charjunk).compare(a, b)
+
+def _mdiff(fromlines, tolines, context=None, linejunk=None,
+           charjunk=IS_CHARACTER_JUNK):
+    r"""Returns generator yielding marked up from/to side by side differences.
+
+    Arguments:
+    fromlines -- list of text lines to compared to tolines
+    tolines -- list of text lines to be compared to fromlines
+    context -- number of context lines to display on each side of difference,
+               if None, all from/to text lines will be generated.
+    linejunk -- passed on to ndiff (see ndiff documentation)
+    charjunk -- passed on to ndiff (see ndiff documentation)
+
+    This function returns an iterator which returns a tuple:
+    (from line tuple, to line tuple, boolean flag)
+
+    from/to line tuple -- (line num, line text)
+        line num -- integer or None (to indicate a context separation)
+        line text -- original line text with following markers inserted:
+            '\0+' -- marks start of added text
+            '\0-' -- marks start of deleted text
+            '\0^' -- marks start of changed text
+            '\1' -- marks end of added/deleted/changed text
+
+    boolean flag -- None indicates context separation, True indicates
+        either "from" or "to" line contains a change, otherwise False.
+
+    This function/iterator was originally developed to generate side by side
+    file difference for making HTML pages (see HtmlDiff class for example
+    usage).
+
+    Note, this function utilizes the ndiff function to generate the side by
+    side difference markup.  Optional ndiff arguments may be passed to this
+    function and they in turn will be passed to ndiff.
+    """
+    import re
+
+    # regular expression for finding intraline change indices
+    change_re = re.compile(r'(\++|\-+|\^+)')
+
+    # create the difference iterator to generate the differences
+    diff_lines_iterator = ndiff(fromlines,tolines,linejunk,charjunk)
+
+    def _make_line(lines, format_key, side, num_lines=[0,0]):
+        """Returns line of text with user's change markup and line formatting.
+
+        lines -- list of lines from the ndiff generator to produce a line of
+                 text from.  When producing the line of text to return, the
+                 lines used are removed from this list.
+        format_key -- '+' return first line in list with "add" markup around
+                          the entire line.
+                      '-' return first line in list with "delete" markup around
+                          the entire line.
+                      '?' return first line in list with add/delete/change
+                          intraline markup (indices obtained from second line)
+                      None return first line in list with no markup
+        side -- indice into the num_lines list (0=from,1=to)
+        num_lines -- from/to current line number.  This is NOT intended to be a
+                     passed parameter.  It is present as a keyword argument to
+                     maintain memory of the current line numbers between calls
+                     of this function.
+
+        Note, this function is purposefully not defined at the module scope so
+        that data it needs from its parent function (within whose context it
+        is defined) does not need to be of module scope.
+        """
+        num_lines[side] += 1
+        # Handle case where no user markup is to be added, just return line of
+        # text with user's line format to allow for usage of the line number.
+        if format_key is None:
+            return (num_lines[side],lines.pop(0)[2:])
+        # Handle case of intraline changes
+        if format_key == '?':
+            text, markers = lines.pop(0), lines.pop(0)
+            # find intraline changes (store change type and indices in tuples)
+            sub_info = []
+            def record_sub_info(match_object,sub_info=sub_info):
+                sub_info.append([match_object.group(1)[0],match_object.span()])
+                return match_object.group(1)
+            change_re.sub(record_sub_info,markers)
+            # process each tuple inserting our special marks that won't be
+            # noticed by an xml/html escaper.
+            for key,(begin,end) in reversed(sub_info):
+                text = text[0:begin]+'\0'+key+text[begin:end]+'\1'+text[end:]
+            text = text[2:]
+        # Handle case of add/delete entire line
+        else:
+            text = lines.pop(0)[2:]
+            # if line of text is just a newline, insert a space so there is
+            # something for the user to highlight and see.
+            if not text:
+                text = ' '
+            # insert marks that won't be noticed by an xml/html escaper.
+            text = '\0' + format_key + text + '\1'
+        # Return line of text, first allow user's line formatter to do its
+        # thing (such as adding the line number) then replace the special
+        # marks with what the user's change markup.
+        return (num_lines[side],text)
+
+    def _line_iterator():
+        """Yields from/to lines of text with a change indication.
+
+        This function is an iterator.  It itself pulls lines from a
+        differencing iterator, processes them and yields them.  When it can
+        it yields both a "from" and a "to" line, otherwise it will yield one
+        or the other.  In addition to yielding the lines of from/to text, a
+        boolean flag is yielded to indicate if the text line(s) have
+        differences in them.
+
+        Note, this function is purposefully not defined at the module scope so
+        that data it needs from its parent function (within whose context it
+        is defined) does not need to be of module scope.
+        """
+        lines = []
+        num_blanks_pending, num_blanks_to_yield = 0, 0
+        while True:
+            # Load up next 4 lines so we can look ahead, create strings which
+            # are a concatenation of the first character of each of the 4 lines
+            # so we can do some very readable comparisons.
+            while len(lines) < 4:
+                lines.append(next(diff_lines_iterator, 'X'))
+            s = ''.join([line[0] for line in lines])
+            if s.startswith('X'):
+                # When no more lines, pump out any remaining blank lines so the
+                # corresponding add/delete lines get a matching blank line so
+                # all line pairs get yielded at the next level.
+                num_blanks_to_yield = num_blanks_pending
+            elif s.startswith('-?+?'):
+                # simple intraline change
+                yield _make_line(lines,'?',0), _make_line(lines,'?',1), True
+                continue
+            elif s.startswith('--++'):
+                # in delete block, add block coming: we do NOT want to get
+                # caught up on blank lines yet, just process the delete line
+                num_blanks_pending -= 1
+                yield _make_line(lines,'-',0), None, True
+                continue
+            elif s.startswith(('--?+', '--+', '- ')):
+                # in delete block and see an intraline change or unchanged line
+                # coming: yield the delete line and then blanks
+                from_line,to_line = _make_line(lines,'-',0), None
+                num_blanks_to_yield,num_blanks_pending = num_blanks_pending-1,0
+            elif s.startswith('-+?'):
+                # intraline change
+                yield _make_line(lines,None,0), _make_line(lines,'?',1), True
+                continue
+            elif s.startswith('-?+'):
+                # intraline change
+                yield _make_line(lines,'?',0), _make_line(lines,None,1), True
+                continue
+            elif s.startswith('-'):
+                # delete FROM line
+                num_blanks_pending -= 1
+                yield _make_line(lines,'-',0), None, True
+                continue
+            elif s.startswith('+--'):
+                # in add block, delete block coming: we do NOT want to get
+                # caught up on blank lines yet, just process the add line
+                num_blanks_pending += 1
+                yield None, _make_line(lines,'+',1), True
+                continue
+            elif s.startswith(('+ ', '+-')):
+                # will be leaving an add block: yield blanks then add line
+                from_line, to_line = None, _make_line(lines,'+',1)
+                num_blanks_to_yield,num_blanks_pending = num_blanks_pending+1,0
+            elif s.startswith('+'):
+                # inside an add block, yield the add line
+                num_blanks_pending += 1
+                yield None, _make_line(lines,'+',1), True
+                continue
+            elif s.startswith(' '):
+                # unchanged text, yield it to both sides
+                yield _make_line(lines[:],None,0),_make_line(lines,None,1),False
+                continue
+            # Catch up on the blank lines so when we yield the next from/to
+            # pair, they are lined up.
+            while(num_blanks_to_yield < 0):
+                num_blanks_to_yield += 1
+                yield None,('','\n'),True
+            while(num_blanks_to_yield > 0):
+                num_blanks_to_yield -= 1
+                yield ('','\n'),None,True
+            if s.startswith('X'):
+                return
+            else:
+                yield from_line,to_line,True
+
+    def _line_pair_iterator():
+        """Yields from/to lines of text with a change indication.
+
+        This function is an iterator.  It itself pulls lines from the line
+        iterator.  Its difference from that iterator is that this function
+        always yields a pair of from/to text lines (with the change
+        indication).  If necessary it will collect single from/to lines
+        until it has a matching pair from/to pair to yield.
+
+        Note, this function is purposefully not defined at the module scope so
+        that data it needs from its parent function (within whose context it
+        is defined) does not need to be of module scope.
+        """
+        line_iterator = _line_iterator()
+        fromlines,tolines=[],[]
+        while True:
+            # Collecting lines of text until we have a from/to pair
+            while (len(fromlines)==0 or len(tolines)==0):
+                try:
+                    from_line, to_line, found_diff = next(line_iterator)
+                except StopIteration:
+                    return
+                if from_line is not None:
+                    fromlines.append((from_line,found_diff))
+                if to_line is not None:
+                    tolines.append((to_line,found_diff))
+            # Once we have a pair, remove them from the collection and yield it
+            from_line, fromDiff = fromlines.pop(0)
+            to_line, to_diff = tolines.pop(0)
+            yield (from_line,to_line,fromDiff or to_diff)
+
+    # Handle case where user does not want context differencing, just yield
+    # them up without doing anything else with them.
+    line_pair_iterator = _line_pair_iterator()
+    if context is None:
+        yield from line_pair_iterator
+    # Handle case where user wants context differencing.  We must do some
+    # storage of lines until we know for sure that they are to be yielded.
+    else:
+        context += 1
+        lines_to_write = 0
+        while True:
+            # Store lines up until we find a difference, note use of a
+            # circular queue because we only need to keep around what
+            # we need for context.
+            index, contextLines = 0, [None]*(context)
+            found_diff = False
+            while(found_diff is False):
+                try:
+                    from_line, to_line, found_diff = next(line_pair_iterator)
+                except StopIteration:
+                    return
+                i = index % context
+                contextLines[i] = (from_line, to_line, found_diff)
+                index += 1
+            # Yield lines that we have collected so far, but first yield
+            # the user's separator.
+            if index > context:
+                yield None, None, None
+                lines_to_write = context
+            else:
+                lines_to_write = index
+                index = 0
+            while(lines_to_write):
+                i = index % context
+                index += 1
+                yield contextLines[i]
+                lines_to_write -= 1
+            # Now yield the context lines after the change
+            lines_to_write = context-1
+            try:
+                while(lines_to_write):
+                    from_line, to_line, found_diff = next(line_pair_iterator)
+                    # If another change within the context, extend the context
+                    if found_diff:
+                        lines_to_write = context-1
+                    else:
+                        lines_to_write -= 1
+                    yield from_line, to_line, found_diff
+            except StopIteration:
+                # Catch exception from next() and return normally
+                return
+
+
+_file_template = """
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=%(charset)s" />
+    <title></title>
+    <style type="text/css">%(styles)s
+    </style>
+</head>
+
+<body>
+    %(table)s%(legend)s
+</body>
+
+</html>"""
+
+_styles = """
+        :root {color-scheme: light dark}
+        table.diff {font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace; border:medium}
+        .diff_header {background-color:#e0e0e0}
+        td.diff_header {text-align:right}
+        .diff_next {background-color:#c0c0c0}
+        .diff_add {background-color:palegreen}
+        .diff_chg {background-color:#ffff77}
+        .diff_sub {background-color:#ffaaaa}
+
+        @media (prefers-color-scheme: dark) {
+            .diff_header {background-color:#666}
+            .diff_next {background-color:#393939}
+            .diff_add {background-color:darkgreen}
+            .diff_chg {background-color:#847415}
+            .diff_sub {background-color:darkred}
+        }"""
+
+_table_template = """
+    <table class="diff" id="difflib_chg_%(prefix)s_top"
+           cellspacing="0" cellpadding="0" rules="groups" >
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        %(header_row)s
+        <tbody>
+%(data_rows)s        </tbody>
+    </table>"""
+
+_legend = """
+    <table class="diff" summary="Legends">
+        <tr> <th colspan="2"> Legends </th> </tr>
+        <tr> <td> <table border="" summary="Colors">
+                      <tr><th> Colors </th> </tr>
+                      <tr><td class="diff_add">&nbsp;Added&nbsp;</td></tr>
+                      <tr><td class="diff_chg">Changed</td> </tr>
+                      <tr><td class="diff_sub">Deleted</td> </tr>
+                  </table></td>
+             <td> <table border="" summary="Links">
+                      <tr><th colspan="2"> Links </th> </tr>
+                      <tr><td>(f)irst change</td> </tr>
+                      <tr><td>(n)ext change</td> </tr>
+                      <tr><td>(t)op</td> </tr>
+                  </table></td> </tr>
+    </table>"""
+
+class HtmlDiff(object):
+    """For producing HTML side by side comparison with change highlights.
+
+    This class can be used to create an HTML table (or a complete HTML file
+    containing the table) showing a side by side, line by line comparison
+    of text with inter-line and intra-line change highlights.  The table can
+    be generated in either full or contextual difference mode.
+
+    The following methods are provided for HTML generation:
+
+    make_table -- generates HTML for a single side by side table
+    make_file -- generates complete HTML file with a single side by side table
+
+    See tools/scripts/diff.py for an example usage of this class.
+    """
+
+    _file_template = _file_template
+    _styles = _styles
+    _table_template = _table_template
+    _legend = _legend
+    _default_prefix = 0
+
+    def __init__(self,tabsize=8,wrapcolumn=None,linejunk=None,
+                 charjunk=IS_CHARACTER_JUNK):
+        """HtmlDiff instance initializer
+
+        Arguments:
+        tabsize -- tab stop spacing, defaults to 8.
+        wrapcolumn -- column number where lines are broken and wrapped,
+            defaults to None where lines are not wrapped.
+        linejunk,charjunk -- keyword arguments passed into ndiff() (used by
+            HtmlDiff() to generate the side by side HTML differences).  See
+            ndiff() documentation for argument default values and descriptions.
+        """
+        self._tabsize = tabsize
+        self._wrapcolumn = wrapcolumn
+        self._linejunk = linejunk
+        self._charjunk = charjunk
+
+    def make_file(self, fromlines, tolines, fromdesc='', todesc='',
+                  context=False, numlines=5, *, charset='utf-8'):
+        """Returns HTML file of side by side comparison with change highlights
+
+        Arguments:
+        fromlines -- list of "from" lines
+        tolines -- list of "to" lines
+        fromdesc -- "from" file column header string
+        todesc -- "to" file column header string
+        context -- set to True for contextual differences (defaults to False
+            which shows full differences).
+        numlines -- number of context lines.  When context is set True,
+            controls number of lines displayed before and after the change.
+            When context is False, controls the number of lines to place
+            the "next" link anchors before the next change (so click of
+            "next" link jumps to just before the change).
+        charset -- charset of the HTML document
+        """
+
+        return (self._file_template % dict(
+            styles=self._styles,
+            legend=self._legend,
+            table=self.make_table(fromlines, tolines, fromdesc, todesc,
+                                  context=context, numlines=numlines),
+            charset=charset
+        )).encode(charset, 'xmlcharrefreplace').decode(charset)
+
+    def _tab_newline_replace(self,fromlines,tolines):
+        """Returns from/to line lists with tabs expanded and newlines removed.
+
+        Instead of tab characters being replaced by the number of spaces
+        needed to fill in to the next tab stop, this function will fill
+        the space with tab characters.  This is done so that the difference
+        algorithms can identify changes in a file when tabs are replaced by
+        spaces and vice versa.  At the end of the HTML generation, the tab
+        characters will be replaced with a nonbreakable space.
+        """
+        def expand_tabs(line):
+            # hide real spaces
+            line = line.replace(' ','\0')
+            # expand tabs into spaces
+            line = line.expandtabs(self._tabsize)
+            # replace spaces from expanded tabs back into tab characters
+            # (we'll replace them with markup after we do differencing)
+            line = line.replace(' ','\t')
+            return line.replace('\0',' ').rstrip('\n')
+        fromlines = [expand_tabs(line) for line in fromlines]
+        tolines = [expand_tabs(line) for line in tolines]
+        return fromlines,tolines
+
+    def _split_line(self,data_list,line_num,text):
+        """Builds list of text lines by splitting text lines at wrap point
+
+        This function will determine if the input text line needs to be
+        wrapped (split) into separate lines.  If so, the first wrap point
+        will be determined and the first line appended to the output
+        text line list.  This function is used recursively to handle
+        the second part of the split line to further split it.
+        """
+        # if blank line or context separator, just add it to the output list
+        if not line_num:
+            data_list.append((line_num,text))
+            return
+
+        # if line text doesn't need wrapping, just add it to the output list
+        size = len(text)
+        max = self._wrapcolumn
+        if (size <= max) or ((size -(text.count('\0')*3)) <= max):
+            data_list.append((line_num,text))
+            return
+
+        # scan text looking for the wrap point, keeping track if the wrap
+        # point is inside markers
+        i = 0
+        n = 0
+        mark = ''
+        while n < max and i < size:
+            if text[i] == '\0':
+                i += 1
+                mark = text[i]
+                i += 1
+            elif text[i] == '\1':
+                i += 1
+                mark = ''
+            else:
+                i += 1
+                n += 1
+
+        # wrap point is inside text, break it up into separate lines
+        line1 = text[:i]
+        line2 = text[i:]
+
+        # if wrap point is inside markers, place end marker at end of first
+        # line and start marker at beginning of second line because each
+        # line will have its own table tag markup around it.
+        if mark:
+            line1 = line1 + '\1'
+            line2 = '\0' + mark + line2
+
+        # tack on first line onto the output list
+        data_list.append((line_num,line1))
+
+        # use this routine again to wrap the remaining text
+        self._split_line(data_list,'>',line2)
+
+    def _line_wrapper(self,diffs):
+        """Returns iterator that splits (wraps) mdiff text lines"""
+
+        # pull from/to data and flags from mdiff iterator
+        for fromdata,todata,flag in diffs:
+            # check for context separators and pass them through
+            if flag is None:
+                yield fromdata,todata,flag
+                continue
+            (fromline,fromtext),(toline,totext) = fromdata,todata
+            # for each from/to line split it at the wrap column to form
+            # list of text lines.
+            fromlist,tolist = [],[]
+            self._split_line(fromlist,fromline,fromtext)
+            self._split_line(tolist,toline,totext)
+            # yield from/to line in pairs inserting blank lines as
+            # necessary when one side has more wrapped lines
+            while fromlist or tolist:
+                if fromlist:
+                    fromdata = fromlist.pop(0)
+                else:
+                    fromdata = ('',' ')
+                if tolist:
+                    todata = tolist.pop(0)
+                else:
+                    todata = ('',' ')
+                yield fromdata,todata,flag
+
+    def _collect_lines(self,diffs):
+        """Collects mdiff output into separate lists
+
+        Before storing the mdiff from/to data into a list, it is converted
+        into a single line of text with HTML markup.
+        """
+
+        fromlist,tolist,flaglist = [],[],[]
+        # pull from/to data and flags from mdiff style iterator
+        for fromdata,todata,flag in diffs:
+            try:
+                # store HTML markup of the lines into the lists
+                fromlist.append(self._format_line(0,flag,*fromdata))
+                tolist.append(self._format_line(1,flag,*todata))
+            except TypeError:
+                # exceptions occur for lines where context separators go
+                fromlist.append(None)
+                tolist.append(None)
+            flaglist.append(flag)
+        return fromlist,tolist,flaglist
+
+    def _format_line(self,side,flag,linenum,text):
+        """Returns HTML markup of "from" / "to" text lines
+
+        side -- 0 or 1 indicating "from" or "to" text
+        flag -- indicates if difference on line
+        linenum -- line number (used for line number column)
+        text -- line text to be marked up
+        """
+        try:
+            linenum = '%d' % linenum
+            id = ' id="%s%s"' % (self._prefix[side],linenum)
+        except TypeError:
+            # handle blank lines where linenum is '>' or ''
+            id = ''
+        # replace those things that would get confused with HTML symbols
+        text=text.replace("&","&amp;").replace(">","&gt;").replace("<","&lt;")
+
+        # make space non-breakable so they don't get compressed or line wrapped
+        text = text.replace(' ','&nbsp;').rstrip()
+
+        return '<td class="diff_header"%s>%s</td><td nowrap="nowrap">%s</td>' \
+               % (id,linenum,text)
+
+    def _make_prefix(self):
+        """Create unique anchor prefixes"""
+
+        # Generate a unique anchor prefix so multiple tables
+        # can exist on the same HTML page without conflicts.
+        fromprefix = "from%d_" % HtmlDiff._default_prefix
+        toprefix = "to%d_" % HtmlDiff._default_prefix
+        HtmlDiff._default_prefix += 1
+        # store prefixes so line format method has access
+        self._prefix = [fromprefix,toprefix]
+
+    def _convert_flags(self,fromlist,tolist,flaglist,context,numlines):
+        """Makes list of "next" links"""
+
+        # all anchor names will be generated using the unique "to" prefix
+        toprefix = self._prefix[1]
+
+        # process change flags, generating middle column of next anchors/links
+        next_id = ['']*len(flaglist)
+        next_href = ['']*len(flaglist)
+        num_chg, in_change = 0, False
+        last = 0
+        for i,flag in enumerate(flaglist):
+            if flag:
+                if not in_change:
+                    in_change = True
+                    last = i
+                    # at the beginning of a change, drop an anchor a few lines
+                    # (the context lines) before the change for the previous
+                    # link
+                    i = max([0,i-numlines])
+                    next_id[i] = ' id="difflib_chg_%s_%d"' % (toprefix,num_chg)
+                    # at the beginning of a change, drop a link to the next
+                    # change
+                    num_chg += 1
+                    next_href[last] = '<a href="#difflib_chg_%s_%d">n</a>' % (
+                         toprefix,num_chg)
+            else:
+                in_change = False
+        # check for cases where there is no content to avoid exceptions
+        if not flaglist:
+            flaglist = [False]
+            next_id = ['']
+            next_href = ['']
+            last = 0
+            if context:
+                fromlist = ['<td></td><td>&nbsp;No Differences Found&nbsp;</td>']
+                tolist = fromlist
+            else:
+                fromlist = tolist = ['<td></td><td>&nbsp;Empty File&nbsp;</td>']
+        # if not a change on first line, drop a link
+        if not flaglist[0]:
+            next_href[0] = '<a href="#difflib_chg_%s_0">f</a>' % toprefix
+        # redo the last link to link to the top
+        next_href[last] = '<a href="#difflib_chg_%s_top">t</a>' % (toprefix)
+
+        return fromlist,tolist,flaglist,next_href,next_id
+
+    def make_table(self,fromlines,tolines,fromdesc='',todesc='',context=False,
+                   numlines=5):
+        """Returns HTML table of side by side comparison with change highlights
+
+        Arguments:
+        fromlines -- list of "from" lines
+        tolines -- list of "to" lines
+        fromdesc -- "from" file column header string
+        todesc -- "to" file column header string
+        context -- set to True for contextual differences (defaults to False
+            which shows full differences).
+        numlines -- number of context lines.  When context is set True,
+            controls number of lines displayed before and after the change.
+            When context is False, controls the number of lines to place
+            the "next" link anchors before the next change (so click of
+            "next" link jumps to just before the change).
+        """
+
+        # make unique anchor prefixes so that multiple tables may exist
+        # on the same page without conflict.
+        self._make_prefix()
+
+        # change tabs to spaces before it gets more difficult after we insert
+        # markup
+        # it also removes trailing newlines, causing some diffs to be missed
+        # see: gh-71896
+        fromlines,tolines = self._tab_newline_replace(fromlines,tolines)
+
+        # create diffs iterator which generates side by side from/to data
+        if context:
+            context_lines = numlines
+        else:
+            context_lines = None
+        diffs = _mdiff(fromlines,tolines,context_lines,linejunk=self._linejunk,
+                      charjunk=self._charjunk)
+
+        # set up iterator to wrap lines that exceed desired width
+        if self._wrapcolumn:
+            diffs = self._line_wrapper(diffs)
+
+        # collect up from/to lines and flags into lists (also format the lines)
+        fromlist,tolist,flaglist = self._collect_lines(diffs)
+
+        # process change flags, generating middle column of next anchors/links
+        fromlist,tolist,flaglist,next_href,next_id = self._convert_flags(
+            fromlist,tolist,flaglist,context,numlines)
+
+        s = []
+        fmt = '            <tr><td class="diff_next"%s>%s</td>%s' + \
+              '<td class="diff_next">%s</td>%s</tr>\n'
+        for i in range(len(flaglist)):
+            if flaglist[i] is None:
+                # mdiff yields None on separator lines skip the bogus ones
+                # generated for the first line
+                if i > 0:
+                    s.append('        </tbody>        \n        <tbody>\n')
+            else:
+                s.append( fmt % (next_id[i],next_href[i],fromlist[i],
+                                           next_href[i],tolist[i]))
+        if fromdesc or todesc:
+            header_row = '<thead><tr>%s%s%s%s</tr></thead>' % (
+                '<th class="diff_next"><br /></th>',
+                '<th colspan="2" class="diff_header">%s</th>' % fromdesc,
+                '<th class="diff_next"><br /></th>',
+                '<th colspan="2" class="diff_header">%s</th>' % todesc)
+        else:
+            header_row = ''
+
+        table = self._table_template % dict(
+            data_rows=''.join(s),
+            header_row=header_row,
+            prefix=self._prefix[1])
+
+        return table.replace('\0+','<span class="diff_add">'). \
+                     replace('\0-','<span class="diff_sub">'). \
+                     replace('\0^','<span class="diff_chg">'). \
+                     replace('\1','</span>'). \
+                     replace('\t','&nbsp;')
+
+
+def restore(delta, which):
+    r"""
+    Generate one of the two sequences that generated a delta.
+
+    Given a `delta` produced by `Differ.compare()` or `ndiff()`, extract
+    lines originating from file 1 or 2 (parameter `which`), stripping off line
+    prefixes.
+
+    Examples:
+
+    >>> diff = ndiff('one\ntwo\nthree\n'.splitlines(keepends=True),
+    ...              'ore\ntree\nemu\n'.splitlines(keepends=True))
+    >>> diff = list(diff)
+    >>> print(''.join(restore(diff, 1)), end="")
+    one
+    two
+    three
+    >>> print(''.join(restore(diff, 2)), end="")
+    ore
+    tree
+    emu
+    """
+    try:
+        tag = {1: "- ", 2: "+ "}[int(which)]
+    except KeyError:
+        raise ValueError('unknown delta choice (must be 1 or 2): %r'
+                           % which) from None
+    prefixes = ("  ", tag)
+    for line in delta:
+        if line[:2] in prefixes:
+            yield line[2:]
+
+# ==== statistics.py
+"""
+Basic statistics module.
+
+This module provides functions for calculating statistics of data, including
+averages, variance, and standard deviation.
+
+Calculating averages
+--------------------
+
+==================  ==================================================
+Function            Description
+==================  ==================================================
+mean                Arithmetic mean (average) of data.
+fmean               Fast, floating-point arithmetic mean.
+geometric_mean      Geometric mean of data.
+harmonic_mean       Harmonic mean of data.
+median              Median (middle value) of data.
+median_low          Low median of data.
+median_high         High median of data.
+median_grouped      Median, or 50th percentile, of grouped data.
+mode                Mode (most common value) of data.
+multimode           List of modes (most common values of data).
+quantiles           Divide data into intervals with equal probability.
+==================  ==================================================
+
+Calculate the arithmetic mean ("the average") of data:
+
+>>> mean([-1.0, 2.5, 3.25, 5.75])
+2.625
+
+
+Calculate the standard median of discrete data:
+
+>>> median([2, 3, 4, 5])
+3.5
+
+
+Calculate the median, or 50th percentile, of data grouped into class intervals
+centred on the data values provided. E.g. if your data points are rounded to
+the nearest whole number:
+
+>>> median_grouped([2, 2, 3, 3, 3, 4])  #doctest: +ELLIPSIS
+2.8333333333...
+
+This should be interpreted in this way: you have two data points in the class
+interval 1.5-2.5, three data points in the class interval 2.5-3.5, and one in
+the class interval 3.5-4.5. The median of these data points is 2.8333...
+
+
+Calculating variability or spread
+---------------------------------
+
+==================  =============================================
+Function            Description
+==================  =============================================
+pvariance           Population variance of data.
+variance            Sample variance of data.
+pstdev              Population standard deviation of data.
+stdev               Sample standard deviation of data.
+==================  =============================================
+
+Calculate the standard deviation of sample data:
+
+>>> stdev([2.5, 3.25, 5.5, 11.25, 11.75])  #doctest: +ELLIPSIS
+4.38961843444...
+
+If you have previously calculated the mean, you can pass it as the optional
+second argument to the four "spread" functions to avoid recalculating it:
+
+>>> data = [1, 2, 2, 4, 4, 4, 5, 6]
+>>> mu = mean(data)
+>>> pvariance(data, mu)
+2.5
+
+
+Statistics for relations between two inputs
+-------------------------------------------
+
+==================  ====================================================
+Function            Description
+==================  ====================================================
+covariance          Sample covariance for two variables.
+correlation         Pearson's correlation coefficient for two variables.
+linear_regression   Intercept and slope for simple linear regression.
+==================  ====================================================
+
+Calculate covariance, Pearson's correlation, and simple linear regression
+for two inputs:
+
+>>> x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> y = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+>>> covariance(x, y)
+0.75
+>>> correlation(x, y)  #doctest: +ELLIPSIS
+0.31622776601...
+>>> linear_regression(x, y)  #doctest:
+LinearRegression(slope=0.1, intercept=1.5)
+
+
+Exceptions
+----------
+
+A single exception is defined: StatisticsError is a subclass of ValueError.
+
+"""
+
+__all__ = [
+    'NormalDist',
+    'StatisticsError',
+    'correlation',
+    'covariance',
+    'fmean',
+    'geometric_mean',
+    'harmonic_mean',
+    'kde',
+    'kde_random',
+    'linear_regression',
+    'mean',
+    'median',
+    'median_grouped',
+    'median_high',
+    'median_low',
+    'mode',
+    'multimode',
+    'pstdev',
+    'pvariance',
+    'quantiles',
+    'stdev',
+    'variance',
+]
+
+import math
+import numbers
+import random
+import sys
+
+from fractions import Fraction
+from decimal import Decimal
+from itertools import count, groupby, repeat
+from bisect import bisect_left, bisect_right
+from math import hypot, sqrt, fabs, exp, erfc, tau, log, fsum, sumprod
+from math import isfinite, isinf, pi, cos, sin, tan, cosh, asin, atan, acos
+from functools import reduce
+from operator import itemgetter
+from collections import Counter, namedtuple, defaultdict
+
+_SQRT2 = sqrt(2.0)
+_random = random
+
+## Exceptions ##############################################################
+
+class StatisticsError(ValueError):
+    pass
+
+
+## Measures of central tendency (averages) #################################
+
+def mean(data):
+    """Return the sample arithmetic mean of data.
+
+    >>> mean([1, 2, 3, 4, 4])
+    2.8
+
+    >>> from fractions import Fraction as F
+    >>> mean([F(3, 7), F(1, 21), F(5, 3), F(1, 3)])
+    Fraction(13, 21)
+
+    >>> from decimal import Decimal as D
+    >>> mean([D("0.5"), D("0.75"), D("0.625"), D("0.375")])
+    Decimal('0.5625')
+
+    If ``data`` is empty, StatisticsError will be raised.
+
+    """
+    T, total, n = _sum(data)
+    if n < 1:
+        raise StatisticsError('mean requires at least one data point')
+    return _convert(total / n, T)
+
+
+def fmean(data, weights=None):
+    """Convert data to floats and compute the arithmetic mean.
+
+    This runs faster than the mean() function and it always returns a float.
+    If the input dataset is empty, it raises a StatisticsError.
+
+    >>> fmean([3.5, 4.0, 5.25])
+    4.25
+
+    """
+    if weights is None:
+
+        try:
+            n = len(data)
+        except TypeError:
+            # Handle iterators that do not define __len__().
+            counter = count()
+            total = fsum(map(itemgetter(0), zip(data, counter)))
+            n = next(counter)
+        else:
+            total = fsum(data)
+
+        if not n:
+            raise StatisticsError('fmean requires at least one data point')
+
+        return total / n
+
+    if not isinstance(weights, (list, tuple)):
+        weights = list(weights)
+
+    try:
+        num = sumprod(data, weights)
+    except ValueError:
+        raise StatisticsError('data and weights must be the same length')
+
+    den = fsum(weights)
+
+    if not den:
+        raise StatisticsError('sum of weights must be non-zero')
+
+    return num / den
+
+
+def geometric_mean(data):
+    """Convert data to floats and compute the geometric mean.
+
+    Raises a StatisticsError if the input dataset is empty
+    or if it contains a negative value.
+
+    Returns zero if the product of inputs is zero.
+
+    No special efforts are made to achieve exact results.
+    (However, this may change in the future.)
+
+    >>> round(geometric_mean([54, 24, 36]), 9)
+    36.0
+
+    """
+    n = 0
+    found_zero = False
+
+    def count_positive(iterable):
+        nonlocal n, found_zero
+        for n, x in enumerate(iterable, start=1):
+            if x > 0.0 or math.isnan(x):
+                yield x
+            elif x == 0.0:
+                found_zero = True
+            else:
+                raise StatisticsError('No negative inputs allowed', x)
+
+    total = fsum(map(log, count_positive(data)))
+
+    if not n:
+        raise StatisticsError('Must have a non-empty dataset')
+    if math.isnan(total):
+        return math.nan
+    if found_zero:
+        return math.nan if total == math.inf else 0.0
+
+    return exp(total / n)
+
+
+def harmonic_mean(data, weights=None):
+    """Return the harmonic mean of data.
+
+    The harmonic mean is the reciprocal of the arithmetic mean of the
+    reciprocals of the data.  It can be used for averaging ratios or
+    rates, for example speeds.
+
+    Suppose a car travels 40 km/hr for 5 km and then speeds-up to
+    60 km/hr for another 5 km. What is the average speed?
+
+        >>> harmonic_mean([40, 60])
+        48.0
+
+    Suppose a car travels 40 km/hr for 5 km, and when traffic clears,
+    speeds-up to 60 km/hr for the remaining 30 km of the journey. What
+    is the average speed?
+
+        >>> harmonic_mean([40, 60], weights=[5, 30])
+        56.0
+
+    If ``data`` is empty, or any element is less than zero,
+    ``harmonic_mean`` will raise ``StatisticsError``.
+
+    """
+    if iter(data) is data:
+        data = list(data)
+
+    errmsg = 'harmonic mean does not support negative values'
+
+    n = len(data)
+    if n < 1:
+        raise StatisticsError('harmonic_mean requires at least one data point')
+    elif n == 1 and weights is None:
+        x = data[0]
+        if isinstance(x, (numbers.Real, Decimal)):
+            if x < 0:
+                raise StatisticsError(errmsg)
+            return x
+        else:
+            raise TypeError('unsupported type')
+
+    if weights is None:
+        weights = repeat(1, n)
+        sum_weights = n
+    else:
+        if iter(weights) is weights:
+            weights = list(weights)
+        if len(weights) != n:
+            raise StatisticsError('Number of weights does not match data size')
+        _, sum_weights, _ = _sum(w for w in _fail_neg(weights, errmsg))
+
+    try:
+        data = _fail_neg(data, errmsg)
+        T, total, count = _sum(w / x if w else 0 for w, x in zip(weights, data))
+    except ZeroDivisionError:
+        return 0
+
+    if total <= 0:
+        raise StatisticsError('Weighted sum must be positive')
+
+    return _convert(sum_weights / total, T)
+
+
+def median(data):
+    """Return the median (middle value) of numeric data.
+
+    When the number of data points is odd, return the middle data point.
+    When the number of data points is even, the median is interpolated by
+    taking the average of the two middle values:
+
+    >>> median([1, 3, 5])
+    3
+    >>> median([1, 3, 5, 7])
+    4.0
+
+    """
+    data = sorted(data)
+    n = len(data)
+    if n == 0:
+        raise StatisticsError("no median for empty data")
+    if n % 2 == 1:
+        return data[n // 2]
+    else:
+        i = n // 2
+        return (data[i - 1] + data[i]) / 2
+
+
+def median_low(data):
+    """Return the low median of numeric data.
+
+    When the number of data points is odd, the middle value is returned.
+    When it is even, the smaller of the two middle values is returned.
+
+    >>> median_low([1, 3, 5])
+    3
+    >>> median_low([1, 3, 5, 7])
+    3
+
+    """
+    # Potentially the sorting step could be replaced with a quickselect.
+    # However, it would require an excellent implementation to beat our
+    # highly optimized builtin sort.
+    data = sorted(data)
+    n = len(data)
+    if n == 0:
+        raise StatisticsError("no median for empty data")
+    if n % 2 == 1:
+        return data[n // 2]
+    else:
+        return data[n // 2 - 1]
+
+
+def median_high(data):
+    """Return the high median of data.
+
+    When the number of data points is odd, the middle value is returned.
+    When it is even, the larger of the two middle values is returned.
+
+    >>> median_high([1, 3, 5])
+    3
+    >>> median_high([1, 3, 5, 7])
+    5
+
+    """
+    data = sorted(data)
+    n = len(data)
+    if n == 0:
+        raise StatisticsError("no median for empty data")
+    return data[n // 2]
+
+
+def median_grouped(data, interval=1.0):
+    """Estimates the median for numeric data binned around the midpoints
+    of consecutive, fixed-width intervals.
+
+    The *data* can be any iterable of numeric data with each value being
+    exactly the midpoint of a bin.  At least one value must be present.
+
+    The *interval* is width of each bin.
+
+    For example, demographic information may have been summarized into
+    consecutive ten-year age groups with each group being represented
+    by the 5-year midpoints of the intervals:
+
+        >>> demographics = Counter({
+        ...    25: 172,   # 20 to 30 years old
+        ...    35: 484,   # 30 to 40 years old
+        ...    45: 387,   # 40 to 50 years old
+        ...    55:  22,   # 50 to 60 years old
+        ...    65:   6,   # 60 to 70 years old
+        ... })
+
+    The 50th percentile (median) is the 536th person out of the 1071
+    member cohort.  That person is in the 30 to 40 year old age group.
+
+    The regular median() function would assume that everyone in the
+    tricenarian age group was exactly 35 years old.  A more tenable
+    assumption is that the 484 members of that age group are evenly
+    distributed between 30 and 40.  For that, we use median_grouped().
+
+        >>> data = list(demographics.elements())
+        >>> median(data)
+        35
+        >>> round(median_grouped(data, interval=10), 1)
+        37.5
+
+    The caller is responsible for making sure the data points are separated
+    by exact multiples of *interval*.  This is essential for getting a
+    correct result.  The function does not check this precondition.
+
+    Inputs may be any numeric type that can be coerced to a float during
+    the interpolation step.
+
+    """
+    data = sorted(data)
+    n = len(data)
+    if not n:
+        raise StatisticsError("no median for empty data")
+
+    # Find the value at the midpoint. Remember this corresponds to the
+    # midpoint of the class interval.
+    x = data[n // 2]
+
+    # Using O(log n) bisection, find where all the x values occur in the data.
+    # All x will lie within data[i:j].
+    i = bisect_left(data, x)
+    j = bisect_right(data, x, lo=i)
+
+    # Coerce to floats, raising a TypeError if not possible
+    try:
+        interval = float(interval)
+        x = float(x)
+    except ValueError:
+        raise TypeError(f'Value cannot be converted to a float')
+
+    # Interpolate the median using the formula found at:
+    # https://www.cuemath.com/data/median-of-grouped-data/
+    L = x - interval / 2.0    # Lower limit of the median interval
+    cf = i                    # Cumulative frequency of the preceding interval
+    f = j - i                 # Number of elements in the median internal
+    return L + interval * (n / 2 - cf) / f
+
+
+def mode(data):
+    """Return the most common data point from discrete or nominal data.
+
+    ``mode`` assumes discrete data, and returns a single value. This is the
+    standard treatment of the mode as commonly taught in schools:
+
+        >>> mode([1, 1, 2, 3, 3, 3, 3, 4])
+        3
+
+    This also works with nominal (non-numeric) data:
+
+        >>> mode(["red", "blue", "blue", "red", "green", "red", "red"])
+        'red'
+
+    If there are multiple modes with same frequency, return the first one
+    encountered:
+
+        >>> mode(['red', 'red', 'green', 'blue', 'blue'])
+        'red'
+
+    If *data* is empty, ``mode``, raises StatisticsError.
+
+    """
+    pairs = Counter(iter(data)).most_common(1)
+    try:
+        return pairs[0][0]
+    except IndexError:
+        raise StatisticsError('no mode for empty data') from None
+
+
+def multimode(data):
+    """Return a list of the most frequently occurring values.
+
+    Will return more than one result if there are multiple modes
+    or an empty list if *data* is empty.
+
+    >>> multimode('aabbbbbbbbcc')
+    ['b']
+    >>> multimode('aabbbbccddddeeffffgg')
+    ['b', 'd', 'f']
+    >>> multimode('')
+    []
+
+    """
+    counts = Counter(iter(data))
+    if not counts:
+        return []
+    maxcount = max(counts.values())
+    return [value for value, count in counts.items() if count == maxcount]
+
+
+## Measures of spread ######################################################
+
+def variance(data, xbar=None):
+    """Return the sample variance of data.
+
+    data should be an iterable of Real-valued numbers, with at least two
+    values. The optional argument xbar, if given, should be the mean of
+    the data. If it is missing or None, the mean is automatically calculated.
+
+    Use this function when your data is a sample from a population. To
+    calculate the variance from the entire population, see ``pvariance``.
+
+    Examples:
+
+    >>> data = [2.75, 1.75, 1.25, 0.25, 0.5, 1.25, 3.5]
+    >>> variance(data)
+    1.3720238095238095
+
+    If you have already calculated the mean of your data, you can pass it as
+    the optional second argument ``xbar`` to avoid recalculating it:
+
+    >>> m = mean(data)
+    >>> variance(data, m)
+    1.3720238095238095
+
+    This function does not check that ``xbar`` is actually the mean of
+    ``data``. Giving arbitrary values for ``xbar`` may lead to invalid or
+    impossible results.
+
+    Decimals and Fractions are supported:
+
+    >>> from decimal import Decimal as D
+    >>> variance([D("27.5"), D("30.25"), D("30.25"), D("34.5"), D("41.75")])
+    Decimal('31.01875')
+
+    >>> from fractions import Fraction as F
+    >>> variance([F(1, 6), F(1, 2), F(5, 3)])
+    Fraction(67, 108)
+
+    """
+    # http://mathworld.wolfram.com/SampleVariance.html
+
+    T, ss, c, n = _ss(data, xbar)
+    if n < 2:
+        raise StatisticsError('variance requires at least two data points')
+    return _convert(ss / (n - 1), T)
+
+
+def pvariance(data, mu=None):
+    """Return the population variance of ``data``.
+
+    data should be a sequence or iterable of Real-valued numbers, with at least one
+    value. The optional argument mu, if given, should be the mean of
+    the data. If it is missing or None, the mean is automatically calculated.
+
+    Use this function to calculate the variance from the entire population.
+    To estimate the variance from a sample, the ``variance`` function is
+    usually a better choice.
+
+    Examples:
+
+    >>> data = [0.0, 0.25, 0.25, 1.25, 1.5, 1.75, 2.75, 3.25]
+    >>> pvariance(data)
+    1.25
+
+    If you have already calculated the mean of the data, you can pass it as
+    the optional second argument to avoid recalculating it:
+
+    >>> mu = mean(data)
+    >>> pvariance(data, mu)
+    1.25
+
+    Decimals and Fractions are supported:
+
+    >>> from decimal import Decimal as D
+    >>> pvariance([D("27.5"), D("30.25"), D("30.25"), D("34.5"), D("41.75")])
+    Decimal('24.815')
+
+    >>> from fractions import Fraction as F
+    >>> pvariance([F(1, 4), F(5, 4), F(1, 2)])
+    Fraction(13, 72)
+
+    """
+    # http://mathworld.wolfram.com/Variance.html
+
+    T, ss, c, n = _ss(data, mu)
+    if n < 1:
+        raise StatisticsError('pvariance requires at least one data point')
+    return _convert(ss / n, T)
+
+
+def stdev(data, xbar=None):
+    """Return the square root of the sample variance.
+
+    See ``variance`` for arguments and other details.
+
+    >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+    1.0810874155219827
+
+    """
+    T, ss, c, n = _ss(data, xbar)
+    if n < 2:
+        raise StatisticsError('stdev requires at least two data points')
+    mss = ss / (n - 1)
+    try:
+        mss_numerator = mss.numerator
+        mss_denominator = mss.denominator
+    except AttributeError:
+        raise ValueError('inf or nan encountered in data')
+    if issubclass(T, Decimal):
+        return _decimal_sqrt_of_frac(mss_numerator, mss_denominator)
+    return _float_sqrt_of_frac(mss_numerator, mss_denominator)
+
+
+def pstdev(data, mu=None):
+    """Return the square root of the population variance.
+
+    See ``pvariance`` for arguments and other details.
+
+    >>> pstdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+    0.986893273527251
+
+    """
+    T, ss, c, n = _ss(data, mu)
+    if n < 1:
+        raise StatisticsError('pstdev requires at least one data point')
+    mss = ss / n
+    try:
+        mss_numerator = mss.numerator
+        mss_denominator = mss.denominator
+    except AttributeError:
+        raise ValueError('inf or nan encountered in data')
+    if issubclass(T, Decimal):
+        return _decimal_sqrt_of_frac(mss_numerator, mss_denominator)
+    return _float_sqrt_of_frac(mss_numerator, mss_denominator)
+
+
+## Statistics for relations between two inputs #############################
+
+def covariance(x, y, /):
+    """Covariance
+
+    Return the sample covariance of two inputs *x* and *y*. Covariance
+    is a measure of the joint variability of two inputs.
+
+    >>> x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    >>> y = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+    >>> covariance(x, y)
+    0.75
+    >>> z = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+    >>> covariance(x, z)
+    -7.5
+    >>> covariance(z, x)
+    -7.5
+
+    """
+    # https://en.wikipedia.org/wiki/Covariance
+    n = len(x)
+    if len(y) != n:
+        raise StatisticsError('covariance requires that both inputs have same number of data points')
+    if n < 2:
+        raise StatisticsError('covariance requires at least two data points')
+    xbar = fsum(x) / n
+    ybar = fsum(y) / n
+    sxy = sumprod((xi - xbar for xi in x), (yi - ybar for yi in y))
+    return sxy / (n - 1)
+
+
+def correlation(x, y, /, *, method='linear'):
+    """Pearson's correlation coefficient
+
+    Return the Pearson's correlation coefficient for two inputs. Pearson's
+    correlation coefficient *r* takes values between -1 and +1. It measures
+    the strength and direction of a linear relationship.
+
+    >>> x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    >>> y = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+    >>> correlation(x, x)
+    1.0
+    >>> correlation(x, y)
+    -1.0
+
+    If *method* is "ranked", computes Spearman's rank correlation coefficient
+    for two inputs.  The data is replaced by ranks.  Ties are averaged
+    so that equal values receive the same rank.  The resulting coefficient
+    measures the strength of a monotonic relationship.
+
+    Spearman's rank correlation coefficient is appropriate for ordinal
+    data or for continuous data that doesn't meet the linear proportion
+    requirement for Pearson's correlation coefficient.
+
+    """
+    # https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
+    # https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient
+    n = len(x)
+    if len(y) != n:
+        raise StatisticsError('correlation requires that both inputs have same number of data points')
+    if n < 2:
+        raise StatisticsError('correlation requires at least two data points')
+    if method not in {'linear', 'ranked'}:
+        raise ValueError(f'Unknown method: {method!r}')
+
+    if method == 'ranked':
+        start = (n - 1) / -2            # Center rankings around zero
+        x = _rank(x, start=start)
+        y = _rank(y, start=start)
+
+    else:
+        xbar = fsum(x) / n
+        ybar = fsum(y) / n
+        x = [xi - xbar for xi in x]
+        y = [yi - ybar for yi in y]
+
+    sxy = sumprod(x, y)
+    sxx = sumprod(x, x)
+    syy = sumprod(y, y)
+
+    try:
+        return sxy / _sqrtprod(sxx, syy)
+    except ZeroDivisionError:
+        raise StatisticsError('at least one of the inputs is constant')
+
+
+LinearRegression = namedtuple('LinearRegression', ('slope', 'intercept'))
+
+
+def linear_regression(x, y, /, *, proportional=False):
+    """Slope and intercept for simple linear regression.
+
+    Return the slope and intercept of simple linear regression
+    parameters estimated using ordinary least squares. Simple linear
+    regression describes relationship between an independent variable
+    *x* and a dependent variable *y* in terms of a linear function:
+
+        y = slope * x + intercept + noise
+
+    where *slope* and *intercept* are the regression parameters that are
+    estimated, and noise represents the variability of the data that was
+    not explained by the linear regression (it is equal to the
+    difference between predicted and actual values of the dependent
+    variable).
+
+    The parameters are returned as a named tuple.
+
+    >>> x = [1, 2, 3, 4, 5]
+    >>> noise = NormalDist().samples(5, seed=42)
+    >>> y = [3 * x[i] + 2 + noise[i] for i in range(5)]
+    >>> linear_regression(x, y)  #doctest: +ELLIPSIS
+    LinearRegression(slope=3.17495..., intercept=1.00925...)
+
+    If *proportional* is true, the independent variable *x* and the
+    dependent variable *y* are assumed to be directly proportional.
+    The data is fit to a line passing through the origin.
+
+    Since the *intercept* will always be 0.0, the underlying linear
+    function simplifies to:
+
+        y = slope * x + noise
+
+    >>> y = [3 * x[i] + noise[i] for i in range(5)]
+    >>> linear_regression(x, y, proportional=True)  #doctest: +ELLIPSIS
+    LinearRegression(slope=2.90475..., intercept=0.0)
+
+    """
+    # https://en.wikipedia.org/wiki/Simple_linear_regression
+    n = len(x)
+    if len(y) != n:
+        raise StatisticsError('linear regression requires that both inputs have same number of data points')
+    if n < 2:
+        raise StatisticsError('linear regression requires at least two data points')
+
+    if not proportional:
+        xbar = fsum(x) / n
+        ybar = fsum(y) / n
+        x = [xi - xbar for xi in x]  # List because used three times below
+        y = (yi - ybar for yi in y)  # Generator because only used once below
+
+    sxy = sumprod(x, y) + 0.0        # Add zero to coerce result to a float
+    sxx = sumprod(x, x)
+
+    try:
+        slope = sxy / sxx   # equivalent to:  covariance(x, y) / variance(x)
+    except ZeroDivisionError:
+        raise StatisticsError('x is constant')
+
+    intercept = 0.0 if proportional else ybar - slope * xbar
+    return LinearRegression(slope=slope, intercept=intercept)
+
+
+## Kernel Density Estimation ###############################################
+
+_kernel_specs = {}
+
+def register(*kernels):
+    "Load the kernel's pdf, cdf, invcdf, and support into _kernel_specs."
+    def deco(builder):
+        spec = dict(zip(('pdf', 'cdf', 'invcdf', 'support'), builder()))
+        for kernel in kernels:
+            _kernel_specs[kernel] = spec
+        return builder
+    return deco
+
+@register('normal', 'gauss')
+def normal_kernel():
+    sqrt2pi = sqrt(2 * pi)
+    neg_sqrt2 = -sqrt(2)
+    pdf = lambda t: exp(-1/2 * t * t) / sqrt2pi
+    cdf = lambda t: 1/2 * erfc(t / neg_sqrt2)
+    invcdf = lambda t: _normal_dist_inv_cdf(t, 0.0, 1.0)
+    support = None
+    return pdf, cdf, invcdf, support
+
+@register('logistic')
+def logistic_kernel():
+    # 1.0 / (exp(t) + 2.0 + exp(-t))
+    pdf = lambda t: 1/2 / (1.0 + cosh(t))
+    cdf = lambda t: 1.0 - 1.0 / (exp(t) + 1.0)
+    invcdf = lambda p: log(p / (1.0 - p))
+    support = None
+    return pdf, cdf, invcdf, support
+
+@register('sigmoid')
+def sigmoid_kernel():
+    # (2/pi) / (exp(t) + exp(-t))
+    c1 = 1 / pi
+    c2 = 2 / pi
+    c3 = pi / 2
+    pdf = lambda t: c1 / cosh(t)
+    cdf = lambda t: c2 * atan(exp(t))
+    invcdf = lambda p: log(tan(p * c3))
+    support = None
+    return pdf, cdf, invcdf, support
+
+@register('rectangular', 'uniform')
+def rectangular_kernel():
+    pdf = lambda t: 1/2
+    cdf = lambda t: 1/2 * t + 1/2
+    invcdf = lambda p: 2.0 * p - 1.0
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+@register('triangular')
+def triangular_kernel():
+    pdf = lambda t: 1.0 - abs(t)
+    cdf = lambda t: t*t * (1/2 if t < 0.0 else -1/2) + t + 1/2
+    invcdf = lambda p: sqrt(2.0*p) - 1.0 if p < 1/2 else 1.0 - sqrt(2.0 - 2.0*p)
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+@register('parabolic', 'epanechnikov')
+def parabolic_kernel():
+    pdf = lambda t: 3/4 * (1.0 - t * t)
+    cdf = lambda t: sumprod((-1/4, 3/4, 1/2), (t**3, t, 1.0))
+    invcdf = lambda p: 2.0 * cos((acos(2.0*p - 1.0) + pi) / 3.0)
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+def _newton_raphson(f_inv_estimate, f, f_prime, tolerance=1e-12):
+    def f_inv(y):
+        "Return x such that f(x) ≈ y within the specified tolerance."
+        x = f_inv_estimate(y)
+        while abs(diff := f(x) - y) > tolerance:
+            x -= diff / f_prime(x)
+        return x
+    return f_inv
+
+def _quartic_invcdf_estimate(p):
+    # A handrolled piecewise approximation. There is no magic here.
+    sign, p = (1.0, p) if p <= 1/2 else (-1.0, 1.0 - p)
+    if p < 0.0106:
+        return ((2.0 * p) ** 0.3838 - 1.0) * sign
+    x = (2.0 * p) ** 0.4258865685331 - 1.0
+    if p < 0.499:
+        x += 0.026818732 * sin(7.101753784 * p + 2.73230839482953)
+    return x * sign
+
+@register('quartic', 'biweight')
+def quartic_kernel():
+    pdf = lambda t: 15/16 * (1.0 - t * t) ** 2
+    cdf = lambda t: sumprod((3/16, -5/8, 15/16, 1/2),
+                            (t**5, t**3, t, 1.0))
+    invcdf = _newton_raphson(_quartic_invcdf_estimate, f=cdf, f_prime=pdf)
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+def _triweight_invcdf_estimate(p):
+    # A handrolled piecewise approximation. There is no magic here.
+    sign, p = (1.0, p) if p <= 1/2 else (-1.0, 1.0 - p)
+    x = (2.0 * p) ** 0.3400218741872791 - 1.0
+    if 0.00001 < p < 0.499:
+        x -= 0.033 * sin(1.07 * tau * (p - 0.035))
+    return x * sign
+
+@register('triweight')
+def triweight_kernel():
+    pdf = lambda t: 35/32 * (1.0 - t * t) ** 3
+    cdf = lambda t: sumprod((-5/32, 21/32, -35/32, 35/32, 1/2),
+                            (t**7, t**5, t**3, t, 1.0))
+    invcdf = _newton_raphson(_triweight_invcdf_estimate, f=cdf, f_prime=pdf)
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+@register('cosine')
+def cosine_kernel():
+    c1 = pi / 4
+    c2 = pi / 2
+    pdf = lambda t: c1 * cos(c2 * t)
+    cdf = lambda t: 1/2 * sin(c2 * t) + 1/2
+    invcdf = lambda p: 2.0 * asin(2.0 * p - 1.0) / pi
+    support = 1.0
+    return pdf, cdf, invcdf, support
+
+del register, normal_kernel, logistic_kernel, sigmoid_kernel
+del rectangular_kernel, triangular_kernel, parabolic_kernel
+del quartic_kernel, triweight_kernel, cosine_kernel
+
+
+def kde(data, h, kernel='normal', *, cumulative=False):
+    """Kernel Density Estimation:  Create a continuous probability density
+    function or cumulative distribution function from discrete samples.
+
+    The basic idea is to smooth the data using a kernel function
+    to help draw inferences about a population from a sample.
+
+    The degree of smoothing is controlled by the scaling parameter h
+    which is called the bandwidth.  Smaller values emphasize local
+    features while larger values give smoother results.
+
+    The kernel determines the relative weights of the sample data
+    points.  Generally, the choice of kernel shape does not matter
+    as much as the more influential bandwidth smoothing parameter.
+
+    Kernels that give some weight to every sample point:
+
+       normal (gauss)
+       logistic
+       sigmoid
+
+    Kernels that only give weight to sample points within
+    the bandwidth:
+
+       rectangular (uniform)
+       triangular
+       parabolic (epanechnikov)
+       quartic (biweight)
+       triweight
+       cosine
+
+    If *cumulative* is true, will return a cumulative distribution function.
+
+    A StatisticsError will be raised if the data sequence is empty.
+
+    Example
+    -------
+
+    Given a sample of six data points, construct a continuous
+    function that estimates the underlying probability density:
+
+        >>> sample = [-2.1, -1.3, -0.4, 1.9, 5.1, 6.2]
+        >>> f_hat = kde(sample, h=1.5)
+
+    Compute the area under the curve:
+
+        >>> area = sum(f_hat(x) for x in range(-20, 20))
+        >>> round(area, 4)
+        1.0
+
+    Plot the estimated probability density function at
+    evenly spaced points from -6 to 10:
+
+        >>> for x in range(-6, 11):
+        ...     density = f_hat(x)
+        ...     plot = ' ' * int(density * 400) + 'x'
+        ...     print(f'{x:2}: {density:.3f} {plot}')
+        ...
+        -6: 0.002 x
+        -5: 0.009    x
+        -4: 0.031             x
+        -3: 0.070                             x
+        -2: 0.111                                             x
+        -1: 0.125                                                   x
+         0: 0.110                                            x
+         1: 0.086                                   x
+         2: 0.068                            x
+         3: 0.059                        x
+         4: 0.066                           x
+         5: 0.082                                 x
+         6: 0.082                                 x
+         7: 0.058                        x
+         8: 0.028            x
+         9: 0.009    x
+        10: 0.002 x
+
+    Estimate P(4.5 < X <= 7.5), the probability that a new sample value
+    will be between 4.5 and 7.5:
+
+        >>> cdf = kde(sample, h=1.5, cumulative=True)
+        >>> round(cdf(7.5) - cdf(4.5), 2)
+        0.22
+
+    References
+    ----------
+
+    Kernel density estimation and its application:
+    https://www.itm-conferences.org/articles/itmconf/pdf/2018/08/itmconf_sam2018_00037.pdf
+
+    Kernel functions in common use:
+    https://en.wikipedia.org/wiki/Kernel_(statistics)#kernel_functions_in_common_use
+
+    Interactive graphical demonstration and exploration:
+    https://demonstrations.wolfram.com/KernelDensityEstimation/
+
+    Kernel estimation of cumulative distribution function of a random variable with bounded support
+    https://www.econstor.eu/bitstream/10419/207829/1/10.21307_stattrans-2016-037.pdf
+
+    """
+
+    n = len(data)
+    if not n:
+        raise StatisticsError('Empty data sequence')
+
+    if not isinstance(data[0], (int, float)):
+        raise TypeError('Data sequence must contain ints or floats')
+
+    if h <= 0.0:
+        raise StatisticsError(f'Bandwidth h must be positive, not {h=!r}')
+
+    kernel_spec = _kernel_specs.get(kernel)
+    if kernel_spec is None:
+        raise StatisticsError(f'Unknown kernel name: {kernel!r}')
+    K = kernel_spec['pdf']
+    W = kernel_spec['cdf']
+    support = kernel_spec['support']
+
+    if support is None:
+
+        def pdf(x):
+            return sum(K((x - x_i) / h) for x_i in data) / (len(data) * h)
+
+        def cdf(x):
+            return sum(W((x - x_i) / h) for x_i in data) / len(data)
+
+    else:
+
+        sample = sorted(data)
+        bandwidth = h * support
+
+        def pdf(x):
+            nonlocal n, sample
+            if len(data) != n:
+                sample = sorted(data)
+                n = len(data)
+            i = bisect_left(sample, x - bandwidth)
+            j = bisect_right(sample, x + bandwidth)
+            supported = sample[i : j]
+            return sum(K((x - x_i) / h) for x_i in supported) / (n * h)
+
+        def cdf(x):
+            nonlocal n, sample
+            if len(data) != n:
+                sample = sorted(data)
+                n = len(data)
+            i = bisect_left(sample, x - bandwidth)
+            j = bisect_right(sample, x + bandwidth)
+            supported = sample[i : j]
+            return sum((W((x - x_i) / h) for x_i in supported), i) / n
+
+    if cumulative:
+        cdf.__doc__ = f'CDF estimate with {h=!r} and {kernel=!r}'
+        return cdf
+
+    else:
+        pdf.__doc__ = f'PDF estimate with {h=!r} and {kernel=!r}'
+        return pdf
+
+
+def kde_random(data, h, kernel='normal', *, seed=None):
+    """Return a function that makes a random selection from the estimated
+    probability density function created by kde(data, h, kernel).
+
+    Providing a *seed* allows reproducible selections within a single
+    thread.  The seed may be an integer, float, str, or bytes.
+
+    A StatisticsError will be raised if the *data* sequence is empty.
+
+    Example:
+
+    >>> data = [-2.1, -1.3, -0.4, 1.9, 5.1, 6.2]
+    >>> rand = kde_random(data, h=1.5, seed=8675309)
+    >>> new_selections = [rand() for i in range(10)]
+    >>> [round(x, 1) for x in new_selections]
+    [0.7, 6.2, 1.2, 6.9, 7.0, 1.8, 2.5, -0.5, -1.8, 5.6]
+
+    """
+    n = len(data)
+    if not n:
+        raise StatisticsError('Empty data sequence')
+
+    if not isinstance(data[0], (int, float)):
+        raise TypeError('Data sequence must contain ints or floats')
+
+    if h <= 0.0:
+        raise StatisticsError(f'Bandwidth h must be positive, not {h=!r}')
+
+    kernel_spec = _kernel_specs.get(kernel)
+    if kernel_spec is None:
+        raise StatisticsError(f'Unknown kernel name: {kernel!r}')
+    invcdf = kernel_spec['invcdf']
+
+    prng = _random.Random(seed)
+    random = prng.random
+    choice = prng.choice
+
+    def rand():
+        return choice(data) + h * invcdf(random())
+
+    rand.__doc__ = f'Random KDE selection with {h=!r} and {kernel=!r}'
+
+    return rand
+
+
+## Quantiles ###############################################################
+
+# There is no one perfect way to compute quantiles.  Here we offer
+# two methods that serve common needs.  Most other packages
+# surveyed offered at least one or both of these two, making them
+# "standard" in the sense of "widely-adopted and reproducible".
+# They are also easy to explain, easy to compute manually, and have
+# straight-forward interpretations that aren't surprising.
+
+# The default method is known as "R6", "PERCENTILE.EXC", or "expected
+# value of rank order statistics". The alternative method is known as
+# "R7", "PERCENTILE.INC", or "mode of rank order statistics".
+
+# For sample data where there is a positive probability for values
+# beyond the range of the data, the R6 exclusive method is a
+# reasonable choice.  Consider a random sample of nine values from a
+# population with a uniform distribution from 0.0 to 1.0.  The
+# distribution of the third ranked sample point is described by
+# betavariate(alpha=3, beta=7) which has mode=0.250, median=0.286, and
+# mean=0.300.  Only the latter (which corresponds with R6) gives the
+# desired cut point with 30% of the population falling below that
+# value, making it comparable to a result from an inv_cdf() function.
+# The R6 exclusive method is also idempotent.
+
+# For describing population data where the end points are known to
+# be included in the data, the R7 inclusive method is a reasonable
+# choice.  Instead of the mean, it uses the mode of the beta
+# distribution for the interior points.  Per Hyndman & Fan, "One nice
+# property is that the vertices of Q7(p) divide the range into n - 1
+# intervals, and exactly 100p% of the intervals lie to the left of
+# Q7(p) and 100(1 - p)% of the intervals lie to the right of Q7(p)."
+
+# If needed, other methods could be added.  However, for now, the
+# position is that fewer options make for easier choices and that
+# external packages can be used for anything more advanced.
+
+def quantiles(data, *, n=4, method='exclusive'):
+    """Divide *data* into *n* continuous intervals with equal probability.
+
+    Returns a list of (n - 1) cut points separating the intervals.
+
+    Set *n* to 4 for quartiles (the default).  Set *n* to 10 for deciles.
+    Set *n* to 100 for percentiles which gives the 99 cuts points that
+    separate *data* in to 100 equal sized groups.
+
+    The *data* can be any iterable containing sample.
+    The cut points are linearly interpolated between data points.
+
+    If *method* is set to *inclusive*, *data* is treated as population
+    data.  The minimum value is treated as the 0th percentile and the
+    maximum value is treated as the 100th percentile.
+
+    """
+    if n < 1:
+        raise StatisticsError('n must be at least 1')
+
+    data = sorted(data)
+
+    ld = len(data)
+    if ld < 2:
+        if ld == 1:
+            return data * (n - 1)
+        raise StatisticsError('must have at least one data point')
+
+    if method == 'inclusive':
+        m = ld - 1
+        result = []
+        for i in range(1, n):
+            j, delta = divmod(i * m, n)
+            interpolated = (data[j] * (n - delta) + data[j + 1] * delta) / n
+            result.append(interpolated)
+        return result
+
+    if method == 'exclusive':
+        m = ld + 1
+        result = []
+        for i in range(1, n):
+            j = i * m // n                               # rescale i to m/n
+            j = 1 if j < 1 else ld-1 if j > ld-1 else j  # clamp to 1 .. ld-1
+            delta = i*m - j*n                            # exact integer math
+            interpolated = (data[j - 1] * (n - delta) + data[j] * delta) / n
+            result.append(interpolated)
+        return result
+
+    raise ValueError(f'Unknown method: {method!r}')
+
+
+## Normal Distribution #####################################################
+
+class NormalDist:
+    "Normal distribution of a random variable"
+    # https://en.wikipedia.org/wiki/Normal_distribution
+    # https://en.wikipedia.org/wiki/Variance#Properties
+
+    __slots__ = {
+        '_mu': 'Arithmetic mean of a normal distribution',
+        '_sigma': 'Standard deviation of a normal distribution',
+    }
+
+    def __init__(self, mu=0.0, sigma=1.0):
+        "NormalDist where mu is the mean and sigma is the standard deviation."
+        if sigma < 0.0:
+            raise StatisticsError('sigma must be non-negative')
+        self._mu = float(mu)
+        self._sigma = float(sigma)
+
+    @classmethod
+    def from_samples(cls, data):
+        "Make a normal distribution instance from sample data."
+        return cls(*_mean_stdev(data))
+
+    def samples(self, n, *, seed=None):
+        "Generate *n* samples for a given mean and standard deviation."
+        rnd = random.random if seed is None else random.Random(seed).random
+        inv_cdf = _normal_dist_inv_cdf
+        mu = self._mu
+        sigma = self._sigma
+        return [inv_cdf(rnd(), mu, sigma) for _ in repeat(None, n)]
+
+    def pdf(self, x):
+        "Probability density function.  P(x <= X < x+dx) / dx"
+        variance = self._sigma * self._sigma
+        if not variance:
+            raise StatisticsError('pdf() not defined when sigma is zero')
+        diff = x - self._mu
+        return exp(diff * diff / (-2.0 * variance)) / sqrt(tau * variance)
+
+    def cdf(self, x):
+        "Cumulative distribution function.  P(X <= x)"
+        if not self._sigma:
+            raise StatisticsError('cdf() not defined when sigma is zero')
+        return 0.5 * erfc((self._mu - x) / (self._sigma * _SQRT2))
+
+    def inv_cdf(self, p):
+        """Inverse cumulative distribution function.  x : P(X <= x) = p
+
+        Finds the value of the random variable such that the probability of
+        the variable being less than or equal to that value equals the given
+        probability.
+
+        This function is also called the percent point function or quantile
+        function.
+        """
+        if p <= 0.0 or p >= 1.0:
+            raise StatisticsError('p must be in the range 0.0 < p < 1.0')
+        return _normal_dist_inv_cdf(p, self._mu, self._sigma)
+
+    def quantiles(self, n=4):
+        """Divide into *n* continuous intervals with equal probability.
+
+        Returns a list of (n - 1) cut points separating the intervals.
+
+        Set *n* to 4 for quartiles (the default).  Set *n* to 10 for deciles.
+        Set *n* to 100 for percentiles which gives the 99 cuts points that
+        separate the normal distribution in to 100 equal sized groups.
+        """
+        return [self.inv_cdf(i / n) for i in range(1, n)]
+
+    def overlap(self, other):
+        """Compute the overlapping coefficient (OVL) between two normal distributions.
+
+        Measures the agreement between two normal probability distributions.
+        Returns a value between 0.0 and 1.0 giving the overlapping area in
+        the two underlying probability density functions.
+
+            >>> N1 = NormalDist(2.4, 1.6)
+            >>> N2 = NormalDist(3.2, 2.0)
+            >>> N1.overlap(N2)
+            0.8035050657330205
+        """
+        # See: "The overlapping coefficient as a measure of agreement between
+        # probability distributions and point estimation of the overlap of two
+        # normal densities" -- Henry F. Inman and Edwin L. Bradley Jr
+        # http://dx.doi.org/10.1080/03610928908830127
+        if not isinstance(other, NormalDist):
+            raise TypeError('Expected another NormalDist instance')
+        X, Y = self, other
+        if (Y._sigma, Y._mu) < (X._sigma, X._mu):  # sort to assure commutativity
+            X, Y = Y, X
+        X_var, Y_var = X.variance, Y.variance
+        if not X_var or not Y_var:
+            raise StatisticsError('overlap() not defined when sigma is zero')
+        dv = Y_var - X_var
+        dm = fabs(Y._mu - X._mu)
+        if not dv:
+            return erfc(dm / (2.0 * X._sigma * _SQRT2))
+        a = X._mu * Y_var - Y._mu * X_var
+        b = X._sigma * Y._sigma * sqrt(dm * dm + dv * log(Y_var / X_var))
+        x1 = (a + b) / dv
+        x2 = (a - b) / dv
+        return 1.0 - (fabs(Y.cdf(x1) - X.cdf(x1)) + fabs(Y.cdf(x2) - X.cdf(x2)))
+
+    def zscore(self, x):
+        """Compute the Standard Score.  (x - mean) / stdev
+
+        Describes *x* in terms of the number of standard deviations
+        above or below the mean of the normal distribution.
+        """
+        # https://www.statisticshowto.com/probability-and-statistics/z-score/
+        if not self._sigma:
+            raise StatisticsError('zscore() not defined when sigma is zero')
+        return (x - self._mu) / self._sigma
+
+    @property
+    def mean(self):
+        "Arithmetic mean of the normal distribution."
+        return self._mu
+
+    @property
+    def median(self):
+        "Return the median of the normal distribution"
+        return self._mu
+
+    @property
+    def mode(self):
+        """Return the mode of the normal distribution
+
+        The mode is the value x where which the probability density
+        function (pdf) takes its maximum value.
+        """
+        return self._mu
+
+    @property
+    def stdev(self):
+        "Standard deviation of the normal distribution."
+        return self._sigma
+
+    @property
+    def variance(self):
+        "Square of the standard deviation."
+        return self._sigma * self._sigma
+
+    def __add__(x1, x2):
+        """Add a constant or another NormalDist instance.
+
+        If *other* is a constant, translate mu by the constant,
+        leaving sigma unchanged.
+
+        If *other* is a NormalDist, add both the means and the variances.
+        Mathematically, this works only if the two distributions are
+        independent or if they are jointly normally distributed.
+        """
+        if isinstance(x2, NormalDist):
+            return NormalDist(x1._mu + x2._mu, hypot(x1._sigma, x2._sigma))
+        return NormalDist(x1._mu + x2, x1._sigma)
+
+    def __sub__(x1, x2):
+        """Subtract a constant or another NormalDist instance.
+
+        If *other* is a constant, translate by the constant mu,
+        leaving sigma unchanged.
+
+        If *other* is a NormalDist, subtract the means and add the variances.
+        Mathematically, this works only if the two distributions are
+        independent or if they are jointly normally distributed.
+        """
+        if isinstance(x2, NormalDist):
+            return NormalDist(x1._mu - x2._mu, hypot(x1._sigma, x2._sigma))
+        return NormalDist(x1._mu - x2, x1._sigma)
+
+    def __mul__(x1, x2):
+        """Multiply both mu and sigma by a constant.
+
+        Used for rescaling, perhaps to change measurement units.
+        Sigma is scaled with the absolute value of the constant.
+        """
+        return NormalDist(x1._mu * x2, x1._sigma * fabs(x2))
+
+    def __truediv__(x1, x2):
+        """Divide both mu and sigma by a constant.
+
+        Used for rescaling, perhaps to change measurement units.
+        Sigma is scaled with the absolute value of the constant.
+        """
+        return NormalDist(x1._mu / x2, x1._sigma / fabs(x2))
+
+    def __pos__(x1):
+        "Return a copy of the instance."
+        return NormalDist(x1._mu, x1._sigma)
+
+    def __neg__(x1):
+        "Negates mu while keeping sigma the same."
+        return NormalDist(-x1._mu, x1._sigma)
+
+    __radd__ = __add__
+
+    def __rsub__(x1, x2):
+        "Subtract a NormalDist from a constant or another NormalDist."
+        return -(x1 - x2)
+
+    __rmul__ = __mul__
+
+    def __eq__(x1, x2):
+        "Two NormalDist objects are equal if their mu and sigma are both equal."
+        if not isinstance(x2, NormalDist):
+            return NotImplemented
+        return x1._mu == x2._mu and x1._sigma == x2._sigma
+
+    def __hash__(self):
+        "NormalDist objects hash equal if their mu and sigma are both equal."
+        return hash((self._mu, self._sigma))
+
+    def __repr__(self):
+        return f'{type(self).__name__}(mu={self._mu!r}, sigma={self._sigma!r})'
+
+    def __getstate__(self):
+        return self._mu, self._sigma
+
+    def __setstate__(self, state):
+        self._mu, self._sigma = state
+
+
+## Private utilities #######################################################
+
+def _sum(data):
+    """_sum(data) -> (type, sum, count)
+
+    Return a high-precision sum of the given numeric data as a fraction,
+    together with the type to be converted to and the count of items.
+
+    Examples
+    --------
+
+    >>> _sum([3, 2.25, 4.5, -0.5, 0.25])
+    (<class 'float'>, Fraction(19, 2), 5)
+
+    Some sources of round-off error will be avoided:
+
+    # Built-in sum returns zero.
+    >>> _sum([1e50, 1, -1e50] * 1000)
+    (<class 'float'>, Fraction(1000, 1), 3000)
+
+    Fractions and Decimals are also supported:
+
+    >>> from fractions import Fraction as F
+    >>> _sum([F(2, 3), F(7, 5), F(1, 4), F(5, 6)])
+    (<class 'fractions.Fraction'>, Fraction(63, 20), 4)
+
+    >>> from decimal import Decimal as D
+    >>> data = [D("0.1375"), D("0.2108"), D("0.3061"), D("0.0419")]
+    >>> _sum(data)
+    (<class 'decimal.Decimal'>, Fraction(6963, 10000), 4)
+
+    Mixed types are currently treated as an error, except that int is
+    allowed.
+
+    """
+    count = 0
+    types = set()
+    types_add = types.add
+    partials = {}
+    partials_get = partials.get
+
+    for typ, values in groupby(data, type):
+        types_add(typ)
+        for n, d in map(_exact_ratio, values):
+            count += 1
+            partials[d] = partials_get(d, 0) + n
+
+    if None in partials:
+        # The sum will be a NAN or INF. We can ignore all the finite
+        # partials, and just look at this special one.
+        total = partials[None]
+        assert not _isfinite(total)
+    else:
+        # Sum all the partial sums using builtin sum.
+        total = sum(Fraction(n, d) for d, n in partials.items())
+
+    T = reduce(_coerce, types, int)  # or raise TypeError
+    return (T, total, count)
+
+
+def _ss(data, c=None):
+    """Return the exact mean and sum of square deviations of sequence data.
+
+    Calculations are done in a single pass, allowing the input to be an iterator.
+
+    If given *c* is used the mean; otherwise, it is calculated from the data.
+    Use the *c* argument with care, as it can lead to garbage results.
+
+    """
+    if c is not None:
+        T, ssd, count = _sum((d := x - c) * d for x in data)
+        return (T, ssd, c, count)
+
+    count = 0
+    types = set()
+    types_add = types.add
+    sx_partials = defaultdict(int)
+    sxx_partials = defaultdict(int)
+
+    for typ, values in groupby(data, type):
+        types_add(typ)
+        for n, d in map(_exact_ratio, values):
+            count += 1
+            sx_partials[d] += n
+            sxx_partials[d] += n * n
+
+    if not count:
+        ssd = c = Fraction(0)
+
+    elif None in sx_partials:
+        # The sum will be a NAN or INF. We can ignore all the finite
+        # partials, and just look at this special one.
+        ssd = c = sx_partials[None]
+        assert not _isfinite(ssd)
+
+    else:
+        sx = sum(Fraction(n, d) for d, n in sx_partials.items())
+        sxx = sum(Fraction(n, d*d) for d, n in sxx_partials.items())
+        # This formula has poor numeric properties for floats,
+        # but with fractions it is exact.
+        ssd = (count * sxx - sx * sx) / count
+        c = sx / count
+
+    T = reduce(_coerce, types, int)  # or raise TypeError
+    return (T, ssd, c, count)
+
+
+def _isfinite(x):
+    try:
+        return x.is_finite()  # Likely a Decimal.
+    except AttributeError:
+        return math.isfinite(x)  # Coerces to float first.
+
+
+def _coerce(T, S):
+    """Coerce types T and S to a common type, or raise TypeError.
+
+    Coercion rules are currently an implementation detail. See the CoerceTest
+    test class in test_statistics for details.
+
+    """
+    # See http://bugs.python.org/issue24068.
+    assert T is not bool, "initial type T is bool"
+    # If the types are the same, no need to coerce anything. Put this
+    # first, so that the usual case (no coercion needed) happens as soon
+    # as possible.
+    if T is S:  return T
+    # Mixed int & other coerce to the other type.
+    if S is int or S is bool:  return T
+    if T is int:  return S
+    # If one is a (strict) subclass of the other, coerce to the subclass.
+    if issubclass(S, T):  return S
+    if issubclass(T, S):  return T
+    # Ints coerce to the other type.
+    if issubclass(T, int):  return S
+    if issubclass(S, int):  return T
+    # Mixed fraction & float coerces to float (or float subclass).
+    if issubclass(T, Fraction) and issubclass(S, float):
+        return S
+    if issubclass(T, float) and issubclass(S, Fraction):
+        return T
+    # Any other combination is disallowed.
+    msg = "don't know how to coerce %s and %s"
+    raise TypeError(msg % (T.__name__, S.__name__))
+
+
+def _exact_ratio(x):
+    """Return Real number x to exact (numerator, denominator) pair.
+
+    >>> _exact_ratio(0.25)
+    (1, 4)
+
+    x is expected to be an int, Fraction, Decimal or float.
+
+    """
+    try:
+        return x.as_integer_ratio()
+    except AttributeError:
+        pass
+    except (OverflowError, ValueError):
+        # float NAN or INF.
+        assert not _isfinite(x)
+        return (x, None)
+
+    try:
+        # x may be an Integral ABC.
+        return (x.numerator, x.denominator)
+    except AttributeError:
+        msg = f"can't convert type '{type(x).__name__}' to numerator/denominator"
+        raise TypeError(msg)
+
+
+def _convert(value, T):
+    """Convert value to given numeric type T."""
+    if type(value) is T:
+        # This covers the cases where T is Fraction, or where value is
+        # a NAN or INF (Decimal or float).
+        return value
+
+    if issubclass(T, int) and value.denominator != 1:
+        T = float
+
+    try:
+        # FIXME: what do we do if this overflows?
+        return T(value)
+    except TypeError:
+        if issubclass(T, Decimal):
+            return T(value.numerator) / T(value.denominator)
+        else:
+            raise
+
+
+def _fail_neg(values, errmsg='negative value'):
+    """Iterate over values, failing if any are less than zero."""
+    for x in values:
+        if x < 0:
+            raise StatisticsError(errmsg)
+        yield x
+
+
+def _rank(data, /, *, key=None, reverse=False, ties='average', start=1) -> list[float]:
+    """Rank order a dataset. The lowest value has rank 1.
+
+    Ties are averaged so that equal values receive the same rank:
+
+        >>> data = [31, 56, 31, 25, 75, 18]
+        >>> _rank(data)
+        [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]
+
+    The operation is idempotent:
+
+        >>> _rank([3.5, 5.0, 3.5, 2.0, 6.0, 1.0])
+        [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]
+
+    It is possible to rank the data in reverse order so that the
+    highest value has rank 1.  Also, a key-function can extract
+    the field to be ranked:
+
+        >>> goals = [('eagles', 45), ('bears', 48), ('lions', 44)]
+        >>> _rank(goals, key=itemgetter(1), reverse=True)
+        [2.0, 1.0, 3.0]
+
+    Ranks are conventionally numbered starting from one; however,
+    setting *start* to zero allows the ranks to be used as array indices:
+
+        >>> prize = ['Gold', 'Silver', 'Bronze', 'Certificate']
+        >>> scores = [8.1, 7.3, 9.4, 8.3]
+        >>> [prize[int(i)] for i in _rank(scores, start=0, reverse=True)]
+        ['Bronze', 'Certificate', 'Gold', 'Silver']
+
+    """
+    # If this function becomes public at some point, more thought
+    # needs to be given to the signature.  A list of ints is
+    # plausible when ties is "min" or "max".  When ties is "average",
+    # either list[float] or list[Fraction] is plausible.
+
+    # Default handling of ties matches scipy.stats.mstats.spearmanr.
+    if ties != 'average':
+        raise ValueError(f'Unknown tie resolution method: {ties!r}')
+    if key is not None:
+        data = map(key, data)
+    val_pos = sorted(zip(data, count()), reverse=reverse)
+    i = start - 1
+    result = [0] * len(val_pos)
+    for _, g in groupby(val_pos, key=itemgetter(0)):
+        group = list(g)
+        size = len(group)
+        rank = i + (size + 1) / 2
+        for value, orig_pos in group:
+            result[orig_pos] = rank
+        i += size
+    return result
+
+
+def _integer_sqrt_of_frac_rto(n: int, m: int) -> int:
+    """Square root of n/m, rounded to the nearest integer using round-to-odd."""
+    # Reference: https://www.lri.fr/~melquion/doc/05-imacs17_1-expose.pdf
+    a = math.isqrt(n // m)
+    return a | (a*a*m != n)
+
+
+# For 53 bit precision floats, the bit width used in
+# _float_sqrt_of_frac() is 109.
+_sqrt_bit_width: int = 2 * sys.float_info.mant_dig + 3
+
+
+def _float_sqrt_of_frac(n: int, m: int) -> float:
+    """Square root of n/m as a float, correctly rounded."""
+    # See principle and proof sketch at: https://bugs.python.org/msg407078
+    q = (n.bit_length() - m.bit_length() - _sqrt_bit_width) // 2
+    if q >= 0:
+        numerator = _integer_sqrt_of_frac_rto(n, m << 2 * q) << q
+        denominator = 1
+    else:
+        numerator = _integer_sqrt_of_frac_rto(n << -2 * q, m)
+        denominator = 1 << -q
+    return numerator / denominator   # Convert to float
+
+
+def _decimal_sqrt_of_frac(n: int, m: int) -> Decimal:
+    """Square root of n/m as a Decimal, correctly rounded."""
+    # Premise:  For decimal, computing (n/m).sqrt() can be off
+    #           by 1 ulp from the correctly rounded result.
+    # Method:   Check the result, moving up or down a step if needed.
+    if n <= 0:
+        if not n:
+            return Decimal('0.0')
+        n, m = -n, -m
+
+    root = (Decimal(n) / Decimal(m)).sqrt()
+    nr, dr = root.as_integer_ratio()
+
+    plus = root.next_plus()
+    np, dp = plus.as_integer_ratio()
+    # test: n / m > ((root + plus) / 2) ** 2
+    if 4 * n * (dr*dp)**2 > m * (dr*np + dp*nr)**2:
+        return plus
+
+    minus = root.next_minus()
+    nm, dm = minus.as_integer_ratio()
+    # test: n / m < ((root + minus) / 2) ** 2
+    if 4 * n * (dr*dm)**2 < m * (dr*nm + dm*nr)**2:
+        return minus
+
+    return root
+
+
+def _mean_stdev(data):
+    """In one pass, compute the mean and sample standard deviation as floats."""
+    T, ss, xbar, n = _ss(data)
+    if n < 2:
+        raise StatisticsError('stdev requires at least two data points')
+    mss = ss / (n - 1)
+    try:
+        return float(xbar), _float_sqrt_of_frac(mss.numerator, mss.denominator)
+    except AttributeError:
+        # Handle Nans and Infs gracefully
+        return float(xbar), float(xbar) / float(ss)
+
+
+def _sqrtprod(x: float, y: float) -> float:
+    "Return sqrt(x * y) computed with improved accuracy and without overflow/underflow."
+
+    h = sqrt(x * y)
+
+    if not isfinite(h):
+        if isinf(h) and not isinf(x) and not isinf(y):
+            # Finite inputs overflowed, so scale down, and recompute.
+            scale = 2.0 ** -512  # sqrt(1 / sys.float_info.max)
+            return _sqrtprod(scale * x, scale * y) / scale
+        return h
+
+    if not h:
+        if x and y:
+            # Non-zero inputs underflowed, so scale up, and recompute.
+            # Scale:  1 / sqrt(sys.float_info.min * sys.float_info.epsilon)
+            scale = 2.0 ** 537
+            return _sqrtprod(scale * x, scale * y) / scale
+        return h
+
+    # Improve accuracy with a differential correction.
+    # https://www.wolframalpha.com/input/?i=Maclaurin+series+sqrt%28h**2+%2B+x%29+at+x%3D0
+    d = sumprod((x, h), (y, -h))
+    return h + d / (2.0 * h)
+
+
+def _normal_dist_inv_cdf(p, mu, sigma):
+    # There is no closed-form solution to the inverse CDF for the normal
+    # distribution, so we use a rational approximation instead:
+    # Wichura, M.J. (1988). "Algorithm AS241: The Percentage Points of the
+    # Normal Distribution".  Applied Statistics. Blackwell Publishing. 37
+    # (3): 477–484. doi:10.2307/2347330. JSTOR 2347330.
+    q = p - 0.5
+
+    if fabs(q) <= 0.425:
+        r = 0.180625 - q * q
+        # Hash sum: 55.88319_28806_14901_4439
+        num = (((((((2.50908_09287_30122_6727e+3 * r +
+                     3.34305_75583_58812_8105e+4) * r +
+                     6.72657_70927_00870_0853e+4) * r +
+                     4.59219_53931_54987_1457e+4) * r +
+                     1.37316_93765_50946_1125e+4) * r +
+                     1.97159_09503_06551_4427e+3) * r +
+                     1.33141_66789_17843_7745e+2) * r +
+                     3.38713_28727_96366_6080e+0) * q
+        den = (((((((5.22649_52788_52854_5610e+3 * r +
+                     2.87290_85735_72194_2674e+4) * r +
+                     3.93078_95800_09271_0610e+4) * r +
+                     2.12137_94301_58659_5867e+4) * r +
+                     5.39419_60214_24751_1077e+3) * r +
+                     6.87187_00749_20579_0830e+2) * r +
+                     4.23133_30701_60091_1252e+1) * r +
+                     1.0)
+        x = num / den
+        return mu + (x * sigma)
+
+    r = p if q <= 0.0 else 1.0 - p
+    r = sqrt(-log(r))
+    if r <= 5.0:
+        r = r - 1.6
+        # Hash sum: 49.33206_50330_16102_89036
+        num = (((((((7.74545_01427_83414_07640e-4 * r +
+                     2.27238_44989_26918_45833e-2) * r +
+                     2.41780_72517_74506_11770e-1) * r +
+                     1.27045_82524_52368_38258e+0) * r +
+                     3.64784_83247_63204_60504e+0) * r +
+                     5.76949_72214_60691_40550e+0) * r +
+                     4.63033_78461_56545_29590e+0) * r +
+                     1.42343_71107_49683_57734e+0)
+        den = (((((((1.05075_00716_44416_84324e-9 * r +
+                     5.47593_80849_95344_94600e-4) * r +
+                     1.51986_66563_61645_71966e-2) * r +
+                     1.48103_97642_74800_74590e-1) * r +
+                     6.89767_33498_51000_04550e-1) * r +
+                     1.67638_48301_83803_84940e+0) * r +
+                     2.05319_16266_37758_82187e+0) * r +
+                     1.0)
+    else:
+        r = r - 5.0
+        # Hash sum: 47.52583_31754_92896_71629
+        num = (((((((2.01033_43992_92288_13265e-7 * r +
+                     2.71155_55687_43487_57815e-5) * r +
+                     1.24266_09473_88078_43860e-3) * r +
+                     2.65321_89526_57612_30930e-2) * r +
+                     2.96560_57182_85048_91230e-1) * r +
+                     1.78482_65399_17291_33580e+0) * r +
+                     5.46378_49111_64114_36990e+0) * r +
+                     6.65790_46435_01103_77720e+0)
+        den = (((((((2.04426_31033_89939_78564e-15 * r +
+                     1.42151_17583_16445_88870e-7) * r +
+                     1.84631_83175_10054_68180e-5) * r +
+                     7.86869_13114_56132_59100e-4) * r +
+                     1.48753_61290_85061_48525e-2) * r +
+                     1.36929_88092_27358_05310e-1) * r +
+                     5.99832_20655_58879_37690e-1) * r +
+                     1.0)
+
+    x = num / den
+    if q < 0.0:
+        x = -x
+
+    return mu + (x * sigma)
+
+
+# If available, use C implementation
+try:
+    from _statistics import _normal_dist_inv_cdf
+except ImportError:
+    pass
+
+# ==== shlex.py
+"""A lexical analyzer class for simple shell-like syntaxes."""
+
+# Module and documentation by Eric S. Raymond, 21 Dec 1998
+# Input stacking and error message cleanup added by ESR, March 2000
+# push_source() and pop_source() made explicit by ESR, January 2001.
+# Posix compliance, split(), string arguments, and
+# iterator interface by Gustavo Niemeyer, April 2003.
+# changes to tokenize more like Posix shells by Vinay Sajip, July 2016.
+
+import sys
+from io import StringIO
+
+__all__ = ["shlex", "split", "quote", "join"]
+
+class shlex:
+    "A lexical analyzer class for simple shell-like syntaxes."
+    def __init__(self, instream=None, infile=None, posix=False,
+                 punctuation_chars=False):
+        from collections import deque  # deferred import for performance
+
+        if isinstance(instream, str):
+            instream = StringIO(instream)
+        if instream is not None:
+            self.instream = instream
+            self.infile = infile
+        else:
+            self.instream = sys.stdin
+            self.infile = None
+        self.posix = posix
+        if posix:
+            self.eof = None
+        else:
+            self.eof = ''
+        self.commenters = '#'
+        self.wordchars = ('abcdfeghijklmnopqrstuvwxyz'
+                          'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_')
+        if self.posix:
+            self.wordchars += ('ßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ'
+                               'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ')
+        self.whitespace = ' \t\r\n'
+        self.whitespace_split = False
+        self.quotes = '\'"'
+        self.escape = '\\'
+        self.escapedquotes = '"'
+        self.state = ' '
+        self.pushback = deque()
+        self.lineno = 1
+        self.debug = 0
+        self.token = ''
+        self.filestack = deque()
+        self.source = None
+        if not punctuation_chars:
+            punctuation_chars = ''
+        elif punctuation_chars is True:
+            punctuation_chars = '();<>|&'
+        self._punctuation_chars = punctuation_chars
+        if punctuation_chars:
+            # _pushback_chars is a push back queue used by lookahead logic
+            self._pushback_chars = deque()
+            # these chars added because allowed in file names, args, wildcards
+            self.wordchars += '~-./*?='
+            #remove any punctuation chars from wordchars
+            t = self.wordchars.maketrans(dict.fromkeys(punctuation_chars))
+            self.wordchars = self.wordchars.translate(t)
+
+    @property
+    def punctuation_chars(self):
+        return self._punctuation_chars
+
+    def push_token(self, tok):
+        "Push a token onto the stack popped by the get_token method"
+        if self.debug >= 1:
+            print("shlex: pushing token " + repr(tok))
+        self.pushback.appendleft(tok)
+
+    def push_source(self, newstream, newfile=None):
+        "Push an input source onto the lexer's input source stack."
+        if isinstance(newstream, str):
+            newstream = StringIO(newstream)
+        self.filestack.appendleft((self.infile, self.instream, self.lineno))
+        self.infile = newfile
+        self.instream = newstream
+        self.lineno = 1
+        if self.debug:
+            if newfile is not None:
+                print('shlex: pushing to file %s' % (self.infile,))
+            else:
+                print('shlex: pushing to stream %s' % (self.instream,))
+
+    def pop_source(self):
+        "Pop the input source stack."
+        self.instream.close()
+        (self.infile, self.instream, self.lineno) = self.filestack.popleft()
+        if self.debug:
+            print('shlex: popping to %s, line %d' \
+                  % (self.instream, self.lineno))
+        self.state = ' '
+
+    def get_token(self):
+        "Get a token from the input stream (or from stack if it's nonempty)"
+        if self.pushback:
+            tok = self.pushback.popleft()
+            if self.debug >= 1:
+                print("shlex: popping token " + repr(tok))
+            return tok
+        # No pushback.  Get a token.
+        raw = self.read_token()
+        # Handle inclusions
+        if self.source is not None:
+            while raw == self.source:
+                spec = self.sourcehook(self.read_token())
+                if spec:
+                    (newfile, newstream) = spec
+                    self.push_source(newstream, newfile)
+                raw = self.get_token()
+        # Maybe we got EOF instead?
+        while raw == self.eof:
+            if not self.filestack:
+                return self.eof
+            else:
+                self.pop_source()
+                raw = self.get_token()
+        # Neither inclusion nor EOF
+        if self.debug >= 1:
+            if raw != self.eof:
+                print("shlex: token=" + repr(raw))
+            else:
+                print("shlex: token=EOF")
+        return raw
+
+    def read_token(self):
+        quoted = False
+        escapedstate = ' '
+        while True:
+            if self.punctuation_chars and self._pushback_chars:
+                nextchar = self._pushback_chars.pop()
+            else:
+                nextchar = self.instream.read(1)
+            if nextchar == '\n':
+                self.lineno += 1
+            if self.debug >= 3:
+                print("shlex: in state %r I see character: %r" % (self.state,
+                                                                  nextchar))
+            if self.state is None:
+                self.token = ''        # past end of file
+                break
+            elif self.state == ' ':
+                if not nextchar:
+                    self.state = None  # end of file
+                    break
+                elif nextchar in self.whitespace:
+                    if self.debug >= 2:
+                        print("shlex: I see whitespace in whitespace state")
+                    if self.token or (self.posix and quoted):
+                        break   # emit current token
+                    else:
+                        continue
+                elif nextchar in self.commenters:
+                    self.instream.readline()
+                    self.lineno += 1
+                elif self.posix and nextchar in self.escape:
+                    escapedstate = 'a'
+                    self.state = nextchar
+                elif nextchar in self.wordchars:
+                    self.token = nextchar
+                    self.state = 'a'
+                elif nextchar in self.punctuation_chars:
+                    self.token = nextchar
+                    self.state = 'c'
+                elif nextchar in self.quotes:
+                    if not self.posix:
+                        self.token = nextchar
+                    self.state = nextchar
+                elif self.whitespace_split:
+                    self.token = nextchar
+                    self.state = 'a'
+                else:
+                    self.token = nextchar
+                    if self.token or (self.posix and quoted):
+                        break   # emit current token
+                    else:
+                        continue
+            elif self.state in self.quotes:
+                quoted = True
+                if not nextchar:      # end of file
+                    if self.debug >= 2:
+                        print("shlex: I see EOF in quotes state")
+                    # XXX what error should be raised here?
+                    raise ValueError("No closing quotation")
+                if nextchar == self.state:
+                    if not self.posix:
+                        self.token += nextchar
+                        self.state = ' '
+                        break
+                    else:
+                        self.state = 'a'
+                elif (self.posix and nextchar in self.escape and self.state
+                      in self.escapedquotes):
+                    escapedstate = self.state
+                    self.state = nextchar
+                else:
+                    self.token += nextchar
+            elif self.state in self.escape:
+                if not nextchar:      # end of file
+                    if self.debug >= 2:
+                        print("shlex: I see EOF in escape state")
+                    # XXX what error should be raised here?
+                    raise ValueError("No escaped character")
+                # In posix shells, only the quote itself or the escape
+                # character may be escaped within quotes.
+                if (escapedstate in self.quotes and
+                        nextchar != self.state and nextchar != escapedstate):
+                    self.token += self.state
+                self.token += nextchar
+                self.state = escapedstate
+            elif self.state in ('a', 'c'):
+                if not nextchar:
+                    self.state = None   # end of file
+                    break
+                elif nextchar in self.whitespace:
+                    if self.debug >= 2:
+                        print("shlex: I see whitespace in word state")
+                    self.state = ' '
+                    if self.token or (self.posix and quoted):
+                        break   # emit current token
+                    else:
+                        continue
+                elif nextchar in self.commenters:
+                    self.instream.readline()
+                    self.lineno += 1
+                    if self.posix:
+                        self.state = ' '
+                        if self.token or (self.posix and quoted):
+                            break   # emit current token
+                        else:
+                            continue
+                elif self.state == 'c':
+                    if nextchar in self.punctuation_chars:
+                        self.token += nextchar
+                    else:
+                        if nextchar not in self.whitespace:
+                            self._pushback_chars.append(nextchar)
+                        self.state = ' '
+                        break
+                elif self.posix and nextchar in self.quotes:
+                    self.state = nextchar
+                elif self.posix and nextchar in self.escape:
+                    escapedstate = 'a'
+                    self.state = nextchar
+                elif (nextchar in self.wordchars or nextchar in self.quotes
+                      or (self.whitespace_split and
+                          nextchar not in self.punctuation_chars)):
+                    self.token += nextchar
+                else:
+                    if self.punctuation_chars:
+                        self._pushback_chars.append(nextchar)
+                    else:
+                        self.pushback.appendleft(nextchar)
+                    if self.debug >= 2:
+                        print("shlex: I see punctuation in word state")
+                    self.state = ' '
+                    if self.token or (self.posix and quoted):
+                        break   # emit current token
+                    else:
+                        continue
+        result = self.token
+        self.token = ''
+        if self.posix and not quoted and result == '':
+            result = None
+        if self.debug > 1:
+            if result:
+                print("shlex: raw token=" + repr(result))
+            else:
+                print("shlex: raw token=EOF")
+        return result
+
+    def sourcehook(self, newfile):
+        "Hook called on a filename to be sourced."
+        import os.path
+        if newfile[0] == '"':
+            newfile = newfile[1:-1]
+        # This implements cpp-like semantics for relative-path inclusion.
+        if isinstance(self.infile, str) and not os.path.isabs(newfile):
+            newfile = os.path.join(os.path.dirname(self.infile), newfile)
+        return (newfile, open(newfile, "r"))
+
+    def error_leader(self, infile=None, lineno=None):
+        "Emit a C-compiler-like, Emacs-friendly error-message leader."
+        if infile is None:
+            infile = self.infile
+        if lineno is None:
+            lineno = self.lineno
+        return "\"%s\", line %d: " % (infile, lineno)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        token = self.get_token()
+        if token == self.eof:
+            raise StopIteration
+        return token
+
+def split(s, comments=False, posix=True):
+    """Split the string *s* using shell-like syntax."""
+    if s is None:
+        raise ValueError("s argument must not be None")
+    lex = shlex(s, posix=posix)
+    lex.whitespace_split = True
+    if not comments:
+        lex.commenters = ''
+    return list(lex)
+
+
+def join(split_command):
+    """Return a shell-escaped string from *split_command*."""
+    return ' '.join(quote(arg) for arg in split_command)
+
+
+def quote(s):
+    """Return a shell-escaped version of the string *s*."""
+    if not s:
+        return "''"
+
+    if not isinstance(s, str):
+        raise TypeError(f"expected string object, got {type(s).__name__!r}")
+
+    # Use bytes.translate() for performance
+    safe_chars = (b'%+,-./0123456789:=@'
+                  b'ABCDEFGHIJKLMNOPQRSTUVWXYZ_'
+                  b'abcdefghijklmnopqrstuvwxyz')
+    # No quoting is needed if `s` is an ASCII string consisting only of `safe_chars`
+    if s.isascii() and not s.encode().translate(None, delete=safe_chars):
+        return s
+
+    # use single quotes, and put single quotes into double quotes
+    # the string $'b is then quoted as '$'"'"'b'
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+def _print_tokens(lexer):
+    while tt := lexer.get_token():
+        print("Token: " + repr(tt))
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        _print_tokens(shlex())
+    else:
+        fn = sys.argv[
