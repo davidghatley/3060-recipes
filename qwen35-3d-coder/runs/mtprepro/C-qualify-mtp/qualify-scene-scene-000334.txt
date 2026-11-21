@@ -1,0 +1,1471 @@
+We need provide code single self-contained HTML. Need create visually polished scene. Need only Three.js core ES module URL, no addons. Implement camera controls directly HTML. Need likely answer with code block. Need ensure no imports else. Need model brittle star draped across top barrel sponge. Central disc on rim, five long jointed arms bend over sides angles. Need maybe procedural geometry curves, textures via canvas, lighting, environment. Single HTML includes CSS/JS module. Need satisfy. Need perhaps explain save as index.html. Need use only three.module.min.js.
+
+Need craft robust code. Need make barrel sponge cylindrical with porous texture procedural canvas, maybe actual texture. Brittle star central disc and five arms, each long segmented, jointed curves, tapering. Use TubeGeometry with variable radius? TubeGeometry constant radius. Better custom tube geometry along CatmullRomCurve3 with radius function, radial segments. Could create taperedTube geometry manually using FrenetFrames from curve.computeFrenetFrames. Build vertices normals. Need joints perhaps spheres at segment boundaries, small. Arms bend over sides at different angles. Central disc on rim: cylinder flattened, maybe radial bumps. Sponge rim torus? Barrel sponge cylinder with rounded top. Use CylinderGeometry radius, height, radial segments, maybe top rim torus. Sponge texture canvas with pores and color. Need central disc sits on sponge rim, perhaps disc atop cylinder, and five arms radiate from disc, drape over sides.
+
+Need camera controls directly: pointer drag orbit, wheel zoom, maybe touch. Implement spherical coordinates and damping. No OrbitControls.
+
+Scene composition: dark teal/ocean floor, caustic-ish lighting, bubbles, particles. Sponge barrel centered. Brittle star pale cream/transparent maybe. Need make arms clearly visible. Five arms, each starts at disc, extends radially and then bends downward over side at different angular positions. Need jointed segments: each arm built from 8-10 tapered segments with spheres/joints. Use CatmullRomCurve3 and custom tube. Could build each arm as chain of tapered cylinders between points plus joint spheres. "jointed arms" perhaps segmented look. Better use TubeGeometry with radius taper? custom.
+
+Need use only Three core. Could use CanvasTexture generated. No external assets.
+
+Need maybe UI title and instructions, quality.
+
+Need ensure code syntax. Let's design.
+
+HTML:
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;style&gt; body etc canvas.
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=ui&gt;...
+&lt;script type=module&gt;
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
+
+Renderer antialias, alpha false, set pixel ratio, toneMapping ACES, outputColorSpace SRGB, shadows.
+scene bg Color 0x061b23, fog.
+camera perspective 38.
+controls custom:
+let target = new Vector3(0,1.4,0), radius=10, theta=0.7, phi=1.15; pointerdown etc; update camera.
+Could have auto-rotate slight? Maybe no, but subtle scene rotation? Better camera static with controls.
+
+Sponge:
+Group.
+Main body CylinderGeometry(2.4,2.45,3.2,96,1,false) at y=1.4? bottom y=0, top y=3.2. Cylinder centered y=1.6. Material with canvas texture. Need texture mapping and bump. Create canvas 1024 maybe draw tan base, random pores. CanvasTexture wrap repeat, repeat maybe (3,2). bumpMap same texture? Color texture and bump. Bump scale .12.
+Could make top cap separate CylinderGeometry radius 2.4, height .18 at y=3.25, material lighter.
+Rim TorusGeometry(2.32,0.18,16,96) rotated x=PI/2? Torus default in XY plane, hole along Z. To make horizontal ring around Y axis, rotate x=PI/2. Position y=3.2. Sponge rim.
+Maybe body slight organic deformation? Cylinder okay. Add vertical ridges? Sponge barrel. Could use custom cylinder geometry? Not needed.
+Pores actual texture with dark circles and highlights. Need avoid too many random. Canvas draw 1200 circles random, varying. Also speckles. Texture colorSpace SRGB. bumpMap should use separate grayscale maybe same texture but colorSpace issue. Create bump canvas separately? Could use same texture as bumpMap, Three may use colorSpace but still. Better create color canvas and bump canvas.
+Texture repeat set 2.4,1.5.
+
+Sponge top perhaps central disc: CylinderGeometry(.55,.62,.24,48) at y=3.48, material pale beige. top disc maybe slightly flattened sphere? "small central disc sits on sponge rim" use cylinder and radial ridges. Add 20 small bumps around edge? central disc with 32 little radial stubs maybe brittle star disc usually radial. Use cylinder and torus? Could create central disc as cylinder, top disk, and ring of small bumps around perimeter.
+
+Arms:
+Need five. Start points around central disc at radius .48, y=3.55. Each arm extends outward to radius 3.2-3.8, then bends down over side to y ~1.0-1.8, with a tip curling inward/down. Different angles. Need draped across top and sides. Could define each arm in local coordinates then rotate around Y.
+For arm i angle = i*2π/5 + offset. Points:
+p0 = (cos a*0.45, 3.55, sin a*0.45)
+p1 = (cos a*1.1, 3.52, sin a*1.1)
+p2 = (cos a*2.0, 3.35, sin a*2.0)
+p3 = (cos a*2.75, 2.75, sin a*2.75)
+p4 = (cos a*3.15, 1.85, sin a*3.15)
+p5 = (cos a*3.35, 1.15, sin a*3.35)
+p6 = (cos a*3.1, .8, sin a*3.1) maybe curl.
+But "bend over the sides at different angles" arms should drape over top edge, perhaps arms start center, extend across top, then bend down side. Since sponge top at y=3.2, arms at y=3.45, then over side descending. Good.
+Different angles means offsets 0.12 etc and maybe some arm reaches opposite side? Five distinct.
+
+Tube geometry custom:
+function createTaperedTube(curve, radiusStart, radiusEnd, segments=80, radial=10) {
+ frames=curve.computeFrenetFrames(segments,false)
+ for i 0..segments:
+ t=i/segments; point=curve.getPointAt(t); radius=lerp(start,end, maybe pow)
+ for j 0..radial:
+ angle=...
+ normal=cos*normalBin + sin*binormal
+ vertex=point + normal*radius
+ normals=normal
+ indices...
+}
+Need radius function perhaps smooth: lerp(start,end, Math.pow(t,.8)). For brittle star arms taper dramatic. Add slight irregularity? Could use radius = lerp * (1+0.04 sin). But normals custom. Fine.
+Material MeshPhysicalMaterial color pale ivory, roughness .72, transmission? Transmission with no environment can be weird. Use transparent opacity .88, clearcoat .15. Maybe color 0xd8d3b8, roughness .78. Need visible. Add vertex? no.
+Joints: at curve sample positions perhaps 9 spheres scaled. But tube itself segmented appearance; add small spheres at boundaries with slightly darker material. Could place at t values .18 increments, sphere radius based. This emphasizes jointed. Use shared sphere geometry perhaps. At each joint, sphere radius = interpolated + .035, scale maybe 1. Need orient irrelevant.
+Could also add tiny setae? Brittle star arms have small spines. Add tiny bristles along arms maybe 15 per arm, using small line segments? Could use InstancedMesh for performance. But not necessary. Yet visual fidelity. Add fine setae as small cones/cylinders along arm, maybe 18 per arm, using small line segments? Could use InstancedMesh for performance. But not necessary. Yet visual fidelity. Add fine setae as small bristles using InstancedMesh: create ConeGeometry(.012,.12,5), material dark beige, place along curve and orient along normal/down. 5*18=90. Could use matrix. Need calculate frame normals at t. For each sample, direction = normal*cos + binormal*sin maybe downward? Brittle star setae point outward. We can orient cone's y axis to direction. Use quaternion setFromUnitVectors(new Vector3(0,1,0), dir). Position point + direction*.04. But if direction includes radial, okay. 18 each.
+
+Arms need maybe central connection and disc.
+
+Sponge details: holes, maybe little bubbles. Add pores as dark shallow cylinders? Texture sufficient. Could add 30 small dark pore discs on top? Since cylinder top material same. Maybe top cap texture. Add little raised nodules around rim.
+
+Environment: floor plane at y=-.04, rough dark, maybe circular patch. Lighting: Hemisphere, Directional key with shadow, Point cyan underglow, warm rim. Shadows.
+Background perhaps gradient CSS? renderer clear color. Could use scene background color. Add particles using Points with BufferGeometry. Bubbles as Points? Use small translucent spheres maybe 35, animate.
+Caustics: plane with canvas texture? Could make floor with procedural caustic texture canvas, transparent? Use MeshStandardMaterial map. Generate 512 canvas with random sin lines. But floor can be dark. Better create caustic canvas with strokes. Use CanvasTexture, repeat. Plane 30x30, rotate x -PI/2, y=-.03, material color 0x0b2d35, map caustic, emissiveMap same? emissive 0x0b6a70, emissiveIntensity .25. Need texture colorSpace.
+
+Sponge maybe slight rotation? no.
+
+Camera custom controls:
+state target, radius, theta, phi. pointerdown on renderer dom. pointermove adjust theta -= dx*.005, phi clamp. wheel radius. touch via pointer. Damping current values to desired.
+Need avoid dragging UI. canvas.
+Double click reset.
+Buttons maybe "Reset view", "Auto rotate" in HTML. But user asked create file, UI optional. Could include title and hint. Need self-contained.
+
+Could add responsive.
+
+Need ensure import only core. No other imports.
+
+Potential issue CanvasTexture creation and colorSpace. Fine.
+
+Need use THREE.MathUtils.lerp etc.
+
+Need create custom geometry correctly:
+const vertices=[], normals=[], uvs=[], indices=[];
+for i=0..segments:
+ t=i/segments
+ P=curve.getPointAt(t)
+ N=frames.normals[i], B=frames.binormals[i]
+ radius = lerp(r0,r1, Math.pow(t,0.72))
+ for j=0..radial:
+  v=j/radial*2π
+  sin/cos
+  radVec = N*cos + B*sin
+  pos=P+radVec*radius
+  normal=radVec
+ indices: a=i*(radial+1)+j, b=(i+1)*(radial+1)+j, c=(i+1)*(radial+1)+j+1, d=i*(radial+1)+j+1; indices.push(a,b,d? Need winding). Let's derive. Tube along curve, frame orientation. Standard TubeGeometry indices a=(radial+1)*(j-1)+(i-1), b=(radial+1)*j+(i-1), c=(radial+1)*j+i, d=(radial+1)*(j-1)+i; indices a,b,d b,c,d. Our i longitudinal, j radial. a=i*(R+1)+j, b=(i+1)*(R+1)+j, c=(i+1)*(R+1)+j+1, d=i*(R+1)+j+1. likely a,b,d and b,c,d. Normals outward. Good.
+Set position, normal, uv. computeBoundingSphere.
+
+Curve points local? create world points and curve. Then arm group maybe no rotation separately. Each arm points world.
+
+Joint positions at t values. Use curve.getPointAt(t). Spheres. To avoid joints look like beads too much, use small. Material slightly darker. Add 10 joints. Sphere geometry shared unit; scale radius. Sphere radius .05 etc.
+Could add segment "knuckles" as small ellipsoids.
+
+Arms different shapes. Need use CatmullRomCurve3 with curveType 'catmullrom', tension .5. Points maybe 7. Use getPointAt.
+
+Arm design:
+const armDefs = [
+ {a:0.05, reach:3.35, drop:1.55, curl:0.25, lift:0.08},
+ {a:1.2, reach:3.6, drop:1.75, curl:-.15},
+ {a:2.4, reach:3.25, drop:1.45},
+ {a:3.55, reach:3.75, drop:1.9},
+ {a:4.75, reach:3.4, drop:1.65}
+]
+But if angle 0 arm extends x positive; camera at theta maybe 0.75 so see.
+Points:
+p0 radius .48 y3.58
+p1 radius .95 y3.58
+p2 radius 1.65 y3.48
+p3 radius reach*.72 y3.28 + maybe
+p4 radius reach*.92 y2.65
+p5 radius reach y1.55
+p6 radius reach*.92 y0.95
+p7 radius reach*.78 y1.15 (curl inward and up a bit)
+This means arm drapes down side and tip curls. Different angles.
+
+At p3 to p4 crossing side. Sponge radius 2.4, so p4 at 3.05 outside, visible. p5 3.4. Great.
+Central disc at y3.48, arms start y3.58.
+
+Need maybe arm passes through top cap? starts .48.
+
+Sponge body: Cylinder top y=3.2. body center 1.6 height3.2. top cap center 3.24 height .12. rim at 3.2. central disc y3.43.
+Arms p0 y3.58.
+
+Maybe body texture orientation. Cylinder UV.
+
+Add vertical pore relief? bump.
+
+Need central disc: group at y3.42. Cylinder .56 top .62 bottom height .22. position y3.48. Add top disk Cylinder .48 .5 .08 y3.64. Add ring Torus .43 .045 y3.68. Add radial little bumps maybe 20 around radius .32, each sphere .045. But brittle star's central disc is small and has radial arms. Good.
+
+Need maybe tiny eyes? no.
+
+Sponge rim nodules: 32 small spheres around radius 2.22 at y3.32, scale .08,.05,.1, beige. This helps.
+
+Sponge body maybe top edge is 2.4. Central disc sits on rim.
+
+Set scene labels? UI:
+top left "CIRRIPHIA / ON THE REEF" maybe species. Title "Brittle star on a barrel sponge". Subtitle. bottom right controls.
+Could be elegant, not obstruct.
+
+Need animate:
+time; bubbles rise. Use Points geometry positions and update y each frame, wrap. PointsMaterial size .025, transparent opacity .35, depthWrite false.
+Maybe 28 bubbles as Points.
+Sponge slight breathing? Could animate group rotation z tiny? But arms are separate group, if sponge group only no issue. Better entire organism group perhaps slight sway, but sponge should stable. Could animate body? no.
+Arms static.
+
+Could animate caustic texture? no.
+Bubbles around.
+
+Could add light rays? transparent cones maybe. Not needed.
+
+Need maybe renderer shadow map. Directional shadow camera.
+
+Need ensure no external fonts to self-contained except Three. Use system fonts.
+
+Need provide full code only maybe brief intro. User asked create. We should answer with code. Could mention save as index.html.
+
+Let's formulate code carefully.
+
+HTML CSS:
+body margin0 overflow hidden background radial gradient.
+#scene fixed inset.
+canvas display block.
+.overlay pointer-events none.
+.card etc.
+button pointer-events auto.
+Maybe loading overlay? Since module load maybe. Add #loading and remove after first render. But if CDN fails stays. Could include.
+
+JS:
+import.
+const container = document.getElementById('scene');
+renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setSize; setPixelRatio.
+renderer.shadowMap.enabled=true; type PCFSoftShadowMap.
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; exposure=1.15.
+
+Scene fog new FogExp2(0x061b22, .055) maybe.
+
+Camera.
+
+Texture functions:
+makeSpongeTextures:
+size=1024; colorCtx, bumpCtx. Fill base.
+For pores random:
+for i 0..1800:
+ x random, y random, r 1-7. But texture repeats, many. Draw dark circle with radial gradient? Canvas radial gradient.
+color: ctx radial gradient center rgba(70,42,25,.25) to transparent. fill.
+bump: radial gradient white to black.
+Also draw fine speckles.
+Texture wrap Repeat, repeat.set(2.4,1.4), anisotropy=renderer.capabilities.getMaxAnisotropy.
+Need bump texture same dimensions.
+floor texture 512, fill dark, draw caustic curves with rgba. Use sin patterns. Could generate pixel image perhaps canvas fill each pixel expensive 262k okay. Better draw 100 translucent ellipse strokes.
+floor material map, emissiveMap, emissive 0x1b7176, emissiveIntensity .25, roughness .95.
+
+Sponge material:
+new MeshStandardMaterial({map, bumpMap, bumpScale:.16, color:0xf0d4a3, roughness:.9, metalness:0});
+Top material color 0xe6c995, bumpMap etc.
+Rim material.
+
+Main body cast receive.
+
+Maybe create body with CylinderGeometry(2.4,2.38,3.1,96,4,false), position y1.55. Slight taper.
+Top cap CylinderGeometry(2.4,2.4,.14,96) y3.18.
+Rim Torus radius2.3 tube .16 y3.22.
+Actually body top at3.1, cap center3.17 top3.24, rim center3.24. Arms y3.5. Good.
+Set body y=1.55, height3.1 -> top3.1.
+cap y=3.16 height .14 -> top3.23.
+rim y=3.23.
+
+Top disc y3.40.
+
+Arm points y accordingly.
+
+Add sponge vertical little bubbles? no.
+
+Lighting:
+hemi 0xbfe8e7 sky, 0x17201e ground intensity1.4
+directional warm 0xffe0aa intensity3 at (4,8,5), castShadow.
+point cyan 0x42d8d0 intensity 25 distance 12 decay2 at (-4,2,-3) maybe physically correct? Three r160 intensity units. PointLight 18.
+rim directional 0x63d7d1 intensity2 at(-5,4,-4).
+Ambient maybe.
+
+Floor plane 40, y=-.03, material. receive shadow.
+Maybe circular pedestal? no.
+
+Organism group at y? all world.
+
+Tapered tube function uses curve and material.
+For each arm, add mesh. Need create joints. Joint geometry shared SphereGeometry(1,12,8). Material.
+At t from .12 to .9 by .1 maybe 9 joints. radius estimate. scale set(r*1.05,r*1.05,r*1.1). Position.
+Could add a small collar at base? sphere.
+
+Setae:
+const setaeGeo = new THREE.ConeGeometry(.012,.11,5); default along y centered.
+For each arm, count 22. t random .15-.9. point. Need outward direction radial. Curve point radial vector. But if arm bends, outward horizontal radial. dir = radial*0.7 + up*0.3 maybe. position point + dir*.025. quaternion from y to dir. Scale random. Instance matrix.
+But setae on all arms could be subtle. Use InstancedMesh 90. For each arm 20. Use dummy Object3D.
+Need avoid allocations? okay.
+Set material color 0xb7aa82, roughness1.
+Could perhaps use Points not.
+
+Arms central group maybe each arm group. Need all arm points world. Add to organism.
+
+Maybe add tiny arm "fingers" at tip? no.
+
+Bubbles:
+BufferGeometry positions count 35, x random -7..7, y .2..7, z. PointsMaterial color 0xb9f6ef size .035, transparent .35, depthWrite false.
+Animate each position y += dt*(.08+...). if >7 reset .2. Need store speeds array and initial.
+Could use Points and update.
+
+Camera controls:
+let desired={radius:8.8, theta:0.72, phi:1.18}; current copy.
+target = (0,1.75,0).
+function updateCamera(dt) {
+ current.radius += (desired.radius-current.radius)*(1-Math.exp(-dt*8));
+ ...
+ const sinPhi=Math.sin(current.phi)
+ camera.position.set(target.x + radius*sinPhi*Math.sin(theta), target.y+radius*Math.cos(phi), target.z+radius*sinPhi*Math.cos(theta))
+ camera.lookAt(target)
+}
+Here theta 0 means z positive. camera x positive if theta .7.
+Pointer:
+down set dragging, last.
+move desired.theta -= dx*.006; desired.phi -= dy*.005? Drag up dy negative -> phi +=? If phi decreases camera higher? camera y=cos phi, smaller phi higher. Drag up should perhaps rotate camera upward? Typical drag up moves object up, camera down? Not critical. Use desired.phi -= dy*0.005.
+Wheel desired.radius *= exp(deltaY*.001), clamp 5.5,14.
+Double click reset.
+Buttons:
+reset button.
+auto button toggles. In animate if auto, desired.theta += dt*.08. But then user drag still.
+Need prevent auto by button.
+
+Responsive camera radius maybe on small.
+
+Animation:
+requestAnimationFrame.
+const clock = new THREE.Clock();
+function animate() { const dt=Math.min(clock.getDelta(),.05); elapsed=clock.elapsedTime; updateCamera; bubbles; renderer.render; }
+Need clock.elapsedTime updated by getDelta yes.
+loading remove after first render.
+
+Could add subtle organism group rotation? no.
+
+Maybe add caustic light moving over sponge: Point light position sin. Could animate point light.
+
+Need perhaps no "legacy examples" yes.
+
+Need maybe use only Three core. Good.
+
+Potential issue `THREE.SRGBColorSpace` exists r160. yes.
+`renderer.useLegacyLights` removed maybe don't.
+`material.emissiveMap` works.
+`InstancedMesh.instanceMatrix.needsUpdate`.
+`curve.computeFrenetFrames(segments,false)` returns arrays length segments+1. yes.
+`getPointAt` uses arc length.
+`CatmullRomCurve3(points,false,'catmullrom',0.5)`.
+
+Texture canvas:
+radial gradient for each pore 1800 * okay.
+Bump image.
+Set `colorTex.colorSpace=THREE.SRGBColorSpace`.
+Bump should NoColorSpace default.
+Floor texture colorSpace.
+
+Need maybe body texture repeats but top cap separate map same repeat. okay.
+
+Could add pore dark circles on top physically? Texture on cap.
+
+Need central disc sits on rim and arms start. Good.
+
+Need maybe sponge barrel has a little neck? no.
+
+Let's ensure arms visible from camera. Sponge radius 2.4, arm reach 3.4. Camera radius 9.2 target y1.8, phi1.15 => camera y=1.8+3.8=5.6, horizontal 8.1. sees top. Great.
+
+Arm angles maybe:
+[0.08,1.18,2.34,3.52,4.68]. Different.
+reach [3.3,3.65,3.25,3.8,3.45]
+drop? points explicit.
+Need arms drape over sides at different angles. All extend over top then down.
+
+Maybe arm geometry intersects sponge? p4 radius reach*.92 around3.1, y2.45, outside. p5 radius reach y1.35 outside. Good.
+At angles, visible.
+
+Central disc radius .52 small relative sponge 4.8 diameter. "small central disc" yes.
+
+Could add five arms equal but lengths varied.
+
+Need maybe central disc on top of sponge rim but our disc at 3.42 and top 3.23, yes.
+
+Maybe use `castShadow` for arms and joints.
+
+Need add subtle transparent outer glow? no.
+
+Let's produce code. Need perhaps answer not too much. Ensure single file. Use comments.
+
+Let's write final with code block.
+=====CONTENT=====
+Save the following as `index.html` and open it in a modern browser. It uses only the Three.js core ES module from cdnjs and includes custom orbit, zoom, and reset controls.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brittle Star on a Barrel Sponge</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #061920;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      z-index: 2;
+      max-width: min(420px, calc(100vw - 40px));
+      color: #e8f4ed;
+      pointer-events: none;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: #83d7d0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      max-width: 330px;
+      margin: 15px 0 0;
+      color: rgba(221, 239, 232, 0.68);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .controls {
+      position: fixed;
+      right: clamp(16px, 3vw, 36px);
+      bottom: clamp(16px, 3vw, 32px);
+      z-index: 3;
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(164, 220, 213, 0.16);
+      border-radius: 999px;
+      background: rgba(5, 24, 30, 0.62);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(164, 220, 213, 0.14);
+      border-radius: 999px;
+      padding: 9px 14px;
+      color: rgba(225, 242, 236, 0.8);
+      background: rgba(255, 255, 255, 0.055);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition:
+        color 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease;
+    }
+
+    button:hover {
+      color: #ffffff;
+      background: rgba(131, 215, 208, 0.15);
+      border-color: rgba(131, 215, 208, 0.35);
+    }
+
+    button.active {
+      color: #071b20;
+      background: #8bd8cf;
+      border-color: #8bd8cf;
+    }
+
+    .hint {
+      position: fixed;
+      left: clamp(20px, 4vw, 52px);
+      bottom: clamp(22px, 4vw, 40px);
+      z-index: 2;
+      color: rgba(213, 235, 228, 0.45);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      color: #b8ded8;
+      background: #061920;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      .subtitle {
+        max-width: 260px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <header class="title-card">
+    <div class="eyebrow">Reef study · 05</div>
+    <h1>Brittle star<br />on a barrel sponge</h1>
+    <p class="subtitle">
+      A delicate, jointed animal drapes from the rim of a porous, cylindrical sponge.
+    </p>
+  </header>
+
+  <div class="hint">Drag to orbit · Scroll to zoom · Double-click to reset</div>
+
+  <nav class="controls" aria-label="Scene controls">
+    <button id="reset" type="button">Reset view</button>
+    <button id="rotate" type="button">Auto rotate</button>
+  </nav>
+
+  <div id="loading">Preparing the reef</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    // ---------------------------------------------------------------------
+    // Renderer and scene
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x061920);
+    scene.fog = new THREE.FogExp2(0x061920, 0.052);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    const clock = new THREE.Clock();
+
+    // ---------------------------------------------------------------------
+    // Procedural textures
+    // ---------------------------------------------------------------------
+
+    function createSpongeTextures() {
+      const size = 1024;
+      const colorCanvas = document.createElement("canvas");
+      const bumpCanvas = document.createElement("canvas");
+
+      colorCanvas.width = colorCanvas.height = size;
+      bumpCanvas.width = bumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const bumpContext = bumpCanvas.getContext("2d");
+
+      const baseGradient = colorContext.createRadialGradient(
+        size * 0.48,
+        size * 0.42,
+        size * 0.08,
+        size * 0.5,
+        size * 0.5,
+        size * 0.72
+      );
+
+      baseGradient.addColorStop(0, "#e8c992");
+      baseGradient.addColorStop(0.45, "#d6b981");
+      baseGradient.addColorStop(1, "#b99762");
+
+      colorContext.fillStyle = baseGradient;
+      colorContext.fillRect(0, 0, size, size);
+
+      bumpContext.fillStyle = "#808080";
+      bumpContext.fillRect(0, 0, size, size);
+
+      // Draw hundreds of irregular pores.
+      for (let i = 0; i < 2100; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const radius = 0.7 + Math.random() * 6.5;
+        const darkness = 0.12 + Math.random() * 0.32;
+
+        const colorGradient = colorContext.createRadialGradient(
+          x,
+          y,
+          0,
+          x,
+          y,
+          radius
+        );
+
+        colorGradient.addColorStop(
+          0,
+          `rgba(73, 43, 24, ${darkness})`
+        );
+        colorGradient.addColorStop(1, "rgba(73, 43, 24, 0)");
+
+        colorContext.fillStyle = colorGradient;
+        colorContext.beginPath();
+        colorContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorContext.fill();
+
+        const bumpGradient = bumpContext.createRadialGradient(
+          x,
+          y,
+          0,
+          x,
+          y,
+          radius
+        );
+
+        bumpGradient.addColorStop(0, "rgba(255,255,255,0.7)");
+        bumpGradient.addColorStop(0.5, "rgba(45,45,45,0.45)");
+        bumpGradient.addColorStop(1, "rgba(45,45,45,0)");
+
+        bumpContext.fillStyle = bumpGradient;
+        bumpContext.beginPath();
+        bumpContext.arc(x, y, radius, 0, Math.PI * 2);
+        bumpContext.fill();
+      }
+
+      // Fine sandy texture.
+      for (let i = 0; i < 5000; i++) {
+        const x = Math.random() * size;
+        const y = Math.random() * size;
+        const alpha = 0.025 + Math.random() * 0.065;
+
+        colorContext.fillStyle = `rgba(255,244,210,${alpha})`;
+        colorContext.fillRect(x, y, 1 + Math.random() * 2, 1 + Math.random() * 2);
+
+        const value = 115 + Math.random() * 100;
+        bumpContext.fillStyle = `rgba(${value},${value},${value},0.12)`;
+        bumpContext.fillRect(x, y, 1, 1);
+      }
+
+      const colorTexture = new THREE.CanvasTexture(colorCanvas);
+      colorTexture.colorSpace = THREE.SRGBColorSpace;
+      colorTexture.wrapS = colorTexture.wrapT = THREE.RepeatWrapping;
+      colorTexture.repeat.set(2.3, 1.45);
+      colorTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+      bumpTexture.wrapS = bumpTexture.wrapT = THREE.RepeatWrapping;
+      bumpTexture.repeat.copy(colorTexture.repeat);
+      bumpTexture.anisotropy = colorTexture.anisotropy;
+
+      return { colorTexture, bumpTexture };
+    }
+
+    function createCausticTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 512;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(
+        256,
+        256,
+        20,
+        256,
+        256,
+        360
+      );
+
+      gradient.addColorStop(0, "rgba(124,220,210,0.18)");
+      gradient.addColorStop(0.5, "rgba(70,153,157,0.08)");
+      gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 90; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const radiusX = 25 + Math.random() * 115;
+        const radiusY = 15 + Math.random() * 65;
+        const rotation = Math.random() * Math.PI;
+
+        context.beginPath();
+        context.ellipse(
+          x,
+          y,
+          radiusX,
+          radiusY,
+          rotation,
+          0,
+          Math.PI * 2
+        );
+
+        context.strokeStyle = `rgba(153,235,221,${
+          0.035 + Math.random() * 0.075
+        })`;
+        context.lineWidth = 0.5 + Math.random() * 1.8;
+        context.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(5, 5);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      return texture;
+    }
+
+    const spongeTextures = createSpongeTextures();
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const spongeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf0d09b,
+      map: spongeTextures.colorTexture,
+      bumpMap: spongeTextures.bumpTexture,
+      bumpScale: 0.13,
+      roughness: 0.94,
+      metalness: 0
+    });
+
+    const spongeTopMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf3dfb4,
+      map: spongeTextures.colorTexture,
+      bumpMap: spongeTextures.bumpTexture,
+      bumpScale: 0.11,
+      roughness: 0.9,
+      metalness: 0
+    });
+
+    const rimMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe7c68e,
+      map: spongeTextures.colorTexture,
+      bumpMap: spongeTextures.bumpTexture,
+      bumpScale: 0.14,
+      roughness: 0.92
+    });
+
+    const discMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe8ddba,
+      roughness: 0.78,
+      metalness: 0
+    });
+
+    const armMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xded7bd,
+      roughness: 0.76,
+      metalness: 0,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.85
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb9aa82,
+      roughness: 0.88,
+      metalness: 0
+    });
+
+    // ---------------------------------------------------------------------
+    // Reef floor and lighting
+    // ---------------------------------------------------------------------
+
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x102c33,
+      map: createCausticTexture(),
+      emissiveMap: createCausticTexture(),
+      emissive: 0x174c50,
+      emissiveIntensity: 0.28,
+      roughness: 0.98,
+      metalness: 0
+    });
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      floorMaterial
+    );
+
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.035;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const hemisphere = new THREE.HemisphereLight(
+      0xc3eee6,
+      0x17211f,
+      1.45
+    );
+    scene.add(hemisphere);
+
+    const keyLight = new THREE.DirectionalLight(0xffe2ad, 3.1);
+    keyLight.position.set(4.5, 8, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.camera.left = -6;
+    keyLight.shadow.camera.right = 6;
+    keyLight.shadow.camera.top = 6;
+    keyLight.shadow.camera.bottom = -6;
+    keyLight.shadow.bias = -0.0004;
+    scene.add(keyLight);
+
+    const cyanLight = new THREE.PointLight(0x52dfd2, 24, 13, 2);
+    cyanLight.position.set(-4.2, 2.2, -3.5);
+    scene.add(cyanLight);
+
+    const rimLight = new THREE.DirectionalLight(0x78d9d1, 1.8);
+    rimLight.position.set(-5, 4, -4);
+    scene.add(rimLight);
+
+    // ---------------------------------------------------------------------
+    // Barrel sponge
+    // ---------------------------------------------------------------------
+
+    const sponge = new THREE.Group();
+    scene.add(sponge);
+
+    const spongeBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.4, 2.38, 3.1, 96, 5, false),
+      spongeMaterial
+    );
+
+    spongeBody.position.y = 1.55;
+    spongeBody.castShadow = true;
+    spongeBody.receiveShadow = true;
+    sponge.add(spongeBody);
+
+    const spongeTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.4, 2.4, 0.14, 96),
+      spongeTopMaterial
+    );
+
+    spongeTop.position.y = 3.16;
+    spongeTop.castShadow = true;
+    spongeTop.receiveShadow = true;
+    sponge.add(spongeTop);
+
+    const spongeRim = new THREE.Mesh(
+      new THREE.TorusGeometry(2.31, 0.17, 18, 128),
+      rimMaterial
+    );
+
+    spongeRim.rotation.x = Math.PI / 2;
+    spongeRim.position.y = 3.23;
+    spongeRim.castShadow = true;
+    spongeRim.receiveShadow = true;
+    sponge.add(spongeRim);
+
+    // Small nodules around the sponge rim.
+    const rimNoduleGeometry = new THREE.SphereGeometry(1, 12, 8);
+    const noduleMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe5c994,
+      roughness: 0.9
+    });
+
+    for (let i = 0; i < 36; i++) {
+      const angle = (i / 36) * Math.PI * 2;
+      const radius = 2.18 + Math.random() * 0.08;
+
+      const nodule = new THREE.Mesh(
+        rimNoduleGeometry,
+        noduleMaterial
+      );
+
+      nodule.position.set(
+        Math.cos(angle) * radius,
+        3.31 + Math.random() * 0.035,
+        Math.sin(angle) * radius
+      );
+
+      nodule.scale.set(
+        0.065 + Math.random() * 0.045,
+        0.045 + Math.random() * 0.025,
+        0.065 + Math.random() * 0.045
+      );
+
+      nodule.castShadow = true;
+      sponge.add(nodule);
+    }
+
+    // ---------------------------------------------------------------------
+    // Central disc
+    // ---------------------------------------------------------------------
+
+    const disc = new THREE.Group();
+    disc.position.y = 3.39;
+    sponge.add(disc);
+
+    const discBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.54, 0.61, 0.22, 48),
+      discMaterial
+    );
+
+    discBody.castShadow = true;
+    discBody.receiveShadow = true;
+    disc.add(discBody);
+
+    const discTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.47, 0.52, 0.065, 48),
+      discMaterial
+    );
+
+    discTop.position.y = 0.125;
+    discTop.castShadow = true;
+    disc.add(discTop);
+
+    const discRim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.43, 0.035, 10, 64),
+      discMaterial
+    );
+
+    discRim.rotation.x = Math.PI / 2;
+    discRim.position.y = 0.17;
+    disc.add(discRim);
+
+    // Radial bumps give the central disc a brittle-star-like surface.
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2;
+      const bump = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035, 10, 7),
+        discMaterial
+      );
+
+      bump.position.set(
+        Math.cos(angle) * 0.34,
+        0.19,
+        Math.sin(angle) * 0.34
+      );
+
+      bump.scale.y = 0.55;
+      bump.castShadow = true;
+      disc.add(bump);
+    }
+
+    // ---------------------------------------------------------------------
+    // Tapered, jointed arm geometry
+    // ---------------------------------------------------------------------
+
+    function createTaperedTube(
+      curve,
+      radiusStart,
+      radiusEnd,
+      longitudinalSegments = 84,
+      radialSegments = 10
+    ) {
+      const frames = curve.computeFrenetFrames(
+        longitudinalSegments,
+        false
+      );
+
+      const positions = [];
+      const normals = [];
+      const uvs = [];
+      const indices = [];
+
+      for (let i = 0; i <= longitudinalSegments; i++) {
+        const t = i / longitudinalSegments;
+        const center = curve.getPointAt(t);
+        const normal = frames.normals[i];
+        const binormal = frames.binormals[i];
+
+        const radius = THREE.MathUtils.lerp(
+          radiusStart,
+          radiusEnd,
+          Math.pow(t, 0.72)
+        );
+
+        for (let j = 0; j <= radialSegments; j++) {
+          const v = (j / radialSegments) * Math.PI * 2;
+          const cosine = Math.cos(v);
+          const sine = Math.sin(v);
+
+          const radialNormal = new THREE.Vector3()
+            .copy(normal)
+            .multiplyScalar(cosine)
+            .addScaledVector(binormal, sine)
+            .normalize();
+
+          const vertex = center.clone().addScaledVector(
+            radialNormal,
+            radius
+          );
+
+          positions.push(vertex.x, vertex.y, vertex.z);
+          normals.push(
+            radialNormal.x,
+            radialNormal.y,
+            radialNormal.z
+          );
+
+          uvs.push(j / radialSegments, t);
+        }
+      }
+
+      for (let i = 0; i < longitudinalSegments; i++) {
+        for (let j = 0; j < radialSegments; j++) {
+          const a = i * (radialSegments + 1) + j;
+          const b = (i + 1) * (radialSegments + 1) + j;
+          const c = (i + 1) * (radialSegments + 1) + j + 1;
+          const d = i * (radialSegments + 1) + j + 1;
+
+          indices.push(a, b, d, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute(
+        "normal",
+        new THREE.Float32BufferAttribute(normals, 3)
+      );
+      geometry.setAttribute(
+        "uv",
+        new THREE.Float32BufferAttribute(uvs, 2)
+      );
+      geometry.setIndex(indices);
+      geometry.computeBoundingSphere();
+
+      return geometry;
+    }
+
+    const armJointGeometry = new THREE.SphereGeometry(1, 14, 10);
+    const upVector = new THREE.Vector3(0, 1, 0);
+    const setaeGeometry = new THREE.ConeGeometry(0.012, 0.11, 5);
+    const setaeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb5a986,
+      roughness: 1
+    });
+
+    const organism = new THREE.Group();
+    scene.add(organism);
+
+    const armDefinitions = [
+      { angle: 0.08, reach: 3.35, variation: 0.02 },
+      { angle: 1.20, reach: 3.65, variation: -0.04 },
+      { angle: 2.35, reach: 3.25, variation: 0.06 },
+      { angle: 3.52, reach: 3.80, variation: -0.02 },
+      { angle: 4.68, reach: 3.45, variation: 0.03 }
+    ];
+
+    function createArm(definition, index) {
+      const angle = definition.angle + definition.variation;
+      const reach = definition.reach;
+
+      const points = [
+        new THREE.Vector3(
+          Math.cos(angle) * 0.48,
+          3.59,
+          Math.sin(angle) * 0.48
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * 0.98,
+          3.57,
+          Math.sin(angle) * 0.98
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * 1.65,
+          3.47,
+          Math.sin(angle) * 1.65
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * reach * 0.7,
+          3.31,
+          Math.sin(angle) * reach * 0.7
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * reach * 0.9,
+          2.62,
+          Math.sin(angle) * reach * 0.9
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * reach,
+          1.62,
+          Math.sin(angle) * reach
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * reach * 0.94,
+          0.98,
+          Math.sin(angle) * reach * 0.94
+        ),
+
+        new THREE.Vector3(
+          Math.cos(angle) * reach * 0.78,
+          1.16,
+          Math.sin(angle) * reach * 0.78
+        )
+      ];
+
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "catmullrom",
+        0.5
+      );
+
+      const arm = new THREE.Mesh(
+        createTaperedTube(curve, 0.13, 0.018, 92, 12),
+        armMaterial
+      );
+
+      arm.castShadow = true;
+      arm.receiveShadow = true;
+      organism.add(arm);
+
+      // Visible joints emphasize the brittle-star segmentation.
+      for (let j = 1; j <= 10; j++) {
+        const t = j / 11;
+        const point = curve.getPointAt(t);
+        const radius = THREE.MathUtils.lerp(0.13, 0.019, Math.pow(t, 0.72));
+
+        const joint = new THREE.Mesh(
+          armJointGeometry,
+          jointMaterial
+        );
+
+        joint.position.copy(point);
+        joint.scale.set(
+          radius * 1.08,
+          radius * 1.08,
+          radius * 1.12
+        );
+
+        joint.castShadow = true;
+        organism.add(joint);
+      }
+
+      // Fine setae along each arm.
+      const setaeCount = 22;
+      const matrix = new THREE.Matrix4();
+      const quaternion = new THREE.Quaternion();
+      const position = new THREE.Vector3();
+      const scale = new THREE.Vector3();
+
+      for (let j = 0; j < setaeCount; j++) {
+        const t = 0.12 + Math.random() * 0.82;
+        const point = curve.getPointAt(t);
+
+        const radial = new THREE.Vector3(
+          Math.cos(angle),
+          0,
+          Math.sin(angle)
+        );
+
+        const direction = radial
+          .multiplyScalar(0.65 + Math.random() * 0.35)
+          .add(new THREE.Vector3(0, 0.35, 0))
+          .normalize();
+
+        position.copy(point).addScaledVector(direction, 0.025);
+
+        quaternion.setFromUnitVectors(
+          upVector,
+          direction
+        );
+
+        const length = 0.8 + Math.random() * 0.65;
+        scale.set(
+          1,
+          length,
+          1
+        );
+
+        matrix.compose(
+          position,
+          quaternion,
+          scale
+        );
+
+        setaeGeometry.instanceMatrix.setUsage(
+          THREE.DynamicDrawUsage
+        );
+
+        setaeGeometry.setMatrixAt(j, matrix);
+      }
+
+      setaeGeometry.instanceMatrix.needsUpdate = true;
+
+      const setae = new THREE.InstancedMesh(
+        setaeGeometry,
+        setaeMaterial,
+        setaeCount
+      );
+
+      setae.castShadow = true;
+      organism.add(setae);
+    }
+
+    armDefinitions.forEach(createArm);
+
+    // ---------------------------------------------------------------------
+    // Suspended particles and bubbles
+    // ---------------------------------------------------------------------
+
+    const bubbleCount = 42;
+    const bubblePositions = new Float32Array(bubbleCount * 3);
+    const bubbleSpeeds = new Float32Array(bubbleCount);
+
+    for (let i = 0; i < bubbleCount; i++) {
+      bubblePositions[i * 3] = (Math.random() - 0.5) * 14;
+      bubblePositions[i * 3 + 1] = Math.random() * 7;
+      bubblePositions[i * 3 + 2] = (Math.random() - 0.5) * 14;
+      bubbleSpeeds[i] = 0.06 + Math.random() * 0.13;
+    }
+
+    const bubbleGeometry = new THREE.BufferGeometry();
+    bubbleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(bubblePositions, 3)
+    );
+
+    const bubbleMaterial = new THREE.PointsMaterial({
+      color: 0xc4f4eb,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.38,
+      depthWrite: false,
+      sizeAttenuation: true
+    });
+
+    const bubbles = new THREE.Points(
+      bubbleGeometry,
+      bubbleMaterial
+    );
+
+    scene.add(bubbles);
+
+    // ---------------------------------------------------------------------
+    // Custom camera controls — no external controls addon
+    // ---------------------------------------------------------------------
+
+    const target = new THREE.Vector3(0, 1.75, 0);
+
+    const defaultView = {
+      radius: 8.8,
+      theta: 0.72,
+      phi: 1.16
+    };
+
+    const desired = { ...defaultView };
+    const current = { ...defaultView };
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+    let autoRotate = false;
+
+    function updateCamera(delta) {
+      const smoothing = 1 - Math.exp(-delta * 8);
+
+      current.radius = THREE.MathUtils.lerp(
+        current.radius,
+        desired.radius,
+        smoothing
+      );
+
+      current.theta = THREE.MathUtils.lerp(
+        current.theta,
+        desired.theta,
+        smoothing
+      );
+
+      current.phi = THREE.MathUtils.lerp(
+        current.phi,
+        desired.phi,
+        smoothing
+      );
+
+      const sinPhi = Math.sin(current.phi);
+
+      camera.position.set(
+        target.x +
+          current.radius * sinPhi * Math.sin(current.theta),
+
+        target.y + current.radius * Math.cos(current.phi),
+
+        target.z +
+          current.radius * sinPhi * Math.cos(current.theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      desired.radius = defaultView.radius;
+      desired.theta = defaultView.theta;
+      desired.phi = defaultView.phi;
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      desired.theta -= deltaX * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.005,
+        0.32,
+        Math.PI * 0.485
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+
+      if (
+        event.pointerId !== undefined &&
+        renderer.domElement.hasPointerCapture(event.pointerId)
+      ) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          14
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    const resetButton = document.getElementById("reset");
+    const rotateButton = document.getElementById("rotate");
+
+    resetButton.addEventListener("click", resetView);
+
+    rotateButton.addEventListener("click", () => {
+      autoRotate = !autoRotate;
+      rotateButton.classList.toggle("active", autoRotate);
+      rotateButton.textContent = autoRotate ? "Stop rotation" : "Auto rotate";
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 2)
+      );
+
+      renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+      );
+    });
+
+    let firstFrame = true;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      updateCamera(delta);
+
+      if (autoRotate) {
+        desired.theta += delta * 0.085;
+      }
+
+      // Animate the suspended particles.
+      const bubbleAttribute = bubbleGeometry.getAttribute("position");
+
+      for (let i = 0; i < bubbleCount; i++) {
+        let y =
+          bubbleAttribute.getY(i) + bubbleSpeeds[i] * delta;
+
+        if (y > 7.5) {
+          y = 0.15;
+        }
+
+        bubbleAttribute.setY(i, y);
+      }
+
+      bubbleAttribute.needsUpdate = true;
+
+      // A slow moving glint adds life to the sponge and floor.
+      cyanLight.position.x = -4.2 + Math.sin(elapsed * 0.22) * 1.4;
+      cyanLight.position.z = -3.5 + Math.cos(elapsed * 0.18) * 0.8;
+
+      renderer.render(scene, camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        loading.classList.add("hidden");
+
+        setTimeout(() => {
+          loading.remove();
+        }, 600);
+      }
+    }
+
+    animate();
+  </script>
+</body>
+</html>
+```

@@ -11,7 +11,7 @@ CUDA_LIB=${QC_CUDA_LIB:-/mnt/scratch/llama.cpp/b12242/cudart/cudart-llama-b12242
 export LD_LIBRARY_PATH="$BIN:$CUDA_LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export GPU_RUN_MEM=${GPU_RUN_MEM:-24G}
 UB=${QC_UBATCH:-2048}
-exec "$HOME/anime-pipeline/tools/gpu_run" --need 7000 --wait 120 \
+exec "$HOME/anime-pipeline/tools/gpu_run" --need 7000 --wait "${QC_GPU_WAIT:-120}" \
   "$BIN/llama-server" -m "$MODEL" --alias qwen35-3d-coder \
   -ngl 99 -fa on -ctk f16 -ctv f16 -c "${QC_CONTEXT:-65536}" -np 1 -b "$UB" -ub "$UB" \
   --spec-type "${QC_SPEC:-none}" --spec-draft-n-max "${QC_DRAFT_MAX:-2}" --spec-draft-p-min "${QC_DRAFT_PMIN:-0}" \

@@ -157,3 +157,75 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
   Gated DeltaNet state rollback after rejected drafts. Verdict: MTP rejected on quality, opt-in only; serve.sh default
   is Q5_K_M without speculation (77.5 tok/s, 1.28x). Fixing the rollback is the top lever (+31%, measured endpoints).
 - 16:58 GPU work done. Flint restarted on 8081 with its own serve.sh (health ok).
+
+## 2026-11-20: MTP correctness
+
+- 15:50 Upstream check (master 29b52d398 = b12597+3, 358 commits after b12242): no commit or issue fixes recurrent
+  rollback for speculation. Related only: PR #31669 (open) replaces GDN snapshot rollback with replay for speed/memory;
+  issue #31472 (open) is batch-shape numerics breaking temp-0 identity, rollback exonerated there. Rollback design read
+  in b12242: `n_rs_seq = n_max` snapshot groups per recurrent cell, GDN kernel writes the state after each of the last
+  K tokens (slot 0 newest), conv state stored as K overlapping windows, `seq_rm` sets a single-use `rs_idx` that
+  `s_copy()` consumes on the next graph. On paper the slot mapping is right for n=2.
+- 15:55 New tools: `tools/mtp_repro.py` (gen with per-token top-N logprobs; force = no-spec server re-scores a run's
+  own prefix [:k] by full prefill; compare), `tools/with_server.sh` (serve.sh on :8090 around a command).
+- 15:59-16:09 Session A, b12242 Q5_K_M, greedy, 3 prompts that looped under MTP (048/334/335), 6000 tokens
+  (`runs/mtprepro/A-b12242/`):
+
+  | run | first divergence from no-spec (gap there) | own logprob vs forced re-score: median / max abs diff | argmax disagrees |
+  |---|---|---|---|
+  | none 048 / 334 / 335 | (reference) | 0.0071/0.056, 0.0004/0.085, 0.0092/0.100 | 0/31 each |
+  | MTP n=2 048 / 334 / 335 | token 473 (0.002), 906 (0.104), 441 (0.043) | 0.0006/0.037, 0.0000/0.092, 0.0000/0.048 | 0/31 each |
+
+  Verdict: within 6k greedy tokens the MTP target state is exact to numerics: its logits match a clean prefill of
+  the same prefix as closely as no-spec decode does. Divergences are near-ties. No looping in any of the 6 runs.
+- 16:10-16:38 Session B, same 3 prompts, card sampling (T 0.6, top-p 0.95, top-k 20, min-p 0, seed 42), 12,000 tokens,
+  top-20 logprobs (`runs/mtprepro/B-b12242-T06/`). Two checks: sampler calibration (observed top-1 picks vs the count
+  T/top-k/top-p predict from the logged distribution) and the forced re-score every 500 tokens.
+
+  | run | top-1 picks obs/exp (z) | own logprob vs forced: median / max abs diff | loops (`loop_check`) |
+  |---|---|---|---|
+  | none 048 / 334 / 335 | 10091/10178 (-2.2), 10595/10660 (-1.9), 10287/10396 (-2.9) | 0.0013/0.047, 0.0004/0.222, 0.0007/0.046 | 0/3 |
+  | MTP n=2 048 / 334 / 335 | 10404/10464 (-1.6), 10089/10164 (-1.9), 9983/10082 (-2.5) | 0.0001/0.106, 0.0021/0.047, 0.0021/0.063 | 0/3 |
+
+  Verdict: through 12k sampled tokens (past the ~9k where the qualify loops began) MTP's target state still matches a
+  clean prefill, and the verifier samples exactly as calibrated as no-spec (same small negative z in both, a property
+  of the check). No state corruption and no sampler bias. MTP decode with logprobs: 75.7-81.0 vs 64.3-69.2 tok/s;
+  sampled acceptance 42-49% (greedy 46-73%). The GPU lock went to the other agent between the two servers once
+  (server gave up after the 120 s wait): serve.sh now takes `QC_GPU_WAIT` (default 120).
+- 16:39-17:14 Session C, qualify conditions (qualify.py `--scene-only`, chat endpoint, prompt cache on, server
+  default min-p 0.05, no seed, 24k cap), MTP n=2, the 4 prompts that looped before (`runs/mtprepro/C-qualify-mtp/`;
+  waited 24 min for the GPU lock first). 048: finished, 19,256 tokens, 102.8 tok/s, no loop (looped last time).
+  238: 24k cap, reasoning LOOP (zlib 0.023), 98.7 tok/s. 334: finished, 14,875 tokens, 107.2 tok/s, no loop (looped
+  last time). 335: interrupted mid-generation (pause, below). So far 1/3 loops vs 4/4 on the same prompts last time;
+  238 also loops without speculation (the Q5 render eval). Reading: the earlier 5/9 vs 0/8 split looks like
+  per-prompt loop variance more than an MTP defect, but the sample is small and this is not yet shown.
+
+### PAUSED 2026-11-20 17:14 (Inkling-2-Mini has GPU priority)
+- Stopped at a boundary: session C's client was stopped during scene 335 (that answer is lost; 048/238/334 files are
+  complete). Its server got SIGINT through `with_server.sh` and exited. The empty `qualify.json` moved aside to
+  `qualify.json.empty-interrupted`. All of my waiter loops are stopped. `gpu_run --status` showed the lock free at 17:14.
+- Done: upstream check (no fix on master 29b52d398; see 15:50). Master is built at
+  `/mnt/scratch/llama.cpp/mtpfix-29b52d398/bin` (llama-server and llama-bench, sm_86, not tested yet; run it with
+  `QC_BIN=/mnt/scratch/llama.cpp/mtpfix-29b52d398/bin QC_CUDA_LIB=/mnt/scratch/envs/llama-build-cuda/lib`). Session A
+  (greedy, 6k tokens) and session B (T 0.6, 12k tokens): MTP target state matches a clean prefill to numerics, and the
+  verifier is calibrated. No rollback corruption was found, so there is no patch and `patches/` doesn't exist.
+- Code read (b12242): the RS snapshot rollback, conv windows, `s_copy`, server accept/rollback, and
+  `sample_and_accept_n` all look correct for n=2. There are no checkpoints when draft <= n_rs_seq.
+- Mid-run: session C (above). Not done: the multi-seed loop-rate test that decides the question, the master build
+  test, the render and spec4 validation, and any default change. The defaults are unchanged: serve.sh still defaults
+  to QC_SPEC=none.
+- serve.sh: the only change is `--wait "${QC_GPU_WAIT:-120}"`, same default behaviour. It's kept because it's harmless
+  and lets long queued runs wait for the lock.
+- Resume (next command): the loop-rate test, MTP vs none on the hardest prompts with several seeds each. `--max 16000`
+  is enough, since loops start around 9k tokens. Server default min-p (-1) matches serve.sh/qualify. Split into batches
+  under 30 min:
+  ```
+  cd ~/Projects/3060-recipes/qwen35-3d-coder && S=runs/mtprepro/D-looprate && export QC_GPU_WAIT=1800
+  QC_SPEC=draft-mtp tools/with_server.sh $S/mtp-server.log -- python3 -I tools/mtp_repro.py gen --temp 0.6 --min-p -1 \
+    --n-probs 0 --max 16000 --ids scene-000238,scene-000335 --seeds 1,2,3 --out $S/mtp
+  tools/with_server.sh $S/none-server.log -- python3 -I tools/mtp_repro.py gen --temp 0.6 --min-p -1 \
+    --n-probs 0 --max 16000 --ids scene-000238,scene-000335 --seeds 1,2,3 --out $S/none
+  ```
+  Each run prints zlib, a LOOP flag and tok/s. (The `--seeds`/`--min-p` options were added just before the pause and
+  haven't run yet: smoke-test with `--max 64` first.) If the loop rates match, MTP goes back to the default after the
+  8-prompt render comparison and spec4 controls. If MTP loops clearly more, test master next.

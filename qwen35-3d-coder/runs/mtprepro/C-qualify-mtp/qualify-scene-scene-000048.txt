@@ -1,0 +1,1786 @@
+We need respond likely code HTML. Need infer ask build scene. Need provide self-contained HTML using only core module cdn. Need perhaps rich visually appealing bamboo-framed box kite. Need no addons. Need camera controls direct. We need craft full HTML. Could include UI, animation, procedural geometry. Need ensure only Three.js core import. "self-contained HTML scene" meaning one file. Need perhaps explain save as index.html. Need code.
+
+Need design: bamboo framed box kite, likely traditional Chinese box kite rectangular frame with diamond sail? "bamboo-framed box kite" means box kite rectangular prism frame, paper/silk panels, bamboo ribs. Build scene with warm studio, ground, wind particles? Need use Three.js.
+
+Need implement camera orbit controls manually, no OrbitControls addon. Pointer drag, wheel, touch. Use import from exact CDN. No other imports. Could use CSS.
+
+Need perhaps use instanced? But straightforward.
+
+Construct:
+- Scene background gradient? Three scene background Color; CSS radial.
+- Orthographic/perspective camera.
+- renderer antialias, shadows, tone mapping.
+- Kite group:
+  - outer rectangular frame: bamboo poles rectangular perimeter, maybe four sides with joints, cross braces.
+  - box structure: 4 vertical corner posts, top/bottom horizontal rails, side rails.
+  - paper envelope: perhaps translucent cream/salmon panels forming rectangular box. Need box kite recognizable. A rectangular prism with six translucent faces, bamboo frame edges. Could use BoxGeometry panels individually? Use MeshPhysicalMaterial transparent, opacity .28, side DoubleSide, roughness. But frame dominates.
+  - top sail? Traditional box kite can be rectangular frame with diamond cloth and vertical support. Yet "box kite" often rectangular framed kite with paper box. Let's make a rectangular prism "box kite" with six translucent ivory panels and bamboo frame. Add central diamond lattice? Maybe more visually rich: rectangular outer frame, 4 corner bamboo posts, upper and lower horizontal rails, side rails, diagonal cross braces on side faces. A central diamond sail? Hmm.
+
+Could create "bamboo-framed box kite" as traditional square box kite: rectangular frame, a diamond-shaped colored sail suspended inside, vertical bamboo spars. But phrase likely wants box kite. Let's make rectangular prism with translucent warm paper faces and bamboo ribs, plus a diamond-shaped red silk panel at center? Yet then not purely box.
+
+Maybe construct:
+- Outer rectangular frame 4.8 x 3.4 x 1.5.
+- Four corner bamboo uprights.
+- Top/bottom perimeter rails.
+- Vertical dividers on front/back into 2x2 panels.
+- Horizontal dividers top/bottom.
+- Thin bamboo ribs.
+- Six face panels: translucent parchment, slightly convex via custom geometry? Could use PlaneGeometry with vertices bulged. But box panels.
+- Add red/gold decorative diamond at center on front? Traditional Chinese box kites often have a diamond-shaped cloth sail in center, but "box kite" means frame.
+- Add tassel.
+- string from top left to upper right? A kite needs string. Thin line from kite top to invisible anchor? We can show taut line extending upward, maybe to top right. Kite floats slightly.
+- Animation sway group rotation and string endpoint maybe.
+- Wind particles? Use Points with small white circles, drifting.
+- Ground platform, bamboo forest? Scene focus.
+
+Need likely code only. Need ensure no external assets. Use canvas textures generated via Canvas2D? Self-contained. Could make paper panel with CanvasTexture subtle fibers and border. We can create canvas texture. But if using transparent panel, texture maybe.
+- Frame bamboo: cylinders oriented between points. Need helper cylinderBetween(a,b,r,mat) using CylinderGeometry(r,r,length,8), quaternion setFromUnitVectors(y, direction).
+- Joints: spheres or small cylinders.
+- frame outer rectangle x ±2.4, y ±1.7, z ±0.85.
+- vertical corner posts from bottom to top, maybe 1.9.
+- top/bottom horizontal x rails.
+- side horizontal z rails.
+- crossbars front/back x at y ±0.75, dividing.
+- side bars z at y ±0.75.
+- diagonals on side faces maybe bamboo.
+- central diamond? Could add front decorative lattice? But box kite frame itself.
+
+Maybe create a diamond sail at center front? Let's search mental image: "box kite" in children's toys is rectangular frame with diamond-shaped colored cloth. "Bamboo box kite" perhaps a square frame with a diamond sail. User asks "bamboo-framed box kite" maybe wants that. We should make unmistakable: rectangular bamboo frame enclosing a diamond-shaped colored sail. But "box kite" can be rectangular prism. Could combine: outer rectangular bamboo frame, translucent rectangular envelope, and a central diamond-shaped red panel. This is visually rich and recognizable.
+
+Could create:
+- rectangular outer frame in bamboo.
+- 4 vertical corner uprights.
+- top and bottom horizontal rails.
+- side rails.
+- central diamond sail on front face: diamond outline in bamboo (points ±0.85 x, ±0.6 y) and red silk triangular panels. But then front face has rectangular outer frame plus diamond.
+- back face maybe lattice.
+- Box depth with side panels.
+- Top maybe sail? Hmm.
+
+Let's make "bamboo-framed box kite" as a traditional rectangular box kite: full 3D translucent paper prism with bamboo ribs and a central diamond motif. Include a tassel.
+
+Need camera controls direct:
+state target, spherical radius theta phi. pointerdown, pointermove, pointerup, wheel. Damping.
+Touch pinch perhaps pointer map. Could implement simple.
+- camera position from spherical.
+- auto rotate slowly until interaction, pause.
+- buttons maybe UI: "Drag to orbit · Scroll to zoom", reset, wind toggle.
+- Responsive.
+
+Need ensure import only core. Use `import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';`
+No other imports.
+
+Need maybe use `renderer.outputColorSpace = THREE.SRGBColorSpace;`.
+Shadows.
+
+Need create paper material with canvas texture:
+canvas 256, fill #f2dfbd, random fibers, border. But if all faces same texture, UV okay.
+Could use MeshPhysicalMaterial map, transparent true, opacity .42, side DoubleSide, roughness .75, depthWrite false. Transmission maybe 0.15, thickness .2.
+But transparent sorting of six panels can be weird. Fine.
+Maybe colored side panels? Traditional box kite paper is translucent. Use warm ivory all faces. Add red center diamond decals? Could create diamond plane at front z=0.88, red material, with bamboo diamond frame. This makes visual focal.
+- Outer frame dimensions W=5, H=3.6, D=1.7.
+- Four corner posts.
+- Top/bottom perimeter.
+- Side rails.
+- Cross rails front/back.
+- Diagonal side braces.
+- Diamond front outline: points (-0.95,0.8,0.9), (0.95,0.8,0.9), (0.95,-0.8,0.9), (-0.95,-0.8,0.9) maybe. But outer frame already. Diamond can be decorative.
+- central small diamond red? Better large diamond sail front in red with bamboo border.
+- Back maybe a grid.
+
+Could also add top cloth? The box is paper prism.
+
+Need string: Line from top of kite to a point high right; dynamic endpoint? Kite group sway, string should remain taut connecting world-space anchor to kite top. Use BufferGeometry points updated each frame, LineBasicMaterial. Anchor maybe (7,6,0). Kite at (0,0,0), top corner? String from anchor to kite top. But line crosses. Add small line.
+- Kite group position y maybe 0.2, rotation z sin * .02, rotation x etc.
+- String endpoint local (0,1.9,0) transformed by group matrix. Each frame set line geometry positions [anchor, endpoint].
+- Anchor maybe (6,5.5,0). This line visible.
+- Add line to upper left maybe.
+
+Wind particles:
+Points maybe 120 small points around, animate x. Use PointsMaterial size .035 transparent.
+Could create sprites? Points enough.
+- drift left to right, wrap.
+- Add small translucent arcs? no.
+
+Ground:
+- plane with ShadowMaterial? Since background. Use MeshStandardMaterial beige.
+- circular platform maybe CylinderGeometry.
+- bamboo grove silhouettes? Could distract. Add stylized bamboo trees around background, low opacity. But scene is kite. Maybe a few bamboo planters at base.
+- Ground plane and circular rug.
+- backdrop maybe large plane? CSS background.
+
+Lighting:
+hemisphere, directional shadows, point warm.
+- Directional at (-4,7,5), shadow map 2048.
+- fill point.
+
+Materials:
+bamboo `MeshStandardMaterial({color:0xc88a35, roughness:.55, metalness:0})`; nodes via rings? Cylinder between with rings. Could add small torus? Torus orientation complex. We can add node bands as small cylinders? Use cylinderBetween and add sphere joints. Bamboo poles have segmented nodes. We can create each pole as segments with slight gaps, and joint spheres. For outer frame, use segmented bamboo:
+function makeBamboo(a,b, radius, segments=3):
+ cylinder each segment with tiny gap, alternating color; joint spheres at nodes.
+This adds detail.
+- `cylinderBetween` returns mesh.
+- For diagonals, segments 2.
+- Add end caps maybe.
+
+Frame:
+outer corners:
+A(-2.5,-1.8,-0.85), B(2.5,-1.8,-.85), C(2.5,1.8,-.85), D(-2.5,1.8,-.85), bottom front? Coordinate y.
+Actually z front = +0.85.
+Top corners.
+Posts at corners.
+Top rails along x at z ±.85, side rails along z at x ±2.5.
+Bottom same.
+Crossbars front/back at y ±0.75, x length.
+Side crossbars at y ±0.75, z length.
+Diagonals front/back in each side? Add X on front/back outer rectangle maybe would clutter. Could add cross braces on side faces (between corners) and central diamond.
+Maybe frame:
+- 4 posts
+- top/bottom outer perimeter
+- front/back crossbars
+- side crossbars
+- diagonals on left/right side between front/back at y ±.75? A side plane x constant, points (x, -0.75, -0.85) to (x,0.75,0.85) and reverse. This makes box structure.
+- top/bottom diagonal? no.
+- central front diamond outline.
+- central back maybe circular? no.
+
+Paper:
+- six PlaneGeometry panels with custom convex shape? We can make `roundedRectPanel`? Box kite paper should be flat. Use PlaneGeometry(width,height) oriented.
+  front at z=0.86, back z=-0.86, left x=-2.5, right x=2.5, top y=1.8, bottom y=-1.8.
+  PlaneGeometry default xy. Front normal +z, good. Back rotate y pi. Side left rotate y -pi/2; right +pi/2. Top rotate x -pi/2 (normal +y? Plane normal +z, rotate x -pi/2 => normal +y yes), bottom +pi/2.
+  But side panel dimensions: front W=5, H=3.6; side W=D=1.7, H=3.6; top W=5, H=1.7.
+  Use `makePanel(w,h,pos,rot)` with material.
+  Maybe paper has slight bulge using custom PlaneGeometry and modify z based on x,y? But orientation and normals. Could create shape with `PlaneGeometry` and displace z = 0.03*sin...; for side etc. Not needed.
+  Add subtle seam lines? frame does.
+- Red diamond front:
+  points maybe (-0.95,0.75,0.9), (0.95,0.75,0.9), (0.95,-0.75,0.9), (-0.95,-0.75,0.9). But that's square rotated, corners on top/bottom and sides. It will overlay. Create 4 triangular panels? A diamond shape with ShapeGeometry. Use `THREE.Shape` with points; ShapeGeometry lies xy, place z=0.91. Material red. Add inner smaller diamond gold? Bamboo frame outline.
+  Maybe center diamond is a colorful red sail, traditional.
+  Add vertical gold line? no.
+- Add a small square emblem at center? maybe gold disk.
+- Tassel at bottom center: bamboo cap, red/gold tassel using torus and cylinders.
+- top cap.
+
+Need maybe animate string endpoint and kite. Kite group includes all. String world line updated.
+- Kite group position x maybe sin * .12, y .2, rotation z etc.
+- Group rotation y slight.
+- String anchor perhaps (6,5.6,0.5). If kite rotates, endpoint.
+- Add line with `LineBasicMaterial({color:0x5a4936})`.
+- Add a small line from top to anchor.
+
+Potential issue line geometry positions dynamic. `line.geometry.setFromPoints` each frame allocates. Use BufferAttribute update.
+
+Camera:
+- initial spherical radius 9, theta 0.65, phi 1.15? Three spherical: x=r sin(phi) sin(theta), y=r cos(phi), z=r sin(phi) cos(theta). target (0,0,0). phi 1.15 gives y 3.7, z 7.5.
+- target maybe (0,0.2,0).
+- pointer drag modifies theta -= dx*0.005, phi -= dy*0.005 clamp .35,1.48.
+- wheel radius *= exp(deltaY*0.001), clamp 5,15.
+- auto rotate theta += dt*0.08 if not interacting.
+- damping current values to desired.
+- touch pointer events. Use pointer capture. Could support pinch with Map; but optional. User said camera controls directly, likely good.
+- reset button.
+- wind button toggles particles and string maybe.
+- UI top left title, bottom hint. Use CSS.
+- loading overlay? Since module loads. Add `<div id=loading>...`; hide after first render.
+- error handling? Since static import fails no catch. Could use dynamic import in try/catch but instruction use module. We can use `import * as THREE ...`; self-contained. Fine.
+- Maybe no external fonts, use system.
+
+Need provide code in final. User asked build, likely no need extensive explanation. We can say save as index.html. Need ensure all code valid.
+
+Let's design detailed code.
+
+HTML:
+&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt; meta...
+&lt;style&gt;
+:root...
+body margin0 overflow hidden background...
+#scene fixed inset0
+canvas display block
+.vignette pointer-events none...
+header...
+.controls...
+button...
+#hint...
+#loading...
+@media...
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=scene&gt;&lt;/div&gt;
+&lt;div class=vignette&gt;&lt;/div&gt;
+&lt;header&gt;...
+&lt;div class=controls&gt;&lt;button id=reset&gt;Reset view&lt;/button&gt;&lt;button id=wind&gt;Wind on&lt;/button&gt;&lt;/div&gt;
+&lt;div id=hint&gt;Drag to orbit · Scroll/pinch to zoom&lt;/div&gt;
+&lt;div id=loading&gt;...&lt;/div&gt;
+&lt;script type=module&gt;
+import...
+...
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+Need no addons.
+
+Three setup:
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize...
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+container.appendChild(renderer.domElement);
+
+Scene background perhaps `new THREE.Color(0xe9e1d2)` and fog `Fog(0xe9e1d2,12,28)`.
+Camera perspective 38, near .1 far 100.
+
+Lights:
+HemisphereLight(0xfff5df,0x78909a,2.0)
+DirectionalLight(0xffe7b0,4.0) at (-4,7,5), cast shadow. shadow camera bounds.
+Directional fill 0x9fc7ff 1.2 at (5,2,-4)
+Point maybe.
+
+Ground:
+plane 40x40 rotate -pi/2 y=-2.05, MeshStandardMaterial color 0xd9cbb4 roughness 1. receiveShadow.
+Circle platform cylinder radius 4.2 height .16 at y=-1.98, color 0xb8a78d. But kite bottom y -1.8, ground -2.05. Platform top -1.9. Kite floats .1 above.
+Maybe use `CircleGeometry(4.4,64)` horizontal.
+
+Backdrop bamboo trees:
+Could create 10 groups of 3-5 stems with cylinders, at positions around radius 6-12, y from ground. But camera can orbit and see. Adds environment. Use bamboo material darker. Each tree 3 stems, height 4-7, radius .08, with leaves? Could make simple bamboo stalks and cross nodes. But scene focus.
+Maybe create a "bamboo garden" with 8 clusters, each 4 thin cylinders and leaf ellipses. Could be visually rich. But code length. We can add 9 stylized bamboo trees in background, each group at random positions, stems. Need deterministic random maybe.
+However if camera orbits, trees provide context. Use `Math.random`.
+For each tree, 4 stalks cylinder between points, leaves as flattened spheres/cones. But self-contained.
+
+Wind particles:
+BufferGeometry positions count 180. PointsMaterial color 0xfff9e8 size .035 transparent opacity .55 depthWrite false. Each particle has base x, y,z, speed, phase. Update x += speed*dt; if > 10 wrap -10. Also y slight.
+Need points in scene not kite group.
+Could add a few larger transparent circles? PointsMaterial squares by default, but okay. Could use custom shader but not needed.
+Maybe `PointsMaterial({map: radialTexture})` requires canvas texture. Generate radial gradient texture. Use `CanvasTexture`. This makes round points.
+`radialTexture` 64 canvas.
+- Points around x -10 to 10, y -1 to 6, z -5 to 5.
+- wind on toggles visibility and animation.
+
+Kite group:
+`const kite = new THREE.Group(); scene.add(kite);`
+materials.
+Paper material:
+function createPaperTexture() {
+ canvas 256; ctx.fillStyle '#f3e5c4'; fill; random translucent lines; border maybe.
+ texture.colorSpace=SRGB;
+ texture.wrapS=RepeatWrapping; texture.repeat.set(1,1)
+}
+Use MeshPhysicalMaterial({
+ color:0xf4dfbd,
+ map: paperTexture,
+ transparent:true,
+ opacity:.48,
+ side:DoubleSide,
+ roughness:.82,
+ metalness:0,
+ depthWrite:false
+})
+Maybe if map and color multiply. Use white-ish.
+Each panel receiveShadow? transparent shadows weird. `castShadow=false`.
+Could use `MeshStandardMaterial` transparent.
+Need frame cast shadows.
+
+`addBamboo(a,b,r,segments=3)`:
+const dir = b-a, len.
+for i 0..segments-1:
+ t0=i/segments, t1=(i+1)/segments; gap=0.015 maybe.
+ a1 = a + dir*t0; b1...
+ mesh = new Mesh(new CylinderGeometry(r*0.92,r,len*0.965,10), bambooMat)
+ position midpoint; quaternion setFromUnitVectors(Y, dir normalized)
+ castShadow true.
+ joints at boundaries: sphere radius r*1.05, maybe 6 segments.
+But if each segment separate, joints. Could use `CylinderGeometry(r,r,len,10)` no taper.
+Add node rings: TorusGeometry(r*1.01, r*.12, 6, 12) oriented around cylinder. Torus default in XY with normal z. Need align normal to direction. `quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), dir)`, position midpoint. Add at boundaries maybe.
+Simpler add joint spheres and occasional torus.
+`addBamboo` returns.
+
+Frame coordinates:
+const W=5, H=3.6, D=1.7;
+const halfW=2.5, halfH=1.8, halfD=.85;
+corners:
+front? z=halfD.
+top y=halfH.
+`corner(x,y,z)`.
+posts at all four.
+outer top rails: x from -halfW to halfW at y=halfH, z=±halfD.
+bottom same.
+side rails at x=±halfW, y=0, z from -halfD to halfD.
+Cross front/back at y=±0.75, z=halfD: x from -halfW to halfW.
+Cross sides at x=±halfW, y=±.75, z from -halfD to halfD.
+Diagonals side faces:
+for x ±halfW, from (x,-.75,-.85) to (x,.75,.85), and reverse. This X on side.
+Maybe front outer frame already rectangle; add X across front? Traditional box kite has lattice. Could add a large X on front, but then central diamond overlay. It may look nice. Yet front face with crossbars and X could be busy. Box kite structure often has grid. Add front vertical/horizontal crossbars already. Add diagonal braces on side only.
+Top maybe a smaller X? no.
+Central diamond outline:
+points in xy at z=halfD+0.02:
+(-0.95,0.78), (0.95,0.78), (0.95,-0.78), (-0.95,-0.78)
+Need bamboo between. But this is a square rotated 45? Those points are top/bottom wide and left/right not present; actually polygon with top ±.95, bottom ±.95, left/right ±.78, so diamond. Add 4 segments.
+Maybe a red cloth plane shape same diamond:
+Shape points (-.78,-.78), (.78,-.78), (.78,.78), (-.78,.78) in shape coordinates? ShapeGeometry expects x,y; then rotate? Better create Shape with `moveTo(-.78,-.78)...` where shape's local y corresponds vertical. Then geometry in XY; place z. This is a square not diamond. For diamond shape, points (-.78,0),(.78,0),(.78,.78),(0,.78),(-.78,.78),(-.78,0). That's diamond. But bamboo outline points should correspond: (-.78,0),(.78,0),(.78,.78),(0,.78),(-.78,.78),(-.78,0). This is rotated square with vertices top/bottom/left/right. Good.
+Create ShapeGeometry, material red, place z=0.91.
+Add smaller gold diamond maybe shape scale .35, at z=.925. But a gold center emblem maybe.
+Bamboo outline radius .035.
+Maybe red panel has no transparent; opaque.
+Add border around outer front? frame itself.
+
+Side panels:
+front plane at (0,0,halfD+0.01) no rotation.
+back at z=-halfD-.01 rotate y=pi.
+left x=-halfW-.01, rotate y=-pi/2.
+right x=halfW+.01 rotate y=pi/2.
+top y=halfH+.01, rotate x=-pi/2.
+bottom y=-halfH-.01, rotate x=pi/2.
+Need dimensions:
+front/back W=5,H=3.6
+left/right W=D=1.7,H=3.6
+top/bottom W=5,H=1.7
+PlaneGeometry.
+Potential z-fighting with frame; offset .02.
+
+Panel UV texture repeats. Fine.
+
+Top cap and bottom cap:
+small bamboo disks? CylinderGeometry(.12,.12,.1,12) at top y 1.88, z 0 maybe, and bottom.
+Tassel:
+At bottom (0,-1.9,0), a red cap cylinder radius .18 height .12, gold thread cylinder, tassel cone or sphere. Add to kite.
+Maybe top has string attachment eye: torus at (0,1.9,0), rotation x=pi/2? Torus default in XY, normal z; to make ring vertical in x-y plane? String extends in x-y, so ring plane x-y, default okay. position top.
+String anchor world perhaps (6,5.2,0.4). Kite top eye transformed. But if group rotates, eye. Add line from eye to anchor.
+Could also add a second string? no.
+String line might be too long and dominate. Use line material 0x6f5a43.
+Anchor maybe (6,4.8,0). Kite at origin. This diagonal line.
+Add a small line from top eye to anchor. It should be taut.
+Maybe string should be attached to upper-left corner rather than top center. Use top eye.
+
+Kite sway:
+let sway=0;
+animate:
+const t=clock.getElapsedTime();
+if(windOn) {
+ kite.position.x = Math.sin(t*0.75)*0.13;
+ kite.position.y = Math.sin(t*0.6)*0.08;
+ kite.rotation.z = Math.sin(t*0.65)*0.025;
+ kite.rotation.x = Math.sin(t*0.5)*0.015;
+ kite.rotation.y = Math.sin(t*0.4)*0.035;
+} else {
+ kite.rotation.z=0...
+}
+Need string endpoint transformed:
+kite.updateMatrixWorld(true);
+const eyeLocal = new Vector3(0,1.9,0).applyMatrix4(kite.matrixWorld);
+geometry attributes position array [anchor.x,anchor.y,anchor.z, eye.x,...]
+Maybe line passes through scene. Fine.
+Wind particles update.
+
+Camera:
+let desired = {theta:0.72, phi:1.16, radius:9.2}; current same.
+`updateCamera(dt)` current.theta += (desired-current)* (1-exp(-dt*8)); etc.
+autoRotate = !dragging && !reducedMotion; desired.theta += dt*0.08.
+position:
+sinPhi*sinTheta etc.
+camera.lookAt(target).
+Need perhaps target y=.1.
+Pointer:
+let pointers = new Map();
+let lastPinch=0;
+on down: pointers.set(id,{x,y}); dragging true; canvas.setPointerCapture; lastInteraction=performance.now.
+on move: if pointers.size===1, dx; desired.theta -= dx*0.006; desired.phi = clamp(desired.phi - dy*0.005,0.35,1.48); if 2, compute distance and ratio; desired.radius *= lastPinch / dist.
+on up delete.
+wheel preventDefault desired.radius *= Math.exp(deltaY*0.001)
+Double click reset maybe.
+buttons.
+`canvas.style.touchAction='none'`.
+
+Need loading hide after renderer first frame. `requestAnimationFrame(()=> loading.classList.add('hidden'))`.
+Could catch WebGL? no.
+
+Need perhaps use `ResizeObserver` or window resize.
+
+Need create environment bamboo:
+Maybe add to scene:
+function createBambooTree(x,z,scale) {
+ group position.
+ for i 0..4:
+  angle = ...
+  height = 4+...
+  base = ...
+  top = ...
+  addBamboo(base, top, .055, 4)
+  add leaves at top using SphereGeometry(.25,8,4) scaled (1,.35,.6) and rotated.
+}
+But addBamboo uses world positions and group? If group local, okay.
+Place around radius 7-12, but camera orbit may see. Use dark green/brown.
+Could add 7 trees.
+However scene fog and ground.
+
+Maybe a large back wall? no.
+
+Need make title "Bamboo Box Kite" and subtitle "A wind-powered paper prism". UI.
+
+Could add wind indicator? no.
+
+Potential issue use `THREE.MathUtils.damp` available core yes, but use manual.
+
+Need code complete.
+
+Could add `renderer.setAnimationLoop(animate)` or requestAnimationFrame. Use `renderer.setAnimationLoop`.
+Clock.
+
+Need ensure `THREE.ShapeGeometry` shape orientation. `shape.moveTo` etc.
+Need create `makeShapeGeometry(points)` with `new THREE.Shape(points)`? `new THREE.Shape(points)` accepts Vector2 array and creates path? In Three, Shape constructor(points) calls setFromPoints, yes. But to be safe:
+const shape = new THREE.Shape();
+shape.moveTo(points[0][0], points[0][1]); ...
+const geom = new THREE.ShapeGeometry(shape);
+For diamond points ordered:
+[-.78,0], [.78,0], [.78,.78], [0,.78], [-.78,.78], [-.78,0].
+Place front z=0.91.
+Gold small diamond shape points [-.26,0],[.26,0],[.26,.26],[0,.26],[-.26,.26],[-.26,0].
+
+Need maybe red panel is opaque and catches light.
+
+Bamboo nodes:
+`addBamboo` with segments:
+- cylinder segments each length len/segments - gap.
+- orientation.
+- joint sphere at each boundary maybe `SphereGeometry(r*1.02,8,6)`.
+- node torus at each internal boundary: torus radius r*0.88? A torus around cylinder with major radius r*0.88 and tube r*.14. Need align torus normal to direction. `TorusGeometry(r*0.88, r*0.13, 6, 12)`. The torus's tube extends radial; orientation normal along cylinder. Position at boundary.
+But if each segment ends at boundary, ring around. Add.
+Need avoid too many geometries; okay maybe 100 objects.
+`addBamboo` called outer frame ~? posts 4*3 seg, rails 8*3, cross 4*2, side diag 4*2 = ~100 segments*3 = 300 cylinders + joints. Might be okay but draw calls high. Could optimize but not needed. Better segments=2 for most, 3 for posts. ~200 draw calls. Fine.
+Could merge? no BufferGeometryUtils addon not allowed. Keep.
+
+Frame rails:
+`addBamboo(new Vector3(-halfW, halfH, halfD), new Vector3(halfW,...), .095, 3)`
+side .09.
+posts .11.
+cross .065.
+diamond .035.
+Diagonal .04.
+
+Add joint spheres maybe 2 per segment.
+
+Bamboo material variation: create two materials `bambooMat` and `bambooLightMat`; add alternate.
+
+Need shadows on all bamboo. Transparent panels no cast.
+
+Ground platform and maybe shadow.
+
+Wind particles should be in scene and not affected by fog? PointsMaterial fog default true.
+
+Could add a soft shadow blob under kite? Directional shadow.
+
+Need use only core module. yes.
+
+Could perhaps include ARIA labels.
+
+Let's consider whether user expects actual artifact rather than code. We can only output code. We should not claim file created. Provide full HTML in code block.
+
+Let's ensure no import of addons. Only exact URL.
+
+Potential browser issue `renderer.domElement` event wheel. Good.
+Pointer map:
+const pointers = new Map();
+let lastPinchDistance=0;
+function pointerDistance() { const arr=[...pointers.values()]; if(arr.length&lt;2)return 0; return Math.hypot(...)}
+pointerdown:
+pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); canvas.setPointerCapture(e.pointerId); drag=true; lastInteraction=performance.now(); if size===2 lastPinchDistance=...
+pointermove:
+if !has return.
+const prev=pointers.get; update.
+if size===1:
+dx=e.clientX-prev.x etc; desired.theta -= dx*0.006; desired.phi = clamp(desired.phi - dy*0.005, .35,1.48)
+if size===2:
+dist; if lastPinchDistance &gt;0 desired.radius = clamp(desired.radius * lastPinchDistance/dist,5.5,15); lastPinchDistance=dist.
+pointerup:
+pointers.delete; if size&lt;2 lastPinchDistance=0; drag=pointers.size&gt;0.
+Need pointer capture release automatic.
+`pointercancel`.
+`lostpointercapture`.
+Wheel.
+Doubleclick reset.
+
+Auto rotation: if not dragging, desired.theta += dt*0.08. But if user has moved, still auto continues, okay.
+Maybe after interaction auto rotate resumes.
+
+Reset:
+desired.theta=0.72; desired.phi=1.16; desired.radius=9.2.
+Current smoothly returns.
+
+Wind button text update.
+
+`loading` fade.
+
+Could add `aria-live` no.
+
+Need maybe use CSS pseudo vignette.
+
+Let's write code carefully.
+
+Detailed environment:
+`const ground = new THREE.Mesh(new THREE.PlaneGeometry(60,60), groundMat); ground.rotation.x=-Math.PI/2; ground.position.y=-2.05; ground.receiveShadow=true;`
+Platform `CylinderGeometry(4.3,4.5,.14,64)` y=-1.96. top -1.89, kite bottom -1.8, nearly touching. Tassel extends below to -2.1, intersects platform. Set kite group y=.15 maybe. Then bottom -1.65, tassel -1.9, platform -1.89. Good. Kite position y=.12. String anchor.
+Maybe ground at -2.15, platform top -1.95. Kite y=.12.
+Set platform y=-1.98, height .14 top -1.91. tassel bottom local -2.1 + .12=-1.98, slight.
+Kite bottom panel -1.8+.12=-1.68, floats .23.
+
+Bamboo tree ground at -1.9.
+
+Add `scene.fog = new THREE.Fog(0xe8dfd0, 13, 30);`
+
+Bamboo tree function:
+for cluster:
+group position x,z.
+for j 0..4:
+angle = j/5*2pi + random
+base = new Vector3(cos*0.35,0,sin*.35)
+top = new Vector3(cos*(.4+...), height, sin*...)
+addBamboo(base,top,.045,3)
+leaves: 2 per stalk, `SphereGeometry(.2,8,4)`, scale set(1,.35,.55), position around top. But stalks vertical and leaves maybe.
+Material dark green.
+Place trees at angles around radius 7-11, but if all around, nice. Use 8.
+Could also add a low planter? no.
+
+Paper texture:
+`ctx.globalAlpha`; random. Need deterministic? Math.random okay.
+`texture.anisotropy = renderer.capabilities.getMaxAnisotropy()` maybe.
+Create radial texture similarly.
+
+Maybe use `CanvasTexture` in module.
+
+Need use `THREE.ColorManagement.enabled` default true.
+
+Potential issue `MeshPhysicalMaterial` with transparent and `opacity` plus map; okay.
+`side: THREE.DoubleSide`.
+For back panel, DoubleSide.
+
+Maybe add subtle panel seam lines via `EdgesGeometry`? no.
+
+Need maybe add a small gold center medallion.
+
+Need animate string:
+const anchor = new Vector3(6.2,4.6,0.2);
+const stringGeo = new BufferGeometry();
+const stringPos = new BufferAttribute(new Float32Array(6),3);
+stringGeo.setAttribute('position',stringPos);
+const stringLine = new THREE.Line(stringGeo,new LineBasicMaterial(...));
+scene.add.
+Each frame:
+kite.updateMatrixWorld(true);
+const eye = new Vector3(0,1.9,0).applyMatrix4(kite.matrixWorld);
+stringPos.setXYZ(0, anchor.x,...); setXYZ(3,eye.x,...)
+stringLine.geometry.attributes.position.needsUpdate=true;
+But line's local origin world because scene add. correct.
+Maybe string passes through UI, fine.
+Add a small line from top eye to anchor. It should be taut.
+Could add a second line from upper-left to anchor? Traditional kite has one string.
+
+Wind:
+`windOn` true. particles visible.
+When wind off, kite still gentle? maybe stop movement but string remains. Button "Wind off".
+`windBtn.addEventListener...`.
+
+Maybe add a "spin" no.
+
+Need maybe use `requestAnimationFrame` first frame hide loading. `renderer.setAnimationLoop(() => {...})`.
+
+Need code comments.
+
+Let's ensure no unsupported `THREE.MathUtils.clamp` yes.
+
+Let's consider exact CDN URL: `https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js` yes.
+
+No other external resources.
+
+Could include `crossorigin`? import handles.
+
+Need maybe output only code. Intro concise.
+
+Let's formulate final with full HTML. Ensure code not too huge? Desired oververbosity 5, but build requires. We can provide.
+
+Let's inspect code for geometry orientation:
+- front panel PlaneGeometry normal +z at z=+0.86. good.
+- back normal after rotate y pi = -z. good.
+- left plane rotate y=-pi/2: normal +z transforms to -x? Rotation y -90: x'=z? matrix: x'=cos x + sin z = -z, so normal (0,0,1)->(-1,0,0), good for left.
+- right +pi/2 -> +x.
+- top rotate x=-pi/2: normal +z -> (0,1,0) yes.
+- bottom +pi/2 -> -y.
+Panel positions:
+front (0,0,halfD+0.025)
+back (0,0,-halfD-.025)
+left(-halfW-.025,0,0)
+right(halfW+.025,0,0)
+top(0,halfH+.025,0)
+bottom(0,-halfH-.025,0)
+Frame at exact boundaries.
+
+Diamond panel at z=halfD+.055, outline at z=halfD+.07.
+Shape geometry lies z=0, place.
+Gold at z=halfD+.065.
+
+Bamboo diamond points:
+const dp = [
+new V3(-.78,0,halfD+.07),
+new V3(.78,0,...),
+new V3(.78,.78,...),
+new V3(0,.78,...),
+new V3(-.78,.78,...),
+new V3(-.78,0,...)
+]
+This is diamond but segment from (.78,0) to (.78,.78) vertical, from (.78,.78) to (0,.78) horizontal, etc. yes.
+Shape points same.
+
+Maybe red panel covers cross? no.
+
+Add a small square gold medallion? diamond enough.
+
+Frame front crossbars at y±.78, x full, so diamond's horizontal sides align with crossbars. Nice.
+
+Side X braces:
+for x of [-halfW,halfW], add bamboo from (x,-.78,-halfD) to (x,.78,halfD), and reverse. This X lies side plane.
+Top maybe add X? no.
+
+Crossbars front/back at y±.78. side crossbars at x±halfW y±.78.
+
+Posts:
+all four corners from y -1.8 to 1.8.
+Top rails at z ±.85, bottom.
+Side rails x ±2.5.
+This forms rectangular prism.
+
+Maybe add a top sail? The paper top panel makes box.
+
+Add a tiny red "tail" at bottom? Tassel.
+
+Bamboo joints:
+`addBamboo` with `jointMaterial` maybe.
+Need not add all joints if segments. Implement:
+for i=0;i<segments;i++:
+ t0=i/segments, t1=(i+1)/segments
+ start = a + dir*t0; end=...
+ length = len*(t1-t0)-gap
+ mesh.position midpoint
+ mesh.quaternion...
+ if i>0 add sphere at start.
+ for i<segments add torus at t=i/segments? At t=0 too.
+Torus orientation:
+const q = new Quaternion().setFromUnitVectors(new Vector3(0,0,1), dir.normalize());
+mesh.quaternion.copy(q)
+Torus normal z aligned dir.
+At each boundary, torus major radius = r*0.88, tube r*.12. But cylinder radius at boundary r; torus major .88r and tube .12r outer .99r, good.
+`new TorusGeometry(r*.88,r*.12,6,12)`.
+At 6 positions. Fine.
+
+`addBamboo` segment cylinder radius slightly smaller `r*.91` leaving gap, but joint sphere radius r*1.03.
+Use `bambooMats[(i+j)%2]`.
+
+Could use `mesh.castShadow=true`.
+
+For leaves, `SphereGeometry` scaled; set material.
+
+Potential issue all tree leaves same geometry and material but each mesh. okay.
+
+Maybe add `renderer.shadowMap.autoUpdate=true`.
+
+Need maybe set `camera.aspect`.
+
+Let's write final.
+=====CONTENT=====
+Save this as `index.html` and open it in a modern browser. It uses only the Three.js core ES module from cdnjs and includes procedural bamboo, translucent paper panels, a diamond emblem, wind particles, lighting, and custom camera controls.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bamboo-Framed Box Kite</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #33291f;
+      --muted: #74685c;
+      --paper: rgba(255, 248, 232, 0.82);
+      --line: rgba(91, 69, 43, 0.18);
+      --accent: #b84e36;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #e8dfd0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--ink);
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 48%, rgba(83, 61, 39, 0.08) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 30%);
+    }
+
+    .title-card {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      width: min(390px, calc(100vw - 40px));
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow: 0 18px 50px rgba(83, 61, 39, 0.12);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.65rem, 4vw, 2.45rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      top: clamp(20px, 4vw, 42px);
+      right: clamp(20px, 4vw, 42px);
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 15px;
+      background: rgba(255, 248, 232, 0.82);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(83, 61, 39, 0.09);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition:
+        transform 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 252, 240, 0.96);
+      box-shadow: 0 12px 30px rgba(83, 61, 39, 0.14);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .hint {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 248, 232, 0.72);
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      background: #e8dfd0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease, visibility 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 650px) {
+      .title-card {
+        padding: 16px 18px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        top: auto;
+        right: 18px;
+        bottom: 66px;
+        flex-direction: column;
+      }
+
+      button {
+        padding: 9px 12px;
+        font-size: 0.72rem;
+      }
+
+      .hint {
+        bottom: 18px;
+        font-size: 0.68rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="scene" aria-label="Interactive three-dimensional bamboo box kite"></main>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <section class="title-card">
+    <p class="eyebrow">Wind-powered craft</p>
+    <h1>Bamboo Box Kite</h1>
+    <p class="subtitle">
+      A translucent paper prism with articulated bamboo ribs, a red diamond emblem,
+      and a delicate silk tassel.
+    </p>
+  </section>
+
+  <nav class="controls" aria-label="Scene controls">
+    <button id="reset" type="button">Reset view</button>
+    <button id="wind" type="button" aria-pressed="true">Wind on</button>
+  </nav>
+
+  <div class="hint">Drag to orbit · Scroll or pinch to zoom · Double-click to reset</div>
+  <div id="loading">Preparing the kite garden…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+    const windButton = document.getElementById("wind");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe8dfd0);
+    scene.fog = new THREE.Fog(0xe8dfd0, 13, 30);
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 0.15, 0);
+    const initialView = {
+      theta: 0.68,
+      phi: 1.16,
+      radius: 9.2
+    };
+
+    const desiredView = { ...initialView };
+    const currentView = { ...initialView };
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xfff4dc, 0x78909a, 2.1));
+
+    const sun = new THREE.DirectionalLight(0xffe4af, 3.7);
+    sun.position.set(-4.5, 7.5, 5.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -7;
+    sun.shadow.camera.right = 7;
+    sun.shadow.camera.top = 7;
+    sun.shadow.camera.bottom = -7;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 22;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xaacfff, 1.15);
+    fill.position.set(5, 2.5, -4);
+    scene.add(fill);
+
+    const warmGlow = new THREE.PointLight(0xffb86f, 18, 12, 2);
+    warmGlow.position.set(-3, 1, 3);
+    scene.add(warmGlow);
+
+    // ---------------------------------------------------------------------
+    // Procedural textures
+    // ---------------------------------------------------------------------
+
+    function makePaperTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+      const context = canvas.getContext("2d");
+
+      context.fillStyle = "#f3e4c3";
+      context.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 1500; i++) {
+        const x = Math.random() * 256;
+        const y = Math.random() * 256;
+        const length = 3 + Math.random() * 13;
+        const angle = (Math.random() - 0.5) * 0.25;
+
+        context.strokeStyle = `rgba(120, 82, 38, ${0.015 + Math.random() * 0.035})`;
+        context.lineWidth = 0.5 + Math.random() * 0.8;
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(
+          x + Math.cos(angle) * length,
+          y + Math.sin(angle) * length
+        );
+        context.stroke();
+      }
+
+      const gradient = context.createRadialGradient(
+        128,
+        128,
+        10,
+        128,
+        128,
+        180
+      );
+      gradient.addColorStop(0, "rgba(255,255,255,0.28)");
+      gradient.addColorStop(1, "rgba(110,70,30,0.05)");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 256, 256);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeRadialTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 64;
+      const context = canvas.getContext("2d");
+
+      const gradient = context.createRadialGradient(
+        32,
+        32,
+        1,
+        32,
+        32,
+        31
+      );
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(0.25, "rgba(255,255,255,0.75)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 64, 64);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const paperTexture = makePaperTexture();
+    const radialTexture = makeRadialTexture();
+
+    // ---------------------------------------------------------------------
+    // Materials
+    // ---------------------------------------------------------------------
+
+    const bambooMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0xc98735,
+        roughness: 0.58,
+        metalness: 0
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xe0a652,
+        roughness: 0.52,
+        metalness: 0
+      })
+    ];
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8f5423,
+      roughness: 0.68
+    });
+
+    const paperMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf5e3bf,
+      map: paperTexture,
+      transparent: true,
+      opacity: 0.48,
+      side: THREE.DoubleSide,
+      roughness: 0.82,
+      metalness: 0,
+      depthWrite: false
+    });
+
+    const redSilkMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb94735,
+      roughness: 0.62,
+      metalness: 0
+    });
+
+    const goldMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd5a84b,
+      roughness: 0.38,
+      metalness: 0.25
+    });
+
+    // ---------------------------------------------------------------------
+    // Bamboo construction helper
+    // ---------------------------------------------------------------------
+
+    const up = new THREE.Vector3(0, 1, 0);
+    const forward = new THREE.Vector3(0, 0, 1);
+
+    function addBamboo(start, end, radius, segments = 2) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+      const normalizedDirection = direction.clone().normalize();
+
+      for (let i = 0; i < segments; i++) {
+        const t0 = i / segments;
+        const t1 = (i + 1) / segments;
+        const gap = 0.012;
+
+        const segmentStart = start.clone().lerp(end, t0);
+        const segmentEnd = start.clone().lerp(end, t1);
+        const segmentLength = length * (t1 - t0) - gap;
+
+        const midpoint = segmentStart.clone().lerp(segmentEnd, 0.5);
+
+        const segment = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            radius * 0.91,
+            radius * 0.91,
+            segmentLength,
+            10
+          ),
+          bambooMaterials[(i + Math.floor((segments / 2))) % 2]
+        );
+
+        segment.position.copy(midpoint);
+        segment.quaternion.setFromUnitVectors(up, normalizedDirection);
+        segment.castShadow = true;
+        segment.receiveShadow = true;
+        scene.add(segment);
+
+        if (i > 0) {
+          const joint = new THREE.Mesh(
+            new THREE.SphereGeometry(radius * 1.035, 8, 6),
+            jointMaterial
+          );
+          joint.position.copy(segmentStart);
+          joint.castShadow = true;
+          scene.add(joint);
+        }
+
+        const node = new THREE.Mesh(
+          new THREE.TorusGeometry(radius * 0.88, radius * 0.12, 6, 12),
+          jointMaterial
+        );
+        node.position.copy(segmentStart);
+        node.quaternion.setFromUnitVectors(forward, normalizedDirection);
+        node.castShadow = true;
+        scene.add(node);
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // Ground and bamboo garden
+    // ---------------------------------------------------------------------
+
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd8c9af,
+      roughness: 1
+    });
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(60, 60),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -2.15;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const platform = new THREE.Mesh(
+      new THREE.CylinderGeometry(4.35, 4.55, 0.14, 72),
+      new THREE.MeshStandardMaterial({
+        color: 0xb9a78e,
+        roughness: 0.94
+      })
+    );
+    platform.position.y = -1.98;
+    platform.receiveShadow = true;
+    platform.castShadow = true;
+    scene.add(platform);
+
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0x667f55,
+      roughness: 0.9
+    });
+
+    const bambooTreeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8b6738,
+      roughness: 0.75
+    });
+
+    function createBambooTree(x, z, scale = 1) {
+      const tree = new THREE.Group();
+      tree.position.set(x, -1.9, z);
+      tree.scale.setScalar(scale);
+      scene.add(tree);
+
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 + Math.random() * 0.35;
+        const radius = 0.25 + Math.random() * 0.45;
+        const height = 3.8 + Math.random() * 2.8;
+
+        const base = new THREE.Vector3(
+          Math.cos(angle) * radius,
+          0,
+          Math.sin(angle) * radius
+        );
+
+        const top = new THREE.Vector3(
+          Math.cos(angle) * (radius + 0.25),
+          height,
+          Math.sin(angle) * (radius + 0.25)
+        );
+
+        addBamboo(base, top, 0.055, 3);
+
+        for (let leafIndex = 0; leafIndex < 2; leafIndex++) {
+          const leaf = new THREE.Mesh(
+            new THREE.SphereGeometry(0.22, 8, 4),
+            leafMaterial
+          );
+          leaf.position.copy(top);
+          leaf.position.y -= 0.18;
+          leaf.scale.set(1.2, 0.35, 0.65);
+          leaf.rotation.z = Math.cos(angle) * 0.4;
+          leaf.rotation.x = Math.sin(angle) * 0.4;
+          leaf.castShadow = true;
+          tree.add(leaf);
+        }
+      }
+    }
+
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2 + Math.random() * 0.2;
+      const radius = 7.2 + Math.random() * 4.5;
+      createBambooTree(
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        0.75 + Math.random() * 0.55
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // Box kite
+    // ---------------------------------------------------------------------
+
+    const kite = new THREE.Group();
+    kite.position.y = 0.12;
+    scene.add(kite);
+
+    const width = 5;
+    const height = 3.6;
+    const depth = 1.7;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+    const halfDepth = depth / 2;
+
+    const cornerPoints = [
+      new THREE.Vector3(-halfWidth, -halfHeight, halfDepth),
+      new THREE.Vector3(halfWidth, -halfHeight, halfDepth),
+      new THREE.Vector3(halfWidth, halfHeight, halfDepth),
+      new THREE.Vector3(-halfWidth, halfHeight, halfDepth)
+    ];
+
+    // Four vertical corner posts.
+    for (const point of cornerPoints) {
+      addBamboo(
+        new THREE.Vector3(point.x, -halfHeight, point.z),
+        new THREE.Vector3(point.x, halfHeight, point.z),
+        0.105,
+        3
+      );
+    }
+
+    // Top and bottom perimeter rails.
+    for (const y of [-halfHeight, halfHeight]) {
+      for (const z of [-halfDepth, halfDepth]) {
+        addBamboo(
+          new THREE.Vector3(-halfWidth, y, z),
+          new THREE.Vector3(halfWidth, y, z),
+          0.09,
+          3
+        );
+      }
+    }
+
+    // Side rails.
+    for (const x of [-halfWidth, halfWidth]) {
+      addBamboo(
+        new THREE.Vector3(x, 0, -halfDepth),
+        new THREE.Vector3(x, 0, halfDepth),
+        0.09,
+        3
+      );
+    }
+
+    // Front and back crossbars.
+    for (const z of [-halfDepth, halfDepth]) {
+      for (const y of [-0.78, 0.78]) {
+        addBamboo(
+          new THREE.Vector3(-halfWidth, y, z),
+          new THREE.Vector3(halfWidth, y, z),
+          0.062,
+          2
+        );
+      }
+    }
+
+    // Side crossbars.
+    for (const x of [-halfWidth, halfWidth]) {
+      for (const y of [-0.78, 0.78]) {
+        addBamboo(
+          new THREE.Vector3(x, y, -halfDepth),
+          new THREE.Vector3(x, y, halfDepth),
+          0.062,
+          2
+        );
+      }
+    }
+
+    // Diagonal braces on the two side faces.
+    for (const x of [-halfWidth, halfWidth]) {
+      addBamboo(
+        new THREE.Vector3(x, -0.78, -halfDepth),
+        new THREE.Vector3(x, 0.78, halfDepth),
+        0.042,
+        2
+      );
+      addBamboo(
+        new THREE.Vector3(x, 0.78, -halfDepth),
+        new THREE.Vector3(x, -0.78, halfDepth),
+        0.042,
+        2
+      );
+    }
+
+    // Six slightly convex-looking paper panels.
+    function addPanel(width, height, position, rotation) {
+      const panel = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, height),
+        paperMaterial
+      );
+      panel.position.copy(position);
+      panel.rotation.copy(rotation);
+      panel.renderOrder = 2;
+      kite.add(panel);
+    }
+
+    addPanel(width, height, new THREE.Vector3(0, 0, halfDepth + 0.025), new THREE.Euler());
+    addPanel(
+      width,
+      height,
+      new THREE.Vector3(0, 0, -halfDepth - 0.025),
+      new THREE.Euler(0, Math.PI, 0)
+    );
+    addPanel(
+      depth,
+      height,
+      new THREE.Vector3(-halfWidth - 0.025, 0, 0),
+      new THREE.Euler(0, -Math.PI / 2, 0)
+    );
+    addPanel(
+      depth,
+      height,
+      new THREE.Vector3(halfWidth + 0.025, 0, 0),
+      new THREE.Euler(0, Math.PI / 2, 0)
+    );
+    addPanel(
+      width,
+      depth,
+      new THREE.Vector3(0, halfHeight + 0.025, 0),
+      new THREE.Euler(-Math.PI / 2, 0, 0)
+    );
+    addPanel(
+      width,
+      depth,
+      new THREE.Vector3(0, -halfHeight - 0.025, 0),
+      new THREE.Euler(Math.PI / 2, 0, 0)
+    );
+
+    // Red diamond emblem on the front.
+    const diamondPoints = [
+      new THREE.Vector2(-0.78, 0),
+      new THREE.Vector2(0.78, 0),
+      new THREE.Vector2(0.78, 0.78),
+      new THREE.Vector2(0, 0.78),
+      new THREE.Vector2(-0.78, 0.78),
+      new THREE.Vector2(-0.78, 0)
+    ];
+
+    const emblemShape = new THREE.Shape();
+    emblemShape.moveTo(diamondPoints[0].x, diamondPoints[0].y);
+    for (let i = 1; i < diamondPoints.length; i++) {
+      emblemShape.lineTo(diamondPoints[i].x, diamondPoints[i].y);
+    }
+    emblemShape.closePath();
+
+    const emblem = new THREE.Mesh(
+      new THREE.ShapeGeometry(emblemShape),
+      redSilkMaterial
+    );
+    emblem.position.z = halfDepth + 0.052;
+    kite.add(emblem);
+
+    const smallEmblemShape = new THREE.Shape();
+    smallEmblemShape.moveTo(-0.26, 0);
+    smallEmblemShape.lineTo(0.26, 0);
+    smallEmblemShape.lineTo(0.26, 0.26);
+    smallEmblemShape.lineTo(0, 0.26);
+    smallEmblemShape.lineTo(-0.26, 0.26);
+    smallEmblemShape.lineTo(-0.26, 0);
+    smallEmblemShape.closePath();
+
+    const smallEmblem = new THREE.Mesh(
+      new THREE.ShapeGeometry(smallEmblemShape),
+      goldMaterial
+    );
+    smallEmblem.position.z = halfDepth + 0.058;
+    kite.add(smallEmblem);
+
+    // Bamboo outline for the diamond emblem.
+    const emblemOutline = [
+      new THREE.Vector3(-0.78, 0, halfDepth + 0.075),
+      new THREE.Vector3(0.78, 0, halfDepth + 0.075),
+      new THREE.Vector3(0.78, 0.78, halfDepth + 0.075),
+      new THREE.Vector3(0, 0.78, halfDepth + 0.075),
+      new THREE.Vector3(-0.78, 0.78, halfDepth + 0.075),
+      new THREE.Vector3(-0.78, 0, halfDepth + 0.075)
+    ];
+
+    for (let i = 0; i < emblemOutline.length - 1; i++) {
+      addBamboo(
+        emblemOutline[i],
+        emblemOutline[i + 1],
+        0.034,
+        2
+      );
+    }
+
+    // Top cap, attachment eye, and tassel.
+    const topCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.18, 0.1, 12),
+      bambooMaterials[1]
+    );
+    topCap.position.set(0, halfHeight + 0.075, 0);
+    topCap.castShadow = true;
+    kite.add(topCap);
+
+    const attachmentEye = new THREE.Mesh(
+      new THREE.TorusGeometry(0.105, 0.025, 8, 18),
+      goldMaterial
+    );
+    attachmentEye.position.set(0, halfHeight + 0.13, 0);
+    kite.add(attachmentEye);
+
+    const tasselCap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.17, 0.13, 0.11, 12),
+      redSilkMaterial
+    );
+    tasselCap.position.y = -halfHeight - 0.09;
+    kite.add(tasselCap);
+
+    const tasselThread = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.035, 0.24, 8),
+      goldMaterial
+    );
+    tasselThread.position.y = -halfHeight - 0.2;
+    kite.add(tasselThread);
+
+    const tassel = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 12, 8),
+      redSilkMaterial
+    );
+    tassel.scale.y = 1.7;
+    tassel.position.y = -halfHeight - 0.34;
+    tassel.castShadow = true;
+    kite.add(tassel);
+
+    // ---------------------------------------------------------------------
+    // Kite string
+    // ---------------------------------------------------------------------
+
+    const anchor = new THREE.Vector3(6.2, 4.6, 0.25);
+    const stringGeometry = new THREE.BufferGeometry();
+    const stringPositions = new THREE.BufferAttribute(
+      new Float32Array(6),
+      3
+    );
+    stringGeometry.setAttribute("position", stringPositions);
+
+    const string = new THREE.Line(
+      stringGeometry,
+      new THREE.LineBasicMaterial({ color: 0x65513d })
+    );
+    scene.add(string);
+
+    // ---------------------------------------------------------------------
+    // Wind particles
+    // ---------------------------------------------------------------------
+
+    const particleCount = 180;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleData = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      particleData.push({
+        x: -10 + Math.random() * 20,
+        y: -1.5 + Math.random() * 7,
+        z: -5 + Math.random() * 10,
+        speed: 0.18 + Math.random() * 0.38,
+        phase: Math.random() * Math.PI * 2
+      });
+
+      particlePositions[i * 3] = particleData[i].x;
+      particlePositions[i * 3 + 1] = particleData[i].y;
+      particlePositions[i * 3 + 2] = particleData[i].z;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xfff9e8,
+        size: 0.075,
+        map: radialTexture,
+        transparent: true,
+        opacity: 0.62,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+    scene.add(particles);
+
+    // ---------------------------------------------------------------------
+    // Custom orbit controls
+    // ---------------------------------------------------------------------
+
+    const canvas = renderer.domElement;
+    const pointers = new Map();
+    let lastPinchDistance = 0;
+    let dragging = false;
+    let lastInteraction = performance.now();
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      canvas.setPointerCapture(event.pointerId);
+      dragging = true;
+      lastInteraction = performance.now();
+
+      if (pointers.size === 2) {
+        lastPinchDistance = pointerDistance();
+      }
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      const previous = pointers.get(event.pointerId);
+      if (!previous) return;
+
+      const dx = event.clientX - previous.x;
+      const dy = event.clientY - previous.y;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        desiredView.theta -= dx * 0.006;
+        desiredView.phi = THREE.MathUtils.clamp(
+          desiredView.phi - dy * 0.005,
+          0.35,
+          1.48
+        );
+      } else if (pointers.size === 2) {
+        const distance = pointerDistance();
+
+        if (lastPinchDistance > 0 && distance > 0) {
+          desiredView.radius = THREE.MathUtils.clamp(
+            desiredView.radius * (lastPinchDistance / distance),
+            5.4,
+            15
+          );
+        }
+
+        lastPinchDistance = distance;
+      }
+
+      lastInteraction = performance.now();
+    });
+
+    function endPointer(event) {
+      pointers.delete(event.pointerId);
+      dragging = pointers.size > 0;
+      lastPinchDistance = 0;
+      lastInteraction = performance.now();
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("lostpointercapture", endPointer);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desiredView.radius = THREE.MathUtils.clamp(
+          desiredView.radius * Math.exp(event.deltaY * 0.001),
+          5.4,
+          15
+        );
+        lastInteraction = performance.now();
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      desiredView.theta = initialView.theta;
+      desiredView.phi = initialView.phi;
+      desiredView.radius = initialView.radius;
+      lastInteraction = performance.now();
+    }
+
+    canvas.addEventListener("dblclick", resetView);
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    let windOn = true;
+    windButton.addEventListener("click", () => {
+      windOn = !windOn;
+      windButton.textContent = windOn ? "Wind on" : "Wind off";
+      windButton.setAttribute("aria-pressed", String(windOn));
+    });
+
+    // ---------------------------------------------------------------------
+    // Animation
+    // ---------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const eyePosition = new THREE.Vector3();
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+
+      // Smooth camera movement.
+      const cameraEase = 1 - Math.exp(-delta * 8);
+
+      currentView.theta +=
+        (desiredView.theta - currentView.theta) * cameraEase;
+      currentView.phi +=
+        (desiredView.phi - currentView.phi) * cameraEase;
+      currentView.radius +=
+        (desiredView.radius - currentView.radius) * cameraEase;
+
+      if (!dragging && !reducedMotion) {
+        desiredView.theta += delta * 0.075;
+      }
+
+      const sinPhi = Math.sin(currentView.phi);
+
+      camera.position.set(
+        cameraTarget.x +
+          currentView.radius * sinPhi * Math.sin(currentView.theta),
+        cameraTarget.y + currentView.radius * Math.cos(currentView.phi),
+        cameraTarget.z +
+          currentView.radius * sinPhi * Math.cos(currentView.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+
+      // Gentle kite motion driven by the wind.
+      if (windOn) {
+        kite.position.x = Math.sin(elapsed * 0.72) * 0.13;
+        kite.position.y = 0.12 + Math.sin(elapsed * 0.58) * 0.075;
+        kite.rotation.z = Math.sin(elapsed * 0.64) * 0.025;
+        kite.rotation.x = Math.sin(elapsed * 0.48) * 0.014;
+        kite.rotation.y = Math.sin(elapsed * 0.36) * 0.035;
+      } else {
+        kite.position.set(0, 0.12, 0);
+        kite.rotation.set(0, 0, 0);
+      }
+
+      kite.updateMatrixWorld(true);
+      eyePosition.set(0, 1.93, 0).applyMatrix4(kite.matrixWorld);
+
+      stringPositions.setXYZ(
+        0,
+        anchor.x,
+        anchor.y,
+        anchor.z
+      );
+      stringPositions.setXYZ(
+        3,
+        eyePosition.x,
+        eyePosition.y,
+        eyePosition.z
+      );
+      stringPositions.needsUpdate = true;
+
+      // Drifting wind particles.
+      if (windOn) {
+        const positions = particleGeometry.attributes.position.array;
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = particleData[i];
+          positions[i * 3] += particle.speed * delta;
+
+          if (positions[i * 3] > 11) {
+            positions[i * 3] = -11;
+          }
+
+          positions[i * 3 + 1] +=
+            Math.sin(elapsed * 0.8 + particle.phase) * delta * 0.025;
+        }
+
+        particleGeometry.attributes.position.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+    });
+  </script>
+</body>
+</html>
+```
