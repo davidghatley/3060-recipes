@@ -17,18 +17,18 @@ That one command:
 
 `./render.sh stills` does steps 1, 2 and 4 only (seconds instead of minutes). The video takes about 3 minutes per theme.
 
-## Explainer (54 s, for sharing in a community)
+## Explainer (30 s, for sharing in a community)
 
 ```sh
 cd inkling-2-mini/promo && ./render.sh explainer
 ```
 
-Renders `ExplainerLight` / `ExplainerDark` (`src/Explainer.tsx`) to `out/video/inkling-explainer-{light,dark}-16x9.mp4` (1920×1080, 30 fps, crf 20) and `-music` versions (with its own bed, faded over the last 2 s), plus review frames `out/stills/explainer-*.png`, then lints them.
-Eight plates: what it is, mixture of experts, the loop, CyberBench, coding, documents and images, on a 12 GB card, what is next; then the dh card.
+Renders `ExplainerLight` / `ExplainerDark` (`src/Explainer.tsx`) to `out/video/inkling-explainer-{light,dark}-16x9.mp4` (1920×1080, 30 fps, crf 20) and `-music` versions with the 30 s promo bed (`public/audio/bed.m4a`, copied in unchanged), plus review frames `out/stills/explainer-*.png`, then lints them.
+Four plates: what it is (0–4 s), the loop (4–12.5 s), benchmarks (12.5–21.5 s: CyberBench as the hero, the six model card scores as a grid against Qwen3.8-27B and Gemma 4 31B), what is next (21.5–26 s); then the dh card (26–30 s). The cuts sit on the bed's beats (117.5 BPM); the music stops at 23.86 s, as in the 30 s promo.
 Model facts and benchmark scores live in `src/explainer.json` with their sources (Thinking Machines model card, Vals AI); every score plate says they are reported numbers, not ours.
-Pacing lives in `src/explainer.json`: `t` holds each plate's start, and `k` scales the entry delays inside a plate (0.6 in v2, which is about 25 % shorter than the 72 s v1; v1 outputs are in `out/v1/`).
+Pacing lives in `src/explainer.json`: `t` holds each plate's start, `k` scales the entry delays inside a plate (0.4 in v3), and `k_loop` keeps the loop plate at its v2 pacing (0.6). Earlier versions are in `out/v1/` (72 s) and `out/v2/` (54 s, with the explainer bed below).
 
-**Music bed** `public/audio/explainer-bed.m4a` (55.0 s; the promo's `bed.m4a` is separate and unchanged). Made with tasty_tunez (ACE-Step 1.5 turbo 2B, `acestep_v1.5_turbo.safetensors` with the `qwen_1.7b_ace15` planner, 8 steps, euler/simple, cfg 1.0, shift 3.0, lm cfg 2.0, temperature 0.85, top-p 0.9), generated at the video length rather than looped or stretched:
+**Explainer bed (v2, not used in v3)** `public/audio/explainer-bed.m4a` (55.0 s). Made with tasty_tunez (ACE-Step 1.5 turbo 2B, `acestep_v1.5_turbo.safetensors` with the `qwen_1.7b_ace15` planner, 8 steps, euler/simple, cfg 1.0, shift 3.0, lm cfg 2.0, temperature 0.85, top-p 0.9), generated at the v2 video length rather than looped or stretched:
 - seed **5101**, 112 BPM, D major, 4/4, duration 55 s; plan in `tools/explainer-bed.plan.json`, the full generation record in `tools/music/explainer_bed_s5101.json`;
 - tags: "A light, upbeat but calm instrumental chiptune and soft electronic track in D major. Warm square-wave lead with short melodic phrases, gentle arpeggiated pulse synths, a round soft synth bass and light, tidy drum machine kicks and rimshots. Friendly and curious, like a tech explainer bed: clean, uncluttered mix that sits under on-screen text, soft highs, no harsh noise. Clear short intro, steady middle, and a clean resolved ending on the tonic. No vocals.";
 - sections in `lyrics`: Intro (soft arpeggio alone), Verse, Build, Chorus, Bridge, Chorus, Outro (arpeggio alone, resolves and ends cleanly);
@@ -36,7 +36,7 @@ Pacing lives in `src/explainer.json`: `t` holds each plate's start, and `k` scal
 
 Regenerate (ComfyUI must be up at 127.0.0.1:8188, `~/anime-pipeline/bin/comfyui`): `~/anime-pipeline/tools/gpu_run --need 6000 ~/Projects/tasty_tunez/.venv/bin/python -I ~/Projects/tasty_tunez/tools/gen.py tools/explainer-bed.plan.json .cache/music`, then `ffmpeg -i .cache/music/explainer_bed_s5101.mp3 -c:a aac -b:a 192k public/audio/explainer-bed.m4a`.
 
-Plate 07 shows a tok/s line only once `tuned_tps` is measured in `../promo-data.json`. The post to go with it is in `out/discord-post.md`.
+The post to go with it is in `out/discord-post.md`.
 
 Rendering is CPU only: Chromium with SwiftShader (`--gl=swangle`), under `nice -n 19` with 4 frames at a time, so it stays out of the way of a tuning run on the GPU.
 

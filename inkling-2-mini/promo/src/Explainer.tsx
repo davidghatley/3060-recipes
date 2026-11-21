@@ -2,13 +2,13 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import exJson from './explainer.json';
 import {
-  Arr, CHIP, CREDITS, CellBar, D, Glyph, HOOP, HW1, LOOP_N, Lab, MONO, Mark, P, Px, R, S, type Theme, TypeOn,
-  URL, carry, cells, fmt, has, on, rise, setTheme, show, useFonts,
+  CHIP, CREDITS, D, Glyph, HOOP, LOOP_N, Lab, MONO, Mark, P, Px, S, type Theme, TypeOn,
+  URL, carry, cells, on, rise, setTheme, show, useFonts,
 } from './kit';
 import {LoopFigure, loopEnd} from './Loop';
 
-// Inkling-2-Mini explainer for designers and builders: one idea per plate, slow enough to read.
-// Facts and scores from explainer.json (model card, Vals AI); run numbers from data.json, shown only once measured.
+// Inkling-2-Mini explainer for designers and builders: four plates and the dh card in 30 s, cut to the promo bed.
+// Facts and scores from explainer.json (model card, Vals AI).
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const X = exJson as any;
@@ -17,17 +17,16 @@ const F = X.facts;
 export const EX_FPS: number = X.fps;
 export const EX_FRAMES = Math.round(X.total * X.fps);
 const M = D.model;
-const MEASURED = has(R.tuned_tps);
-// K scales every entry delay inside a plate (v2 pacing: 0.6 of v1).
+// K scales the entry delays inside a plate; KL is the loop plate's own (kept at v2 pacing).
 const K: number = X.k ?? 1;
+const KL: number = X.k_loop ?? K;
 const FOOTNOTE = 'SCORES REPORTED BY THINKING MACHINES AND VALS AI · NOT OUR MEASUREMENTS';
 
 // ---------- chrome ----------
 const L = 48;
 const PLATES: [string, string, string][] = [
-  ['what', 'WHAT IT IS', 'MODEL CARD'], ['moe', 'MIXTURE OF EXPERTS', 'MODEL CARD'], ['loop', 'THE LOOP', 'MODEL CARD'],
-  ['cyber', 'CYBERBENCH', 'VALS AI'], ['code', 'CODING', 'MODEL CARD'], ['docs', 'DOCUMENTS AND IMAGES', 'MODEL CARD'],
-  ['fits', 'ON A 12 GB CARD', MEASURED ? 'MEASURED' : 'IN PROGRESS'], ['close', 'WHAT IS NEXT', 'COMING SOON'],
+  ['what', 'WHAT IT IS', 'MODEL CARD'], ['loop', 'THE LOOP', 'MODEL CARD'],
+  ['bench', 'BENCHMARKS', 'VALS AI + MODEL CARD'], ['close', 'WHAT IS NEXT', 'COMING SOON'],
 ];
 const Chrome: React.FC<{t: number; si: number; foot: string}> = ({t, si, foot}) => (
   <>
@@ -45,8 +44,8 @@ const Chrome: React.FC<{t: number; si: number; foot: string}> = ({t, si, foot}) 
 const Body: React.FC<{children: React.ReactNode}> = ({children}) => (
   <div style={{position: 'absolute', left: L, right: L, top: 128, height: 848, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}><div>{children}</div></div>
 );
-const Title: React.FC<{t: number; t0: number; children: React.ReactNode}> = ({t, t0, children}) => (
-  <Px size={S.l} style={{whiteSpace: 'pre-wrap', lineHeight: '88px', ...rise(t, t0 + K * 0.2)}}>{children}</Px>
+const Title: React.FC<{t: number; t0: number; k?: number; children: React.ReactNode}> = ({t, t0, k = K, children}) => (
+  <Px size={S.l} style={{whiteSpace: 'pre-wrap', lineHeight: '88px', ...rise(t, t0 + k * 0.2)}}>{children}</Px>
 );
 const Stat: React.FC<{k: string; v: string; sub?: string; style?: React.CSSProperties; color?: string; size?: number}> = ({k, v, sub, style, color = P.ink, size = S.xl}) => (
   <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...style}}>
@@ -72,56 +71,15 @@ const What: React.FC<{t: number}> = ({t}) => (
   </Body>
 );
 
-// ---------- 02 · mixture of experts ----------
-const hash = (a: number, b: number) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0); };
-const picks = (tok: number, n: number, of: number) => {
-  const out = new Set<number>();
-  for (let i = 0; out.size < n; i++) out.add(hash(tok + 1, i) % of);
-  return out;
-};
-const Moe: React.FC<{t: number}> = ({t}) => {
-  const t0 = T.moe;
-  const n = F.experts, k = F.experts_per_token;
-  const tok = Math.max(0, Math.floor((t - t0 - K * 2.2) / 0.8));
-  const lit = t >= t0 + K * 2.2 ? picks(tok, k, n) : new Set<number>();
-  const cell = 52, gap = 8, cols = 16;
-  return (
-    <Body>
-      <Title t={t} t0={t0}>{'A big model that only\nwakes up a small part of itself'}</Title>
-      <div style={{display: 'grid', gridTemplateColumns: `max-content 1fr`, columnGap: 96, marginTop: 56, alignItems: 'start'}}>
-        <div style={show(t, t0 + K * 0.8)}>
-          <Lab>{`${n} EXPERTS · ${k} PICKED FOR EACH TOKEN`}</Lab>
-          <div style={{display: 'grid', gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gap, marginTop: 24}}>
-            {Array.from({length: n}, (_, i) => (
-              <div key={i} style={{width: cell, height: cell, boxSizing: 'border-box', background: lit.has(i) ? P.cobalt : 'transparent', border: `2px solid ${lit.has(i) ? P.cobalt : P.rule}`, opacity: i < cells(t, t0 + K * 0.8, n, 0.006) ? 1 : 0}} />
-            ))}
-          </div>
-          <Lab style={{marginTop: 24, ...show(t, t0 + K * 2.2)}}>{`TOKEN ${tok + 1}: A DIFFERENT ${k} EACH TIME`}</Lab>
-        </div>
-        <div>
-          <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + K * 1.4)}}>
-            <Lab>PARAMETERS IN TOTAL</Lab>
-            <Px size={S.xl} color={P.muted} style={{marginTop: 24}}>{`${M.total_b}B`}</Px>
-          </div>
-          <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, marginTop: 48, ...show(t, t0 + K * 2.6)}}>
-            <Lab color={P.cobaltText}>USED PER TOKEN</Lab>
-            <Px size={S.xl} style={{marginTop: 24}}>{`${M.active_b}B`}</Px>
-          </div>
-        </div>
-      </div>
-    </Body>
-  );
-};
-
-// ---------- 03 · the loop ----------
+// ---------- 02 · the loop (v2 pacing) ----------
 const Loop: React.FC<{t: number}> = ({t}) => {
   const t0 = T.loop;
-  const tm = {go: t0 + K * 1.4, pre: 0.6, pass: 0.9, back: 0.4};
+  const tm = {go: t0 + KL * 1.4, pre: 0.6, pass: 0.9, back: 0.4};
   const end = loopEnd(tm);
   return (
     <Body>
-      <Title t={t} t0={t0}>{`The same ${LOOP_N} middle layers run ${M.loop_times} times`}</Title>
-      <div style={{marginTop: 48, ...show(t, t0 + K * 0.8)}}>
+      <Title t={t} t0={t0} k={KL}>{`The same ${LOOP_N} middle layers run ${M.loop_times} times`}</Title>
+      <div style={{marginTop: 48, ...show(t, t0 + KL * 0.8)}}>
         <LoopFigure t={t} tm={tm} cw={48} ch={136} gap={8} gg={56} big={S.xl} loopH={88} />
       </div>
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, max-content)', columnGap: 96, marginTop: 40}}>
@@ -136,70 +94,61 @@ const Loop: React.FC<{t: number}> = ({t}) => {
   );
 };
 
-// ---------- 04 · CyberBench ----------
-const Cyber: React.FC<{t: number}> = ({t}) => {
-  const t0 = T.cyber;
+// ---------- 03 · benchmarks: CyberBench as the hero, the six model card scores as a grid ----------
+const Bench: React.FC<{t: number}> = ({t}) => {
+  const t0 = T.bench;
   const c = X.cyber;
-  const k = carry(t, t0 + K * 1.4, 0.7);
-  const bar = (label: string, v: number, fill: string, t1: number) => (
-    <div style={{display: 'grid', gridTemplateColumns: '560px 1fr max-content', columnGap: 32, alignItems: 'center', ...show(t, t1)}}>
+  const fills = [P.cobalt, P.ink, P.rule];
+  const hk = carry(t, t0 + 0.4, 0.5);
+  const heroBar = (label: string, v: number, fill: string) => (
+    <div style={{display: 'grid', gridTemplateColumns: '410px 1fr 180px', columnGap: 24, alignItems: 'center', height: 48}}>
       <Px size={S.label} color={fill === P.cobalt ? P.ink : P.muted}>{label}</Px>
-      <div style={{height: 48, width: `${(v / 100) * 100 * k}%`, background: fill}} />
-      <Px size={S.l}>{`${v.toFixed(2)}%`}</Px>
+      <div style={{height: 32, width: `${v * hk}%`, background: fill}} />
+      <Px size={S.m} style={{textAlign: 'right'}}>{`${v.toFixed(2)}%`}</Px>
     </div>
   );
+  const rows = [...X.code, ...X.docs];
   return (
     <Body>
       <Title t={t} t0={t0}>{`Ties ${c.opus_label.replace(' (CVP)', '')} on ${c.name}`}</Title>
-      <Lab style={{marginTop: 16, ...rise(t, t0 + K * 0.4)}}>{`SECURITY TASKS · SOURCE: VALS AI LEADERBOARD, VALS.AI`}</Lab>
-      <div style={{display: 'grid', rowGap: 24, marginTop: 56}}>
-        {bar('Inkling 2 Mini', c.inkling, P.cobalt, t0 + K * 1.2)}
-        {bar(c.opus_label, c.opus, P.ink, t0 + K * 1.2)}
-      </div>
-      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 64, marginTop: 64}}>
-        <Stat k="RANK ON THE LEADERBOARD" v={`${c.rank} of ${c.of}`} sub="TIED SCORE WITH OPUS 5.5" style={show(t, t0 + K * 3.0)} />
-        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + K * 4.2)}}>
+      <Lab style={{marginTop: 8, ...rise(t, t0 + 0.2)}}>SECURITY TASKS · SOURCE: VALS AI LEADERBOARD, VALS.AI</Lab>
+      <div style={{display: 'grid', gridTemplateColumns: '1fr 400px 400px', columnGap: 48, marginTop: 24, alignItems: 'start'}}>
+        <div style={{display: 'grid', rowGap: 8, ...show(t, t0 + 0.4)}}>
+          {heroBar('Inkling 2 Mini', c.inkling, P.cobalt)}
+          {heroBar(c.opus_label, c.opus, P.ink)}
+        </div>
+        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 16, ...show(t, t0 + 0.9)}}>
+          <Lab>RANK</Lab>
+          <Px size={S.l} style={{marginTop: 16}}>{`${c.rank} of ${c.of}`}</Px>
+          <Lab style={{marginTop: 8}}>ON VALS AI</Lab>
+        </div>
+        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 16, ...show(t, t0 + 1.2)}}>
           <Lab>COST PER TEST</Lab>
-          <div style={{display: 'flex', alignItems: 'flex-start', gap: 40, marginTop: 24}}>
-            <Px size={S.xl} color={P.vermilion}>{`$${c.cost_inkling.toFixed(2)}`}</Px>
-            <Px size={S.l} color={P.muted} style={{marginTop: 24}}>{`vs $${c.cost_opus.toFixed(2)}`}</Px>
-          </div>
-          <Lab style={{marginTop: 24}}>INKLING 2 MINI VS OPUS 5.5</Lab>
+          <Px size={S.l} color={P.vermilion} style={{marginTop: 16}}>{`$${c.cost_inkling.toFixed(2)}`}</Px>
+          <Lab style={{marginTop: 8}}>{`OPUS 5.5: $${c.cost_opus.toFixed(2)}`}</Lab>
         </div>
       </div>
-    </Body>
-  );
-};
-
-// ---------- 05/06 · model card bars ----------
-const Bars: React.FC<{t: number; t0: number; title: string; rows: any[]}> = ({t, t0, title, rows}) => {
-  const fills = [P.cobalt, P.ink, P.rule];
-  return (
-    <Body>
-      <div>
-        <Title t={t} t0={t0}>{title}</Title>
-        <div style={{display: 'flex', gap: 48, marginTop: 24, ...show(t, t0 + K * 0.6)}}>
-          {X.series.map((s: string, i: number) => (
-            <div key={s} style={{display: 'flex', gap: 12, alignItems: 'center'}}><div style={{width: 24, height: 24, background: fills[i]}} /><Lab color={i === 0 ? P.ink : P.muted}>{s.toUpperCase()}</Lab></div>
+      <div style={{borderTop: `2px solid ${P.ink}`, marginTop: 32, paddingTop: 16, ...show(t, t0 + 1.6)}}>
+        <Lab color={P.ink}>{`SOURCE: ${X.card_src.toUpperCase()}`}</Lab>
+        <div style={{display: 'flex', gap: 40, marginTop: 8}}>
+          {X.series.map((sn: string, i: number) => (
+            <div key={sn} style={{display: 'flex', gap: 12, alignItems: 'center'}}><div style={{width: 24, height: 24, background: fills[i]}} /><Lab color={i === 0 ? P.ink : P.muted}>{sn.toUpperCase()}</Lab></div>
           ))}
         </div>
       </div>
-      <div style={{display: 'grid', rowGap: 32, marginTop: 40}}>
-        {rows.map((r, ri) => {
-          const t1 = t0 + K * 1.0 + ri * 0.8;
-          const k = carry(t, t1 + 0.2, 0.7);
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 48, rowGap: 24, marginTop: 16}}>
+        {rows.map((r: any, ri: number) => {
+          const t1 = t0 + 1.8 + ri * 0.15;
+          const k = carry(t, t1 + 0.1, 0.4);
           return (
-            <div key={r.name} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, t1)}}>
-              <div style={{display: 'flex', gap: 24, alignItems: 'baseline'}}>
-                <Px size={S.m}>{r.name}</Px>
-                <Lab>{r.what.toUpperCase()}</Lab>
-              </div>
-              <div style={{display: 'grid', rowGap: 8, marginTop: 16}}>
+            <div key={r.name} style={show(t, t1)}>
+              <Px size={S.label}>{r.name}</Px>
+              <div style={{display: 'grid', rowGap: 4, marginTop: 8}}>
                 {r.v.map((v: number | null, i: number) => (
-                  <div key={i} style={{display: 'grid', gridTemplateColumns: '1fr 120px', columnGap: 24, alignItems: 'center', height: 32}}>
+                  <div key={i} style={{display: 'grid', gridTemplateColumns: '1fr 88px', columnGap: 16, alignItems: 'center', height: 32}}>
                     {v === null
                       ? <Lab>NOT REPORTED</Lab>
-                      : <div style={{height: 24, width: `${v * k}%`, background: fills[i]}} />}
+                      : <div style={{height: 16, width: `${v * k}%`, background: fills[i]}} />}
                     <Px size={S.label} color={i === 0 ? P.ink : P.muted} style={{textAlign: 'right'}}>{v === null ? '–' : v.toFixed(1)}</Px>
                   </div>
                 ))}
@@ -212,44 +161,7 @@ const Bars: React.FC<{t: number; t0: number; title: string; rows: any[]}> = ({t,
   );
 };
 
-// ---------- 07 · on a 12 GB card ----------
-const Fits: React.FC<{t: number}> = ({t}) => {
-  const t0 = T.fits;
-  const strike = carry(t, t0 + K * 1.6, 0.35);
-  return (
-    <Body>
-      <Title t={t} t0={t0}>A model at this level, on one consumer GPU</Title>
-      <div style={{display: 'grid', gridTemplateColumns: '1fr max-content 1fr', columnGap: 64, alignItems: 'start', marginTop: 56}}>
-        <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + K * 0.8)}}>
-          <Lab>THE CARD RECOMMENDS</Lab>
-          <div style={{position: 'relative', display: 'inline-block', marginTop: 24}}>
-            <Px size={S.xl} color={P.muted}>{`${F.needs_gb}+ GB`}</Px>
-            <div style={{position: 'absolute', left: -8, top: 52, height: 16, width: `calc(${strike * 100}% + 16px)`, background: P.ink}} />
-          </div>
-          <Lab style={{marginTop: 24}}>OF VRAM</Lab>
-        </div>
-        <div style={{paddingTop: 72, ...show(t, t0 + K * 1.6)}}><Arr size={S.xl} t={t} t0={t0 + K * 1.6} /></div>
-        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + K * 2.0)}}>
-          <Lab color={P.cobaltText}>OUR BOX</Lab>
-          <Px size={S.xl} style={{marginTop: 24}}>12 GB</Px>
-          <Lab style={{marginTop: 24}}>ONE RTX 3060 · 62 GB RAM</Lab>
-          <div style={{marginTop: 24}}><CellBar n={has(R.vram_gib) ? R.vram_gib : null} of={12} cell={44} h={32} gap={6} /></div>
-        </div>
-      </div>
-      <Px size={S.m} style={{marginTop: 56, whiteSpace: 'pre-wrap', lineHeight: '64px', ...show(t, t0 + K * 3.0)}}>
-        {MEASURED
-          ? `It runs at ${fmt(R.tuned_tps, 1)} tok/s on llama.cpp (PR ${D.engine.pr}).`
-          : `It already loads and answers on llama.cpp master (PR ${D.engine.pr}). Tuning is under way.`}
-      </Px>
-      <div style={{border: `2px solid ${P.ink}`, padding: '20px 24px', marginTop: 40, display: 'flex', gap: 32, alignItems: 'baseline', ...show(t, t0 + K * 4.2)}}>
-        <Lab color={P.ink}>KNOWN QUIRK</Lab>
-        <Px size={S.label} style={{whiteSpace: 'pre-wrap', lineHeight: '40px'}}>It can get stuck in long reasoning loops. Cap the output tokens.</Px>
-      </div>
-    </Body>
-  );
-};
-
-// ---------- 08 · close ----------
+// ---------- 04 · close ----------
 const Close: React.FC<{t: number}> = ({t}) => {
   const t0 = T.close;
   return (
@@ -287,16 +199,11 @@ const DhCard: React.FC<{t: number}> = ({t}) => (
 );
 
 // ---------- composition ----------
-const SCENES: Record<string, React.FC<{t: number}>> = {
-  what: What, moe: Moe, loop: Loop, cyber: Cyber,
-  code: ({t}) => <Bars t={t} t0={T.code} title="Coding" rows={X.code} />,
-  docs: ({t}) => <Bars t={t} t0={T.docs} title="Documents and images" rows={X.docs} />,
-  fits: Fits, close: Close,
-};
+const SCENES: Record<string, React.FC<{t: number}>> = {what: What, loop: Loop, bench: Bench, close: Close};
 const FOOT: Record<string, string> = {
   what: 'SOURCE: HUGGINGFACE.CO/THINKINGMACHINES/INKLING-2-MINI',
-  moe: 'SOURCE: THINKING MACHINES MODEL CARD', loop: `SOURCE: MODEL CARD AND THE GGUF HEADER · LLAMA.CPP PR ${D.engine.pr}`,
-  cyber: FOOTNOTE, code: FOOTNOTE, docs: FOOTNOTE, fits: `${HW1} · LLAMA.CPP PR ${D.engine.pr}`, close: FOOTNOTE,
+  loop: `SOURCE: MODEL CARD AND THE GGUF HEADER · LLAMA.CPP PR ${D.engine.pr}`,
+  bench: FOOTNOTE, close: FOOTNOTE,
 };
 const Explainer: React.FC<{theme: Theme}> = ({theme}) => {
   setTheme(theme);

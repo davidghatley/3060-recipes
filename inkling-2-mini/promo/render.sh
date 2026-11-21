@@ -2,7 +2,7 @@
 # Re-render the Inkling-2-Mini promo from ../promo-data.json: data, video, stills, lint.
 #   ./render.sh            everything (video light + dark, music mix, stills)
 #   ./render.sh stills     stills only (a few seconds)
-#   ./render.sh explainer  the 54 s explainer only (light + dark, music mix, review frames)
+#   ./render.sh explainer  the 30 s explainer only (light + dark, music mix, review frames)
 # CPU only: Chromium with SwiftShader (--gl=swangle), niced, 4 frames at a time, so a tuning run on the GPU is not disturbed.
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
@@ -15,21 +15,20 @@ python3 -I tools/prep.py
 mkdir -p out/stills out/video
 
 if [ "$what" = explainer ]; then
-  # 54 s at 1080p30; crf 20 keeps each file well under 10 MB. Its own bed (public/audio/explainer-bed.m4a, generated at
-  # the video's length, see README) is trimmed to the video and faded out over the last 2 s; no looping.
+  # 30 s at 1080p30, cut to the promo bed (public/audio/bed.m4a, 30.0 s), which goes in unchanged: no loop, no stretch,
+  # no fade, audio stream copied. crf 20 keeps each file well under 10 MB.
   for th in Light Dark; do
     lc=$(echo $th | tr A-Z a-z)
     v="out/video/inkling-explainer-$lc-16x9.mp4"
     $REM render src/index.ts Explainer$th "$v" "${R[@]}" --concurrency=4 --codec=h264 --crf=20 --pixel-format=yuv420p
-    dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$v")
-    ffmpeg -loglevel error -y -i "$v" -i public/audio/explainer-bed.m4a -map 0:v -map 1:a -t "$dur" \
-      -af "afade=t=out:st=$(python3 -c "print(max(0,$dur-2))"):d=2" -c:v copy -c:a aac -b:a 160k -movflags +faststart \
+    ffmpeg -loglevel error -y -i "$v" -i public/audio/bed.m4a -map 0:v -map 1:a -c copy -movflags +faststart \
       "out/video/inkling-explainer-$lc-16x9-music.mp4"
   done
-  for f in 135 315 540 765 975 1170 1365 1485 1590; do
+  # one frame per plate (two on the benchmarks plate) and the dh card
+  for f in 105 345 465 600 735 885; do
     $REM still src/index.ts ExplainerLight "out/stills/explainer-$f.png" --frame=$f "${R[@]}"
   done
-  $REM still src/index.ts ExplainerDark "out/stills/explainer-dark-765.png" --frame=765 "${R[@]}"
+  $REM still src/index.ts ExplainerDark "out/stills/explainer-dark-600.png" --frame=600 "${R[@]}"
   [ -f "$LINT" ] && { node "$LINT" out/stills/explainer-*.png --surface docs --quiet || echo "lint: see above"; }
   ls -l out/video/inkling-explainer-*
   exit 0
