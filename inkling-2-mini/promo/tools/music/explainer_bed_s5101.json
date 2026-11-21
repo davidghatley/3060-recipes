@@ -1,0 +1,36 @@
+{
+ "name": "explainer_bed_s5101",
+ "gen_seconds": 15.0,
+ "measured": {
+  "bpm": 112.3,
+  "key": "D major",
+  "duration": 55.0
+ },
+ "params": {
+  "unet": "acestep_v1.5_turbo.safetensors",
+  "lm": "qwen_1.7b_ace15.safetensors",
+  "lora": null,
+  "lora_strength": 1.0,
+  "steps": 8,
+  "cfg": 1.0,
+  "shift": 3.0,
+  "sampler": "euler",
+  "scheduler": "simple",
+  "codes": true,
+  "lm_cfg": 2.0,
+  "temperature": 0.85,
+  "top_p": 0.9,
+  "bpm": 112,
+  "key": "D major",
+  "duration": 55,
+  "timesig": "4",
+  "language": "en",
+  "seed": 5101,
+  "tags": "A light, upbeat but calm instrumental chiptune and soft electronic track in D major. Warm square-wave lead with short melodic phrases, gentle arpeggiated pulse synths, a round soft synth bass and light, tidy drum machine kicks and rimshots. Friendly and curious, like a tech explainer bed: clean, uncluttered mix that sits under on-screen text, soft highs, no harsh noise. Clear short intro, steady middle, and a clean resolved ending on the tonic. No vocals.",
+  "lyrics": "[Intro - soft arpeggio alone]\n\n[Verse - bass and light drums enter]\n\n[Build - lead melody, a little brighter]\n\n[Chorus - fullest, still calm]\n\n[Bridge - drums drop back, pads and arpeggio]\n\n[Chorus - lead returns]\n\n[Outro - arpeggio alone, resolves and ends cleanly]",
+  "title": "inkling explainer bed",
+  "caption": "chiptune \u00b7 instrumental",
+  "genre": "Electronic",
+  "album": "tasty_tunez \u00b7 3060-recipes"
+ }
+}

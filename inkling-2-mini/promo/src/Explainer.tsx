@@ -18,6 +18,8 @@ export const EX_FPS: number = X.fps;
 export const EX_FRAMES = Math.round(X.total * X.fps);
 const M = D.model;
 const MEASURED = has(R.tuned_tps);
+// K scales every entry delay inside a plate (v2 pacing: 0.6 of v1).
+const K: number = X.k ?? 1;
 const FOOTNOTE = 'SCORES REPORTED BY THINKING MACHINES AND VALS AI · NOT OUR MEASUREMENTS';
 
 // ---------- chrome ----------
@@ -44,7 +46,7 @@ const Body: React.FC<{children: React.ReactNode}> = ({children}) => (
   <div style={{position: 'absolute', left: L, right: L, top: 128, height: 848, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}><div>{children}</div></div>
 );
 const Title: React.FC<{t: number; t0: number; children: React.ReactNode}> = ({t, t0, children}) => (
-  <Px size={S.l} style={{whiteSpace: 'pre-wrap', lineHeight: '88px', ...rise(t, t0 + 0.2)}}>{children}</Px>
+  <Px size={S.l} style={{whiteSpace: 'pre-wrap', lineHeight: '88px', ...rise(t, t0 + K * 0.2)}}>{children}</Px>
 );
 const Stat: React.FC<{k: string; v: string; sub?: string; style?: React.CSSProperties; color?: string; size?: number}> = ({k, v, sub, style, color = P.ink, size = S.xl}) => (
   <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...style}}>
@@ -63,9 +65,9 @@ const What: React.FC<{t: number}> = ({t}) => (
       <Px size={S.m} color={P.muted} style={{marginTop: 32, whiteSpace: 'pre-wrap', lineHeight: '64px'}}>An open model that reads text and images.</Px>
     </div>
     <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 64, marginTop: 72}}>
-      <Stat k="OPEN WEIGHTS" v={F.license} sub="USE IT, CHANGE IT, SHIP IT" style={show(t, 1.6)} size={S.l} />
-      <Stat k="INPUT" v="Text + image" sub="SCREENSHOTS, PDFS, PHOTOS" style={show(t, 2.2)} size={S.l} />
-      <Stat k="CONTEXT" v={`${M.ctx_max} tokens`} sub="ROUGHLY 1,500 PAGES OF TEXT" style={show(t, 2.8)} size={S.l} />
+      <Stat k="OPEN WEIGHTS" v={F.license} sub="USE IT, CHANGE IT, SHIP IT" style={show(t, K * 1.6)} size={S.l} />
+      <Stat k="INPUT" v="Text + image" sub="SCREENSHOTS, PDFS, PHOTOS" style={show(t, K * 2.2)} size={S.l} />
+      <Stat k="CONTEXT" v={`${M.ctx_max} tokens`} sub="ROUGHLY 1,500 PAGES OF TEXT" style={show(t, K * 2.8)} size={S.l} />
     </div>
   </Body>
 );
@@ -80,28 +82,28 @@ const picks = (tok: number, n: number, of: number) => {
 const Moe: React.FC<{t: number}> = ({t}) => {
   const t0 = T.moe;
   const n = F.experts, k = F.experts_per_token;
-  const tok = Math.max(0, Math.floor((t - t0 - 2.2) / 0.9));
-  const lit = t >= t0 + 2.2 ? picks(tok, k, n) : new Set<number>();
+  const tok = Math.max(0, Math.floor((t - t0 - K * 2.2) / 0.8));
+  const lit = t >= t0 + K * 2.2 ? picks(tok, k, n) : new Set<number>();
   const cell = 52, gap = 8, cols = 16;
   return (
     <Body>
       <Title t={t} t0={t0}>{'A big model that only\nwakes up a small part of itself'}</Title>
       <div style={{display: 'grid', gridTemplateColumns: `max-content 1fr`, columnGap: 96, marginTop: 56, alignItems: 'start'}}>
-        <div style={show(t, t0 + 0.8)}>
+        <div style={show(t, t0 + K * 0.8)}>
           <Lab>{`${n} EXPERTS · ${k} PICKED FOR EACH TOKEN`}</Lab>
           <div style={{display: 'grid', gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gap, marginTop: 24}}>
             {Array.from({length: n}, (_, i) => (
-              <div key={i} style={{width: cell, height: cell, boxSizing: 'border-box', background: lit.has(i) ? P.cobalt : 'transparent', border: `2px solid ${lit.has(i) ? P.cobalt : P.rule}`, opacity: i < cells(t, t0 + 0.8, n, 0.008) ? 1 : 0}} />
+              <div key={i} style={{width: cell, height: cell, boxSizing: 'border-box', background: lit.has(i) ? P.cobalt : 'transparent', border: `2px solid ${lit.has(i) ? P.cobalt : P.rule}`, opacity: i < cells(t, t0 + K * 0.8, n, 0.006) ? 1 : 0}} />
             ))}
           </div>
-          <Lab style={{marginTop: 24, ...show(t, t0 + 2.2)}}>{`TOKEN ${tok + 1}: A DIFFERENT ${k} EACH TIME`}</Lab>
+          <Lab style={{marginTop: 24, ...show(t, t0 + K * 2.2)}}>{`TOKEN ${tok + 1}: A DIFFERENT ${k} EACH TIME`}</Lab>
         </div>
         <div>
-          <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + 1.4)}}>
+          <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + K * 1.4)}}>
             <Lab>PARAMETERS IN TOTAL</Lab>
             <Px size={S.xl} color={P.muted} style={{marginTop: 24}}>{`${M.total_b}B`}</Px>
           </div>
-          <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, marginTop: 48, ...show(t, t0 + 2.6)}}>
+          <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, marginTop: 48, ...show(t, t0 + K * 2.6)}}>
             <Lab color={P.cobaltText}>USED PER TOKEN</Lab>
             <Px size={S.xl} style={{marginTop: 24}}>{`${M.active_b}B`}</Px>
           </div>
@@ -114,17 +116,17 @@ const Moe: React.FC<{t: number}> = ({t}) => {
 // ---------- 03 · the loop ----------
 const Loop: React.FC<{t: number}> = ({t}) => {
   const t0 = T.loop;
-  const tm = {go: t0 + 1.4, pre: 0.8, pass: 1.2, back: 0.5};
+  const tm = {go: t0 + K * 1.4, pre: 0.6, pass: 0.9, back: 0.4};
   const end = loopEnd(tm);
   return (
     <Body>
       <Title t={t} t0={t0}>{`The same ${LOOP_N} middle layers run ${M.loop_times} times`}</Title>
-      <div style={{marginTop: 48, ...show(t, t0 + 0.8)}}>
+      <div style={{marginTop: 48, ...show(t, t0 + K * 0.8)}}>
         <LoopFigure t={t} tm={tm} cw={48} ch={136} gap={8} gg={56} big={S.xl} loopH={88} />
       </div>
       <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, max-content)', columnGap: 96, marginTop: 40}}>
         {[['LAYERS OF WEIGHTS', String(F.layers)], ['LAYER PASSES PER TOKEN', String(F.passes)], ['EFFECTIVE ACTIVE', `≈${F.effective_active_b}B`]].map(([k, v], i) => (
-          <div key={k} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, end + 0.3 + i * 0.4)}}>
+          <div key={k} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, end + 0.2 + i * 0.3)}}>
             <Lab>{k}</Lab>
             <Px size={S.l} style={{marginTop: 16}}>{v}</Px>
           </div>
@@ -138,7 +140,7 @@ const Loop: React.FC<{t: number}> = ({t}) => {
 const Cyber: React.FC<{t: number}> = ({t}) => {
   const t0 = T.cyber;
   const c = X.cyber;
-  const k = carry(t, t0 + 1.4, 0.9);
+  const k = carry(t, t0 + K * 1.4, 0.7);
   const bar = (label: string, v: number, fill: string, t1: number) => (
     <div style={{display: 'grid', gridTemplateColumns: '560px 1fr max-content', columnGap: 32, alignItems: 'center', ...show(t, t1)}}>
       <Px size={S.label} color={fill === P.cobalt ? P.ink : P.muted}>{label}</Px>
@@ -149,14 +151,14 @@ const Cyber: React.FC<{t: number}> = ({t}) => {
   return (
     <Body>
       <Title t={t} t0={t0}>{`Ties ${c.opus_label.replace(' (CVP)', '')} on ${c.name}`}</Title>
-      <Lab style={{marginTop: 16, ...rise(t, t0 + 0.4)}}>{`SECURITY TASKS · SOURCE: VALS AI LEADERBOARD, VALS.AI`}</Lab>
+      <Lab style={{marginTop: 16, ...rise(t, t0 + K * 0.4)}}>{`SECURITY TASKS · SOURCE: VALS AI LEADERBOARD, VALS.AI`}</Lab>
       <div style={{display: 'grid', rowGap: 24, marginTop: 56}}>
-        {bar('Inkling 2 Mini', c.inkling, P.cobalt, t0 + 1.2)}
-        {bar(c.opus_label, c.opus, P.ink, t0 + 1.2)}
+        {bar('Inkling 2 Mini', c.inkling, P.cobalt, t0 + K * 1.2)}
+        {bar(c.opus_label, c.opus, P.ink, t0 + K * 1.2)}
       </div>
       <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 64, marginTop: 64}}>
-        <Stat k="RANK ON THE LEADERBOARD" v={`${c.rank} of ${c.of}`} sub="TIED SCORE WITH OPUS 5.5" style={show(t, t0 + 3.0)} />
-        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + 4.2)}}>
+        <Stat k="RANK ON THE LEADERBOARD" v={`${c.rank} of ${c.of}`} sub="TIED SCORE WITH OPUS 5.5" style={show(t, t0 + K * 3.0)} />
+        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + K * 4.2)}}>
           <Lab>COST PER TEST</Lab>
           <div style={{display: 'flex', alignItems: 'flex-start', gap: 40, marginTop: 24}}>
             <Px size={S.xl} color={P.vermilion}>{`$${c.cost_inkling.toFixed(2)}`}</Px>
@@ -176,7 +178,7 @@ const Bars: React.FC<{t: number; t0: number; title: string; rows: any[]}> = ({t,
     <Body>
       <div>
         <Title t={t} t0={t0}>{title}</Title>
-        <div style={{display: 'flex', gap: 48, marginTop: 24, ...show(t, t0 + 0.6)}}>
+        <div style={{display: 'flex', gap: 48, marginTop: 24, ...show(t, t0 + K * 0.6)}}>
           {X.series.map((s: string, i: number) => (
             <div key={s} style={{display: 'flex', gap: 12, alignItems: 'center'}}><div style={{width: 24, height: 24, background: fills[i]}} /><Lab color={i === 0 ? P.ink : P.muted}>{s.toUpperCase()}</Lab></div>
           ))}
@@ -184,7 +186,7 @@ const Bars: React.FC<{t: number; t0: number; title: string; rows: any[]}> = ({t,
       </div>
       <div style={{display: 'grid', rowGap: 32, marginTop: 40}}>
         {rows.map((r, ri) => {
-          const t1 = t0 + 1.0 + ri * 1.2;
+          const t1 = t0 + K * 1.0 + ri * 0.8;
           const k = carry(t, t1 + 0.2, 0.7);
           return (
             <div key={r.name} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, t1)}}>
@@ -213,12 +215,12 @@ const Bars: React.FC<{t: number; t0: number; title: string; rows: any[]}> = ({t,
 // ---------- 07 · on a 12 GB card ----------
 const Fits: React.FC<{t: number}> = ({t}) => {
   const t0 = T.fits;
-  const strike = carry(t, t0 + 1.6, 0.35);
+  const strike = carry(t, t0 + K * 1.6, 0.35);
   return (
     <Body>
       <Title t={t} t0={t0}>A model at this level, on one consumer GPU</Title>
       <div style={{display: 'grid', gridTemplateColumns: '1fr max-content 1fr', columnGap: 64, alignItems: 'start', marginTop: 56}}>
-        <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + 0.8)}}>
+        <div style={{borderTop: `4px solid ${P.ink}`, paddingTop: 20, ...show(t, t0 + K * 0.8)}}>
           <Lab>THE CARD RECOMMENDS</Lab>
           <div style={{position: 'relative', display: 'inline-block', marginTop: 24}}>
             <Px size={S.xl} color={P.muted}>{`${F.needs_gb}+ GB`}</Px>
@@ -226,20 +228,20 @@ const Fits: React.FC<{t: number}> = ({t}) => {
           </div>
           <Lab style={{marginTop: 24}}>OF VRAM</Lab>
         </div>
-        <div style={{paddingTop: 72, ...show(t, t0 + 1.6)}}><Arr size={S.xl} t={t} t0={t0 + 1.6} /></div>
-        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + 2.0)}}>
+        <div style={{paddingTop: 72, ...show(t, t0 + K * 1.6)}}><Arr size={S.xl} t={t} t0={t0 + K * 1.6} /></div>
+        <div style={{borderTop: `4px solid ${P.cobalt}`, paddingTop: 20, ...show(t, t0 + K * 2.0)}}>
           <Lab color={P.cobaltText}>OUR BOX</Lab>
           <Px size={S.xl} style={{marginTop: 24}}>12 GB</Px>
           <Lab style={{marginTop: 24}}>ONE RTX 3060 · 62 GB RAM</Lab>
           <div style={{marginTop: 24}}><CellBar n={has(R.vram_gib) ? R.vram_gib : null} of={12} cell={44} h={32} gap={6} /></div>
         </div>
       </div>
-      <Px size={S.m} style={{marginTop: 56, whiteSpace: 'pre-wrap', lineHeight: '64px', ...show(t, t0 + 3.0)}}>
+      <Px size={S.m} style={{marginTop: 56, whiteSpace: 'pre-wrap', lineHeight: '64px', ...show(t, t0 + K * 3.0)}}>
         {MEASURED
           ? `It runs at ${fmt(R.tuned_tps, 1)} tok/s on llama.cpp (PR ${D.engine.pr}).`
           : `It already loads and answers on llama.cpp master (PR ${D.engine.pr}). Tuning is under way.`}
       </Px>
-      <div style={{border: `2px solid ${P.ink}`, padding: '20px 24px', marginTop: 40, display: 'flex', gap: 32, alignItems: 'baseline', ...show(t, t0 + 4.2)}}>
+      <div style={{border: `2px solid ${P.ink}`, padding: '20px 24px', marginTop: 40, display: 'flex', gap: 32, alignItems: 'baseline', ...show(t, t0 + K * 4.2)}}>
         <Lab color={P.ink}>KNOWN QUIRK</Lab>
         <Px size={S.label} style={{whiteSpace: 'pre-wrap', lineHeight: '40px'}}>It can get stuck in long reasoning loops. Cap the output tokens.</Px>
       </div>
@@ -252,17 +254,17 @@ const Close: React.FC<{t: number}> = ({t}) => {
   const t0 = T.close;
   return (
     <Body>
-      <Px size={S.xl} style={rise(t, t0 + 0.2)}>3060 recipe coming soon</Px>
-      <Px size={S.l} color={P.cobalt} style={{marginTop: 40, ...show(t, t0 + 0.8)}}>{URL}</Px>
+      <Px size={S.xl} style={rise(t, t0 + K * 0.2)}>3060 recipe coming soon</Px>
+      <Px size={S.l} color={P.cobalt} style={{marginTop: 40, ...show(t, t0 + K * 0.8)}}>{URL}</Px>
       <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 48, rowGap: 24, marginTop: 64}}>
         {CREDITS.map(([key, val], i) => (
-          <div key={key} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, t0 + 1.4 + i * 0.25)}}>
+          <div key={key} style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16, ...show(t, t0 + K * 1.4 + i * 0.2)}}>
             <Lab>{key}</Lab>
             <Px size={S.label} style={{marginTop: 12}}>{val}</Px>
           </div>
         ))}
       </div>
-      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 48, marginTop: 24, ...show(t, t0 + 2.4)}}>
+      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 48, marginTop: 24, ...show(t, t0 + K * 2.4)}}>
         <div style={{borderTop: `2px solid ${P.ink}`, paddingTop: 16}}><Lab>SCORES</Lab><Px size={S.label} style={{marginTop: 12}}>Thinking Machines model card · Vals AI</Px></div>
       </div>
     </Body>
@@ -273,7 +275,7 @@ const Close: React.FC<{t: number}> = ({t}) => {
 const DhCard: React.FC<{t: number}> = ({t}) => (
   <AbsoluteFill style={{background: P.paper, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 56}}>
     <Mark cell={48} n={cells(t, T.dh, 21, 0.05)} />
-    <div style={{textAlign: 'center', opacity: on(t, T.dh + 1.2) ? 1 : 0}}>
+    <div style={{textAlign: 'center', opacity: on(t, T.dh + 0.8) ? 1 : 0}}>
       <div style={{fontFamily: HOOP, fontWeight: 700, fontSize: 56, lineHeight: '64px', color: P.ink}}>David Hatley</div>
       <div style={{fontFamily: MONO, fontSize: 28, lineHeight: '36px', letterSpacing: '0.04em', color: P.muted, marginTop: 12}}>design · AI/ML · generative tools</div>
       <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 48}}>
