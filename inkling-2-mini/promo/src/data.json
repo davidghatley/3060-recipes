@@ -1,19 +1,21 @@
 {
- "status": "draft",
- "missing": [
-  "baseline_tps",
-  "tuned_tps",
-  "speedup",
-  "prefill_tps",
-  "ctx",
-  "vram_gib",
-  "quant",
-  "kld",
-  "flags"
- ],
+ "status": "measured",
+ "missing": [],
  "matched": {
+  "baseline_tps": "baselinetoks",
+  "tuned_tps": "tunedtoks",
+  "speedup": "speedup",
+  "prefill_tps": "prefilltoks",
+  "baseline_prefill_tps": "baselineprefilltoks",
+  "ctx": "context",
+  "vram_gib": "vramgib",
+  "quant": "quant",
+  "gguf": "gguf",
+  "kld": "kld",
   "kld_ref": "kldref",
-  "build": "build"
+  "build": "build",
+  "flags": "flags",
+  "cmd": "cmd"
  },
  "src": "../promo-data.json",
  "model": {
@@ -41,24 +43,51 @@
   "name": "llama.cpp",
   "pr": "#32694",
   "pr_author": "pcuenca",
-  "build": "master 29b52d398"
+  "build": "master 29b52d398 + inkfix"
  },
  "run": {
-  "baseline_tps": null,
-  "tuned_tps": null,
-  "speedup": null,
-  "prefill_tps": null,
-  "baseline_prefill_tps": null,
+  "baseline_tps": 17.5,
+  "tuned_tps": 29.0,
+  "speedup": 1.66,
+  "prefill_tps": 145.0,
+  "baseline_prefill_tps": 39.1,
   "prefill_prompt": null,
-  "ctx": null,
-  "vram_gib": null,
+  "ctx": 65536,
+  "vram_gib": 10.4,
   "ram_gib": null,
-  "quant": null,
-  "gguf": null,
+  "quant": "IQ4_NL (ggml-org)",
+  "gguf": "ggml-org/Inkling-2-Mini-GGUF Inkling-2-Mini-IQ4_NL.gguf @ db61c5b4",
   "file_gb": null,
-  "kld": null,
+  "kld": 0.0085,
   "kld_ref": "Q8_0",
-  "flags": null,
-  "cmd": null
+  "flags": [
+   {
+    "flag": "-ot \"blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU\"",
+    "note": "+68%"
+   },
+   {
+    "flag": "-ctk q8_0 -ctv q8_0",
+    "note": "FITS 64K"
+   },
+   {
+    "flag": "-ub 128 -b 2048",
+    "note": "FITS 64K"
+   },
+   {
+    "flag": "-c 65536",
+    "note": "3/3 NEEDLES"
+   },
+   {
+    "flag": "-t 6",
+    "note": "FASTEST"
+   },
+   {
+    "flag": "-fa on",
+    "note": null
+   }
+  ],
+  "cmd": [
+   "inkling-2-mini/serve.sh"
+  ]
  }
 }

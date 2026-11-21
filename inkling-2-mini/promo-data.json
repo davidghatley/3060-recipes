@@ -10,12 +10,30 @@
  "kld": 0.0085,
  "kld_ref": "Q8_0 (ggml-org), wikitext-2 + code, 24x512 tokens each",
  "flags": [
-  "-ot \"blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU\"",
-  "-ctk q8_0 -ctv q8_0",
-  "-ub 128 -b 2048",
-  "-c 65536",
-  "-fa on",
-  "-t 6"
+  {
+   "flag": "-ot \"blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU\"",
+   "note": "+68%"
+  },
+  {
+   "flag": "-ctk q8_0 -ctv q8_0",
+   "note": "FITS 64K"
+  },
+  {
+   "flag": "-ub 128 -b 2048",
+   "note": "FITS 64K"
+  },
+  {
+   "flag": "-c 65536",
+   "note": "3/3 NEEDLES"
+  },
+  {
+   "flag": "-t 6",
+   "note": "FASTEST"
+  },
+  {
+   "flag": "-fa on",
+   "note": null
+  }
  ],
  "gguf": "ggml-org/Inkling-2-Mini-GGUF Inkling-2-Mini-IQ4_NL.gguf @ db61c5b4",
  "cmd": "inkling-2-mini/serve.sh",

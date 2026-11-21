@@ -125,13 +125,12 @@ const Speed: React.FC<SceneP> = ({t}) => {
   return (
     <Body>
       <Px size={v ? S.m : S.l} style={rise(t, s.in)}>Stock flags vs tuned</Px>
-      <div style={{borderTop: `4px solid ${P.ink}`, marginTop: v ? 32 : 40, paddingTop: 24}}>
+      <div style={{position: 'relative', borderTop: `4px solid ${P.ink}`, marginTop: v ? 32 : 40, paddingTop: 24}}>
         <Lab>DECODE · TOK/S</Lab>
-        <div style={{display: 'flex', alignItems: 'flex-start', gap: v ? 32 : 60, marginTop: 32, flexWrap: 'wrap'}}>
+        <div style={{display: 'flex', alignItems: 'flex-start', gap: v ? 32 : 60, marginTop: 32, flexWrap: v ? 'wrap' : 'nowrap'}}>
           <Px size={big} color={P.muted} style={show(t, s.nums)}>{fmt(a, 1)}</Px>
           <Arr size={big} t={t} t0={s.nums + 0.15} />
           <Px size={big} style={show(t, s.nums + 0.35)}>{count(z, t, s.nums + 0.35, 1, a ?? 0)}</Px>
-          {!v && <Px size={big} color={P.vermilion} style={{marginLeft: 'auto', ...show(t, s.delta)}}>{xfmt(R.speedup)}</Px>}
         </div>
         {v && <Px size={S.x240} color={P.vermilion} style={{marginTop: 40, ...show(t, s.delta)}}>{xfmt(R.speedup)}</Px>}
         <div style={{display: 'grid', gap: 16, marginTop: 40, ...show(t, s.nums)}}>
@@ -143,6 +142,7 @@ const Speed: React.FC<SceneP> = ({t}) => {
         <Lab>{`PREFILL · TOK/S${has(R.prefill_prompt) ? ' · ' + ctxLabel(R.prefill_prompt) + ' PROMPT' : ''}`}</Lab>
         {has(R.baseline_prefill_tps) && <><Px size={S.l} color={P.muted}>{fmt(R.baseline_prefill_tps)}</Px><Arr size={S.l} /></>}
         <Px size={S.l}>{fmt(R.prefill_tps)}</Px>
+        {!v && <div style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 24, ...show(t, s.delta)}}><Lab>DECODE</Lab><Px size={S.xl} color={P.vermilion}>{xfmt(R.speedup)}</Px></div>}
       </div>
     </Body>
   );
@@ -155,7 +155,7 @@ const Flags: React.FC<SceneP> = ({t}) => {
   const rows: {flag: string; note: string | null}[] = (R.flags as any[] | null)?.slice(0, 5) ?? Array.from({length: 4}, () => ({flag: 'TBD', note: null}));
   return (
     <Body>
-      <Px size={v ? S.m : S.l} style={{whiteSpace: 'pre-wrap', lineHeight: v ? '64px' : '88px', ...rise(t, f.in)}}>{has(R.flags) ? `${rows.length} flags on stock llama.cpp` : 'The flags'}</Px>
+      <Px size={v ? S.m : S.l} style={{whiteSpace: 'pre-wrap', lineHeight: v ? '64px' : '88px', ...rise(t, f.in)}}>{has(R.flags) ? `${rows.length} flags + 2 engine patches` : 'The flags'}</Px>
       <div style={{borderTop: `4px solid ${P.ink}`, marginTop: 40}}>
         {rows.map((r, i) => {
           const t0 = f.rows + i * 0.3;
