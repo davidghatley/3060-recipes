@@ -17,6 +17,17 @@ That one command:
 
 `./render.sh stills` does steps 1, 2 and 4 only (seconds instead of minutes). The video takes about 3 minutes per theme.
 
+## Explainer (72 s, for sharing in a community)
+
+```sh
+cd inkling-2-mini/promo && ./render.sh explainer
+```
+
+Renders `ExplainerLight` / `ExplainerDark` (`src/Explainer.tsx`) to `out/video/inkling-explainer-{light,dark}-16x9.mp4` (1920×1080, 30 fps, crf 20) and `-music` versions (the 30 s bed looped, faded over the last 3 s), plus review frames `out/stills/explainer-*.png`, then lints them.
+Eight plates: what it is, mixture of experts, the loop, CyberBench, coding, documents and images, on a 12 GB card, what is next; then the dh card.
+Model facts and benchmark scores live in `src/explainer.json` with their sources (Thinking Machines model card, Vals AI); every score plate says they are reported numbers, not ours.
+Plate 07 shows a tok/s line only once `tuned_tps` is measured in `../promo-data.json`. The post to go with it is in `out/discord-post.md`.
+
 Rendering is CPU only: Chromium with SwiftShader (`--gl=swangle`), under `nice -n 19` with 4 frames at a time, so it stays out of the way of a tuning run on the GPU.
 
 ## Where the numbers come from

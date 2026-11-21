@@ -1,0 +1,39 @@
+{
+  "fps": 30,
+  "total": 72,
+  "t": {"what": 0, "moe": 8, "loop": 17, "cyber": 27, "code": 36, "docs": 46, "fits": 54, "close": 62.5, "dh": 68.5},
+  "facts": {
+    "released": "NOV 20 2026",
+    "license": "Apache-2.0",
+    "experts": 128,
+    "experts_per_token": 8,
+    "layers": 24,
+    "passes": 48,
+    "effective_active_b": 5.4,
+    "needs_gb": 32,
+    "src": "Thinking Machines model card, huggingface.co/thinkingmachines/Inkling-2-Mini; ../THEORY.md (GGUF header)"
+  },
+  "cyber": {
+    "name": "CyberBench v1.1",
+    "inkling": 74.58,
+    "opus": 74.58,
+    "opus_label": "Claude Opus 5.5 (CVP)",
+    "rank": 10,
+    "of": 49,
+    "cost_inkling": 0.93,
+    "cost_opus": 4.17,
+    "src": "Vals AI leaderboard, vals.ai/models/thinkingmachines_inkling-2-mini"
+  },
+  "series": ["Inkling 2 Mini", "Qwen3.8-27B", "Gemma 4 31B"],
+  "code": [
+    {"name": "Vibe Code Bench v1.1", "what": "build a working app from a prompt", "v": [77.9, 64.9, null]},
+    {"name": "SWE-bench Verified", "what": "fix real GitHub issues (bash only)", "v": [79.2, 77.8, 46.1]},
+    {"name": "Terminal Bench v2.1", "what": "get jobs done in a terminal", "v": [71.6, 73.0, 43.4]}
+  ],
+  "docs": [
+    {"name": "OmniDocBench v1.6", "what": "read PDFs and scanned pages", "v": [92.8, 91.5, 82.5]},
+    {"name": "PerceptionBench", "what": "understand what is in an image", "v": [57.5, 52.4, 40.7]},
+    {"name": "LongBench v2", "what": "answer questions over very long inputs", "v": [66.9, 52.3, 52.9]}
+  ],
+  "card_src": "Thinking Machines model card"
+}

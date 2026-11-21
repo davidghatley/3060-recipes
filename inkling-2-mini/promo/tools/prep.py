@@ -155,6 +155,11 @@ if r["speedup"] is None and r["baseline_tps"] and r["tuned_tps"]:
 for k in ("quant", "gguf", "build", "kld_ref"):
     if r[k] is not None:
         r[k] = str(r[k])
+# short labels for the screen: "llama.cpp master 29b52d398 (CUDA 12.9)" -> "master 29b52d398"; "Q8_0 (ggml-org), ..." -> "Q8_0"
+if r["build"]:
+    r["build"] = re.sub(r"^\s*llama\.?cpp\s*", "", r["build"], flags=re.I).split("(")[0].strip() or None
+if r["kld_ref"]:
+    r["kld_ref"] = re.split(r"[ ,(]", r["kld_ref"].strip())[0]
 if raw.get("layers") is not None or flat.get("modellayers") is not None or flat.get("nlayers") is not None:
     MODEL["layers"] = int(num(raw.get("layers") or flat.get("modellayers") or flat.get("nlayers")))
 

@@ -2,6 +2,7 @@
 # Re-render the Inkling-2-Mini promo from ../promo-data.json: data, video, stills, lint.
 #   ./render.sh            everything (video light + dark, music mix, stills)
 #   ./render.sh stills     stills only (a few seconds)
+#   ./render.sh explainer  the 72 s explainer only (light + dark, music mix, review frames)
 # CPU only: Chromium with SwiftShader (--gl=swangle), niced, 4 frames at a time, so a tuning run on the GPU is not disturbed.
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
@@ -12,6 +13,26 @@ LINT=$HOME/Projects/secret-sauce/tools/lint/sauce-lint.mjs
 
 python3 -I tools/prep.py
 mkdir -p out/stills out/video
+
+if [ "$what" = explainer ]; then
+  # 72 s at 1080p30; crf 20 keeps each file well under 10 MB. The 30 s bed loops and fades out over the last 3 s.
+  for th in Light Dark; do
+    lc=$(echo $th | tr A-Z a-z)
+    v="out/video/inkling-explainer-$lc-16x9.mp4"
+    $REM render src/index.ts Explainer$th "$v" "${R[@]}" --concurrency=4 --codec=h264 --crf=20 --pixel-format=yuv420p
+    dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$v")
+    ffmpeg -loglevel error -y -i "$v" -stream_loop -1 -i public/audio/bed.m4a -map 0:v -map 1:a -t "$dur" \
+      -af "afade=t=out:st=$(python3 -c "print(max(0,$dur-3))"):d=3" -c:v copy -c:a aac -b:a 160k -movflags +faststart \
+      "out/video/inkling-explainer-$lc-16x9-music.mp4"
+  done
+  for f in 210 480 795 1050 1350 1605 1860 2040 2130; do
+    $REM still src/index.ts ExplainerLight "out/stills/explainer-$f.png" --frame=$f "${R[@]}"
+  done
+  $REM still src/index.ts ExplainerDark "out/stills/explainer-dark-1050.png" --frame=1050 "${R[@]}"
+  [ -f "$LINT" ] && { node "$LINT" out/stills/explainer-*.png --surface docs --quiet || echo "lint: see above"; }
+  ls -l out/video/inkling-explainer-*
+  exit 0
+fi
 
 for id in HeaderLight HeaderDark SocialLight SocialDark SquareLight SquareDark; do
   $REM still src/index.ts $id "out/stills/$id.png" "${R[@]}"

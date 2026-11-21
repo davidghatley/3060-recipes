@@ -11,8 +11,11 @@
   "kld",
   "flags"
  ],
- "matched": {},
- "src": "none yet (../promo-data.json missing or empty)",
+ "matched": {
+  "kld_ref": "kldref",
+  "build": "build"
+ },
+ "src": "../promo-data.json",
  "model": {
   "name": "Inkling-2-Mini",
   "maker": "Thinking Machines",
@@ -38,7 +41,7 @@
   "name": "llama.cpp",
   "pr": "#32694",
   "pr_author": "pcuenca",
-  "build": null
+  "build": "master 29b52d398"
  },
  "run": {
   "baseline_tps": null,
@@ -54,7 +57,7 @@
   "gguf": null,
   "file_gb": null,
   "kld": null,
-  "kld_ref": null,
+  "kld_ref": "Q8_0",
   "flags": null,
   "cmd": null
  }
