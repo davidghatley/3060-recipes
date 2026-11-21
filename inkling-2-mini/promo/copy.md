@@ -25,13 +25,13 @@ llama.cpp runs it since PR #32694 by pcuenca.
 
 **3/**
 What fits in 12 GB:
-- {{quant}} GGUF (ggml-org and Unsloth quants)
+- {{quant}} GGUF
 - {{ctx}} context, of the 1M it supports
 - {{vram_gib}} GB of VRAM
 - mean KLD {{kld}}
 
 **4/**
-The flags that did it, on stock llama.cpp:
+The flags that did it (64k also needs our F16-mask patch; 32k runs on stock master at the same speed):
 {{flags}}
 
 Stock was {{baseline_tps}} tok/s. Prefill is {{prefill_tps}} tok/s.
@@ -60,7 +60,7 @@ The numbers on this machine:
 The flags:
 {{flags}}
 
-Built on Thinking Machines' model, llama.cpp (pcuenca's PR #32694 added the loop architecture), GGUF quants from ggml-org and Unsloth, and 0xSero's inference-optimisation method for the tuning.
+Built on Thinking Machines' model, llama.cpp (pcuenca's PR #32694 added the loop architecture), GGUF quants from ggml-org, and 0xSero's inference-optimisation method for the tuning.
 
 The recipe, the scripts and every run are in the repo: github.com/davidghatley/3060-recipes
 
@@ -68,4 +68,4 @@ The recipe, the scripts and every run are in the repo: github.com/davidghatley/3
 
 ## README blurb
 
-**Inkling-2-Mini on a 12 GB RTX 3060.** Thinking Machines' 26.4B MoE (3.4B active, 1M context, text and image input) runs on one RTX 3060 12 GB with llama.cpp at {{tuned_tps}} tok/s decode ({{speedup}} over stock flags) and {{prefill_tps}} tok/s prefill, with {{ctx}} context in {{vram_gib}} GB of VRAM ({{quant}}, mean KLD {{kld}}). Its looped core runs layers 6–17 three times per token (48 layer passes on 24 layers of weights), which llama.cpp supports since pcuenca's PR #32694. Quants from ggml-org and Unsloth; tuned with 0xSero's inference-optimisation method.
+**Inkling-2-Mini on a 12 GB RTX 3060.** Thinking Machines' 26.4B MoE (3.4B active, 1M context, text and image input) runs on one RTX 3060 12 GB with llama.cpp at {{tuned_tps}} tok/s decode ({{speedup}} over stock flags) and {{prefill_tps}} tok/s prefill, with {{ctx}} context in {{vram_gib}} GB of VRAM ({{quant}}, mean KLD {{kld}}). Its looped core runs layers 6–17 three times per token (48 layer passes on 24 layers of weights), which llama.cpp supports since pcuenca's PR #32694. Quants from ggml-org; tuned with 0xSero's inference-optimisation method.

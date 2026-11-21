@@ -126,3 +126,15 @@ The NVFP4 file holds the checkpoint's own 4-bit expert weights: the E2M1 nibbles
 - `tools/codeeval.py`: 8 Python tasks, each answer run against asserts. Temperature 0, reasoning_effort low, at most 2048 tokens. **IQ4_NL 8/8, NVFP4 8/8**, all finished on their own (`runs/codeeval-*.json`).
 - `tools/smoke.py --image`, both quants: chat, arithmetic (17 × 23 = 391), a code answer, and one image. The image is described correctly: "A vertical red and blue split background with a white square centered across the dividing line."
 - No reasoning loops in any capped server request: srvtest's loop score was 0.0 on every tuned answer.
+
+## Stock master vs the patches
+
+Tuned flags (`serve.sh` defaults, IQ4_NL) on **unpatched master 29b52d398** (`INK_BIN=/mnt/scratch/llama.cpp/master-29b52d398/bin`), measured 2026-11-20:
+
+| Context | Result on stock master | Same flags on inkfix |
+|---|---|---|
+| llama-bench (empty) | tg 29.40, pp2048 175.3 (`runs/bench-b02-core-q8kv-ub128.jsonl`) | tg 29.07 / 29.45, pp2048 174.6 |
+| 32k server | decode 29.07 / 28.98 / 29.05; 29.6k-token prompt: prefill 121.4, decode 23.68 (`runs/server-stock-master-32k.log`) | decode 29.0; 23.7 at 32k |
+| 64k server | loads, then **CUDA OOM on the first request** (`cudaGraphInstantiate`, `runs/server-stock-master-64k.log`), with ~0.95 GB held by the desktop | runs; needles 3/3 at 62k |
+
+So the speed comes from flags alone. The F16-mask patch (commits 4c836a8eb + 6aafbc7d2, `patches/0002`, `0003`) is only what makes 64k fit on this 12 GB card. The loop-scale patch (7c396f834, `patches/0001`) only matters for NVFP4 GGUFs; IQ4_NL does not need it.
