@@ -67,3 +67,15 @@ redistributed); this folder keeps aggregates, configs and server logs only.
   band of fine-tuned 4B entries; gains are broad (API-Bank, ToolRet, MMLU-Pro, BBH, RAGTruth), HellaSwag and CLINC are
   lower than the control. Not a too-good result. Pretraining exposure to public sets can't be ruled out from here.
 - Aggregates: `inkling-3pass/` (test-score/, metrics, temperature), `control-decider-2b-v10/on-inktest/`.
+
+## 2026-11-21 · Phase 3 · loop passes 2 and 1 (patched build 73e22d20a, `--override-kv inkling2_loop.loop.count=int:N`)
+- `sessions/phase3.sh`, test split, otherwise serve.sh defaults. 1,447 / 1,447 ok at each count, 0 errors.
+- | passes | index (95% CI) | acc (bench-weighted) | ECE raw, base 27 | median ms / question |
+  |---|---|---|---|---|
+  | 3 (trained) | 40.13 (37.55–43.36) | 0.646 | 0.263 | 888 |
+  | 2 (OOD) | 4.95 (3.79–8.32) | 0.335 | 0.287 | 741 |
+  | 1 (OOD) | 2.59 (1.93–5.27) | 0.328 | 0.430 | 627 |
+- Both out-of-distribution counts fall to near chance; top-1 agreement with 3 passes is 0.27 at both. Fewer passes
+  save only 17–29% per question because prefill of layers 0–5 and 18–23 (RAM experts) dominates.
+- The 3-pass temperature applied to 2 and 1 passes gives ECE 0.078 / 0.092, but only by flattening confidence to ~0.4.
+- Plot: `loop-passes.png` (raw ECE; hollow = out of distribution).
