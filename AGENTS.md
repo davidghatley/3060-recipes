@@ -21,5 +21,6 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
 - `flint/`: Flint 40B-A2.5B MoE (Q4_K_M, 128k) on llama.cpp, experts in RAM with the MoE cache keeping hot ones in VRAM; `promo/` holds the Remotion video
 - `qwen35-3d-coder/`: Qwen3.5-4B-3D-Coder (three.js scene writer) in VRAM, Q5_K_M on llama.cpp (restored MTP head is opt-in: it breaks long answers on b12242)
 - `inkling-2-mini/`: Inkling-2-Mini 26.4B looped MoE (IQ4_NL, 64k) on llama.cpp master + the inkfix branch (`/mnt/scratch/llama.cpp/src-inkfix`), loop-core experts on GPU, rest in RAM. Stock master gives NaN prompts when a core layer's experts are in RAM with op offload on
+- `kintsugi-27b/`: Kintsugi-27B (Qwen3.8-27B dense, EXL3 trellis 2.47 bpw GGUF, 262k window) on the author's llama.cpp fork bundle v1.1.1; tiered K/V cache (VRAM cells + rest in RAM), DFlash2 drafter. `serve.sh` holds the GPU lock while serving (the bundle's launcher detaches)
 - `scripts/`: shared helpers (benchmark client etc.)
 - `notes/`, `docs/`: research notes
