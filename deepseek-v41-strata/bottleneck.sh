@@ -7,7 +7,10 @@
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 export BENCH_ARGS="--cases chat,code --runs 3" GPU_RUN_MEM=44G
-q() { "$HOME/anime-pipeline/tools/gpu_run" --free --need 11000 --wait "${DS_GPU_WAIT:-1800}" "$HERE/run_variant.sh" "$@"; }
+# --need 10500, not 11000: gpu_run holds the lock while it waits for VRAM, and with ~1 GB on the desktop 11000 can
+# stay unreachable and block everyone (2026-11-22). Strata sizes its VRAM expert slab to what is free, so compare the
+# resident-expert count in each engine log before comparing speeds.
+q() { "$HOME/anime-pipeline/tools/gpu_run" --free --need "${DS_NEED:-10500}" --wait "${DS_GPU_WAIT:-1800}" "$HERE/run_variant.sh" "$@"; }
 session_a() {
   q bn-ctl1    --ssd-cache 27
   q bn-t3      --ssd-cache 27 --cpu-threads 3
