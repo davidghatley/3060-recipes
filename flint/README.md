@@ -53,6 +53,7 @@ Overrides: `FLINT_CONTEXT`, `FLINT_CPU_MOE`, `FLINT_MOE_CACHE_MIB`, `FLINT_MOE_C
 | Threads ≠ 6, `--poll`, CPU pinning, `GGML_CUDA_GRAPH_OPT` | noise or worse; RAM bandwidth saturates at 6 threads (PLAN #5–6, exp 2) |
 | ngram-mod speculation | noise (PLAN #10) |
 | RAM experts requantized Q4_K_M → Q3_K / IQ4_XS | Q3_K +7% speed, but KLD 0.34 and 78.8% top-1; IQ4_XS no speed gain (exp 3) |
+| unsloth UD-Q3_K_XL (18.5 GB, from the original weights) | −6% decode (54.8 vs 58.5), +8% prefill, KLD 0.39, 77.5% top-1, PPL +5.8%: its I-quant experts are slower on the CPU than Q4_K (exp 7) |
 
 ## Where the remaining time goes
 
@@ -79,5 +80,5 @@ Overrides: `FLINT_CONTEXT`, `FLINT_CPU_MOE`, `FLINT_MOE_CACHE_MIB`, `FLINT_MOE_C
 ## Credits
 
 - llama.cpp for the engine and its MoE cache (`--moe-cache-mib`); ggml-org for the GGUF.
-- RecursiveSI for Flint; bartowski for the imatrix used in the requant experiment; unsloth for the UD-Q3_K_XL GGUF.
+- RecursiveSI for Flint; bartowski for the imatrix used in the requant experiment; unsloth for the UD-Q3_K_XL GGUF tested in exp 7.
 - The tuning method comes from 0xSero's [inference-optimisation-skill](https://github.com/sybil-solutions/inference-optimisation-skill): ceilings first, one change at a time with controls, and output gated as well as speed.
