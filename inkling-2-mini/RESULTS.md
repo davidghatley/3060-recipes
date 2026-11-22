@@ -162,7 +162,7 @@ Step 2, a real long request for each case that loads:
 | Shipped (F16 patches) | 6–15, ub 64 | 11.35 GB | runs | **124k-token prompt: needles 3/3**, prefill 56.0 tok/s, decode 14.6 tok/s after it |
 | Shipped (F16 patches) | 6–16, ub 64 | 11.9 GB on the card | **OOM** (`cudaGraphInstantiate`) | |
 | + #32752 | 6–15, ub 128 | 11.86 GB | **OOM** | |
-| + #32740 | 6–15, ub 256 | 10.9 GB | runs | **104k-token prompt: needles 3/3**, prefill 92.2 tok/s, decode 20.0 tok/s after it |
+| + #32740 | 6–15, ub 256 | 10.9 GB | runs | **104k-token prompt: needles 3/3**, prefill 92.2 tok/s, decode 20.0 tok/s after it. Second run: **64k prompt 3/3** (95.4 / 22.3) and **124k prompt 3/3** (90.8 / 18.9) |
 | + #32740 | 6–16, ub 128 | 11.32 GB | runs | **104k-token prompt: needles 3/3**, prefill 101.2 tok/s, decode 20.7 tok/s after it |
 | + #32740 | 6–17 (whole core), ub 128 | 11.87 GB | **OOM** | |
 
@@ -174,10 +174,10 @@ Speed of the layouts that run, against round 1 (same tests: 3 capped answers, th
 |---|---:|---:|---|---|
 | Round 1: 6–15, ub 64, old build | 26.1 | 85.2 | 64k: 68.5 / 18.7. 124k: 56.2 / 14.6 | 3/3, 3/3 |
 | **Shipped: 6–15, ub 64** (`INK_PROFILE=128k`) | **26.4** | **85.4** | 124k: 56.0 / 14.6 | 3/3 |
-| + #32740: 6–15, ub 256 | 26.9 | 101.0 | 104k: 92.2 / 20.0 | 3/3 |
+| + #32740: 6–15, ub 256 | 26.9 | 101.0 | 104k: 92.2 / 20.0; 124k: 90.8 / 18.9 | 3/3, 3/3 |
 | + #32740: 6–16, ub 128 | 28.2 | 112.9 | 104k: 101.2 / 20.7 | 3/3 |
 
-No higher ubatch is stable on the shipped build, so the 128k profile keeps ub 64 and its numbers are the round-1 numbers. The gain at 128k is in #32740: +5–8% decode at empty context, +18–32% prefill at 8k, and a long prompt processed at 92–101 tok/s at 104k against 56 at 124k (different depths, so not like for like).
+No higher ubatch is stable on the shipped build, so the 128k profile keeps ub 64 and its numbers are the round-1 numbers. The gain at 128k is in #32740: +5–8% decode at empty context, +18–32% prefill at 8k, and a long prompt processed at 92–101 tok/s at 104k. At the same 124k depth as the shipped profile, #32740 at ub 256 gives 90.8 tok/s prefill against 56.0 (1.6×) and 18.9 tok/s decode against 14.6 (+29%).
 
 **Community report, same card (RTX 3060 12 GB), unverified, build and settings unknown:** layers 6–15 on the GPU at ub 128 runs 128k at 20 tok/s; 6–16 runs out of memory at ub 128; at 6–15, ub 192 works and ub 256 runs out of memory.
 

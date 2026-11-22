@@ -21,17 +21,26 @@ descendants() { local p; for p in $(pgrep -P "$1"); do echo "$p"; descendants "$
 stop() {
   local pids p
   pids="$top $(descendants "$top")"     # $top is llama-server itself when serve.sh runs without gpu_run (INK_NO_GPU_RUN)
-  for p in $pids; do [ "$(cat /proc/$p/comm 2>/dev/null)" = llama-server ] && kill -INT "$p" 2>/dev/null; done
+  local found=0
+  for p in $pids; do
+    if [ "$(cat /proc/$p/comm 2>/dev/null)" = llama-server ]; then found=1; kill -INT "$p" 2>/dev/null || true; fi
+  done
+  # No llama-server yet: the launcher is still queued in gpu_run. Stop the whole tree, or it starts a server later that nobody owns.
+  if [ "$found" = 0 ]; then for p in $pids; do kill -TERM "$p" 2>/dev/null || true; done; fi
   for _ in $(seq 60); do kill -0 "$top" 2>/dev/null || return 0; sleep 1; done
-  echo "server did not exit after 60 s (pid $top)" >&2
+  echo "server did not exit after 60 s (pid $top); stopping its tree" >&2
+  for p in $top $(descendants "$top"); do kill -TERM "$p" 2>/dev/null || true; done
+  return 0
 }
 trap stop EXIT
-for _ in $(seq 7200); do
+ready=0
+for _ in $(seq "${INK_READY_WAIT:-7200}"); do
   # healthy only if OUR server bound the port (its own log says so): another session's server on the same port must not pass for ours
-  grep -q "listening on http://127.0.0.1:$INK_PORT\$" "$log" 2>/dev/null && curl -sf "http://127.0.0.1:$INK_PORT/health" > /dev/null && break
+  grep -q "listening on http://127.0.0.1:$INK_PORT\$" "$log" 2>/dev/null && curl -sf "http://127.0.0.1:$INK_PORT/health" > /dev/null && { ready=1; break; }
   kill -0 "$top" 2>/dev/null || { echo "server exited during load:"; tail -20 "$log"; exit 1; }
   sleep 1
 done
+[ "$ready" = 1 ] || { echo "$label: server not ready after ${INK_READY_WAIT:-7200} s; giving up"; exit 1; }
 echo "$label ready; vram=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader)"
 if [ -n "${INK_TEST:-}" ]; then (cd "$ROOT" && eval "$INK_TEST"); else python3 -I "$ROOT/tools/srvtest.py" --label "$label" "${targs[@]}"; fi
 echo "$label done; vram=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader)"

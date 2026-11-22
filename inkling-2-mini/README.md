@@ -57,7 +57,7 @@ IQ4_NL, q8_0 KV, `--no-op-offload`, with 0.95 GB of the card held by the desktop
 | 6–15 (`INK_PROFILE=128k`) | 64 | **runs** (124k prompt, 3/3) | loads; not run | loads; not run |
 | 6–15 | 128 | does not load | loads, fails on the first request | loads; not run |
 | 6–15 | 192 | does not load | does not load | loads; not run |
-| 6–15 | 256 | does not load | does not load | **runs** (104k prompt, 3/3) |
+| 6–15 | 256 | does not load | does not load | **runs** (104k and 124k prompts, 3/3 each) |
 | 6–16 | 64 | loads, fails on the first request | loads; not run | loads; not run |
 | 6–16 | 128 | does not load | does not load | **runs** (104k prompt, 3/3) |
 | 6–17 (the 64k default layout) | 128 | not tried (6–15 already does not load) | not tried | loads, fails on the first request |

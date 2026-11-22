@@ -290,3 +290,9 @@
 {"label": "r2-nvfp4-64k", "case": "code-32k-med", "t": 1795372205.5537403, "vram_mib": 11700, "decode_tps": 22.5, "min": 22.5, "max": 22.5, "max_loop": 0.0}
 {"label": "r2-nvfp4-64k", "case": "needle-32k", "t": 1795372490.7961113, "vram_mib": 11700, "prompt_n": 32090, "found": "3/3", "prefill_tps": 117.7, "decode_tps": 22.5, "answer": "UF8VWEFI | 3UK043MD | NMTTET2A"}
 {"label": "r2-nvfp4-64k", "case": "needle-62k", "t": 1795373144.4581256, "vram_mib": 11700, "prompt_n": 61947, "found": "3/3", "prefill_tps": 98.0, "decode_tps": 19.3, "answer": "VUZ5K9KL | MWSRU5VU | HTK9014R"}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "code-0k", "t": 1795376861.5660195, "vram_mib": 11088, "gen_n": 463, "prompt_n": 64, "decode_tps": 26.8, "finish": "stop", "content_chars": 645, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "code-0k", "t": 1795376876.5207717, "vram_mib": 11088, "gen_n": 385, "prompt_n": 72, "decode_tps": 27.0, "finish": "stop", "content_chars": 407, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "code-0k", "t": 1795376896.129139, "vram_mib": 11088, "gen_n": 512, "prompt_n": 60, "decode_tps": 26.9, "finish": "length", "content_chars": 882, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "code-0k-med", "t": 1795376896.1412215, "vram_mib": 11088, "decode_tps": 26.9, "min": 26.8, "max": 27.0, "max_loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "needle-64k", "t": 1795377582.11653, "vram_mib": 11118, "prompt_n": 64219, "found": "3/3", "prefill_tps": 95.4, "decode_tps": 22.3, "answer": "67AAXTV1 | TKKN0JMF | VL9MBRCI"}
+{"label": "r2-128k-c15-ub256-pr32740-124k", "case": "needle-124k", "t": 1795378965.4360564, "vram_mib": 11118, "prompt_n": 124217, "found": "3/3", "prefill_tps": 90.8, "decode_tps": 18.9, "answer": "WPLW3MYH | 2HCIQNT0 | ZNCLZYXO"}

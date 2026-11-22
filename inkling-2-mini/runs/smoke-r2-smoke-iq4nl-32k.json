@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 114,
+  "reasoning_head": "The user asks: Reply with exactly: ok. Need final exactly \"ok\" likely no extra punctuation. Ensure no extra words.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 18,
+   "prompt_ms": 372.59,
+   "prompt_per_token_ms": 20.7,
+   "prompt_per_second": 48.31,
+   "predicted_n": 35,
+   "predicted_ms": 1178.81,
+   "predicted_per_token_ms": 34.67,
+   "predicted_per_second": 28.84
+  },
+  "wall_s": 1.56
+ },
+ "math": {
+  "content": "391",
+  "reasoning_chars": 96,
+  "reasoning_head": "The user wants just the number. 17*23 = 17*20 + 17*3 = 340 + 51 = 391. Ensure final just number.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 29,
+   "prompt_ms": 415.59,
+   "prompt_per_token_ms": 14.33,
+   "prompt_per_second": 69.78,
+   "predicted_n": 44,
+   "predicted_ms": 1472.34,
+   "predicted_per_token_ms": 34.24,
+   "predicted_per_second": 29.21
+  },
+  "wall_s": 1.89
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = ''.join(c.lower() for c in s if c.isalnum())\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 562,
+  "reasoning_head": "The user wants only one code block. Need provide Python function is_palindrome(s) ignoring case and non-alphanumerics. Need ensure function logic. Could use ''.join(c.lower() for c in s if c.isalnum()). Then compare to reversed. Note isalnum includes unicode alphanumerics; fine. Output only one code",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 33,
+   "prompt_ms": 383.3,
+   "prompt_per_token_ms": 11.62,
+   "prompt_per_second": 86.09,
+   "predicted_n": 195,
+   "predicted_ms": 6603.33,
+   "predicted_per_token_ms": 34.04,
+   "predicted_per_second": 29.38
+  },
+  "wall_s": 6.99
+ },
+ "image": {
+  "content": "A square is split vertically into a red left half and a blue right half, with a white square centered over the boundary.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 68,
+   "prompt_ms": 771.72,
+   "prompt_per_token_ms": 11.35,
+   "prompt_per_second": 88.11,
+   "predicted_n": 99,
+   "predicted_ms": 3339.44,
+   "predicted_per_token_ms": 34.08,
+   "predicted_per_second": 29.35
+  },
+  "wall_s": 4.13
+ }
+}
