@@ -47,5 +47,8 @@ curl -s -m 3600 http://127.0.0.1:$PORT/v1/chat/completions -H 'Content-Type: app
   -d '{"model":"x","messages":[{"role":"user","content":"Say OK."}],"max_tokens":8,"reasoning_effort":"low"}' >"$OUT/$LABEL.warmup.json"
 echo "[$(date +%T)] ready after $(( $(date +%s) - t0 )) s; vram $(nvidia-smi --query-gpu=memory.used --format=csv,noheader); rss $(ps -o rss= --ppid $SRV --pid $SRV | awk '{s+=$1} END {printf "%.1f GiB", s/1048576}')" | tee -a "$LOG"
 
-python3 -I "$REPO/scripts/bench.py" --url http://127.0.0.1:$PORT --label "$LABEL" --out "$OUT" ${BENCH_ARGS:-} | tee "$OUT/$LABEL.bench.txt"
+# Sample the disk that really holds the pack (the path can be a symlink to another drive).
+PACK=$(python3 -I -c 'import json,sys; a=json.load(open(sys.argv[1]))["args"]; print(a[a.index("--pack")+1])' "$CFG")
+echo "[$(date +%T)] pack on $(df --output=source "$(readlink -f "$PACK")" | tail -1) ($(readlink -f "$PACK"))" | tee -a "$LOG"
+python3 -I "$REPO/scripts/bench.py" --url http://127.0.0.1:$PORT --label "$LABEL" --out "$OUT" --disk-path "$(readlink -f "$PACK")" ${BENCH_ARGS:-} | tee "$OUT/$LABEL.bench.txt"
 echo "[$(date +%T)] done $LABEL" | tee -a "$LOG"

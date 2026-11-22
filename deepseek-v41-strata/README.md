@@ -23,7 +23,7 @@ Strata's own numbers for a 3060 with 46 GB RAM are 8–11 tok/s. This box gets a
 
 - **The GPU holds very little of the model.** The dense weights (5.86 GB) and about 260 of the 15,360 routed experts (2.5 GB) are in VRAM.
 - **RAM holds a store of the hottest experts:** about 2,600 of them (27 GB). It is sized from free RAM at start.
-- **Everything else is read from the NVMe.** The other ~100 GB of experts are read in place from the GGUFs, and the 111 GB Engram n-gram table is read a few rows per token. So a fast NVMe on the same box is part of the requirement, not an option.
+- **Everything else is read from the NVMe.** The other ~100 GB of experts are read in place from the GGUFs, and the 111 GB Engram n-gram table is read a few rows per token. So a fast NVMe on the same box is part of the requirement, not an option. Measured: with the pack on a 7200 rpm hard disk instead, decode fell from 4.98 to 0.46 tok/s and a short question waited 200 s for its first token (RESULTS.md, not a controlled comparison).
 - **The CPU does most of the expert maths.** 72–78% of expert evaluations ran on the CPU on short prompts.
 
 So the claim is true: a 12 GB card is enough. But the card is not what sets the speed. RAM, the CPU and the SSD do.
@@ -53,7 +53,7 @@ GPU_RUN_MEM=44G ~/anime-pipeline/tools/gpu_run --free --need 11000 deepseek-v41-
 | Script | What it does |
 |---|---|
 | `run_variant.sh LABEL [engine args]` | start the Strata server with one engine variant, wait for the engine, run `scripts/bench.py`, stop |
-| `bottleneck.sh [a\|b]` | the CPU-vs-NVMe runs: `--cpu-threads` and `--ssd-cache` (RAM store size), one knob at a time, controls on both sides |
+| `bottleneck.sh [a\|b]` | the CPU-vs-NVMe runs: `--cpu-threads` and `--ssd-cache` (RAM store size), one knob at a time, controls on both sides. Not run yet: needs the pack on an NVMe |
 | `../scripts/bench.py` | prefill and decode tok/s from streaming timestamps, plus a 1 s sampler of VRAM, RAM, page cache, CPU busy % and reads on the model's disk |
 
 ## Credits

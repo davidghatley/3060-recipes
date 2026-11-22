@@ -14,6 +14,7 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
   Engines that mmap experts (Strata, llama.cpp with `-ot exps=CPU`) need `GPU_RUN_MEM=44G`.
   The DeepSeek runs peaked at 31–35 GB, so 20 GB would bind. The effect of a low cap was not measured.
 - `/mnt/models` is on the fast Micron NVMe. `/mnt/scratch` is a slower SK hynix BC501, so don't stream weights from it.
+- Since 2026-11-19 `/mnt/models/llm/deepseek-v41-flash` is a symlink to `/mnt/archive` (a Seagate 7200 rpm HDD). DeepSeek on Strata decodes at ~0.46 tok/s from there, not ~5. Check `readlink -f` before benchmarking anything under `/mnt/models`.
 - Run Python that reads downloaded files with `python -I`, from scripts kept outside the download dir.
 
 ## Layout
