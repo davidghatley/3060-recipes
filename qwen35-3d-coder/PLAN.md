@@ -229,3 +229,31 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
   Each run prints zlib, a LOOP flag and tok/s. (The `--seeds`/`--min-p` options were added just before the pause and
   haven't run yet: smoke-test with `--max 64` first.) If the loop rates match, MTP goes back to the default after the
   8-prompt render comparison and spec4 controls. If MTP loops clearly more, test master next.
+
+## 2026-11-21/22: session D, the loop-rate test
+
+- `tools/looprate.sh`: MTP n=2 vs no speculation, same Q5_K_M via `serve.sh` (64k, one slot), T 0.6, top-p 0.95,
+  top-k 20, server min-p 0.05, the 4 prompts that looped before (048/238/334/335) x seeds 1-4, 16k-token cap
+  (loops start ~9k). Batches a (238/335) and b (048/334), each arm its own server session
+  (`runs/mtprepro/D-looprate/`). mtp-b missed the GPU lock twice (another session held it 30+ min) and ran at 04:35
+  (`D-looprate-mtpb.log`); the other three batches ran 00:49-03:02.
+
+  | arm | 238 | 335 | 048 | 334 | loops | decode (mean, range) |
+  |---|---|---|---|---|---:|---|
+  | MTP n=2 | 0/4 | 0/4 | 0/4 | 0/4 | **0/16** | 100.2 tok/s (90.6-106.5) |
+  | none | 0/4 | 0/4 | 1/4 (s3) | 1/4 (s1) | **2/16** | 76.2 tok/s (76.0-77.1) |
+
+  LOOP = zlib ratio < 0.12 on the answer (the two loops: 0.023 and 0.031, both hit the cap inside `<think>`).
+  Fisher 0/16 vs 2/16: p = 0.48. Pooled with sessions B and C (same prompts): MTP 1/22 vs none 2/19, p = 0.59.
+  Pooled with the first qualify split (5/9 vs 0/8) as well: 6/31 vs 2/27, p = 0.26.
+  Verdict: no evidence that MTP loops more. No-spec decode loops on these prompts too. Together with sessions A/B
+  (target state matches a clean prefill, verifier calibrated), the "rollback bug" is not supported: the first
+  5/9 vs 0/8 split was most likely per-prompt loop variance at one sample each. No engine patch, and the master
+  build test is not needed for this question.
+- Not yet shown: that MTP pages work as often as no-spec pages. The first split (1/8 vs 6/8 working) also had
+  token-level slips in finished MTP pages. Next: the 8-prompt render comparison with 2 seeds per arm, then the
+  spec4 speed controls. serve.sh keeps QC_SPEC=none until that passes; MTP stays a reliable opt-in.
+- Harness fix (commit 3896e68): `with_server.sh` found its server by port and gave up on health after 30 min while
+  gpu_run was still queued for the lock, which left a queued launcher that would have started an orphan server.
+  It now finds the server as its own child, waits QC_GPU_WAIT + 900 s, and ends the launcher tree on exit or signal.
+

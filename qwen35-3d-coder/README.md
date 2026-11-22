@@ -22,7 +22,7 @@ Numbers, the quality eval and the CUDA-kernel analysis are in [RESULTS.md](RESUL
 | KL divergence vs F16 | 0.001 | 0.007 |
 | Render eval, pages that work (20 prompts) | 10 | 9 |
 
-The restored MTP head takes Q5_K_M to **101.7 tok/s (1.68×)**, but it is off by default. On this llama.cpp build, MTP sends long answers into reasoning loops: on the same 8 prompts, 1 page worked with MTP against 6 without it. The cause looks like an engine bug in rolling back the DeltaNet state after a rejected draft (RESULTS.md, "MTP breaks long answers"). To try it anyway: `QC_SPEC=draft-mtp ./serve.sh`.
+The restored MTP head takes Q5_K_M to **101.7 tok/s (1.68×)**, but it is off by default. In the first comparison on 8 prompts, one answer each, 1 page worked with MTP against 6 without it, and MTP answers got stuck in reasoning loops. The follow-up did not hold that up: MTP's model state matches a clean prefill through 12k tokens, and on the 4 prompts that looped, 4 seeds each, MTP looped 0 of 16 times against 2 of 16 without it (RESULTS.md, "Does MTP break long answers?"). It stays opt-in until a render comparison with more samples shows its pages work as often. To try it anyway: `QC_SPEC=draft-mtp ./serve.sh`.
 
 Q4_K_M is faster again (84.8 tok/s without speculation), but 62% of its finished pages threw errors (`THREE.Object33D`, duplicate declarations), and it passed 5 of 20 prompts.
 

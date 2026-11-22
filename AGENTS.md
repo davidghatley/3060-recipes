@@ -19,7 +19,7 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
 ## Layout
 - `deepseek-v41-strata/`: DeepSeek-V4.1-Flash 763B MoE (ISTA GSQ-RCO IQ2_XXS) on the Strata engine
 - `flint/`: Flint 40B-A2.5B MoE (Q4_K_M, 128k) on llama.cpp, experts in RAM with the MoE cache keeping hot ones in VRAM; `promo/` holds the Remotion video
-- `qwen35-3d-coder/`: Qwen3.5-4B-3D-Coder (three.js scene writer) in VRAM, Q5_K_M on llama.cpp (restored MTP head is opt-in: it breaks long answers on b12242)
+- `qwen35-3d-coder/`: Qwen3.5-4B-3D-Coder (three.js scene writer) in VRAM, Q5_K_M on llama.cpp (restored MTP head is opt-in: its first 8-prompt page check failed; loop rate and state later matched no-spec, render re-check pending)
 - `inkling-2-mini/`: Inkling-2-Mini 26.4B looped MoE (IQ4_NL, 64k) on llama.cpp master + the inkfix branch (`/mnt/scratch/llama.cpp/src-inkfix`), loop-core experts on GPU, rest in RAM. Stock master gives NaN prompts when a core layer's experts are in RAM with op offload on
 - `scripts/`: shared helpers (benchmark client etc.)
 - `notes/`, `docs/`: research notes

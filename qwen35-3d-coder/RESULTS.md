@@ -11,10 +11,10 @@
 ## Verdict
 
 - **Ships: Q5_K_M without speculation (`serve.sh`): 77.5 tok/s task-weighted, 1.28× the Q8_0 baseline (60.6).** It decodes at 80.7 tok/s while reasoning and 74.0 tok/s while writing code. Its pages work as often as Q8_0's (render eval 9 vs 10 of 20).
-- **MTP is not shipped. It is 31% faster (Q5_K_M + MTP n=2: 101.7 tok/s, 1.68×), but on this llama.cpp build it breaks long answers.** On the same 8 prompts through the same server:
+- **MTP is not shipped yet. It is 31% faster (Q5_K_M + MTP n=2: 101.7 tok/s, 1.68×), and its first quality check failed.** On the same 8 prompts through the same server, one answer each:
   - with MTP, 1 page worked, 4 answers fell into reasoning loops and 3 pages threw errors;
   - without speculation, 6 pages worked, with 0 loops.
-  The sampler's sample-and-compare acceptance is exact in distribution, so the likely cause is the engine: Gated DeltaNet state not being rolled back correctly after a rejected draft. It is opt-in (`QC_SPEC=draft-mtp`) and is the first thing to fix. See [MTP breaks long answers](#mtp-breaks-long-answers).
+  The follow-up found no engine bug: MTP's state matches a clean prefill through 12k tokens, and on the 4 prompts that looped, 4 seeds each, MTP looped 0/16 times against 2/16 without it. It stays opt-in (`QC_SPEC=draft-mtp`) until a render comparison with more samples shows its pages work as often. See [Does MTP break long answers?](#does-mtp-break-long-answers).
 - **Q4_K_M does not ship either.** It is the fastest quant (84.8 no-spec, 107.1 with MTP), but it passed 5 of 20 prompts in the render eval, and 62% of its finished pages threw an error, against 29% for Q5_K_M and 33% for Q8_0.
 - **A custom CUDA kernel is not worth writing yet.** Fixing MTP is worth +31% (77.5 → 101.7, measured) and needs no new CUDA code. After that, a phase-aware MTP/DFlash switch (+8%) and a vocabulary-pruned MTP LM head (+10–13% while writing code) each beat a custom kernel (~+5% on the task with MTP on). Without speculation, a fused single-token decode kernel would be worth ~+15%. See [the kernel section](#is-a-custom-cuda-kernel-worth-writing).
 
@@ -32,11 +32,11 @@ Each cell is the median of 5 prompts × 1024 tokens, sampled as the model card s
 | Config | Decode, reasoning | Decode, writing code | Task | Card memory used* |
 |---|---:|---:|---:|---:|
 | Q8_0 official, no speculation (baseline) | 62.5 | 58.3 | 60.6 | 8.0 GB |
-| Q8_0 ours + MTP n=2 (no quant change; MTP breaks long answers) | 77.8 | 107.7 | 88.9 (1.47×) | 8.7 GB |
+| Q8_0 ours + MTP n=2 (no quant change; opt-in, see below) | 77.8 | 107.7 | 88.9 (1.47×) | 8.7 GB |
 | Q4_K_M ours, no speculation (fails the render eval) | 88.5 | 80.6 | 84.8 (1.40×) | 6.3 GB |
 | **Q5_K_M ours, no speculation (`serve.sh`)** | **80.7** | **74.0** | **77.5 (1.28×)** | 7.1 GB |
 | Q4_K_M ours + MTP n=2 (fastest; both problems) | 92.8 | 132.2 | 107.1 (1.77×) | 6.9 GB |
-| Q5_K_M ours + MTP n=2 (opt-in; MTP breaks long answers) | 86.9 | 128.7 | 101.7 (1.68×) | 7.3 GB |
+| Q5_K_M ours + MTP n=2 (opt-in, page quality not yet re-checked) | 86.9 | 128.7 | 101.7 (1.68×) | 7.3 GB |
 | Ceiling, Q4_K_M without speculation, at 0 / 16k depth | 122.2 | 102.5 | | |
 
 \* Whole card while serving at 64k context, including ~1.4 GB held by the desktop and an idle ComfyUI.
@@ -53,7 +53,7 @@ MTP n=2 on Q4_K_M was measured in three separate sessions: R 92.8 / 92.8 / 92.6 
 |---|---|---|
 | Quant Q8_0 → Q5_K_M | decode 63.6 → 82.5 tok/s (llama-bench tg128); KLD 0.001 → 0.007; render eval 10 → 9 of 20 | **kept** |
 | Quant Q8_0 → Q4_K_M | decode 63.6 → 91.0 tok/s; KLD 0.026; render eval 10 → 5 of 20, 62% of finished pages throw | rejected on quality |
-| MTP head restored, n=2 | +5% reasoning, +64% code (Q4_K_M); +31% task on Q5_K_M | **rejected on quality**: breaks long answers on this build (opt-in) |
+| MTP head restored, n=2 | +5% reasoning, +64% code (Q4_K_M); +31% task on Q5_K_M | **opt-in**: first 8-prompt check failed (1/8 vs 6/8 pages); loop rate and state later matched no-spec, render re-check pending |
 | MTP n=3 / n=4 / n=6 | n=3 loses 13% in reasoning; n≥4 worse | rejected |
 | MTP + `--spec-draft-p-min` 0.5 / 0.75 | higher acceptance, fewer accepted tokens; task 99–103 | rejected |
 | DFlash (z-lab drafter, n=15) | 158 tok/s writing code, but 71.5 reasoning (acceptance 7%) | rejected for this model |
@@ -154,9 +154,9 @@ With one sample per prompt, Q5_K_M vs Q8_0 (9 vs 10) is within noise. Q4_K_M vs 
 
 - Scenes: see the next section. The gate first ran with MTP on, and that is how the MTP problem was found.
 
-### MTP breaks long answers
+### Does MTP break long answers?
 
-This was found by the `serve.sh` scene gate. With MTP on, its first prompt (scene-000048, which Q5_K_M finished in 12k tokens in the eval) hit the 24k cap in a reasoning loop, twice.
+The worry came from the `serve.sh` scene gate. With MTP on, its first prompt (scene-000048, which Q5_K_M finished in 12k tokens in the eval) hit the 24k cap in a reasoning loop, twice.
 
 The same 8 subset prompts were then run through `serve.sh` (64k context, one slot, card sampling, a 24k cap, one sample each) with and without `--spec-type draft-mtp`. The pages were rendered on the CPU and scored like the render eval (`runs/qualify-mtp/`, `runs/qualify-nospec/`):
 
@@ -169,22 +169,30 @@ The same 8 subset prompts were then run through `serve.sh` (64k context, one slo
 
 Counting the gate's first MTP run of scene-000048, MTP looped on 5 of 9 answers against 0 of 8 without it (Fisher's exact test, p ≈ 0.03). The MTP pages also show token-level slips like Q4_K_M's: a duplicate `const direction`, and `rgba(16721477,1)`.
 
-**Why this is an engine bug, not the draft head.** llama.cpp accepts a draft token only if the target's own sampler, run on the verify logits, picks the same token (`common_sampler_sample_and_accept_n`). That is exact in distribution however bad the draft is. So the target's state must be going wrong.
+**First reading: an engine bug.** llama.cpp accepts a draft token only if the target's own sampler, run on the verify logits, picks the same token (`common_sampler_sample_and_accept_n`). That is exact in distribution however bad the draft is, so the suspect was the 24 Gated DeltaNet layers, whose recurrent state has to be rolled back after every rejected draft.
 
-The suspect is the 24 Gated DeltaNet layers. Their recurrent state has to be rolled back to the last accepted token after every rejected draft. Reasoning has 35% acceptance, so many rollbacks, and that is where the loops start. The 1024-token speed sessions and the 512-token greedy check were too short to show it.
+**What the follow-up found: no bug, and no higher loop rate** (PLAN.md, 2026-11-20 and 2026-11-21/22, `runs/mtprepro/`):
 
-To fix: test whether recurrent-state rollback is exact (greedy, long outputs, MTP vs none, token by token), then patch or update llama.cpp. If it is fixed, MTP is worth +31% on Q5_K_M (77.5 → 101.7 tok/s).
+- **The state is exact.** Greedy to 6k tokens and sampled to 12k tokens (past where the loops began), the MTP run's own logprobs match a clean no-spec prefill of the same prefix as closely as no-spec decode does (median difference 0.0000–0.0021 nats). The verifier's top-1 pick rate matches what T / top-k / top-p predict, the same as without speculation.
+- **The loop rate is the same.** The 4 prompts that looped, 4 seeds each, 16k cap, card sampling:
+
+  | Q5_K_M via `serve.sh` | MTP n=2 | No speculation |
+  |---|---:|---:|
+  | Answers stuck in a reasoning loop | **0 / 16** | **2 / 16** |
+  | Decode | 100.2 tok/s | 76.2 tok/s |
+
+  0/16 vs 2/16 is Fisher p = 0.48. Pooled with every earlier run on these prompts: 6/31 vs 2/27, p = 0.26. Plain decoding loops on these prompts too. The first 5/9 vs 0/8 split was one sample per prompt.
+
+So MTP is not shown to be broken. It is also not yet shown to be as good: the 1/8 vs 6/8 page split above included finished MTP pages with token slips, and that needs the render comparison with more than one sample per prompt. **Until that passes, `serve.sh` stays without speculation and MTP stays opt-in.** If it passes, MTP is worth +31% (77.5 → 101.7 tok/s).
 
 ### Is MTP lossless?
 
-**On this build, no.** See [MTP breaks long answers](#mtp-breaks-long-answers).
-
-The short greedy check missed it. At temperature 0 (3 prompts × 2 phases × 512 tokens), the two no-spec runs are identical to each other. Against them:
+**In distribution, yes as far as measured** (see the follow-up under [Does MTP break long answers?](#does-mtp-break-long-answers)); the page-quality check is still open. It is not token-identical at temperature 0, as expected from batched verify numerics. At temperature 0 (3 prompts × 2 phases × 512 tokens), the two no-spec runs are identical to each other. Against them:
 
 - MTP n=2 matches on 4 of 6 outputs;
 - MTP n=4 with p-min 0.5 matches on 1 of 6.
 
-At every divergence point, the top two tokens are 0.002–0.10 nats apart (`tools/greedy_check.py`). That is what both batched-verify numerics and slightly corrupted recurrent state would look like at first. Only the long sampled answers show which it is.
+At every divergence point, the top two tokens are 0.002–0.10 nats apart (`tools/greedy_check.py`). The long greedy and sampled checks later showed the state matches a clean prefill, so these are near-tie flips from batched-verify numerics.
 
 ## Is a custom CUDA kernel worth writing?
 
