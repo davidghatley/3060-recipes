@@ -7,7 +7,7 @@
 set -uo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 export BENCH_ARGS="--cases chat,code --runs 3" GPU_RUN_MEM=44G
-q() { "$HOME/anime-pipeline/tools/gpu_run" --free --need 11000 --wait 1800 "$HERE/run_variant.sh" "$@"; }
+q() { "$HOME/anime-pipeline/tools/gpu_run" --free --need 11000 --wait "${DS_GPU_WAIT:-1800}" "$HERE/run_variant.sh" "$@"; }
 session_a() {
   q bn-ctl1    --ssd-cache 27
   q bn-t3      --ssd-cache 27 --cpu-threads 3
