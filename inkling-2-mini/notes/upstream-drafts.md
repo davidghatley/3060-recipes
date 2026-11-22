@@ -87,6 +87,14 @@ sides.
 So on this card the PR is worth 2.5x prefill at 8k, 2.9x at 62k and +20% decode at 62k over the best we could run
 before.
 
+**128k context, same card.** Experts of layers 6-15 on the GPU (0-5 and 16-23 on the host), `--no-op-offload`,
+q8_0 KV. Master with our F16 cast only runs this at `-ub 64`; with this PR `-ub 256` runs with about 1 GB to spare:
+
+| 128k context, IQ4_NL | Decode, empty | Prefill, 124k prompt | Decode after 124k | Needles at 124k |
+|---|---:|---:|---:|---|
+| master + F16 cast, ub 64 | 26.4 | 56.0 | 14.6 | 3/3 |
+| **master + #32740, ub 256** | 26.9 | **90.8** | **18.9** | 3/3 |
+
 Output check, llama-perplexity 3 x 512 on wikitext-2, same placement: master 6.0297 (op offload on) and 6.0131
 (`--no-op-offload`); this PR 6.0178 and 6.0279. Not bit-identical to master, but inside the spread between master's
 own two paths. The unrelated op-offload NaN (#32710) is unchanged by this PR, as expected.
@@ -102,4 +110,4 @@ made the buffer larger (4198 MiB), because the destination is a graph leaf and e
 `ggml_cast` did not have that problem.
 
 Logs: `runs/membuf/summary-r2-core.txt`, `runs/membuf/summary-r2-allgpu.txt`, `runs/r2/benchA.log`,
-`runs/server-r2-pr32740-64k-ub128.log`, `runs/server-r2-pr32740-64k-ub512.log`, `runs/server-r2-pr32752-64k-ub256.log`.
+`runs/r2/b128-8.log`, `runs/server-r2-pr32740-64k-ub128.log`, `runs/server-r2-pr32740-64k-ub512.log`, `runs/server-r2-pr32752-64k-ub256.log`.
