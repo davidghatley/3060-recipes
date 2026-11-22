@@ -24,11 +24,17 @@ c["log"] = log
 json.dump(c, open(out, "w"), indent=1)
 EOF
 
+# Another server already on the port would answer our readiness checks and take the benchmark.
+curl -sf -m 3 http://127.0.0.1:$PORT/v1/models >/dev/null && { echo "port $PORT is already in use; not starting $LABEL"; exit 1; }
 echo "[$(date +%T)] start $LABEL: $*" | tee "$LOG"
 cd "$STRATA"
 "$STRATA/python/bin/python3.12" "$STRATA/serve/server.py" --engine strata --config "$CFG" --port $PORT >>"$LOG" 2>&1 &
 SRV=$!
-trap 'kill $SRV 2>/dev/null; wait $SRV 2>/dev/null || true' EXIT
+# Stop the front end and any engine process it started, so nothing outlives the gpu_run session.
+stop() { local kids; kids=$(pgrep -P $SRV || true); kill $SRV $kids 2>/dev/null; wait $SRV 2>/dev/null || true
+  [ -z "$kids" ] && return 0
+  for _ in $(seq 30); do kill -0 $kids 2>/dev/null || return 0; sleep 1; done; kill -9 $kids 2>/dev/null || true; }
+trap stop EXIT
 
 t0=$(date +%s)
 until curl -sf -m 5 http://127.0.0.1:$PORT/v1/models >/dev/null; do
