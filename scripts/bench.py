@@ -7,8 +7,9 @@ For each case it does `--runs` requests (the first is treated as warm-up). It re
 - prefill tok/s = prompt_tokens / time to first streamed token
 - decode tok/s  = (completion_tokens - 1) / (last token - first token)
 
-A sampler thread logs GPU VRAM/util/temp, RAM and nvme0n1 read MB/s once per second, so you can see whether
-the run is GPU-, RAM- or SSD-bound. Every prompt starts with a nonce, which defeats any prefix cache.
+A sampler thread logs GPU VRAM/util/temp, RAM, page cache, CPU busy % and the read MB/s of the disk that holds
+--disk-path (default /mnt/models; NVMe names can swap between boots) once per second, so you can see whether
+the run is GPU-, RAM-, CPU- or SSD-bound. Every prompt starts with a nonce, which defeats any prefix cache.
 """
 import argparse, csv, json, os, statistics, subprocess, sys, threading, time, urllib.request, uuid
 
@@ -34,8 +35,23 @@ def filler(n_chars):
     return "```python\n" + text[:n_chars] + "\n```\n\n"
 
 
+def disk_of(path):
+    """Whole-disk block device name (e.g. nvme1n1) that holds `path`."""
+    st = os.stat(path)
+    dev = os.path.realpath(f"/sys/dev/block/{os.major(st.st_dev)}:{os.minor(st.st_dev)}")
+    if os.path.exists(os.path.join(dev, "partition")):
+        dev = os.path.dirname(dev)
+    return os.path.basename(dev)
+
+
+def cpu_times():
+    with open("/proc/stat") as f:
+        v = [int(x) for x in f.readline().split()[1:]]
+    return v[3] + v[4], sum(v[:8])  # idle + iowait, total
+
+
 class Sampler(threading.Thread):
-    def __init__(self, path, disk="nvme0n1"):
+    def __init__(self, path, disk):
         super().__init__(daemon=True)
         self.path, self.disk, self.stop = path, disk, threading.Event()
 
@@ -46,18 +62,21 @@ class Sampler(threading.Thread):
     def run(self):
         with open(self.path, "w", newline="") as fh:
             w = csv.writer(fh)
-            w.writerow(["t", "vram_mib", "gpu_util", "gpu_temp", "ram_avail_gib", "nvme_read_mbs"])
-            last = self._sectors_read()
+            w.writerow(["t", "vram_mib", "gpu_util", "gpu_temp", "ram_avail_gib", "nvme_read_mbs",
+                        "disk", "cpu_busy_pct", "page_cache_gib"])
+            last, (i0, t0) = self._sectors_read(), cpu_times()
             while not self.stop.wait(1.0):
                 q = subprocess.run(["nvidia-smi", "--query-gpu=memory.used,utilization.gpu,temperature.gpu",
                                     "--format=csv,noheader,nounits"], capture_output=True, text=True).stdout.strip()
                 with open("/proc/meminfo") as f:
                     mi = {l.split(":")[0]: int(l.split()[1]) for l in f}
-                now = self._sectors_read()
+                now, (i1, t1) = self._sectors_read(), cpu_times()
+                busy = 100 * (1 - (i1 - i0) / (t1 - t0)) if t1 > t0 else float("nan")
                 w.writerow([round(time.time(), 1), *[x.strip() for x in q.split(",")],
-                            round(mi["MemAvailable"] / 2**20, 1), round((now - last) * 512 / 1e6, 1)])
+                            round(mi["MemAvailable"] / 2**20, 1), round((now - last) * 512 / 1e6, 1),
+                            self.disk, round(busy, 1), round(mi["Cached"] / 2**20, 1)])
                 fh.flush()
-                last = now
+                last, i0, t0 = now, i1, t1
 
 
 def one_request(url, model, prompt, max_tokens, effort, timeout):
@@ -108,12 +127,13 @@ def main():
     ap.add_argument("--timeout", type=int, default=900)
     ap.add_argument("--label", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--disk-path", default="/mnt/models", help="sample reads of the disk holding this path")
     a = ap.parse_args()
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(a.out, exist_ok=True)
     base = os.path.join(a.out, f"{stamp}-{a.label}")
-    sampler = Sampler(base + "-telemetry.csv")
+    sampler = Sampler(base + "-telemetry.csv", disk_of(a.disk_path))
     sampler.start()
     rows = []
     try:
