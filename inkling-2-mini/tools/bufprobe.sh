@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start llama-server for each (ctx, ub[, extra]) combo, record the KV / compute buffer sizes it reserves, stop it.
-#   tools/bufprobe.sh "4096 512" "16384 256" ...   (runs inside one gpu_run session)
+#   tools/bufprobe.sh "4096 512" "16384 256" ...   (runs inside one gpu_run session; BP_TAG=<prefix> for the log names)
 set -uo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if [[ -z ${BP_INSIDE:-} ]]; then
@@ -11,7 +11,7 @@ MODEL=${INK_MODEL:-/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf}
 export LD_LIBRARY_PATH=/mnt/scratch/envs/llama-build-cuda/lib
 for combo in "$@"; do
   read -r ctx ub extra <<< "$combo"
-  log=$ROOT/runs/membuf/ctx$ctx-ub$ub${extra:+-$(echo "$extra" | tr -c 'a-zA-Z0-9' _)}.log
+  log=$ROOT/runs/membuf/${BP_TAG:+$BP_TAG-}ctx$ctx-ub$ub${extra:+-$(echo "$extra" | tr -c 'a-zA-Z0-9' _)}.log
   "$BIN/llama-server" -m "$MODEL" -ngl 99 -ot "${INK_OT:-exps=CPU}" --fit off -c "$ctx" -b "$ub" -ub "$ub" -fa on \
     -np 1 -t 6 --port 8086 -lv 4 $extra > "$log" 2>&1 &
   pid=$!

@@ -1,0 +1,4 @@
+{"id": "06-r2-iq2xxs-gpu-64k", "from": "05-r2-inkfix-64k", "change": "Unsloth UD-IQ2_XXS (Mainline_Support layout) with every expert on the GPU: no -ot", "build": "r2inkfix-19c41d2ff",
+ "env": {"INK_QUANT": "iq2xxs"},
+ "flags": "-ngl 99 --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 128 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "result": "r2-iq2xxs-gpu-64k: decode 41.4 / 31.3 / 26.1, prefill 295.2 / 213.9 / 159.7, needles 3/3 + 3/3, codeeval 8/8; KLD vs Q8_0 0.0910 wiki / 0.0562 code (IQ4_NL 0.0085 / 0.0088): option, not default"}

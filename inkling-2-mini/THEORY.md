@@ -59,3 +59,17 @@ That, not the weights, sets the context and ubatch limits.
 
 - Compute: ~5.4 B effective active params → ~10.8 GFLOP/token + attention. At ~25 TFLOP/s practical on the 3060 that is ~2,300 tok/s.
 - Transfer: with experts in RAM llama.cpp copies each CPU expert tensor to the GPU per micro-batch, **per graph node**, so the core layers' experts are copied 3 times per ubatch. All experts in RAM: 44 × 547 MiB + 4 × 1033 MiB ≈ 28 GiB per ubatch → ~2.1 s at 14 GB/s → ~1,900 tok/s at ub 4096, ~240 tok/s at ub 512. Core on GPU: 8 × 547 + 4 × 1033 ≈ 8.4 GiB → 0.64 s per ubatch → compute bound at ub ≥ 2048.
+
+## Round 2 (2026-11-22): what the smaller quants say about the decode ceiling
+
+The byte-count ceilings above overstate what the GPU part can reach. Measured with every expert on the GPU (llama-bench, `runs/bench-r2c-*`):
+
+| Quant, all on GPU | Bytes read per token (experts + dense + head) | Ceiling at 342 GB/s | Measured | Time per token |
+|---|---:|---:|---:|---:|
+| UD-IQ2_XXS | ~2.7 GB | ~125 tok/s | 43.4 tok/s | 23.0 ms |
+| UD-Q2_K_XL | ~2.9 GB | ~118 tok/s | 41.7 tok/s | 24.0 ms |
+
+- 23 ms for 48 layer applications is **~0.48 ms per application**, whatever the expert size. The GPU part is bound by per-layer overhead (many small kernels per expert layer), not by bandwidth.
+- IQ4_NL with the core on the GPU takes 34.1 ms per token: the same ~23 ms plus ~11 ms for the 12 applications whose experts are read from RAM. THEORY's bandwidth figure for that RAM part was 9.8 ms, so the RAM part is close to its ceiling and the GPU part is not.
+- UD-IQ3_XXS with the same 12 layers in RAM decodes at 29.2 tok/s against 29.3 for IQ4_NL, although its RAM experts are about 40% smaller. Smaller RAM experts did not buy time.
+- So the practical ceiling for "everything on the GPU" on this engine and card is **~43 tok/s**, and for the IQ4_NL placement ~29 tok/s is already at it. What moves the number from here is fewer RAM applications (MoE cache, +10–12% at 32k), fewer target passes per token (DSpark, median +14–20%), or less per-layer overhead in the engine.

@@ -12,20 +12,23 @@ while [ $# -gt 0 ]; do
   targs+=("$1"); shift
 done
 SERVE=${INK_SERVE:-$ROOT/serve.sh}
+# Test runs use their own port (other sessions on this box serve on 8081, 8085 and 8091); serve.sh, srvtest.py and codeeval.py read INK_PORT.
+export INK_PORT=${INK_PORT:-8097}
 log="${INK_LOGDIR:-$ROOT/runs}/server-$label.log"
 setsid "$SERVE" "${sargs[@]}" > "$log" 2>&1 < /dev/null &
 top=$!
 descendants() { local p; for p in $(pgrep -P "$1"); do echo "$p"; descendants "$p"; done; }
 stop() {
   local pids p
-  pids=$(descendants "$top")
+  pids="$top $(descendants "$top")"     # $top is llama-server itself when serve.sh runs without gpu_run (INK_NO_GPU_RUN)
   for p in $pids; do [ "$(cat /proc/$p/comm 2>/dev/null)" = llama-server ] && kill -INT "$p" 2>/dev/null; done
   for _ in $(seq 60); do kill -0 "$top" 2>/dev/null || return 0; sleep 1; done
   echo "server did not exit after 60 s (pid $top)" >&2
 }
 trap stop EXIT
 for _ in $(seq 7200); do
-  curl -sf "http://127.0.0.1:${INK_PORT:-8085}/health" > /dev/null && break
+  # healthy only if OUR server bound the port (its own log says so): another session's server on the same port must not pass for ours
+  grep -q "listening on http://127.0.0.1:$INK_PORT\$" "$log" 2>/dev/null && curl -sf "http://127.0.0.1:$INK_PORT/health" > /dev/null && break
   kill -0 "$top" 2>/dev/null || { echo "server exited during load:"; tail -20 "$log"; exit 1; }
   sleep 1
 done

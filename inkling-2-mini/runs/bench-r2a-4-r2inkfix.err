@@ -1,0 +1,11 @@
+cpu idle 71% at start
+gpu_run: waiting for the GPU lock (2902462 00:04:07 bash -c 
+  B="$1"
+  trap "\"$B/stop.sh\"" INT TERM
+  "$B/start-server.sh" --wait || { "$B/stop.sh"; exit 1; }
+  SP=$(cat "$B/logs/server-8080.pid")
+  echo "serving; ./stop.sh (or Ctrl-C) to stop and free the GPU"
+  while kill -0 "$SP" 2>/dev/null; do sleep 5 & wait $!; done
+  echo "engine exited" _ /mnt/models/llm/kintsugi-27b/bundle/Kintsugi-27B )
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB

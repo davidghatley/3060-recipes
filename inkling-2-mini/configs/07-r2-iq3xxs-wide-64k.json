@@ -1,0 +1,4 @@
+{"id": "07-r2-iq3xxs-wide-64k", "from": "05-r2-inkfix-64k", "change": "Unsloth UD-IQ3_XXS (Mainline_Support layout), experts of layers 3-19 on the GPU, 0-2 and 20-23 in RAM", "build": "r2inkfix-19c41d2ff",
+ "env": {"INK_QUANT": "iq3xxs"},
+ "flags": "-ngl 99 -ot 'blk\\.([0-2]|2[0-3])\\.ffn_.*_exps=CPU' --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 128 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "result": "r2-iq3xxs-core5-64k: decode 31.0 / 24.8 / 21.6, prefill 205.0 / 162.3 / 129.1, needles 3/3 + 3/3, codeeval 8/8; KLD vs Q8_0 0.0280 wiki / 0.0179 code: option, not default"}

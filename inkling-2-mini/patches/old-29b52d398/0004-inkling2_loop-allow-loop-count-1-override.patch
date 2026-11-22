@@ -1,0 +1,32 @@
+From 73e22d20aa8bff990446e22284cc76da3888ff69 Mon Sep 17 00:00:00 2001
+From: 3060-recipes <noreply@localhost>
+Date: Sat, 21 Nov 2026 04:04:43 -0700
+Subject: [PATCH] inkling2_loop: allow loop.count = 1 so the pass count can be
+ overridden at load (--override-kv)
+
+---
+ src/models/inkling2-loop.cpp | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/models/inkling2-loop.cpp b/src/models/inkling2-loop.cpp
+index 38d3dffd3..d016a5dfc 100644
+--- a/src/models/inkling2-loop.cpp
++++ b/src/models/inkling2-loop.cpp
+@@ -15,8 +15,12 @@ void llama_model_inkling2_loop::load_arch_hparams(llama_model_loader & ml) {
+ 
+     n_phys = hparams.n_layer();
+     const uint32_t block = hparams.attn_res_block_size;
+-    // a fixed loop needs at least 2 passes, a variable loop at least 1
+-    if (n_passes < (varying ? 1u : 2u) || !gate_rank || !core_start || core_start >= core_end || core_end > (uint32_t) n_phys ||
++    // the checkpoint fixes the pass count; --override-kv inkling2_loop.loop.count=int:N runs N passes instead
++    // (N = 1 runs the core once and never reads the loop controllers). Other counts are out of distribution.
++    if (n_passes == 1 && !varying) {
++        LLAMA_LOG_WARN("%s: running the loop core for a single pass (loop.count = 1)\n", __func__);
++    }
++    if (n_passes < 1u || !gate_rank || !core_start || core_start >= core_end || core_end > (uint32_t) n_phys ||
+         core_start % block || core_end % block || hparams.n_layer_nextn) {
+         throw std::runtime_error(format("inkling2_loop: invalid loop core [%u, %u) with block size %u, %u passes or gate rank %u for %d layers",
+                 core_start, core_end, block, n_passes, gate_rank, n_phys));
+-- 
+2.56.0
+

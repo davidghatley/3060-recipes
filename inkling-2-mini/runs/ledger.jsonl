@@ -29,3 +29,264 @@
 {"label": "ctx128k-core10-nopo", "case": "code-0k-med", "t": 1795230558.5491998, "vram_mib": 11497, "decode_tps": 26.1, "min": 26.0, "max": 26.2, "max_loop": 0.0}
 {"label": "ctx128k-core10-nopo", "case": "needle-64k", "t": 1795231527.9718196, "vram_mib": 11557, "prompt_n": 64219, "found": "3/3", "prefill_tps": 68.5, "decode_tps": 18.7, "answer": "LWKMO3BH | ZAPD1FI3 | ITYL8IS3"}
 {"label": "ctx128k-core10-nopo", "case": "needle-124k", "t": 1795233760.3432891, "vram_mib": 11557, "prompt_n": 124216, "found": "3/3", "prefill_tps": 56.2, "decode_tps": 14.6, "answer": "W9UFWLLQ | P0EOQ52T | XX6SKBMU"}
+{"label": "r2-inkfix-64k", "case": "pp-8k", "t": 1795337914.2945015, "vram_mib": 11680, "prompt_n": 7996, "prefill_tps": 144.9, "ttft_s": 55.18}
+{"label": "r2-inkfix-64k", "case": "pp-8k", "t": 1795337970.5483701, "vram_mib": 11700, "prompt_n": 8008, "prefill_tps": 143.3, "ttft_s": 55.89}
+{"label": "r2-inkfix-64k", "case": "pp-8k-med", "t": 1795337970.5604434, "vram_mib": 11700, "prefill_tps": 144.1}
+{"label": "r2-inkfix-64k", "case": "pp-32k", "t": 1795338231.0679412, "vram_mib": 11700, "prompt_n": 32239, "prefill_tps": 124.0, "ttft_s": 259.96}
+{"label": "r2-inkfix-64k", "case": "pp-32k", "t": 1795338494.7032914, "vram_mib": 11700, "prompt_n": 32014, "prefill_tps": 121.7, "ttft_s": 263.0}
+{"label": "r2-inkfix-64k", "case": "pp-32k-med", "t": 1795338494.7193904, "vram_mib": 11700, "prefill_tps": 122.9}
+{"label": "r2-inkfix-64k", "case": "code-0k", "t": 1795338513.308817, "vram_mib": 11700, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.0, "finish": "length", "content_chars": 563, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-0k", "t": 1795338530.0804825, "vram_mib": 11700, "gen_n": 467, "prompt_n": 72, "decode_tps": 29.0, "finish": "stop", "content_chars": 528, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-0k", "t": 1795338548.3653529, "vram_mib": 11690, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.0, "finish": "length", "content_chars": 281, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-0k-med", "t": 1795338548.381523, "vram_mib": 11690, "decode_tps": 29.0, "min": 29.0, "max": 29.0, "max_loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-32k", "t": 1795338832.242629, "vram_mib": 11700, "gen_n": 512, "prompt_n": 32053, "decode_tps": 23.0, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-32k", "t": 1795338855.6109416, "vram_mib": 11700, "gen_n": 512, "prompt_n": 32061, "decode_tps": 23.6, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-32k", "t": 1795338878.7035766, "vram_mib": 11700, "gen_n": 512, "prompt_n": 32049, "decode_tps": 23.6, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "code-32k-med", "t": 1795338878.7196498, "vram_mib": 11700, "decode_tps": 23.6, "min": 23.0, "max": 23.6, "max_loop": 0.0}
+{"label": "r2-inkfix-64k", "case": "needle-32k", "t": 1795339149.3314507, "vram_mib": 11700, "prompt_n": 32088, "found": "3/3", "prefill_tps": 124.8, "decode_tps": 23.5, "answer": "OFT63017 | FR7PP3KT | XWCMC8AZ"}
+{"label": "r2-inkfix-64k", "case": "needle-62k", "t": 1795339776.490015, "vram_mib": 11700, "prompt_n": 61948, "found": "3/3", "prefill_tps": 102.9, "decode_tps": 20.2, "answer": "FZT7HN4S | DIY269GH | BZPW2Y7S"}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-8k", "t": 1795341775.7957757, "vram_mib": 11592, "prompt_n": 7998, "prefill_tps": 295.9, "ttft_s": 27.03}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-8k", "t": 1795341803.2972429, "vram_mib": 11592, "prompt_n": 8006, "prefill_tps": 294.5, "ttft_s": 27.18}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-8k-med", "t": 1795341803.3131363, "vram_mib": 11592, "prefill_tps": 295.2}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-32k", "t": 1795341954.2946987, "vram_mib": 11592, "prompt_n": 32238, "prefill_tps": 214.2, "ttft_s": 150.51}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-32k", "t": 1795342104.705163, "vram_mib": 11592, "prompt_n": 32013, "prefill_tps": 213.6, "ttft_s": 149.85}
+{"label": "r2-iq2xxs-gpu-64k", "case": "pp-32k-med", "t": 1795342104.7212934, "vram_mib": 11592, "prefill_tps": 213.9}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-0k", "t": 1795342115.1025388, "vram_mib": 11592, "gen_n": 412, "prompt_n": 64, "decode_tps": 41.4, "finish": "stop", "content_chars": 590, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-0k", "t": 1795342127.692906, "vram_mib": 11594, "gen_n": 512, "prompt_n": 72, "decode_tps": 41.4, "finish": "length", "content_chars": 436, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-0k", "t": 1795342140.2162135, "vram_mib": 11594, "gen_n": 512, "prompt_n": 60, "decode_tps": 41.6, "finish": "length", "content_chars": 696, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-0k-med", "t": 1795342140.2280664, "vram_mib": 11594, "decode_tps": 41.4, "min": 41.4, "max": 41.6, "max_loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-32k", "t": 1795342303.1969724, "vram_mib": 11594, "gen_n": 415, "prompt_n": 32053, "decode_tps": 31.3, "finish": "stop", "content_chars": 653, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-32k", "t": 1795342320.7222207, "vram_mib": 11594, "gen_n": 512, "prompt_n": 32061, "decode_tps": 31.3, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-32k", "t": 1795342338.0384262, "vram_mib": 11594, "gen_n": 512, "prompt_n": 32049, "decode_tps": 31.3, "finish": "length", "content_chars": 372, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "code-32k-med", "t": 1795342338.0544538, "vram_mib": 11594, "decode_tps": 31.3, "min": 31.3, "max": 31.3, "max_loop": 0.0}
+{"label": "r2-iq2xxs-gpu-64k", "case": "needle-32k", "t": 1795342492.7531602, "vram_mib": 11594, "prompt_n": 32091, "found": "3/3", "prefill_tps": 214.5, "decode_tps": 32.1, "answer": "11WORBIF | KY8DGMYP | 9R09WFGZ"}
+{"label": "r2-iq2xxs-gpu-64k", "case": "needle-62k", "t": 1795342893.7647102, "vram_mib": 11594, "prompt_n": 61949, "found": "3/3", "prefill_tps": 159.7, "decode_tps": 26.1, "answer": "7ZARA8N6 | IKIL9ALD | WBBTJA8F"}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-8k", "t": 1795349136.9319875, "vram_mib": 11902, "prompt_n": 7996, "prefill_tps": 206.1, "ttft_s": 38.79}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-8k", "t": 1795349176.5474424, "vram_mib": 11902, "prompt_n": 8005, "prefill_tps": 203.9, "ttft_s": 39.26}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-8k-med", "t": 1795349176.5595875, "vram_mib": 11902, "prefill_tps": 205.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-32k", "t": 1795349374.3950808, "vram_mib": 11902, "prompt_n": 32239, "prefill_tps": 163.4, "ttft_s": 197.32}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-32k", "t": 1795349573.4951136, "vram_mib": 11902, "prompt_n": 32013, "prefill_tps": 161.2, "ttft_s": 198.55}
+{"label": "r2-iq3xxs-core5-64k", "case": "pp-32k-med", "t": 1795349573.507263, "vram_mib": 11902, "prefill_tps": 162.3}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-0k", "t": 1795349590.569578, "vram_mib": 11902, "gen_n": 512, "prompt_n": 64, "decode_tps": 31.1, "finish": "length", "content_chars": 755, "loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-0k", "t": 1795349606.8569396, "vram_mib": 11902, "gen_n": 492, "prompt_n": 72, "decode_tps": 31.0, "finish": "stop", "content_chars": 528, "loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-0k", "t": 1795349621.9875863, "vram_mib": 11902, "gen_n": 439, "prompt_n": 60, "decode_tps": 29.8, "finish": "stop", "content_chars": 641, "loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-0k-med", "t": 1795349621.9995675, "vram_mib": 11902, "decode_tps": 31.0, "min": 29.8, "max": 31.1, "max_loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-32k", "t": 1795349840.8600035, "vram_mib": 11882, "gen_n": 512, "prompt_n": 32053, "decode_tps": 24.7, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-32k", "t": 1795349862.8950262, "vram_mib": 11882, "gen_n": 512, "prompt_n": 32061, "decode_tps": 24.8, "finish": "length", "content_chars": 549, "loop": 0.01}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-32k", "t": 1795349883.2896242, "vram_mib": 11902, "gen_n": 481, "prompt_n": 32049, "decode_tps": 25.0, "finish": "stop", "content_chars": 644, "loop": 0.0}
+{"label": "r2-iq3xxs-core5-64k", "case": "code-32k-med", "t": 1795349883.301842, "vram_mib": 11902, "decode_tps": 24.8, "min": 24.7, "max": 25.0, "max_loop": 0.01}
+{"label": "r2-iq3xxs-core5-64k", "case": "needle-32k", "t": 1795350097.003553, "vram_mib": 11904, "prompt_n": 32088, "found": "3/3", "prefill_tps": 163.8, "decode_tps": 25.4, "answer": "C15612MI | S42OW008 | KYMKOY4T"}
+{"label": "r2-iq3xxs-core5-64k", "case": "needle-62k", "t": 1795350596.9440286, "vram_mib": 11904, "prompt_n": 61946, "found": "3/3", "prefill_tps": 129.1, "decode_tps": 21.6, "answer": "ZWSQSDSF | S533FT3U | NA7IS6JU"}
+{"label": "r2-pr32740-64k-ub128", "case": "pp-8k", "t": 1795351341.687511, "vram_mib": 11214, "prompt_n": 7996, "prefill_tps": 168.5, "ttft_s": 47.46}
+{"label": "r2-pr32740-64k-ub128", "case": "pp-8k", "t": 1795351390.6097496, "vram_mib": 11214, "prompt_n": 8006, "prefill_tps": 164.9, "ttft_s": 48.55}
+{"label": "r2-pr32740-64k-ub128", "case": "pp-8k-med", "t": 1795351390.6217852, "vram_mib": 11214, "prefill_tps": 166.7}
+{"label": "r2-pr32740-64k-ub128", "case": "code-0k", "t": 1795351407.7870617, "vram_mib": 11214, "gen_n": 483, "prompt_n": 64, "decode_tps": 29.6, "finish": "stop", "content_chars": 616, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub128", "case": "code-0k", "t": 1795351426.4133463, "vram_mib": 11214, "gen_n": 512, "prompt_n": 72, "decode_tps": 28.5, "finish": "length", "content_chars": 472, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub128", "case": "code-0k", "t": 1795351441.4044657, "vram_mib": 11234, "gen_n": 425, "prompt_n": 60, "decode_tps": 29.6, "finish": "stop", "content_chars": 711, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub128", "case": "code-0k-med", "t": 1795351441.4206367, "vram_mib": 11234, "decode_tps": 29.6, "min": 28.5, "max": 29.6, "max_loop": 0.0}
+{"label": "r2-pr32740-64k-ub128", "case": "needle-62k", "t": 1795351866.1815534, "vram_mib": 11234, "prompt_n": 61949, "found": "3/3", "prefill_tps": 152.1, "decode_tps": 24.2, "answer": "AK25ISD5 | 54KTO4Q3 | DZ8GW8BX"}
+{"label": "r2-pr32740-64k-ub512", "case": "pp-8k", "t": 1795351901.0490882, "vram_mib": 11346, "prompt_n": 7996, "prefill_tps": 363.6, "ttft_s": 21.99}
+{"label": "r2-pr32740-64k-ub512", "case": "pp-8k", "t": 1795351923.557023, "vram_mib": 11348, "prompt_n": 8005, "prefill_tps": 361.4, "ttft_s": 22.15}
+{"label": "r2-pr32740-64k-ub512", "case": "pp-8k-med", "t": 1795351923.5735629, "vram_mib": 11348, "prefill_tps": 362.5}
+{"label": "r2-pr32740-64k-ub512", "case": "code-0k", "t": 1795351941.762591, "vram_mib": 11348, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.5, "finish": "length", "content_chars": 577, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512", "case": "code-0k", "t": 1795351959.2144806, "vram_mib": 11348, "gen_n": 495, "prompt_n": 72, "decode_tps": 29.5, "finish": "stop", "content_chars": 489, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512", "case": "code-0k", "t": 1795351977.1875546, "vram_mib": 11348, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.5, "finish": "length", "content_chars": 466, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512", "case": "code-0k-med", "t": 1795351977.2040622, "vram_mib": 11348, "decode_tps": 29.5, "min": 29.5, "max": 29.5, "max_loop": 0.0}
+{"label": "r2-pr32740-64k-ub512", "case": "needle-62k", "t": 1795352202.7733107, "vram_mib": 11348, "prompt_n": 61945, "found": "3/3", "prefill_tps": 297.1, "decode_tps": 24.1, "answer": "ZPKRFX46 | GPBR10NV | 22LGMWIR"}
+{"label": "r2-pr32752-64k-ub256", "case": "pp-8k", "t": 1795352255.4281275, "vram_mib": 11654, "prompt_n": 7996, "prefill_tps": 202.3, "ttft_s": 39.53}
+{"label": "r2-pr32752-64k-ub256", "case": "pp-8k", "t": 1795352296.228466, "vram_mib": 11674, "prompt_n": 8006, "prefill_tps": 198.0, "ttft_s": 40.44}
+{"label": "r2-pr32752-64k-ub256", "case": "pp-8k-med", "t": 1795352296.2448978, "vram_mib": 11674, "prefill_tps": 200.1}
+{"label": "r2-pr32752-64k-ub256", "case": "code-0k", "t": 1795352311.2477968, "vram_mib": 11674, "gen_n": 411, "prompt_n": 64, "decode_tps": 29.0, "finish": "stop", "content_chars": 683, "loop": 0.0}
+{"label": "r2-pr32752-64k-ub256", "case": "code-0k", "t": 1795352330.5227811, "vram_mib": 11674, "gen_n": 512, "prompt_n": 72, "decode_tps": 27.6, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-pr32752-64k-ub256", "case": "code-0k", "t": 1795352348.872345, "vram_mib": 11664, "gen_n": 512, "prompt_n": 60, "decode_tps": 28.9, "finish": "length", "content_chars": 205, "loop": 0.0}
+{"label": "r2-pr32752-64k-ub256", "case": "code-0k-med", "t": 1795352348.8888893, "vram_mib": 11664, "decode_tps": 28.9, "min": 27.6, "max": 29.0, "max_loop": 0.0}
+{"label": "r2-pr32752-64k-ub256", "case": "needle-62k", "t": 1795352876.6772451, "vram_mib": 11674, "prompt_n": 61949, "found": "3/3", "prefill_tps": 123.1, "decode_tps": 20.0, "answer": "73DOL3DO | FNL4NEH7 | SXEZLZQG"}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "pp-8k", "t": 1795353503.8559346, "vram_mib": 10984, "prompt_n": 7996, "prefill_tps": 102.0, "ttft_s": 78.36}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "pp-8k", "t": 1795353584.339099, "vram_mib": 10984, "prompt_n": 8005, "prefill_tps": 99.9, "ttft_s": 80.11}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "pp-8k-med", "t": 1795353584.351364, "vram_mib": 10984, "prefill_tps": 101.0}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "code-0k", "t": 1795353602.0893767, "vram_mib": 11004, "gen_n": 456, "prompt_n": 64, "decode_tps": 27.0, "finish": "stop", "content_chars": 676, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "code-0k", "t": 1795353617.8876023, "vram_mib": 11004, "gen_n": 406, "prompt_n": 72, "decode_tps": 26.9, "finish": "stop", "content_chars": 500, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "code-0k", "t": 1795353637.5250716, "vram_mib": 11004, "gen_n": 512, "prompt_n": 60, "decode_tps": 26.9, "finish": "length", "content_chars": 586, "loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "code-0k-med", "t": 1795353637.5373461, "vram_mib": 11004, "decode_tps": 26.9, "min": 26.9, "max": 27.0, "max_loop": 0.0}
+{"label": "r2-128k-c15-ub256-pr32740", "case": "needle-104k", "t": 1795354774.273872, "vram_mib": 10994, "prompt_n": 104070, "found": "3/3", "prefill_tps": 92.2, "decode_tps": 20.0, "answer": "GIBZ33MX | 86LG9Q1G | P2XXUAMI"}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-8k", "t": 1795354827.2108448, "vram_mib": 11590, "prompt_n": 7996, "prefill_tps": 256.8, "ttft_s": 31.14}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-8k", "t": 1795354859.0448918, "vram_mib": 11590, "prompt_n": 8005, "prefill_tps": 253.8, "ttft_s": 31.54}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-8k-med", "t": 1795354859.0568893, "vram_mib": 11590, "prefill_tps": 255.3}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-32k", "t": 1795355027.8517904, "vram_mib": 11590, "prompt_n": 32239, "prefill_tps": 191.5, "ttft_s": 168.34}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-32k", "t": 1795355196.38891, "vram_mib": 11590, "prompt_n": 32014, "prefill_tps": 190.5, "ttft_s": 168.04}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "pp-32k-med", "t": 1795355196.4007452, "vram_mib": 11590, "prefill_tps": 191.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-0k", "t": 1795355209.6353817, "vram_mib": 11590, "gen_n": 512, "prompt_n": 64, "decode_tps": 39.8, "finish": "length", "content_chars": 509, "loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-0k", "t": 1795355222.705955, "vram_mib": 11590, "gen_n": 512, "prompt_n": 72, "decode_tps": 39.9, "finish": "length", "content_chars": 463, "loop": 0.06}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-0k", "t": 1795355235.7351384, "vram_mib": 11590, "gen_n": 512, "prompt_n": 60, "decode_tps": 40.0, "finish": "length", "content_chars": 328, "loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-0k-med", "t": 1795355235.7470222, "vram_mib": 11590, "decode_tps": 39.9, "min": 39.8, "max": 40.0, "max_loop": 0.06}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-32k", "t": 1795355420.2767396, "vram_mib": 11590, "gen_n": 512, "prompt_n": 32053, "decode_tps": 30.4, "finish": "length", "content_chars": 237, "loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-32k", "t": 1795355437.8511283, "vram_mib": 11590, "gen_n": 512, "prompt_n": 32061, "decode_tps": 30.5, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-32k", "t": 1795355455.2275853, "vram_mib": 11590, "gen_n": 512, "prompt_n": 32049, "decode_tps": 30.4, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "code-32k-med", "t": 1795355455.2396672, "vram_mib": 11590, "decode_tps": 30.4, "min": 30.4, "max": 30.5, "max_loop": 0.0}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "needle-32k", "t": 1795355631.203237, "vram_mib": 11590, "prompt_n": 32090, "found": "3/3", "prefill_tps": 191.9, "decode_tps": 31.3, "answer": "RGVSKP3D | MP17FRBI | VR9D9TPQ"}
+{"label": "r2-q2kxl-gpu-64k-ub64", "case": "needle-62k", "t": 1795356067.8068361, "vram_mib": 11590, "prompt_n": 61948, "found": "3/3", "prefill_tps": 146.5, "decode_tps": 25.6, "answer": "T3NETP7V | 1K45ALM9 | LOLFGVWS"}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356416.6323204, "vram_mib": 10666, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.1, "finish": "length", "content_chars": 287, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356432.0902388, "vram_mib": 10646, "gen_n": 430, "prompt_n": 72, "decode_tps": 29.1, "finish": "stop", "content_chars": 509, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356450.3232684, "vram_mib": 10646, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.1, "finish": "length", "content_chars": 619, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356468.5875459, "vram_mib": 10646, "gen_n": 512, "prompt_n": 70, "decode_tps": 29.1, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356486.9357264, "vram_mib": 10656, "gen_n": 512, "prompt_n": 80, "decode_tps": 29.0, "finish": "length", "content_chars": 72, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795356497.707051, "vram_mib": 10656, "gen_n": 294, "prompt_n": 72, "decode_tps": 29.1, "finish": "stop", "content_chars": 523, "loop": 0.04}
+{"label": "r2-moe-iq4nl-32k-ctl1", "case": "code-0k-med", "t": 1795356497.7239661, "vram_mib": 10656, "decode_tps": 29.1, "min": 29.0, "max": 29.1, "max_loop": 0.04}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356525.4982755, "vram_mib": 11508, "gen_n": 489, "prompt_n": 64, "decode_tps": 32.0, "finish": "stop", "content_chars": 604, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356542.2001407, "vram_mib": 11508, "gen_n": 512, "prompt_n": 72, "decode_tps": 31.9, "finish": "length", "content_chars": 247, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356557.7634475, "vram_mib": 11508, "gen_n": 474, "prompt_n": 60, "decode_tps": 31.7, "finish": "stop", "content_chars": 750, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356574.3110309, "vram_mib": 11508, "gen_n": 512, "prompt_n": 70, "decode_tps": 32.2, "finish": "length", "content_chars": 8, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356588.257564, "vram_mib": 11508, "gen_n": 428, "prompt_n": 80, "decode_tps": 32.3, "finish": "stop", "content_chars": 495, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k", "t": 1795356603.4264991, "vram_mib": 11518, "gen_n": 459, "prompt_n": 72, "decode_tps": 31.6, "finish": "stop", "content_chars": 546, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-c768", "case": "code-0k-med", "t": 1795356603.4425583, "vram_mib": 11518, "decode_tps": 32.0, "min": 31.6, "max": 32.3, "max_loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356634.3455095, "vram_mib": 10666, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.2, "finish": "length", "content_chars": 299, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356652.6422582, "vram_mib": 10666, "gen_n": 512, "prompt_n": 72, "decode_tps": 29.1, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356670.8590574, "vram_mib": 10666, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.1, "finish": "length", "content_chars": 427, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356688.6402802, "vram_mib": 10666, "gen_n": 499, "prompt_n": 70, "decode_tps": 29.1, "finish": "stop", "content_chars": 183, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356701.777514, "vram_mib": 10666, "gen_n": 363, "prompt_n": 80, "decode_tps": 29.2, "finish": "stop", "content_chars": 518, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795356718.6085987, "vram_mib": 10666, "gen_n": 470, "prompt_n": 72, "decode_tps": 29.1, "finish": "stop", "content_chars": 551, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl2", "case": "code-0k-med", "t": 1795356718.6252983, "vram_mib": 10666, "decode_tps": 29.1, "min": 29.1, "max": 29.2, "max_loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356759.9860685, "vram_mib": 10644, "gen_n": 370, "prompt_n": 64, "decode_tps": 27.6, "finish": "stop", "content_chars": 645, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356780.042066, "vram_mib": 10654, "gen_n": 512, "prompt_n": 72, "decode_tps": 26.6, "finish": "length", "content_chars": 305, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356797.125397, "vram_mib": 10654, "gen_n": 453, "prompt_n": 60, "decode_tps": 27.6, "finish": "stop", "content_chars": 659, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356816.6918845, "vram_mib": 10654, "gen_n": 512, "prompt_n": 70, "decode_tps": 27.1, "finish": "length", "content_chars": 31, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356836.2176309, "vram_mib": 10654, "gen_n": 512, "prompt_n": 80, "decode_tps": 27.6, "finish": "length", "content_chars": 128, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k", "t": 1795356847.138017, "vram_mib": 10654, "gen_n": 282, "prompt_n": 72, "decode_tps": 27.7, "finish": "stop", "content_chars": 536, "loop": 0.0}
+{"label": "r2-nvfp4-32k", "case": "code-0k-med", "t": 1795356847.1545477, "vram_mib": 10654, "decode_tps": 27.6, "min": 26.6, "max": 27.7, "max_loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356875.9116933, "vram_mib": 10656, "gen_n": 450, "prompt_n": 64, "decode_tps": 29.2, "finish": "stop", "content_chars": 618, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356887.2188003, "vram_mib": 10656, "gen_n": 310, "prompt_n": 72, "decode_tps": 29.2, "finish": "stop", "content_chars": 503, "loop": 0.02}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356903.2198029, "vram_mib": 10666, "gen_n": 448, "prompt_n": 60, "decode_tps": 29.1, "finish": "stop", "content_chars": 659, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356918.4148664, "vram_mib": 10666, "gen_n": 424, "prompt_n": 70, "decode_tps": 29.1, "finish": "stop", "content_chars": 152, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356933.7698097, "vram_mib": 10666, "gen_n": 427, "prompt_n": 80, "decode_tps": 29.2, "finish": "stop", "content_chars": 533, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k", "t": 1795356952.05091, "vram_mib": 10666, "gen_n": 512, "prompt_n": 72, "decode_tps": 29.1, "finish": "length", "content_chars": 276, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-ctl3", "case": "code-0k-med", "t": 1795356952.0675938, "vram_mib": 10666, "decode_tps": 29.2, "min": 29.1, "max": 29.2, "max_loop": 0.02}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795356989.545858, "vram_mib": 10744, "gen_n": 471, "prompt_n": 64, "decode_tps": 31.4, "finish": "stop", "content_chars": 604, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795357006.455228, "vram_mib": 10744, "gen_n": 512, "prompt_n": 72, "decode_tps": 31.1, "finish": "length", "content_chars": 471, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795357023.2863314, "vram_mib": 10754, "gen_n": 512, "prompt_n": 60, "decode_tps": 31.2, "finish": "length", "content_chars": 549, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795357040.1293645, "vram_mib": 10754, "gen_n": 512, "prompt_n": 70, "decode_tps": 31.2, "finish": "length", "content_chars": 152, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795357050.7323673, "vram_mib": 10754, "gen_n": 319, "prompt_n": 80, "decode_tps": 31.4, "finish": "stop", "content_chars": 500, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k", "t": 1795357064.9595838, "vram_mib": 10754, "gen_n": 432, "prompt_n": 72, "decode_tps": 31.3, "finish": "stop", "content_chars": 655, "loop": 0.03}
+{"label": "r2-moe-iq3xxs-32k-ctl1", "case": "code-0k-med", "t": 1795357064.9764476, "vram_mib": 10754, "decode_tps": 31.2, "min": 31.1, "max": 31.4, "max_loop": 0.03}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357090.9591954, "vram_mib": 11608, "gen_n": 512, "prompt_n": 64, "decode_tps": 34.9, "finish": "length", "content_chars": 255, "loop": 0.14}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357105.920985, "vram_mib": 11610, "gen_n": 512, "prompt_n": 72, "decode_tps": 35.2, "finish": "length", "content_chars": 444, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357118.423627, "vram_mib": 11610, "gen_n": 426, "prompt_n": 60, "decode_tps": 35.1, "finish": "stop", "content_chars": 687, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357133.4145093, "vram_mib": 11610, "gen_n": 512, "prompt_n": 70, "decode_tps": 35.0, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357146.8114262, "vram_mib": 11600, "gen_n": 456, "prompt_n": 80, "decode_tps": 35.1, "finish": "stop", "content_chars": 506, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k", "t": 1795357159.8851602, "vram_mib": 11600, "gen_n": 441, "prompt_n": 72, "decode_tps": 34.8, "finish": "stop", "content_chars": 511, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-c768", "case": "code-0k-med", "t": 1795357159.9011943, "vram_mib": 11600, "decode_tps": 35.1, "min": 34.8, "max": 35.2, "max_loop": 0.14}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357188.5059016, "vram_mib": 10744, "gen_n": 512, "prompt_n": 64, "decode_tps": 31.3, "finish": "length", "content_chars": 586, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357205.2314534, "vram_mib": 10754, "gen_n": 512, "prompt_n": 72, "decode_tps": 31.4, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357221.95759, "vram_mib": 10754, "gen_n": 512, "prompt_n": 60, "decode_tps": 31.4, "finish": "length", "content_chars": 346, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357238.6688056, "vram_mib": 10754, "gen_n": 512, "prompt_n": 70, "decode_tps": 31.4, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357255.4773188, "vram_mib": 10754, "gen_n": 512, "prompt_n": 80, "decode_tps": 31.3, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k", "t": 1795357266.1100986, "vram_mib": 10734, "gen_n": 321, "prompt_n": 72, "decode_tps": 31.5, "finish": "stop", "content_chars": 489, "loop": 0.0}
+{"label": "r2-moe-iq3xxs-32k-ctl2", "case": "code-0k-med", "t": 1795357266.1275148, "vram_mib": 10734, "decode_tps": 31.4, "min": 31.3, "max": 31.5, "max_loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357302.5837674, "vram_mib": 10730, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.0, "finish": "length", "content_chars": 623, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357320.9338443, "vram_mib": 10750, "gen_n": 512, "prompt_n": 72, "decode_tps": 29.0, "finish": "length", "content_chars": 225, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357339.2520547, "vram_mib": 10750, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.0, "finish": "length", "content_chars": 560, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357357.5765245, "vram_mib": 10750, "gen_n": 512, "prompt_n": 70, "decode_tps": 29.0, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357372.6953971, "vram_mib": 10750, "gen_n": 418, "prompt_n": 80, "decode_tps": 29.0, "finish": "stop", "content_chars": 519, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k", "t": 1795357391.0767314, "vram_mib": 10750, "gen_n": 512, "prompt_n": 72, "decode_tps": 28.9, "finish": "length", "content_chars": 415, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl1", "case": "code-0k-med", "t": 1795357391.0938752, "vram_mib": 10750, "decode_tps": 29.0, "min": 28.9, "max": 29.0, "max_loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357418.0315506, "vram_mib": 11396, "gen_n": 512, "prompt_n": 64, "decode_tps": 36.4, "finish": "length", "content_chars": 525, "loop": 0.08, "draft_n": 480, "accepted": 350}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357431.2068002, "vram_mib": 11396, "gen_n": 441, "prompt_n": 72, "decode_tps": 35.4, "finish": "stop", "content_chars": 526, "loop": 0.0, "draft_n": 429, "accepted": 297}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357444.9287822, "vram_mib": 11386, "gen_n": 444, "prompt_n": 60, "decode_tps": 34.0, "finish": "stop", "content_chars": 658, "loop": 0.0, "draft_n": 450, "accepted": 293}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357463.982857, "vram_mib": 11386, "gen_n": 512, "prompt_n": 70, "decode_tps": 27.8, "finish": "length", "content_chars": 173, "loop": 0.0, "draft_n": 634, "accepted": 299}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357480.7228959, "vram_mib": 11386, "gen_n": 512, "prompt_n": 80, "decode_tps": 32.0, "finish": "length", "content_chars": 156, "loop": 0.0, "draft_n": 549, "accepted": 327}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k", "t": 1795357492.360797, "vram_mib": 11386, "gen_n": 281, "prompt_n": 72, "decode_tps": 25.7, "finish": "stop", "content_chars": 496, "loop": 0.0, "draft_n": 378, "accepted": 154}
+{"label": "r2-dspark-iq4nl-32k-n3", "case": "code-0k-med", "t": 1795357492.37714, "vram_mib": 11386, "decode_tps": 33.0, "min": 25.7, "max": 36.4, "max_loop": 0.08}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357523.44734, "vram_mib": 10750, "gen_n": 512, "prompt_n": 64, "decode_tps": 28.9, "finish": "length", "content_chars": 542, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357541.836113, "vram_mib": 10750, "gen_n": 512, "prompt_n": 72, "decode_tps": 28.9, "finish": "length", "content_chars": 416, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357560.1394923, "vram_mib": 10740, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.0, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357578.5072138, "vram_mib": 10740, "gen_n": 512, "prompt_n": 70, "decode_tps": 28.9, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357596.922285, "vram_mib": 10740, "gen_n": 512, "prompt_n": 80, "decode_tps": 28.9, "finish": "length", "content_chars": 131, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k", "t": 1795357615.3057666, "vram_mib": 10740, "gen_n": 512, "prompt_n": 72, "decode_tps": 28.9, "finish": "length", "content_chars": 181, "loop": 0.0}
+{"label": "r2-dspark-iq4nl-32k-ctl2", "case": "code-0k-med", "t": 1795357615.3221421, "vram_mib": 10740, "decode_tps": 28.9, "min": 28.9, "max": 29.0, "max_loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357646.1807747, "vram_mib": 10618, "gen_n": 493, "prompt_n": 64, "decode_tps": 41.3, "finish": "stop", "content_chars": 656, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357658.8401206, "vram_mib": 10620, "gen_n": 512, "prompt_n": 72, "decode_tps": 41.2, "finish": "length", "content_chars": 526, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357671.4813364, "vram_mib": 10620, "gen_n": 512, "prompt_n": 60, "decode_tps": 41.2, "finish": "length", "content_chars": 391, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357684.1140797, "vram_mib": 10620, "gen_n": 512, "prompt_n": 70, "decode_tps": 41.3, "finish": "length", "content_chars": 179, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357696.788494, "vram_mib": 10620, "gen_n": 512, "prompt_n": 80, "decode_tps": 41.2, "finish": "length", "content_chars": 503, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k", "t": 1795357709.433158, "vram_mib": 10620, "gen_n": 512, "prompt_n": 72, "decode_tps": 41.3, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-ctl1", "case": "code-0k-med", "t": 1795357709.445177, "vram_mib": 10620, "decode_tps": 41.2, "min": 41.2, "max": 41.3, "max_loop": 0.0}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357727.8092804, "vram_mib": 11276, "gen_n": 512, "prompt_n": 64, "decode_tps": 52.2, "finish": "length", "content_chars": 175, "loop": 0.0, "draft_n": 537, "accepted": 332}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357738.5469499, "vram_mib": 11276, "gen_n": 512, "prompt_n": 72, "decode_tps": 48.8, "finish": "length", "content_chars": 0, "loop": 0.0, "draft_n": 573, "accepted": 320}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357749.0272057, "vram_mib": 11296, "gen_n": 512, "prompt_n": 60, "decode_tps": 49.9, "finish": "length", "content_chars": 0, "loop": 0.0, "draft_n": 559, "accepted": 323}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357757.6501656, "vram_mib": 11296, "gen_n": 378, "prompt_n": 70, "decode_tps": 45.1, "finish": "stop", "content_chars": 159, "loop": 0.0, "draft_n": 465, "accepted": 222}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357766.5519793, "vram_mib": 11296, "gen_n": 444, "prompt_n": 80, "decode_tps": 51.4, "finish": "stop", "content_chars": 583, "loop": 0.0, "draft_n": 474, "accepted": 285}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k", "t": 1795357777.8678434, "vram_mib": 11296, "gen_n": 512, "prompt_n": 72, "decode_tps": 46.3, "finish": "length", "content_chars": 0, "loop": 0.0, "draft_n": 609, "accepted": 308}
+{"label": "r2-dspark-iq2xxs-32k-n3", "case": "code-0k-med", "t": 1795357777.8799994, "vram_mib": 11296, "decode_tps": 49.4, "min": 45.1, "max": 52.2, "max_loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-8k", "t": 1795358030.198014, "vram_mib": 11326, "prompt_n": 7997, "prefill_tps": 362.0, "ttft_s": 22.09}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-8k", "t": 1795358052.7743049, "vram_mib": 11328, "prompt_n": 8005, "prefill_tps": 360.2, "ttft_s": 22.22}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-8k-med", "t": 1795358052.7907221, "vram_mib": 11328, "prefill_tps": 361.1}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-32k", "t": 1795358149.7577183, "vram_mib": 11328, "prompt_n": 32239, "prefill_tps": 334.3, "ttft_s": 96.45}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-32k", "t": 1795358247.585678, "vram_mib": 11348, "prompt_n": 32013, "prefill_tps": 329.3, "ttft_s": 97.21}
+{"label": "r2-pr32740-64k-ub512-full", "case": "pp-32k-med", "t": 1795358247.6021, "vram_mib": 11348, "prefill_tps": 331.8}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-0k", "t": 1795358265.8644726, "vram_mib": 11348, "gen_n": 512, "prompt_n": 64, "decode_tps": 29.5, "finish": "length", "content_chars": 531, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-0k", "t": 1795358283.7820857, "vram_mib": 11348, "gen_n": 510, "prompt_n": 72, "decode_tps": 29.6, "finish": "stop", "content_chars": 584, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-0k", "t": 1795358301.726624, "vram_mib": 11348, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.6, "finish": "length", "content_chars": 345, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-0k-med", "t": 1795358301.742803, "vram_mib": 11348, "decode_tps": 29.6, "min": 29.5, "max": 29.6, "max_loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-32k", "t": 1795358418.1436052, "vram_mib": 11338, "gen_n": 512, "prompt_n": 32053, "decode_tps": 26.3, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-32k", "t": 1795358439.6773403, "vram_mib": 11338, "gen_n": 512, "prompt_n": 32061, "decode_tps": 26.3, "finish": "length", "content_chars": 238, "loop": 0.11}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-32k", "t": 1795358461.0226297, "vram_mib": 11348, "gen_n": 512, "prompt_n": 32049, "decode_tps": 26.4, "finish": "length", "content_chars": 427, "loop": 0.0}
+{"label": "r2-pr32740-64k-ub512-full", "case": "code-32k-med", "t": 1795358461.0386586, "vram_mib": 11348, "decode_tps": 26.3, "min": 26.3, "max": 26.4, "max_loop": 0.11}
+{"label": "r2-pr32740-64k-ub512-full", "case": "needle-32k", "t": 1795358568.7243192, "vram_mib": 11350, "prompt_n": 32093, "found": "3/3", "prefill_tps": 335.2, "decode_tps": 24.2, "answer": "DDQBUT6S | 1C7SU4RJ | 7GN6LIQJ"}
+{"label": "r2-pr32740-64k-ub512-full", "case": "needle-62k", "t": 1795358788.6455882, "vram_mib": 11350, "prompt_n": 61950, "found": "3/3", "prefill_tps": 297.1, "decode_tps": 24.2, "answer": "2YFNS1CF | ZX3SHUZC | DY5CWVND"}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "pp-8k", "t": 1795360296.1930015, "vram_mib": 11492, "prompt_n": 7996, "prefill_tps": 86.4, "ttft_s": 92.54}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "pp-8k", "t": 1795360391.5622733, "vram_mib": 11492, "prompt_n": 8007, "prefill_tps": 84.3, "ttft_s": 94.98}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "pp-8k-med", "t": 1795360391.5744197, "vram_mib": 11492, "prefill_tps": 85.4}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "code-0k", "t": 1795360411.4778876, "vram_mib": 11492, "gen_n": 504, "prompt_n": 64, "decode_tps": 26.4, "finish": "stop", "content_chars": 539, "loop": 0.0}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "code-0k", "t": 1795360432.3887823, "vram_mib": 11492, "gen_n": 512, "prompt_n": 72, "decode_tps": 25.3, "finish": "length", "content_chars": 503, "loop": 0.01}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "code-0k", "t": 1795360452.4112113, "vram_mib": 11512, "gen_n": 512, "prompt_n": 60, "decode_tps": 26.4, "finish": "length", "content_chars": 672, "loop": 0.0}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "code-0k-med", "t": 1795360452.4232109, "vram_mib": 11512, "decode_tps": 26.4, "min": 25.3, "max": 26.4, "max_loop": 0.01}
+{"label": "r2-128k-c15-ub64-inkfix", "case": "needle-124k", "t": 1795362690.6195478, "vram_mib": 11492, "prompt_n": 124219, "found": "3/3", "prefill_tps": 56.0, "decode_tps": 14.6, "answer": "QM8CEZSH | 6RF7A79F | 3ZQ4RWAD"}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "pp-8k", "t": 1795364637.394642, "vram_mib": 11492, "prompt_n": 7994, "prefill_tps": 114.2, "ttft_s": 70.0}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "pp-8k", "t": 1795364709.517621, "vram_mib": 11492, "prompt_n": 8004, "prefill_tps": 111.5, "ttft_s": 71.76}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "pp-8k-med", "t": 1795364709.5296583, "vram_mib": 11492, "prefill_tps": 112.9}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "code-0k", "t": 1795364728.394492, "vram_mib": 11492, "gen_n": 512, "prompt_n": 64, "decode_tps": 28.2, "finish": "length", "content_chars": 634, "loop": 0.0}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "code-0k", "t": 1795364745.830994, "vram_mib": 11492, "gen_n": 474, "prompt_n": 72, "decode_tps": 28.2, "finish": "stop", "content_chars": 519, "loop": 0.0}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "code-0k", "t": 1795364761.7475865, "vram_mib": 11482, "gen_n": 435, "prompt_n": 60, "decode_tps": 28.3, "finish": "stop", "content_chars": 645, "loop": 0.0}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "code-0k-med", "t": 1795364761.7596276, "vram_mib": 11482, "decode_tps": 28.2, "min": 28.2, "max": 28.3, "max_loop": 0.0}
+{"label": "r2-128k-c16-ub128-pr32740", "case": "needle-104k", "t": 1795365814.7463872, "vram_mib": 11472, "prompt_n": 104071, "found": "3/3", "prefill_tps": 101.2, "decode_tps": 20.7, "answer": "JX8HIKS7 | 07X27QD5 | WSMH9YFV"}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "pp-8k", "t": 1795366958.6378095, "vram_mib": 10668, "prompt_n": 7994, "prefill_tps": 147.2, "ttft_s": 54.3}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "pp-8k", "t": 1795367014.1959329, "vram_mib": 10668, "prompt_n": 8005, "prefill_tps": 145.0, "ttft_s": 55.19}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "pp-8k-med", "t": 1795367014.2079365, "vram_mib": 10668, "prefill_tps": 146.1}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "code-0k", "t": 1795367027.6331244, "vram_mib": 10668, "gen_n": 367, "prompt_n": 64, "decode_tps": 29.1, "finish": "stop", "content_chars": 611, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "code-0k", "t": 1795367045.91288, "vram_mib": 10668, "gen_n": 512, "prompt_n": 72, "decode_tps": 29.1, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "code-0k", "t": 1795367064.180026, "vram_mib": 10668, "gen_n": 512, "prompt_n": 60, "decode_tps": 29.1, "finish": "length", "content_chars": 668, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "code-0k-med", "t": 1795367064.1920125, "vram_mib": 10668, "decode_tps": 29.1, "min": 29.1, "max": 29.1, "max_loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-ctl", "case": "needle-30k", "t": 1795367308.8997252, "vram_mib": 10648, "prompt_n": 29957, "found": "3/3", "prefill_tps": 126.8, "decode_tps": 24.0, "answer": "9E1MEQ3M | LS5TKFB5 | 39JY9N8X"}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "pp-8k", "t": 1795367372.9928446, "vram_mib": 11434, "prompt_n": 7996, "prefill_tps": 154.1, "ttft_s": 51.89}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "pp-8k", "t": 1795367426.0842266, "vram_mib": 11434, "prompt_n": 8006, "prefill_tps": 151.8, "ttft_s": 52.74}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "pp-8k-med", "t": 1795367426.0964527, "vram_mib": 11434, "prefill_tps": 152.9}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "code-0k", "t": 1795367441.6440835, "vram_mib": 11434, "gen_n": 472, "prompt_n": 64, "decode_tps": 31.9, "finish": "stop", "content_chars": 633, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "code-0k", "t": 1795367458.3408504, "vram_mib": 11434, "gen_n": 512, "prompt_n": 72, "decode_tps": 31.9, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "code-0k", "t": 1795367475.0935183, "vram_mib": 11434, "gen_n": 512, "prompt_n": 60, "decode_tps": 31.7, "finish": "length", "content_chars": 683, "loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "code-0k-med", "t": 1795367475.1059008, "vram_mib": 11434, "decode_tps": 31.9, "min": 31.7, "max": 31.9, "max_loop": 0.0}
+{"label": "r2-moe-iq4nl-32k-gate-c768", "case": "needle-30k", "t": 1795367723.9346929, "vram_mib": 11414, "prompt_n": 29953, "found": "3/3", "prefill_tps": 131.8, "decode_tps": 25.8, "answer": "W9KT0ZG3 | W8IE72D3 | VOF22511"}
+{"label": "r2-iq2xxs-gpu-96k-ub128-pr32740", "case": "code-0k", "t": 1795369455.8138154, "vram_mib": 11374, "gen_n": 512, "prompt_n": 64, "decode_tps": 42.5, "finish": "length", "content_chars": 197, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub128-pr32740", "case": "code-0k", "t": 1795369467.9316247, "vram_mib": 11376, "gen_n": 506, "prompt_n": 72, "decode_tps": 42.6, "finish": "stop", "content_chars": 538, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub128-pr32740", "case": "code-0k", "t": 1795369480.1606445, "vram_mib": 11376, "gen_n": 512, "prompt_n": 60, "decode_tps": 42.6, "finish": "length", "content_chars": 642, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub128-pr32740", "case": "code-0k-med", "t": 1795369480.17243, "vram_mib": 11376, "decode_tps": 42.6, "min": 42.5, "max": 42.6, "max_loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub128-pr32740", "case": "needle-92k", "t": 1795369820.80966, "vram_mib": 11382, "prompt_n": 91802, "found": "3/3", "prefill_tps": 288.0, "decode_tps": 29.3, "answer": "NEFMZIXE | ABCMTW8L | TN9W4OF3"}
+{"label": "r2-iq2xxs-gpu-96k-ub32-inkfix", "case": "code-0k", "t": 1795369840.55622, "vram_mib": 11630, "gen_n": 405, "prompt_n": 64, "decode_tps": 41.5, "finish": "stop", "content_chars": 605, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub32-inkfix", "case": "code-0k", "t": 1795369853.242045, "vram_mib": 11630, "gen_n": 512, "prompt_n": 72, "decode_tps": 41.3, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub32-inkfix", "case": "code-0k", "t": 1795369865.885563, "vram_mib": 11630, "gen_n": 512, "prompt_n": 60, "decode_tps": 41.4, "finish": "length", "content_chars": 497, "loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub32-inkfix", "case": "code-0k-med", "t": 1795369865.8975675, "vram_mib": 11630, "decode_tps": 41.4, "min": 41.3, "max": 41.5, "max_loop": 0.0}
+{"label": "r2-iq2xxs-gpu-96k-ub32-inkfix", "case": "needle-92k", "t": 1795370761.334007, "vram_mib": 11734, "prompt_n": 91803, "found": "3/3", "prefill_tps": 105.4, "decode_tps": 21.9, "answer": "L82F2CEW | 6GIAIJJO | ZAJ2374D"}
+{"label": "r2-nvfp4-64k", "case": "pp-8k", "t": 1795371182.382714, "vram_mib": 11700, "prompt_n": 7996, "prefill_tps": 127.4, "ttft_s": 62.74}
+{"label": "r2-nvfp4-64k", "case": "pp-8k", "t": 1795371246.9187274, "vram_mib": 11700, "prompt_n": 8006, "prefill_tps": 125.2, "ttft_s": 63.94}
+{"label": "r2-nvfp4-64k", "case": "pp-8k-med", "t": 1795371246.9384935, "vram_mib": 11700, "prefill_tps": 126.3}
+{"label": "r2-nvfp4-64k", "case": "pp-32k", "t": 1795371524.8530276, "vram_mib": 11700, "prompt_n": 32237, "prefill_tps": 116.3, "ttft_s": 277.24}
+{"label": "r2-nvfp4-64k", "case": "pp-32k", "t": 1795371803.1791885, "vram_mib": 11700, "prompt_n": 32014, "prefill_tps": 115.3, "ttft_s": 277.68}
+{"label": "r2-nvfp4-64k", "case": "pp-32k-med", "t": 1795371803.195433, "vram_mib": 11700, "prefill_tps": 115.8}
+{"label": "r2-nvfp4-64k", "case": "code-0k", "t": 1795371822.8674724, "vram_mib": 11700, "gen_n": 512, "prompt_n": 64, "decode_tps": 27.4, "finish": "length", "content_chars": 322, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-0k", "t": 1795371842.235444, "vram_mib": 11700, "gen_n": 512, "prompt_n": 72, "decode_tps": 27.5, "finish": "length", "content_chars": 549, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-0k", "t": 1795371858.5151143, "vram_mib": 11700, "gen_n": 428, "prompt_n": 60, "decode_tps": 27.4, "finish": "stop", "content_chars": 660, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-0k-med", "t": 1795371858.5314972, "vram_mib": 11700, "decode_tps": 27.4, "min": 27.4, "max": 27.5, "max_loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-32k", "t": 1795372156.760918, "vram_mib": 11700, "gen_n": 466, "prompt_n": 32053, "decode_tps": 22.5, "finish": "stop", "content_chars": 643, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-32k", "t": 1795372181.314896, "vram_mib": 11700, "gen_n": 512, "prompt_n": 32061, "decode_tps": 22.5, "finish": "length", "content_chars": 462, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-32k", "t": 1795372205.5370293, "vram_mib": 11700, "gen_n": 512, "prompt_n": 32049, "decode_tps": 22.5, "finish": "length", "content_chars": 0, "loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "code-32k-med", "t": 1795372205.5537403, "vram_mib": 11700, "decode_tps": 22.5, "min": 22.5, "max": 22.5, "max_loop": 0.0}
+{"label": "r2-nvfp4-64k", "case": "needle-32k", "t": 1795372490.7961113, "vram_mib": 11700, "prompt_n": 32090, "found": "3/3", "prefill_tps": 117.7, "decode_tps": 22.5, "answer": "UF8VWEFI | 3UK043MD | NMTTET2A"}
+{"label": "r2-nvfp4-64k", "case": "needle-62k", "t": 1795373144.4581256, "vram_mib": 11700, "prompt_n": 61947, "found": "3/3", "prefill_tps": 98.0, "decode_tps": 19.3, "answer": "VUZ5K9KL | MWSRU5VU | HTK9014R"}

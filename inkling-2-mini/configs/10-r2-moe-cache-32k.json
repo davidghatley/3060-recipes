@@ -1,0 +1,3 @@
+{"id": "10-r2-moe-cache-32k", "from": "05-r2-inkfix-64k", "change": "32k context and a 768 MiB MoE cache for the RAM layers' hottest experts", "build": "r2inkfix-19c41d2ff",
+ "env": {"INK_CONTEXT": 32768, "INK_MOE_CACHE_MIB": 768},
+ "result": "r2-moe-iq4nl-32k-gate-c768: decode 31.9 (ctl 29.1), pp 8k 152.9 (146.1), needles 3/3 at 30k, decode after 30k 25.8 (24.0): accept as a 32k option"}

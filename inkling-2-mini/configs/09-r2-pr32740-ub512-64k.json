@@ -1,0 +1,4 @@
+{"id": "09-r2-pr32740-ub512-64k", "from": "05-r2-inkfix-64k", "change": "build = master 225a5345b + upstream PR #32740 at 808fd1c4e (compact attention bias) instead of our F16 patches; ub 512 (fits because the mask buffer is 1100 MiB instead of OOM)", "build": "pr32740-3afe9c3c8",
+ "env": {"INK_BIN": "/mnt/scratch/llama.cpp/pr32740-3afe9c3c8/bin", "INK_UBATCH": 512},
+ "flags": "-ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "result": "r2-pr32740-64k-ub512-full: decode 29.6 / 26.3 / 24.2, prefill 361.1 / 331.8 / 297.1, needles 3/3 + 3/3, codeeval 8/8: wins the gate; not the default because the PR is unmerged"}

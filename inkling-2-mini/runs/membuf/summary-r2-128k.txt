@@ -1,0 +1,88 @@
+== r2inkfix-19c41d2ff; card before load: 965 MiB used (desktop + idle ComfyUI)
+-- 6-15 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1223.82 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.987.640 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2447.55 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.989.464 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3671.29 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.977.750 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4895.02 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.977.953 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2479.80 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.992.556 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3684.90 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.983.696 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4889.43 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.987.069 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6093.96 MiB on device 0: cudaMalloc failed: out of memory
+-- 6-16 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1223.82 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.035.907 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2447.55 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.020.159 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3138.15 MiB on device 0: cudaMalloc failed: out of memory
+== master-225a5345b; card before load: 945 MiB used (desktop + idle ComfyUI)
+-- 6-15 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1607.82 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.975.324 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3215.55 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.985.820 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4823.29 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.983.876 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6431.02 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.002.840 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2863.80 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.976.319 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4452.90 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.978.979 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6041.43 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.988.637 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 7629.96 MiB on device 0: cudaMalloc failed: out of memory
+-- 6-16 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.013.452 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1607.82 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.025.528 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3215.55 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.022.085 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3906.15 MiB on device 0: cudaMalloc failed: out of memory
+== pr32752-d66e7bfe2; card before load: 945 MiB used (desktop + idle ComfyUI)
+-- 6-15 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1255.82 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1743.55 MiB;CUDA_Host compute buffer size =   117.19 MiB;
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.989.882 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2231.29 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.984.206 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2719.02 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.985.691 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2479.80 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.978.160 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2916.90 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.977.028 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3353.43 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.981.978 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3917.96 MiB on device 0: cudaMalloc failed: out of memory
+-- 6-16 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1255.82 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.019.961 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1743.55 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.024.600 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2370.15 MiB on device 0: cudaMalloc failed: out of memory
+== pr32740-3afe9c3c8; card before load: 945 MiB used (desktop + idle ComfyUI)
+-- 6-15 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   578.56 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   645.04 MiB;CUDA_Host compute buffer size =   117.19 MiB;
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   711.52 MiB;CUDA_Host compute buffer size =   175.79 MiB;
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   778.00 MiB;CUDA_Host compute buffer size =   234.38 MiB;
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1840.55 MiB;CUDA_Host compute buffer size =    49.60 MiB;
+0.01.010.390 E CUDA error: out of memory
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.985.772 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1894.40 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=192 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.991.314 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1947.68 MiB on device 0: cudaMalloc failed: out of memory
+ctx=131072 ub=256 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  6732.14 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.997.519 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 2000.96 MiB on device 0: cudaMalloc failed: out of memory
+-- 6-16 on GPU
+ctx=131072 ub=64 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   578.56 MiB;CUDA_Host compute buffer size =    58.60 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 --no-op-offload :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   645.04 MiB;CUDA_Host compute buffer size =   117.19 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7278.89 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.011.935 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1347.65 MiB on device 0: cudaMalloc failed: out of memory

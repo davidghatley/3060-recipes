@@ -1,0 +1,4 @@
+{"id": "08-r2-q2kxl-gpu-64k", "from": "06-r2-iq2xxs-gpu-64k", "change": "Unsloth UD-Q2_K_XL instead of UD-IQ2_XXS, every expert on the GPU; ub 64 (ub 128 does not load)", "build": "r2inkfix-19c41d2ff",
+ "env": {"INK_QUANT": "q2kxl"},
+ "flags": "-ngl 99 --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 64 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "result": "r2-q2kxl-gpu-64k-ub64: decode 39.9 / 30.4 / 25.6, prefill 255.3 / 191.0 / 146.5, needles 3/3 + 3/3, codeeval 8/8; KLD vs Q8_0 0.0723 wiki / 0.0440 code: option"}

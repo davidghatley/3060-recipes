@@ -16,7 +16,7 @@ if [[ -z ${KLD_INSIDE:-} ]]; then
   exec env KLD_INSIDE=1 GPU_RUN_MEM=${GPU_RUN_MEM:-44G} "$HOME/anime-pipeline/tools/gpu_run" --need 6000 --wait 7200 "$0" "$@"
 fi
 export LD_LIBRARY_PATH=/mnt/scratch/envs/llama-build-cuda/lib
-out=$ROOT/runs/kld; mkdir -p "$out" "$D/kld"
+out=$ROOT/runs/kld${KLD_TAG:+/$KLD_TAG}; mkdir -p "$out" "$D/kld"     # KLD_TAG=r2 keeps a later round in its own folder
 models=("$@"); [[ ${#models[@]} -eq 0 ]] && models=("$D/Inkling-2-Mini-IQ4_NL.gguf")
 common=(-ngl 99 -ot exps=CPU --no-op-offload --fit off -fa on -c 512 -b 2048 -ub 2048 -t 6 --chunks 24)
 declare -A TEXT=([wiki]=/mnt/scratch/data/wikitext-2-dl/wikitext-2-raw/wiki.test.raw [code]=$ROOT/runs/data/kld-code.txt)

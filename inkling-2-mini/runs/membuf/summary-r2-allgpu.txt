@@ -1,0 +1,65 @@
+== 00:29:14 IQ2_XXS all-GPU on master-225a5345b
+ctx=65536 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =  1629.67 MiB;CUDA_Host compute buffer size =    51.19 MiB;
+grep: /home/davidhatley/Projects/3060-recipes/inkling-2-mini/runs/membuf/r2-IQ2_XXS-master-225a5345b-ctx65536-ub512-_ctk_q8_0__ctv_q8_0_.log: No such file or directory
+ctx=65536 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.036.761 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6524.22 MiB on device 0: cudaMalloc failed: out of memory
+0.01.036.764 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 6841139456
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.980.007 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3213.67 MiB on device 0: cudaMalloc failed: out of memory
+0.00.980.010 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 3369779968
+ctx=131072 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.012.245 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 12860.22 MiB on device 0: cudaMalloc failed: out of memory
+0.01.012.250 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 13484916992
+ctx=262144 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;
+0.00.963.167 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4352.00 MiB on device 0: cudaMalloc failed: out of memory
+0.00.963.169 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA0 buffer of size 4563402752
+ctx=262144 ub=128 -ctk q4_0 -ctv q4_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2304.00 MiB;CUDA0 KV buffer size =    56.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.995.529 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6381.67 MiB on device 0: cudaMalloc failed: out of memory
+0.00.995.531 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 6691668736
+== 00:32:06 IQ2_XXS all-GPU on pr32740-3afe9c3c8
+ctx=65536 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   339.16 MiB;CUDA_Host compute buffer size =    51.19 MiB;
+ctx=65536 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   594.17 MiB;CUDA_Host compute buffer size =   205.52 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   643.16 MiB;CUDA_Host compute buffer size =    99.19 MiB;
+ctx=131072 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.980.286 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1042.17 MiB on device 0: cudaMalloc failed: out of memory
+0.00.980.289 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 1092796672
+ctx=262144 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  7847.07 MiB;
+0.00.944.570 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4352.00 MiB on device 0: cudaMalloc failed: out of memory
+0.00.944.573 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA0 buffer of size 4563402752
+ctx=262144 ub=128 -ctk q4_0 -ctv q4_0 :: CUDA0 model buffer size =  7847.07 MiB;CUDA0 KV buffer size =  2304.00 MiB;CUDA0 KV buffer size =    56.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.00.982.546 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1251.16 MiB on device 0: cudaMalloc failed: out of memory
+0.00.982.549 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 1311937280
+== 00:34:53 Q2_K_XL all-GPU on master-225a5345b
+ctx=65536 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.14.719.689 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1629.67 MiB on device 0: cudaMalloc failed: out of memory
+0.14.719.692 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 1708835584
+ctx=65536 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.022.661 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6524.22 MiB on device 0: cudaMalloc failed: out of memory
+0.01.022.663 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 6841139456
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.054.872 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 3213.67 MiB on device 0: cudaMalloc failed: out of memory
+0.01.054.875 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 3369779968
+ctx=131072 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.038.613 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 12860.22 MiB on device 0: cudaMalloc failed: out of memory
+0.01.038.616 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 13484916992
+ctx=262144 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;
+0.01.008.679 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4352.00 MiB on device 0: cudaMalloc failed: out of memory
+0.01.008.681 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA0 buffer of size 4563402752
+ctx=262144 ub=128 -ctk q4_0 -ctv q4_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2304.00 MiB;CUDA0 KV buffer size =    56.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.052.064 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 6381.67 MiB on device 0: cudaMalloc failed: out of memory
+0.01.052.067 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 6691668736
+== 00:38:12 Q2_K_XL all-GPU on pr32740-3afe9c3c8
+ctx=65536 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   339.16 MiB;CUDA_Host compute buffer size =    51.19 MiB;
+ctx=65536 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  1088.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;CUDA0 compute buffer size =   594.17 MiB;CUDA_Host compute buffer size =   205.52 MiB;
+ctx=131072 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   106.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.047.248 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 643.16 MiB on device 0: cudaMalloc failed: out of memory
+0.01.047.250 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 674403072
+ctx=131072 ub=512 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2176.00 MiB;CUDA0 KV buffer size =   127.50 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.022.998 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1042.17 MiB on device 0: cudaMalloc failed: out of memory
+0.01.023.001 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 1092796672
+ctx=262144 ub=128 -ctk q8_0 -ctv q8_0 :: CUDA0 model buffer size =  8469.32 MiB;
+0.01.005.738 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 4352.00 MiB on device 0: cudaMalloc failed: out of memory
+0.01.005.740 E ggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA0 buffer of size 4563402752
+ctx=262144 ub=128 -ctk q4_0 -ctv q4_0 :: CUDA0 model buffer size =  8469.32 MiB;CUDA0 KV buffer size =  2304.00 MiB;CUDA0 KV buffer size =    56.25 MiB;CUDA0 RS buffer size =     3.66 MiB;
+0.01.037.053 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 1251.16 MiB on device 0: cudaMalloc failed: out of memory
+0.01.037.055 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 1311937280

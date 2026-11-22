@@ -1,0 +1,88 @@
+== Inkling-2-Mini-IQ4_NL wiki
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.367389 ±   0.238436
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.002092 ±   0.002025
+Mean PPL(Q)-PPL(base)         :   0.015377 ±   0.014884
+Mean    KLD:   0.008479 ±   0.000243
+Maximum KLD:   0.519866
+99.0%   KLD:   0.078289
+RMS Δp    :  2.395 ± 0.111 %
+Same top p: 95.539 ± 0.264 %
+== Inkling-2-Mini-UD-IQ2_XXS wiki
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.909594 ±   0.257653
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.075841 ±   0.006983
+Mean PPL(Q)-PPL(base)         :   0.557583 ±   0.053322
+Mean    KLD:   0.090993 ±   0.002274
+Maximum KLD:   4.261725
+99.0%   KLD:   0.779302
+RMS Δp    :  8.227 ± 0.229 %
+Same top p: 86.846 ± 0.432 %
+== Inkling-2-Mini-UD-Q2_K_XL wiki
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.731262 ±   0.250750
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.051585 ±   0.006055
+Mean PPL(Q)-PPL(base)         :   0.379250 ±   0.045316
+Mean    KLD:   0.072304 ±   0.001874
+Maximum KLD:   3.088400
+99.0%   KLD:   0.681173
+RMS Δp    :  7.294 ± 0.237 %
+Same top p: 87.974 ± 0.416 %
+== Inkling-2-Mini-UD-IQ3_XXS wiki
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.488580 ±   0.242977
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.018576 ±   0.003680
+Mean PPL(Q)-PPL(base)         :   0.136568 ±   0.027306
+Mean    KLD:   0.027965 ±   0.001057
+Maximum KLD:   3.824058
+99.0%   KLD:   0.256057
+RMS Δp    :  4.690 ± 0.186 %
+Same top p: 92.974 ± 0.327 %
+== Inkling-2-Mini-IQ4_NL code
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.642255 ±   0.063458
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.001722 ±   0.001982
+Mean PPL(Q)-PPL(base)         :   0.004542 ±   0.005224
+Mean    KLD:   0.008812 ±   0.000367
+Maximum KLD:   0.610839
+99.0%   KLD:   0.123240
+RMS Δp    :  3.114 ± 0.155 %
+Same top p: 97.467 ± 0.201 %
+== Inkling-2-Mini-UD-IQ2_XXS code
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.789925 ±   0.068555
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.057706 ±   0.005425
+Mean PPL(Q)-PPL(base)         :   0.152211 ±   0.014763
+Mean    KLD:   0.056221 ±   0.001884
+Maximum KLD:   3.419676
+99.0%   KLD:   0.660771
+RMS Δp    :  7.940 ± 0.259 %
+Same top p: 93.268 ± 0.320 %
+== Inkling-2-Mini-UD-Q2_K_XL code
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.745674 ±   0.066704
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.040929 ±   0.004617
+Mean PPL(Q)-PPL(base)         :   0.107960 ±   0.012363
+Mean    KLD:   0.043968 ±   0.001431
+Maximum KLD:   1.731147
+99.0%   KLD:   0.492945
+RMS Δp    :  6.749 ± 0.226 %
+Same top p: 93.873 ± 0.307 %
+== Inkling-2-Mini-UD-IQ3_XXS code
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.656313 ±   0.063937
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.007051 ±   0.003034
+Mean PPL(Q)-PPL(base)         :   0.018599 ±   0.007991
+Mean    KLD:   0.017859 ±   0.000715
+Maximum KLD:   2.338660
+99.0%   KLD:   0.209693
+RMS Δp    :  4.432 ± 0.179 %
+Same top p: 95.931 ± 0.253 %

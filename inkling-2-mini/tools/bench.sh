@@ -19,6 +19,8 @@ nvidia-smi dmon -s mt -d 1 > "$out-dmon.txt" 2>&1 &
 dmon=$!
 trap 'kill $dmon 2>/dev/null || true' EXIT
 extra=(); [[ " $* " == *" -t "* ]] || extra+=(-t 6)
-"$HOME/anime-pipeline/tools/gpu_run" --need "${INK_NEED:-10000}" --wait 7200 \
+RUN=("$HOME/anime-pipeline/tools/gpu_run" --need "${INK_NEED:-10000}" --wait 7200)
+[ -n "${INK_NO_GPU_RUN:-}" ] && RUN=()        # already inside a gpu_run session (tools/gpu_batch.sh)
+"${RUN[@]}" \
   "$BIN/llama-bench" -m "$MODEL" -ngl 99 -fa 1 "${extra[@]}" -o jsonl "$@" > "$out.jsonl" 2>> "$out.err"
 python3 -I "$ROOT/tools/summarize.py" "$out.jsonl"

@@ -1,15 +1,15 @@
-From 73e22d20aa8bff990446e22284cc76da3888ff69 Mon Sep 17 00:00:00 2001
-From: David Hatley <davidhatley@me.com>
+From d94720180d5d5b60ede1f3855c0bdc6022bcfdf5 Mon Sep 17 00:00:00 2001
+From: 3060-recipes <noreply@localhost>
 Date: Sat, 21 Nov 2026 04:04:43 -0700
-Subject: [PATCH] inkling2_loop: allow loop.count = 1 so the pass count can be
- overridden at load (--override-kv)
+Subject: [PATCH 3/3] inkling2_loop: allow loop.count = 1 so the pass count can
+ be overridden at load (--override-kv)
 
 ---
  src/models/inkling2-loop.cpp | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/models/inkling2-loop.cpp b/src/models/inkling2-loop.cpp
-index 38d3dffd3..d016a5dfc 100644
+index 8366a1191..e904b08a0 100644
 --- a/src/models/inkling2-loop.cpp
 +++ b/src/models/inkling2-loop.cpp
 @@ -15,8 +15,12 @@ void llama_model_inkling2_loop::load_arch_hparams(llama_model_loader & ml) {
