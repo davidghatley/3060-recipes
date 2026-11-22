@@ -33,7 +33,8 @@ SRV=$!
 # Stop the front end and any engine process it started, so nothing outlives the gpu_run session.
 stop() { local kids; kids=$(pgrep -P $SRV || true); kill $SRV $kids 2>/dev/null; wait $SRV 2>/dev/null || true
   [ -z "$kids" ] && return 0
-  for _ in $(seq 30); do kill -0 $kids 2>/dev/null || return 0; sleep 1; done; kill -9 $kids 2>/dev/null || true; }
+  local k alive; for _ in $(seq 30); do alive=0; for k in $kids; do kill -0 "$k" 2>/dev/null && alive=1; done
+    [ $alive = 0 ] && return 0; sleep 1; done; kill -9 $kids 2>/dev/null || true; }
 trap stop EXIT
 
 t0=$(date +%s)
