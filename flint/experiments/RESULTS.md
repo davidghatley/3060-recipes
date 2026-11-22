@@ -34,7 +34,32 @@ Reference: the shipped profile (128k, -ncmoe 43, f16 KV, ub 4096) measured
 | 1 64k f16 | -ncmoe 37 fits, 55.1 t/s (+7%), cold 11k prefill +6%; -ncmoe 35 does not load | Ship, but the 64k cache profile beats it |
 | 2 hand-off | Hand-off is ~1.1 ms of an 18.9 ms token, not 3–4 ms. CPU experts run at 80% of DRAM bandwidth. The mainline knobs are noise. Async copy prototype: +3.0% decode. | Needs engine patch (small); see sketch |
 | 3 RAM-expert requant | Q3_K: +7% tg/pp, but top-1 agreement 78.8% and KLD 0.34. IQ4_XS: +3% pp, tg noise, KLD 0.17. | Drop. A clean requant needs a BF16/Q8_0 source download that doesn't fit on disk now. |
+| 6 cache size, cpu-share, `-ub 8192` (2026-11-22) | 128k: 3200 / 3328 MiB and cpu-share 0.90 all within noise of 2944 / 0.95 (57.7–59.3 vs 59.2). `-ub 8192`: cold 11k prefill +1.7% at 64k and 32k, decode −3 to −6% (the bigger compute buffer takes cache VRAM). | **Keep the shipped profiles.** Reject `-ub 8192`. |
 | 4 routing skew | On code the top 25% of experts take 57–59% of selections and the top 50% take 79–81%. Two Python samples agree well (top-25% overlap 0.76, ρ 0.81); Python vs C++ less so (0.62). | Explains exp 5 |
+
+## Experiment 6: cache size, cpu-share and `-ub 8192` (2026-11-22)
+
+Same harness as experiment 5 (`tools/srv.sh`, `FLINT_SPEC=none`, `-lv 4`), script `tools/phaseG2.sh`, log `runs/phaseG2.log`.
+The first attempt (`tools/phaseG.sh`, `runs/phaseG.log`) is void. Other sessions held the GPU lock, so six servers gave up after `serve.sh`'s 120 s wait, and its first control decoded 18.7 t/s while another job was running. `serve.sh` now takes `FLINT_GPU_WAIT` (default 120, unchanged), and `srv.sh` flags runs that end with another compute process on the GPU.
+In G2, control 1's prose test was lost: `srv.sh` was edited while it ran (the bash re-read trap again). Its warm-up requests 2–4 ran at 58.1 / 59.3 / 58.2.
+
+| config (ctx, ub, cache MiB, cpu-share) | VRAM MiB | prose t/s | cold 11k prefill t/s (TTFT) | hit rate (ub≤8) |
+|---|---:|---:|---:|---:|
+| 128k, 4096, 2944, 0.95 (ctl1, warm-up only) | 11288 | (58.1–59.3) | | 47.6% |
+| 128k, 4096, 3200, 0.95 | 11592 | 59.3 | | 45.7% |
+| 128k, 4096, 3328, 0.95 | 11730 | 57.7 | | 49.2% |
+| 128k, 4096, 2944, 0.90 | 11316 | 58.8 | | 47.6% |
+| 128k, 4096, 2944, 0.95 (ctl2) | 11346 | **59.2** | | 46.0% |
+| 64k, 4096, 5248, 0.95 (shipped 64k) | 11402 | **63.3** | **1746.6 (6.29 s)** | 58.8% |
+| 64k, 8192, 3200, 0.95 | 11024 | 59.3 | 1776.0 (6.18 s) | 45.4% |
+| 32k, 4096, 6144, 0.95 | 11146 | **64.8** | 1768.3 (6.21 s) | 63.0% |
+| 32k, 8192, 5120, 0.95 | 11534 | 62.8 | 1798.9 (6.10 s) | 56.7% |
+
+Findings:
+- **The 128k cache is at its knee.** Past 2944 MiB the hit rate stops climbing (45.7–49.2% in all four runs), and decode stays at 57.7–59.3. 3328 MiB leaves ~550 MiB of VRAM, less than the 121k-token request needed in experiment 5. cpu-share 0.90 equals 0.95 again.
+- **`-ub 8192` buys almost no prefill on an 11k prompt.** It saves 0.1 s of a 6.2 s TTFT (+1.7%). Its compute buffer costs ~1 GB of cache at the same VRAM, which costs 3–6% decode. That rules it out for opencode-style use, where TTFT is dominated by an 11k system prompt.
+- This contradicts the transfer model in `../THEORY.md`. That model predicts 3 → 2 expert copies (−1.4 s) for an 11k prompt, but the measured saving is 0.1 s. So at ub 4096 the per-chunk expert copy is no longer what limits server prefill at this length. Either compute dominates or the copies overlap. This wasn't profiled. Experiment 2's +16% at pp16384 (llama-bench, no cache) still stands for longer prompts.
+- A 32k context with a 6144 MiB cache decodes 64.8 t/s, only +2% over the 64k profile. Not shipped as a profile.
 
 ## Experiment 5: MoE expert cache (`--moe-cache-mib`, `--moe-cache-cpu-share`)
 

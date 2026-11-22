@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start flint/serve.sh (unchanged) with env overrides + extra args, wait for health, run tests, stop cleanly.
-#   [FLINT_CONTEXT=.. FLINT_CPU_MOE=.. FLINT_MODEL=..] TESTS="pre-probes|servertest-args|post-probes" tools/srv.sh <label> [-- extra llama-server args]
+#   [FLINT_CONTEXT=.. FLINT_CPU_MOE=.. FLINT_MODEL=..] TESTS="pre-probes|servertest-args|post-probes" [EXTRA='cmd "$1"'] tools/srv.sh <label> [-- extra llama-server args]
 # servertest results -> runs/server-ledger.jsonl, probe results -> runs/exp5-ledger.jsonl, log -> runs/server-<label>.log
 set -euo pipefail
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd); FLINT=$(dirname "$HERE")
@@ -29,6 +29,11 @@ IFS='|' read -r PRE ST POST <<< "${TESTS:-warmup|--reps 4 --skip code|greedy,dep
 [ -n "$PRE" ] && python3 -I "$HERE/tools/exp5probe.py" --label "$label" --cases "$PRE"
 [ -n "$ST" ] && python3 -I "$FLINT/tools/servertest.py" --label "$label" --ledger "$HERE/runs/server-ledger.jsonl" $ST
 [ -n "$POST" ] && python3 -I "$HERE/tools/exp5probe.py" --label "$label" --cases "$POST"
+# EXTRA: one more command against the live server, e.g. the shared code eval (label is passed as $1).
+[ -n "${EXTRA:-}" ] && bash -c "$EXTRA" _ "$label"
 echo "$label done; vram=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader)"
+# Flag runs that shared the GPU with another compute job (other sessions don't always take the lock).
+others=$(nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader | grep -v -E "llama-server|comfyui|main.py|helium|--type=gpu-process" || true)
+[ -n "$others" ] && echo "$label CONTAMINATED: other GPU compute jobs at the end of the run: $others"
 stop; trap - EXIT
 grep -oE "llama_moe_cache: (ubatch|large).*" "$log" | sed "s/^/  /" || true

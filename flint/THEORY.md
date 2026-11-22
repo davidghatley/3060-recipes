@@ -43,6 +43,8 @@ With experts in RAM, llama.cpp copies each CPU-resident expert tensor to the GPU
 
 GPU compute is not the limit: the 3060 has ~50 TFLOPS of fp16 tensor throughput and Flint activates only a few billion parameters per token.
 
+**Measured check (2026-11-22, `experiments/RESULTS.md` exp 6):** with the MoE cache profiles on the server, `-ub 8192` cut the 11k-prompt TTFT by only 0.1 s (6.29 → 6.18 s at 64k), not the 1.4 s this table predicts for 3 → 2 copies. So for server prompts of this length, the per-chunk copy at ub 4096 is not the main cost. Treat the ub 4096 row's ~2,600 tok/s as a loose upper bound, not a near-term target. Where the time goes instead (compute, or copies overlapping it) wasn't profiled.
+
 ## KV cache
 
 - Full-attention layers: 14 × 2 × 4 heads × 128 × 2 bytes = 28.7 KB/token in f16, so **3.5 GiB at 128k** (q8_0: ~1.9 GiB).
