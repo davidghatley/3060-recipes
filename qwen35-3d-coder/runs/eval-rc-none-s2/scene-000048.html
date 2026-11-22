@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bamboo Box Kite</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b9d9e8;
+    }
+
+    #scene {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      max-width: min(360px, calc(100vw - 48px));
+      padding: 18px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 18px;
+      color: #263b32;
+      background: rgba(248, 244, 231, 0.78);
+      box-shadow: 0 12px 40px rgba(30, 55, 45, 0.14);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #a85c36;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: #5c6d62;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .controls {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .control-panel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      color: #31443a;
+      background: rgba(248, 244, 231, 0.82);
+      box-shadow: 0 10px 30px rgba(30, 55, 45, 0.12);
+      backdrop-filter: blur(12px);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(74, 99, 82, 0.2);
+      border-radius: 9px;
+      padding: 8px 12px;
+      color: #f8f4e8;
+      background: #315646;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    button:hover {
+      background: #244335;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #wind {
+      width: 125px;
+      accent-color: #a85c36;
+      cursor: pointer;
+    }
+
+    #wind-label {
+      width: 38px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .hint {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      z-index: 10;
+      transform: translateX(-50%);
+      padding: 9px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      color: rgba(35, 55, 45, 0.78);
+      background: rgba(248, 244, 231, 0.68);
+      box-shadow: 0 8px 24px rgba(30, 55, 45, 0.1);
+      backdrop-filter: blur(10px);
+      font-size: 0.72rem;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      color: #315646;
+      background: #b9d9e8;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.2rem;
+      transition: opacity 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 680px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        top: auto;
+        right: 14px;
+        bottom: 58px;
+      }
+
+      .control-panel {
+        padding: 8px;
+      }
+
+      .hint {
+        bottom: 14px;
+        font-size: 0.66rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <section class="title-card">
+    <div class="eyebrow">Traditional wind craft</div>
+    <h1>Bamboo Box Kite</h1>
+    <p class="subtitle">
+      Four fluttering paper faces, a woven bamboo skeleton, and a long,
+      graceful tail carried on a fine string.
+    </p>
+  </section>
+
+  <nav class="controls" aria-label="Scene controls">
+    <div class="control-panel">
+      <button id="pause" type="button">Pause wind</button>
+      <button id="reset" type="button">Reset view</button>
+    </div>
+    <div class="control-panel">
+      <label for="wind">Wind</label>
+      <input id="wind" type="range" min="0.3" max="2.4" step="0.1" value="1.2" />
+      <span id="wind-label">12 km/h</span>
+    </div>
+  </nav>
+
+  <div class="hint">Drag to orbit · Scroll or pinch to zoom · Double-click to reset</div>
+  <div id="loading">Preparing the kite…</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const canvas = document.querySelector("#scene");
+    const pauseButton = document.querySelector("#pause");
+    const resetButton = document.querySelector("#reset");
+    const windSlider = document.querySelector("#wind");
+    const windLabel = document.querySelector("#wind-label");
+    const loading = document.querySelector("#loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9d9e8);
+    scene.fog = new THREE.Fog(0xb9d9e8, 24, 65);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      120
+    );
+
+    const hemiLight = new THREE.HemisphereLight(0xe8f7ff, 0x66704a, 2.1);
+    scene.add(hemiLight);
+
+    const sun = new THREE.DirectionalLight(0xfff0ce, 3.1);
+    sun.position.set(7, 12, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -10;
+    sun.shadow.camera.right = 10;
+    sun.shadow.camera.top = 12;
+    sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 35;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0x9fd9e8, 0.65);
+    fillLight.position.set(-8, 4, -7);
+    scene.add(fillLight);
+
+    // Procedural textures keep the scene completely self-contained.
+    function makePaperTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 512;
+      const ctx = c.getContext("2d");
+
+      const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+      gradient.addColorStop(0, "#fff8df");
+      gradient.addColorStop(0.55, "#f5e9cf");
+      gradient.addColorStop(1, "#e8dcc0");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 2200; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.strokeStyle = `rgba(105, 83, 48, ${0.015 + Math.random() * 0.025})`;
+        ctx.lineWidth = Math.random() * 1.1 + 0.2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.random() * 8, y + Math.random() * 2);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#a84e32";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(18, 18, 476, 476);
+
+      ctx.strokeStyle = "#397b83";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(38, 38, 436, 436);
+
+      ctx.strokeStyle = "#a84e32";
+      ctx.lineWidth = 3;
+      for (const x of [78, 434]) {
+        ctx.beginPath();
+        ctx.arc(x, 256, 24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeBambooTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const ctx = c.getContext("2d");
+
+      ctx.fillStyle = "#c99548";
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let x = 0; x < 256; x += 24) {
+        const light = Math.random() > 0.5;
+        ctx.fillStyle = light ? "#d8a95d" : "#b98238";
+        ctx.fillRect(x + 2, 0, 20, 256);
+        ctx.fillStyle = "rgba(65, 35, 12, 0.3)";
+        ctx.fillRect(x + 19, 0, 3, 256);
+      }
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 1);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    function makeGroundTexture() {
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const ctx = c.getContext("2d");
+      const image = ctx.createImageData(256, 256);
+
+      for (let i = 0; i < image.data.length; i += 4) {
+        const n = 92 + Math.random() * 28;
+        image.data[i] = n;
+        image.data[i + 1] = n + 13;
+        image.data[i + 2] = n - 5;
+        image.data[i + 3] = 255;
+      }
+
+      ctx.putImageData(image, 0, 0);
+
+      const texture = new THREE.CanvasTexture(c);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(18, 18);
+      return texture;
+    }
+
+    const paperTexture = makePaperTexture();
+    const bambooTexture = makeBambooTexture();
+    const groundTexture = makeGroundTexture();
+
+    const bambooMaterial = new THREE.MeshStandardMaterial({
+      map: bambooTexture,
+      color: 0xffffff,
+      roughness: 0.72
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0x76502a,
+      roughness: 0.8
+    });
+
+    const paperMaterial = new THREE.MeshStandardMaterial({
+      map: paperTexture,
+      roughness: 0.9,
+      side: THREE.DoubleSide
+    });
+
+    const stringMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf1e5c2,
+      roughness: 1
+    });
+
+    const UP = new THREE.Vector3(0, 1, 0);
+
+    function addRod(parent, start, end, radius, material = bambooMaterial) {
+      const direction = end.clone().sub(start);
+      const length = direction.length();
+
+      if (length < 0.0001) return null;
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        10,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addJoint(parent, position, radius = 0.1) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 12, 8),
+        jointMaterial
+      );
+      mesh.position.copy(position);
+      mesh.castShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // A subdivided triangular mesh allows the paper faces to flutter.
+    function createPanelGeometry(width, height, segments = 9) {
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+
+      for (let i = 0; i <= segments; i++) {
+        const u = i / segments;
+
+        for (let j = 0; j <= segments - i; j++) {
+          const v =
+            i === segments ? 1 : j / (segments - i);
+
+          // Barycentric-style position within the triangular face.
+          const x = -width / 2 + u * width - v * width / 2;
+          const y = v * height;
+
+          positions.push(x, y, 0);
+          uvs.push(u, v);
+        }
+      }
+
+      for (let i = 0; i < segments; i++) {
+        const rowStart = i * (segments - i + 1);
+        const nextRowStart = (i + 1) * (segments - i);
+        const count = segments - i;
+
+        for (let k = 0; k < count; k++) {
+          const a = rowStart + k;
+          const b = a + 1;
+          const c = nextRowStart + k;
+          const d = c + 1;
+
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      return { geometry, basePositions: positions.slice() };
+    }
+
+    // Kite assembly.
+    const kite = new THREE.Group();
+    kite.position.y = 0.15;
+    scene.add(kite);
+
+    const BASE_HEIGHT = 3.35;
+    const halfWidth = 2.15;
+
+    const baseVertices = [
+      new THREE.Vector3(halfWidth, 0, halfWidth),
+      new THREE.Vector3(-halfWidth, 0, halfWidth),
+      new THREE.Vector3(-halfWidth, 0, -halfWidth),
+      new THREE.Vector3(halfWidth, 0, -halfWidth)
+    ];
+
+    const apex = new THREE.Vector3(0, BASE_HEIGHT, 0);
+
+    const panelRecords = [];
+
+    for (let i = 0; i < 4; i++) {
+      const next = (i + 1) % 4;
+      const start = baseVertices[i];
+      const end = baseVertices[next];
+      const direction = end.clone().sub(start);
+      const width = direction.length();
+      const midpoint = start.clone().add(end).multiplyScalar(0.5);
+
+      const face = new THREE.Group();
+      face.position.copy(midpoint);
+      face.rotation.y = Math.atan2(-direction.z, direction.x);
+      kite.add(face);
+
+      const panelData = createPanelGeometry(width, BASE_HEIGHT, 9);
+
+      const paper = new THREE.Mesh(
+        panelData.geometry,
+        paperMaterial
+      );
+      paper.castShadow = true;
+      paper.receiveShadow = true;
+      face.add(paper);
+
+      // The strong vertical rib runs from the middle of each face to the hub.
+      addRod(
+        face,
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, BASE_HEIGHT, 0),
+        0.046,
+        bambooMaterial
+      );
+
+      addJoint(face, new THREE.Vector3(0, BASE_HEIGHT / 2, 0), 0.09);
+
+      panelRecords.push({
+        face,
+        geometry: panelData.geometry,
+        basePositions: panelData.basePositions,
+        phase: i * 0.83
+      });
+    }
+
+    // Bottom square frame.
+    for (let i = 0; i < 4; i++) {
+      addRod(
+        kite,
+        baseVertices[i],
+        baseVertices[(i + 1) % 4],
+        0.066
+      );
+    }
+
+    // Four horizontal reinforcing ribs.
+    for (const level of [0.72, 1.42, 2.12]) {
+      const t = level / BASE_HEIGHT;
+
+      for (let i = 0; i < 4; i++) {
+        const a = baseVertices[i].clone().lerp(apex, t);
+        const b = baseVertices[(i + 1) % 4].clone().lerp(apex, t);
+        addRod(kite, a, b, 0.022);
+      }
+    }
+
+    addJoint(kite, apex, 0.14);
+    addJoint(kite, baseVertices[0], 0.105);
+    addJoint(kite, baseVertices[1], 0.105);
+    addJoint(kite, baseVertices[2], 0.105);
+    addJoint(kite, baseVertices[3], 0.105);
+
+    const hub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.2, 0.28, 16),
+      bambooMaterial
+    );
+    hub.position.copy(apex);
+    hub.castShadow = true;
+    kite.add(hub);
+
+    // Long, fanned bamboo tail.
+    const tail = new THREE.Group();
+    kite.add(tail);
+
+    addRod(tail, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -1.25, 0), 0.045);
+    addRod(tail, new THREE.Vector3(0, -1.25, 0), new THREE.Vector3(0, -2.65, 0), 0.04);
+    addRod(tail, new THREE.Vector3(0, -2.65, 0), new THREE.Vector3(0, -3.9, 0), 0.035);
+
+    addRod(tail, new THREE.Vector3(0, -1.25, 0), new THREE.Vector3(-1.25, -1.25, 0), 0.025);
+    addRod(tail, new THREE.Vector3(0, -1.25, 0), new THREE.Vector3(1.25, -1.25, 0), 0.025);
+    addRod(tail, new THREE.Vector3(0, -2.65, 0), new THREE.Vector3(-1.65, -2.65, 0), 0.022);
+    addRod(tail, new THREE.Vector3(0, -2.65, 0), new THREE.Vector3(1.65, -2.65, 0), 0.022);
+    addRod(tail, new THREE.Vector3(0, -3.9, 0), new THREE.Vector3(-2.05, -3.9, 0), 0.018);
+    addRod(tail, new THREE.Vector3(0, -3.9, 0), new THREE.Vector3(2.05, -3.9, 0), 0.018);
+
+    const tailTip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.075, 0.32, 8),
+      bambooMaterial
+    );
+    tailTip.position.set(0, -4.1, 0);
+    tailTip.rotation.z = Math.PI;
+    tailTip.castShadow = true;
+    tail.add(tailTip);
+
+    // Fine line from the hub to the spool.
+    const spoolPosition = new THREE.Vector3(0, 8.2, 0);
+    const stringGeometry = new THREE.BufferGeometry();
+    stringGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(6), 3)
+    );
+
+    const stringLine = new THREE.Line(
+      stringGeometry,
+      new THREE.LineBasicMaterial({ color: 0xf1e5c2 })
+    );
+    scene.add(stringLine);
+
+    // Small line spool.
+    const spool = new THREE.Group();
+    spool.position.copy(spoolPosition);
+    scene.add(spool);
+
+    const spoolBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.24, 0.48, 20),
+      bambooMaterial
+    );
+    spoolBody.castShadow = true;
+    spool.add(spoolBody);
+
+    for (const y of [-0.25, 0.25]) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.245, 0.035, 8, 24),
+        bambooMaterial
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = y;
+      spool.add(ring);
+    }
+
+    function updateString() {
+      const positions = stringGeometry.attributes.position;
+      positions.setXYZ(
+        0,
+        kite.position.x + apex.x,
+        kite.position.y + apex.y,
+        spoolPosition.x,
+        spoolPosition.y,
+        spoolPosition.z
+      );
+      positions.needsUpdate = true;
+    }
+
+    // Soft clouds.
+    const clouds = [];
+    const cloudMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.76,
+      depthWrite: false
+    });
+
+    const cloudGeometry = new THREE.SphereGeometry(1, 14, 10);
+
+    function createCloud(x, y, z, scale, speed, phase) {
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.scale.setScalar(scale);
+
+      const pieces = [
+        [-1.1, 0, 0, 0.9],
+        [-0.35, 0.28, 0, 1.15],
+        [0.55, 0.12, 0, 0.95],
+        [1.25, -0.04, 0, 0.72],
+        [0, -0.18, 0.1, 1.25]
+      ];
+
+      for (const [px, py, pz, s] of pieces) {
+        const puff = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        puff.position.set(px, py, pz);
+        puff.scale.set(s * 1.5, s * 0.65, s);
+        group.add(puff);
+      }
+
+      group.userData.baseX = x;
+      group.userData.speed = speed;
+      group.userData.phase = phase;
+      scene.add(group);
+      clouds.push(group);
+    }
+
+    createCloud(-9, 8.5, -18, 1.5, 0.16, 0.2);
+    createCloud(8, 10.5, -25, 1.9, 0.12, 1.4);
+    createCloud(-15, 12, -30, 2.2, 0.1, 2.6);
+    createCloud(13, 7, -12, 1.25, 0.14, 3.8);
+
+    // Drifting wind particles.
+    const particleCount = 150;
+    const particlePositions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (Math.random() - 0.5) * 30;
+      particlePositions[i * 3 + 1] = -3 + Math.random() * 14;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 24;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.055,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false
+      })
+    );
+    scene.add(particles);
+
+    // Ground and a softly shaded landing area.
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(35, 96),
+      new THREE.MeshStandardMaterial({
+        map: groundTexture,
+        color: 0xffffff,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -4.22;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const clearing = new THREE.Mesh(
+      new THREE.CircleGeometry(5.3, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x829a70,
+        transparent: true,
+        opacity: 0.28,
+        depthWrite: false
+      })
+    );
+    clearing.rotation.x = -Math.PI / 2;
+    clearing.position.y = -4.205;
+    clearing.receiveShadow = true;
+    scene.add(clearing);
+
+    // A few low-poly stones.
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x7f8478,
+      roughness: 1
+    });
+
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + 0.3;
+      const radius = 6.5 + Math.random() * 3;
+      const stone = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.18 + Math.random() * 0.16, 0),
+        stoneMaterial
+      );
+      stone.position.set(
+        Math.cos(angle) * radius,
+        -4.12,
+        Math.sin(angle) * radius
+      );
+      stone.scale.y = 0.55 + Math.random() * 0.4;
+      stone.rotation.set(
+        Math.random(),
+        Math.random(),
+        Math.random()
+      );
+      stone.castShadow = true;
+      stone.receiveShadow = true;
+      scene.add(stone);
+    }
+
+    // Distant bamboo grove.
+    const groveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x66815a,
+      roughness: 0.9
+    });
+
+    for (let cluster = 0; cluster < 3; cluster++) {
+      const angle = cluster * (Math.PI * 2 / 3) + 0.4;
+      const radius = 12 + cluster * 3.2;
+      const count = 7 + cluster * 3;
+
+      for (let i = 0; i < count; i++) {
+        const height = 1.5 + Math.random() * 2.8;
+        const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 1.2;
+        const z = Math.sin(angle) * radius + (Math.random() - 0.5) * 1.2;
+
+        const stalk = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            0.025 + Math.random() * 0.025,
+            0.04 + Math.random() * 0.025,
+            height,
+            7
+          ),
+          groveMaterial
+        );
+        stalk.position.set(x, -4.2 + height / 2, z);
+        stalk.rotation.z = (Math.random() - 0.5) * 0.12;
+        stalk.castShadow = true;
+        scene.add(stalk);
+      }
+    }
+
+    // Camera controls implemented directly without external addons.
+    const target = new THREE.Vector3(0, -0.35, 0);
+    const initialView = {
+      theta: 0.72,
+      phi: 1.25,
+      radius: 14.4
+    };
+
+    const desired = { ...initialView };
+    const current = { ...initialView };
+    const spherical = new THREE.Spherical();
+
+    let dragging = false;
+    let activePointer = null;
+    let lastX = 0;
+    let lastY = 0;
+
+    function resetView() {
+      desired.theta = initialView.theta;
+      desired.phi = initialView.phi;
+      desired.radius = initialView.radius;
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      dragging = true;
+      activePointer = event.pointerId;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging || event.pointerId !== activePointer) return;
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      desired.theta -= dx * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - dy * 0.005,
+        0.25,
+        1.46
+      );
+    });
+
+    function endDrag(event) {
+      if (event.pointerId !== activePointer) return;
+      dragging = false;
+      activePointer = null;
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          7,
+          25
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetView);
+    resetButton.addEventListener("click", resetView);
+
+    let paused = false;
+    pauseButton.addEventListener("click", () => {
+      paused = !paused;
+      pauseButton.textContent = paused ? "Resume wind" : "Pause wind";
+    });
+
+    let windSpeed = Number(windSlider.value);
+    windSlider.addEventListener("input", () => {
+      windSpeed = Number(windSlider.value);
+      const kmh = Math.round(windSpeed * 10);
+      windLabel.textContent = `${kmh} km/h`;
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    let elapsed = 0;
+
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.05);
+      if (!paused) elapsed += dt;
+
+      // Gentle airborne motion.
+      kite.position.y = 0.15 + Math.sin(elapsed * 0.68) * 0.055;
+      kite.rotation.y = Math.sin(elapsed * 0.36) * 0.035;
+      kite.rotation.z = Math.sin(elapsed * 0.51) * 0.012;
+
+      // Flutter each subdivided paper face.
+      for (const record of panelRecords) {
+        const position = record.geometry.attributes.position;
+        const base = record.basePositions;
+        const uv = record.geometry.attributes.uv;
+
+        for (let i = 0; i < position.count; i++) {
+          const u = uv.getX(i);
+          const v = uv.getY(i);
+          const envelope =
+            Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
+
+          const wave =
+            Math.sin(elapsed * 1.85 + u * 4.2 + v * 2.6 + record.phase) *
+              0.034 *
+              envelope +
+            Math.sin(elapsed * 2.7 + record.phase * 1.4) *
+              0.011 *
+              envelope;
+
+          position.setZ(i, wave);
+        }
+
+        position.needsUpdate = true;
+        record.geometry.computeVertexNormals();
+      }
+
+      updateString();
+
+      // Cloud drift.
+      for (const cloud of clouds) {
+        cloud.position.x += cloud.userData.speed * dt;
+        if (cloud.position.x > 32) cloud.position.x = -32;
+      }
+
+      // Wind particles travel from left to right.
+      const particleAttribute = particleGeometry.attributes.position;
+      for (let i = 0; i < particleCount; i++) {
+        let x = particleAttribute.getX(i) + windSpeed * dt;
+        if (x > 16) x = -16;
+        particleAttribute.setX(i, x);
+      }
+      particleAttribute.needsUpdate = true;
+
+      // Smooth camera movement.
+      const damping = 1 - Math.exp(-dt * 7);
+      current.theta += (desired.theta - current.theta) * damping;
+      current.phi += (desired.phi - current.phi) * damping;
+      current.radius += (desired.radius - current.radius) * damping;
+
+      spherical.set(current.radius, current.phi, current.theta);
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 600);
+    });
+  </script>
+</body>
+</html>

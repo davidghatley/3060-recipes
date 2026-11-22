@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Kite Aegis</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --gold: #f4cf73;
+      --gold-bright: #ffe08a;
+      --red: #ff5d68;
+      --ink: #080b14;
+      --glass: rgba(10, 13, 24, 0.68);
+      --line: rgba(244, 207, 115, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 44%, transparent 35%, rgba(2, 3, 8, 0.34) 100%),
+        linear-gradient(180deg, rgba(4, 6, 13, 0.2), transparent 22%, transparent 78%, rgba(4, 6, 13, 0.55));
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: #f4f1ed;
+    }
+
+    .title {
+      position: absolute;
+      top: clamp(22px, 4vw, 48px);
+      left: clamp(22px, 4vw, 52px);
+      max-width: 440px;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 5.5vw, 72px);
+      font-weight: 500;
+      line-height: 0.95;
+      letter-spacing: -0.045em;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      color: rgba(244, 241, 237, 0.66);
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .boss-card {
+      position: absolute;
+      top: clamp(22px, 4vw, 48px);
+      right: clamp(22px, 4vw, 52px);
+      width: 230px;
+      padding: 16px 17px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--glass);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .boss-card .label {
+      color: rgba(244, 241, 237, 0.52);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .boss-card h2 {
+      margin: 6px 0 13px;
+      color: #fff3d7;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 500;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 7px 0;
+      color: rgba(244, 241, 237, 0.65);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .stat strong {
+      color: var(--gold-bright);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .bar {
+      height: 3px;
+      margin-top: 13px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .bar-fill {
+      width: 76%;
+      height: 100%;
+      background: linear-gradient(90deg, #b83c4b, #ff836f);
+      box-shadow: 0 0 12px rgba(255, 91, 111, 0.7);
+    }
+
+    .controls {
+      position: absolute;
+      left: clamp(22px, 4vw, 52px);
+      bottom: clamp(22px, 4vw, 42px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      pointer-events: auto;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 11px 16px;
+      color: #f7ead3;
+      background: rgba(10, 13, 24, 0.72);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      transition: 160ms ease;
+    }
+
+    button:hover {
+      color: #fff;
+      border-color: rgba(244, 207, 115, 0.72);
+      background: rgba(24, 20, 12, 0.88);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .hint {
+      position: absolute;
+      right: clamp(22px, 4vw, 52px);
+      bottom: clamp(24px, 4vw, 44px);
+      color: rgba(244, 241, 237, 0.42);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      line-height: 1.8;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%, -50%);
+      opacity: 0.28;
+    }
+
+    .reticle::before,
+    .reticle::after {
+      content: "";
+      position: absolute;
+      background: var(--gold);
+    }
+
+    .reticle::before {
+      top: 8px;
+      left: 0;
+      width: 18px;
+      height: 1px;
+    }
+
+    .reticle::after {
+      top: 0;
+      left: 8px;
+      width: 1px;
+      height: 18px;
+    }
+
+    @media (max-width: 700px) {
+      .boss-card {
+        top: auto;
+        right: 18px;
+        bottom: 76px;
+        width: 190px;
+      }
+
+      .boss-card h2 {
+        font-size: 18px;
+      }
+
+      .subtitle {
+        max-width: 280px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="vignette"></div>
+
+  <div class="hud">
+    <header class="title">
+      <div class="eyebrow">The Skybound Rebellion</div>
+      <h1>The Kite<br />Aegis</h1>
+      <p class="subtitle">
+        An ancient wind-powered shield, a line of steel and will,
+        and the last boss of the cloud realm.
+      </p>
+    </header>
+
+    <aside class="boss-card">
+      <div class="label">Current adversary</div>
+      <h2>Velvet Wing</h2>
+      <div class="stat"><span>Power</span><strong>98%</strong></div>
+      <div class="stat"><span>Wind</span><strong>42%</strong></div>
+      <div class="stat"><span>Sanity</span><strong>67%</strong></div>
+      <div class="bar"><div class="bar-fill"></div></div>
+    </aside>
+
+    <div class="reticle"></div>
+
+    <nav class="controls">
+      <button id="releaseButton" type="button">Release the kite</button>
+      <button id="resetButton" type="button">Reset view</button>
+    </nav>
+
+    <div class="hint">
+      Drag to orbit<br />
+      Scroll to zoom<br />
+      Arrow keys to pan
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // ------------------------------------------------------------
+    // Renderer and scene
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x070b17);
+    scene.fog = new THREE.FogExp2(0x070b17, 0.026);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      120
+    );
+
+    const clock = new THREE.Clock();
+
+    const world = new THREE.Group();
+    scene.add(world);
+
+    // ------------------------------------------------------------
+    // Materials
+    // ------------------------------------------------------------
+
+    const materials = {
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x171b25,
+        metalness: 0.82,
+        roughness: 0.34
+      }),
+      metal: new THREE.MeshStandardMaterial({
+        color: 0x738093,
+        metalness: 0.88,
+        roughness: 0.25
+      }),
+      gold: new THREE.MeshStandardMaterial({
+        color: 0xd4a64d,
+        metalness: 0.8,
+        roughness: 0.28
+      }),
+      brightGold: new THREE.MeshStandardMaterial({
+        color: 0xffd26b,
+        emissive: 0x9b4c08,
+        emissiveIntensity: 1.2,
+        metalness: 0.65,
+        roughness: 0.25
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0x8f1724,
+        metalness: 0.58,
+        roughness: 0.38
+      }),
+      redBright: new THREE.MeshStandardMaterial({
+        color: 0xff3447,
+        emissive: 0x7a0817,
+        emissiveIntensity: 1.8,
+        metalness: 0.35,
+        roughness: 0.3
+      }),
+      wood: new THREE.MeshStandardMaterial({
+        color: 0x603b24,
+        roughness: 0.84,
+        metalness: 0.04
+      }),
+      leather: new THREE.MeshStandardMaterial({
+        color: 0x241b18,
+        roughness: 0.95
+      }),
+      cloth: new THREE.MeshStandardMaterial({
+        color: 0x35455b,
+        roughness: 0.92
+      }),
+      clothGold: new THREE.MeshStandardMaterial({
+        color: 0xb8893e,
+        roughness: 0.72
+      }),
+      skin: new THREE.MeshStandardMaterial({
+        color: 0xc98e6b,
+        roughness: 0.8
+      }),
+      ice: new THREE.MeshStandardMaterial({
+        color: 0x9bbbd0,
+        emissive: 0x214350,
+        emissiveIntensity: 0.7,
+        metalness: 0.2,
+        roughness: 0.3
+      })
+    };
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x8ea8d8, 0x18100c, 1.15));
+
+    const moonLight = new THREE.DirectionalLight(0xbfd4ff, 2.1);
+    moonLight.position.set(-7, 12, 8);
+    moonLight.castShadow = true;
+    moonLight.shadow.mapSize.set(2048, 2048);
+    moonLight.shadow.camera.near = 1;
+    moonLight.shadow.camera.far = 35;
+    moonLight.shadow.camera.left = -12;
+    moonLight.shadow.camera.right = 12;
+    moonLight.shadow.camera.top = 12;
+    moonLight.shadow.camera.bottom = -12;
+    scene.add(moonLight);
+
+    const bossLight = new THREE.PointLight(0xff3c55, 32, 18, 2);
+    bossLight.position.set(0, 5, 1.5);
+    scene.add(bossLight);
+
+    const windLight = new THREE.PointLight(0x6ea6ff, 18, 14, 2);
+    windLight.position.set(-5, 4, 4);
+    scene.add(windLight);
+
+    // ------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------
+
+    function addMesh(geometry, material, parent = world, position = null) {
+      const mesh = new THREE.Mesh(geometry, material);
+      if (position) mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addCylinderBetween(a, b, radius, material, parent = world, radialSegments = 12) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = end.clone().sub(start);
+      const midpoint = start.clone().add(end).multiplyScalar(0.5);
+
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(radius, radius, direction.length(), radialSegments),
+        material,
+        parent,
+        midpoint.toArray()
+      );
+
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.clone().normalize()
+      );
+
+      return mesh;
+    }
+
+    function makeGlowTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const context = canvas.getContext("2d");
+      const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
+      gradient.addColorStop(0, "rgba(255,255,255,1)");
+      gradient.addColorStop(0.12, "rgba(255,255,255,0.8)");
+      gradient.addColorStop(0.38, "rgba(255,255,255,0.22)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 256, 256);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeShieldTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+
+      const context = canvas.getContext("2d");
+      const center = 512;
+
+      const parchment = context.createRadialGradient(
+        center - 60,
+        center - 110,
+        40,
+        center,
+        center,
+        520
+      );
+      parchment.addColorStop(0, "#f0dfae");
+      parchment.addColorStop(0.72, "#d9c28b");
+      parchment.addColorStop(1, "#8e6837");
+
+      context.fillStyle = parchment;
+      context.fillRect(0, 0, 1024, 1024);
+
+      context.strokeStyle = "rgba(65,42,18,0.8)";
+      context.lineWidth = 18;
+      context.strokeRect(38, 38, 948, 948);
+
+      context.strokeStyle = "rgba(255,224,143,0.65)";
+      context.lineWidth = 5;
+      context.strokeRect(68, 68, 888, 888);
+
+      // Central boss medallion.
+      context.beginPath();
+      context.arc(center, center, 190, 0, Math.PI * 2);
+      context.fillStyle = "#24131c";
+      context.fill();
+
+      context.strokeStyle = "#e3b65f";
+      context.lineWidth = 18;
+      context.stroke();
+
+      context.beginPath();
+      context.arc(center, center, 147, 0, Math.PI * 2);
+      context.fillStyle = "#b52d3e";
+      context.fill();
+
+      context.strokeStyle = "#f0c66d";
+      context.lineWidth = 12;
+      context.stroke();
+
+      context.beginPath();
+      context.arc(center, center, 103, 0, Math.PI * 2);
+      context.fillStyle = "#e9d39a";
+      context.fill();
+
+      // Crossed sword and wing motifs.
+      context.save();
+      context.translate(center, center);
+      context.rotate(-0.45);
+      context.strokeStyle = "#6d3028";
+      context.lineWidth = 13;
+      context.beginPath();
+      context.moveTo(0, -275);
+      context.lineTo(0, 145);
+      context.stroke();
+
+      context.strokeStyle = "#e2b65c";
+      context.lineWidth = 7;
+      context.beginPath();
+      context.moveTo(0, -275);
+      context.lineTo(0, 145);
+      context.stroke();
+
+      context.restore();
+
+      context.save();
+      context.translate(center, center);
+      context.rotate(0.45);
+      context.strokeStyle = "#6d3028";
+      context.lineWidth = 13;
+      context.beginPath();
+      context.moveTo(0, -275);
+      context.lineTo(0, 145);
+      context.stroke();
+
+      context.strokeStyle = "#e2b65c";
+      context.lineWidth = 7;
+      context.beginPath();
+      context.moveTo(0, -275);
+      context.lineTo(0, 145);
+      context.stroke();
+      context.restore();
+
+      context.fillStyle = "#27151d";
+      context.font = "bold 28px Georgia";
+      context.textAlign = "center";
+      context.fillText("WIND & STEEL", center, 365);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    // ------------------------------------------------------------
+    // Ground, ruins, and atmosphere
+    // ------------------------------------------------------------
+
+    const island = addMesh(
+      new THREE.CylinderGeometry(6.2, 8.2, 1.1, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x25231f,
+        roughness: 1
+      }),
+      world,
+      [0, -1.35, 0]
+    );
+    island.receiveShadow = true;
+
+    const islandTop = addMesh(
+      new THREE.CylinderGeometry(5.7, 5.9, 0.28, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x343028,
+        roughness: 1
+      }),
+      world,
+      [0, -0.68, 0]
+    );
+    islandTop.receiveShadow = true;
+
+    const rockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x34312d,
+      roughness: 0.95,
+      flatShading: true
+    });
+
+    const rockLocations = [
+      [-6, -0.1, 0.5, 1.5],
+      [-5.2, -0.25, -1.1, 1.1],
+      [5.8, -0.15, 0.2, 1.35],
+      [6.2, -0.3, -1.3, 0.9],
+      [-2.8, -0.45, 4.2, 1.2],
+      [3.1, -0.5, 4.4, 1.4],
+      [-4.2, -0.5, -4.1, 1.1]
+    ];
+
+    for (const [x, y, z, scale] of rockLocations) {
+      const rock = addMesh(
+        new THREE.DodecahedronGeometry(scale, 0),
+        rockMaterial,
+        world,
+        [x, y, z]
+      );
+      rock.scale.y = 0.75 + Math.random() * 0.4;
+      rock.rotation.set(Math.random(), Math.random(), Math.random());
+    }
+
+    // Distant floating shards.
+    const shardMaterial = new THREE.MeshStandardMaterial({
+      color: 0x171d2b,
+      emissive: 0x101827,
+      emissiveIntensity: 0.4,
+      metalness: 0.4,
+      roughness: 0.65
+    });
+
+    for (let i = 0; i < 9; i++) {
+      const shard = addMesh(
+        new THREE.OctahedronGeometry(0.6 + Math.random() * 1.1),
+        shardMaterial,
+        world,
+        [
+          (Math.random() - 0.5) * 25,
+          2 + Math.random() * 9,
+          (Math.random() - 0.5) * 20 - 4
+        ]
+      );
+      shard.scale.y = 0.35 + Math.random() * 0.5;
+      shard.rotation.set(Math.random(), Math.random(), Math.random());
+    }
+
+    // Star field.
+    const starPositions = [];
+    for (let i = 0; i < 650; i++) {
+      const radius = 35 + Math.random() * 25;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      starPositions.push(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0x9eb7d4,
+        size: 0.11,
+        transparent: true,
+        opacity: 0.85,
+        sizeAttenuation: true
+      })
+    );
+    scene.add(stars);
+
+    // Moon and halo.
+    const moon = addMesh(
+      new THREE.SphereGeometry(1.55, 32, 24),
+      new THREE.MeshBasicMaterial({ color: 0xc9d8ef }),
+      world,
+      [-9, 11, -16]
+    );
+    moon.castShadow = false;
+
+    const moonGlow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: makeGlowTexture(),
+        color: 0x8eb9ff,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    moonGlow.position.copy(moon.position);
+    moonGlow.scale.set(7, 7, 1);
+    world.add(moonGlow);
+
+    // ------------------------------------------------------------
+    // The central boss
+    // ------------------------------------------------------------
+
+    const boss = new THREE.Group();
+    boss.position.set(0, 4.15, 0);
+    world.add(boss);
+
+    const bossBody = new THREE.Group();
+    boss.add(bossBody);
+
+    // Legs and boots.
+    for (const x of [-0.48, 0.48]) {
+      addMesh(
+        new THREE.CylinderGeometry(0.24, 0.3, 0.95, 16),
+        materials.darkMetal,
+        bossBody,
+        [x, 0.48, 0]
+      );
+
+      addMesh(
+        new THREE.BoxGeometry(0.5, 0.22, 0.8),
+        materials.leather,
+        bossBody,
+        [x, 0.05, 0.08]
+      );
+    }
+
+    // Torso.
+    addMesh(
+      new THREE.CylinderGeometry(0.62, 0.82, 1.35, 20),
+      materials.cloth,
+      bossBody,
+      [0, 1.35, 0]
+    );
+
+    addMesh(
+      new THREE.CylinderGeometry(0.77, 0.77, 0.16, 24),
+      materials.gold,
+      bossBody,
+      [0, 1.53, 0]
+    );
+
+    // Shoulder armor.
+    for (const x of [-0.72, 0.72]) {
+      addMesh(
+        new THREE.SphereGeometry(0.64, 20, 14),
+        materials.darkMetal,
+        bossBody,
+        [x, 1.7, 0]
+      );
+      addMesh(
+        new THREE.ConeGeometry(0.72, 0.55, 4),
+        materials.gold,
+        bossBody,
+        [x, 2.02, 0]
+      ).rotation.z = x < 0 ? -Math.PI / 2 : Math.PI / 2;
+    }
+
+    // Neck and helmet.
+    addMesh(
+      new THREE.CylinderGeometry(0.25, 0.32, 0.42, 16),
+      materials.darkMetal,
+      bossBody,
+      [0, 2.28, 0]
+    );
+
+    const helmet = addMesh(
+      new THREE.SphereGeometry(0.65, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      materials.metal,
+      bossBody,
+      [0, 2.55, 0]
+    );
+    helmet.scale.z = 0.82;
+
+    addMesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.42, 12),
+      materials.gold,
+      bossBody,
+      [0, 2.87, 0]
+    );
+
+    // Crown spikes.
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2;
+      const spike = addMesh(
+        new THREE.ConeGeometry(0.11, 0.55, 8),
+        materials.gold,
+        bossBody,
+        [
+          Math.cos(angle) * 0.48,
+          3.18,
+          Math.sin(angle) * 0.48
+        ]
+      );
+      spike.rotation.z = Math.cos(angle) * 0.18;
+      spike.rotation.x = Math.sin(angle) * 0.18;
+    }
+
+    // Eyes.
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffb31a,
+      emissive: 0xff3d16,
+      emissiveIntensity: 3.2,
+      roughness: 0.2
+    });
+
+    for (const x of [-0.22, 0.22]) {
+      addMesh(
+        new THREE.SphereGeometry(0.13, 16, 12),
+        eyeMaterial,
+        bossBody,
+        [x, 2.61, 0.53]
+      );
+    }
+
+    // Chest emblem.
+    addMesh(
+      new THREE.CylinderGeometry(0.28, 0.28, 0.12, 24),
+      materials.redBright,
+      bossBody,
+      [0, 1.55, 0.64]
+    );
+
+    const bossEmblem = addMesh(
+      new THREE.CylinderGeometry(0.16, 0.16, 0.14, 20),
+      materials.gold,
+      bossBody,
+      [0, 1.55, 0.72]
+    );
+    bossEmblem.rotation.x = Math.PI / 2;
+
+    // Sword.
+    const sword = new THREE.Group();
+    sword.position.set(1.08, 0.05, 0.15);
+    sword.rotation.z = -0.22;
+    boss.add(sword);
+
+    addMesh(
+      new THREE.BoxGeometry(0.12, 1.75, 0.12),
+      materials.metal,
+      sword,
+      [0, 0.85, 0]
+    );
+
+    addMesh(
+      new THREE.BoxGeometry(0.2, 0.2, 0.2),
+      materials.gold,
+      sword,
+      [0, 1.8, 0]
+    );
+
+    addMesh(
+      new THREE.CylinderGeometry(0.07, 0.07, 0.55, 12),
+      materials.darkMetal,
+      sword,
+      [0, 0.1, 0]
+    );
+
+    // Boss aura.
+    const bossAura = addMesh(
+      new THREE.TorusGeometry(3.1, 0.055, 10, 100),
+      new THREE.MeshBasicMaterial({
+        color: 0xff3e58,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }),
+      boss,
+      [0, 0, 0]
+    );
+    bossAura.castShadow = false;
+
+    const outerAura = addMesh(
+      new THREE.TorusGeometry(3.7, 0.025, 8, 100),
+      new THREE.MeshBasicMaterial({
+        color: 0x76a7ff,
+        transparent: true,
+        opacity: 0.2,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }),
+      boss,
+      [0, 0, 0]
+    );
+    outerAura.castShadow = false;
+
+    // ------------------------------------------------------------
+    // The adventurer
+    // ------------------------------------------------------------
+
+    const adventurer = new THREE.Group();
+    adventurer.position.set(4.65, 0, 5.8);
+    adventurer.rotation.y = -0.35;
+    world.add(adventurer);
+
+    const adventurerTorso = new THREE.Group();
+    adventurer.add(adventurerTorso);
+
+    addMesh(
+      new THREE.CylinderGeometry(0.55, 0.7, 1.25, 18),
+      materials.cloth,
+      adventurerTorso,
+      [0, 1.25, 0]
+    );
+
+    addMesh(
+      new THREE.CylinderGeometry(0.62, 0.62, 0.14, 20),
+      materials.clothGold,
+      adventurerTorso,
+      [0, 1.5, 0]
+    );
+
+    addMesh(
+      new THREE.CylinderGeometry(0.48, 0.48, 0.13, 18),
+      materials.leather,
+      adventurerTorso,
+      [0, 0.48, 0]
+    );
+
+    for (const x of [-0.34, 0.34]) {
+      addMesh(
+        new THREE.CylinderGeometry(0.2, 0.25, 0.82, 14),
+        materials.cloth,
+        adventurerTorso,
+        [x, 0.55, 0]
+      );
+
+      addMesh(
+        new THREE.BoxGeometry(0.43, 0.2, 0.72),
+        materials.leather,
+        adventurerTorso,
+        [x, 0.02, 0.08]
+      );
+    }
+
+    const adventurerHead = addMesh(
+      new THREE.SphereGeometry(0.42, 20, 16),
+      materials.skin,
+      adventurerTorso,
+      [0, 2.05, 0]
+    );
+    adventurerHead.scale.set(0.88, 1.12, 0.9);
+
+    addMesh(
+      new THREE.CylinderGeometry(0.28, 0.32, 0.18, 18),
+      materials.leather,
+      adventurerTorso,
+      [0, 2.34, 0]
+    );
+
+    // Arm pivots.
+    const leftShoulder = new THREE.Group();
+    leftShoulder.position.set(-0.75, 1.72, 0);
+    adventurerTorso.add(leftShoulder);
+
+    addCylinderBetween(
+      [0, 0, 0],
+      [-0.48, -0.48, 0.08],
+      0.17,
+      materials.cloth,
+      leftShoulder
+    );
+
+    addCylinderBetween(
+      [-0.48, -0.48, 0.08],
+      [-1.1, -0.78, 0.18],
+      0.14,
+      materials.cloth,
+      leftShoulder
+    );
+
+    const leftHand = addMesh(
+      new THREE.SphereGeometry(0.16, 14, 10),
+      materials.skin,
+      leftShoulder,
+      [-1.1, -0.78, 0.18]
+    );
+    leftHand.scale.set(1, 0.85, 0.9);
+
+    const rightShoulder = new THREE.Group();
+    rightShoulder.position.set(0.75, 1.72, 0);
+    adventurerTorso.add(rightShoulder);
+
+    addCylinderBetween(
+      [0, 0, 0],
+      [0.48, -0.42, 0.05],
+      0.17,
+      materials.cloth,
+      rightShoulder
+    );
+
+    addCylinderBetween(
+      [0.48, -0.42, 0.05],
+      [1.08, -0.72, 0.12],
+      0.14,
+      materials.cloth,
+      rightShoulder
+    );
+
+    const rightHand = addMesh(
+      new THREE.SphereGeometry(0.15, 14, 10),
+      materials.skin,
+      rightShoulder,
+      [1.08, -0.72, 0.12]
+    );
+    rightHand.scale.set(1, 0.85, 0.9);
+
+    // Small backpack.
+    addMesh(
+      new THREE.BoxGeometry(0.48, 0.65, 0.24),
+      materials.leather,
+      adventurerTorso,
+      [0, 1.25, -0.55]
+    );
+
+    // ------------------------------------------------------------
+    // Kite shield
+    // ------------------------------------------------------------
+
+    const shield = new THREE.Group();
+    shield.position.set(3.28, 2.15, 5.25);
+    shield.rotation.y = -0.1;
+    world.add(shield);
+
+    const shieldFace = addMesh(
+      new THREE.CircleGeometry(1.8, 96),
+      new THREE.MeshStandardMaterial({
+        map: makeShieldTexture(),
+        roughness: 0.84,
+        metalness: 0.03
+      }),
+      shield
+    );
+    shieldFace.castShadow = true;
+
+    addMesh(
+      new THREE.TorusGeometry(1.83, 0.12, 14, 96),
+      materials.wood,
+      shield
+    );
+
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const spoke = addMesh(
+        new THREE.BoxGeometry(3.45, 0.075, 0.08),
+        materials.wood,
+        shield,
+        [0, 0, 0]
+      );
+      spoke.rotation.z = angle;
+    }
+
+    // Shield crest and handle.
+    addMesh(
+      new THREE.CylinderGeometry(0.23, 0.23, 0.1, 24),
+      materials.gold,
+      shield,
+      [0, 0, 0.09]
+    ).rotation.x = Math.PI / 2;
+
+    addMesh(
+      new THREE.CylinderGeometry(0.07, 0.1, 0.65, 12),
+      materials.wood,
+      shield,
+      [0, -2.02, 0]
+    );
+
+    // ------------------------------------------------------------
+    // The flying kite
+    // ------------------------------------------------------------
+
+    const kite = new THREE.Group();
+    kite.position.set(-0.45, 7.15, 0.75);
+    world.add(kite);
+
+    const kiteFrameMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd3a44b,
+      metalness: 0.7,
+      roughness: 0.3
+    });
+
+    const kiteGeometry = new THREE.BufferGeometry();
+    kiteGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute([
+        0, 1.25, 0,
+        0.96, 0, 0,
+        0, -1.25, 0,
+        -0.96, 0, 0
+      ], 3)
+    );
+    kiteGeometry.setIndex([0, 1, 2, 0, 2, 3]);
+    kiteGeometry.computeVertexNormals();
+
+    addMesh(
+      kiteGeometry,
+      new THREE.MeshStandardMaterial({
+        color: 0x172b3c,
+        emissive: 0x061321,
+        emissiveIntensity: 0.5,
+        side: THREE.DoubleSide,
+        metalness: 0.35,
+        roughness: 0.42
+      }),
+      kite
+    );
+
+    addCylinderBetween(
+      [0, 1.25, 0],
+      [0, -1.25, 0],
+      0.055,
+      kiteFrameMaterial,
+      kite
+    );
+
+    addCylinderBetween(
+      [-0.96, 0, 0],
+      [0.96, 0, 0],
+      0.055,
+      kiteFrameMaterial,
+      kite
+    );
+
+    addMesh(
+      new THREE.SphereGeometry(0.13, 16, 12),
+      materials.brightGold,
+      kite,
+      [0, 1.28, 0]
+    );
+
+    // Kite string.
+    const linePositions = new Float32Array(6);
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(linePositions, 3)
+    );
+
+    const line = new THREE.Line(
+      lineGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0xffe0a0,
+        transparent: true,
+        opacity: 0.95
+      })
+    );
+    world.add(line);
+
+    const lineGlowPositions = new Float32Array(6);
+    const lineGlowGeometry = new THREE.BufferGeometry();
+    lineGlowGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(lineGlowPositions, 3)
+    );
+
+    const lineGlow = new THREE.Line(
+      lineGlowGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0xffbd57,
+        transparent: true,
+        opacity: 0.25,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    world.add(lineGlow);
+
+    // ------------------------------------------------------------
+    // Fireflies and particles
+    // ------------------------------------------------------------
+
+    const fireflyCount = 70;
+    const fireflyPositions = new Float32Array(fireflyCount * 3);
+    const fireflyPhases = new Float32Array(fireflyCount);
+
+    for (let i = 0; i < fireflyCount; i++) {
+      fireflyPositions[i * 3] = (Math.random() - 0.5) * 18;
+      fireflyPositions[i * 3 + 1] = 0.3 + Math.random() * 7;
+      fireflyPositions[i * 3 + 2] = (Math.random() - 0.5) * 13;
+      fireflyPhases[i] = Math.random() * Math.PI * 2;
+    }
+
+    const fireflyGeometry = new THREE.BufferGeometry();
+    fireflyGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(fireflyPositions, 3)
+    );
+
+    const fireflies = new THREE.Points(
+      fireflyGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffd87a,
+        size: 0.12,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    world.add(fireflies);
+
+    // ------------------------------------------------------------
+    // Custom camera controls
+    // ------------------------------------------------------------
+
+    const controls = {
+      target: new THREE.Vector3(0, 3.1, 0),
+      radius: 15.8,
+      theta: 0.62,
+      phi: 1.12,
+      targetRadius: 15.8,
+      targetTheta: 0.62,
+      targetPhi: 1.12,
+      dragging: false,
+      pointerX: 0,
+      pointerY: 0
+    };
+
+    function updateCamera() {
+      controls.theta = THREE.MathUtils.lerp(
+        controls.theta,
+        controls.targetTheta,
+        0.08
+      );
+
+      controls.phi = THREE.MathUtils.lerp(
+        controls.phi,
+        controls.targetPhi,
+        0.08
+      );
+
+      controls.radius = THREE.MathUtils.lerp(
+        controls.radius,
+        controls.targetRadius,
+        0.08
+      );
+
+      controls.phi = THREE.MathUtils.clamp(controls.phi, 0.35, 1.48);
+
+      const sinPhi = Math.sin(controls.phi);
+      camera.position.set(
+        controls.target.x + controls.radius * sinPhi * Math.sin(controls.theta),
+        controls.target.y + controls.radius * Math.cos(controls.phi),
+        controls.target.z + controls.radius * sinPhi * Math.cos(controls.theta)
+      );
+
+      camera.lookAt(controls.target);
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      controls.dragging = true;
+      controls.pointerX = event.clientX;
+      controls.pointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!controls.dragging) return;
+
+      const dx = event.clientX - controls.pointerX;
+      const dy = event.clientY - controls.pointerY;
+
+      controls.pointerX = event.clientX;
+      controls.pointerY = event.clientY;
+
+      controls.targetTheta -= dx * 0.005;
+      controls.targetPhi -= dy * 0.005;
+    });
+
+    function endDrag(event) {
+      controls.dragging = false;
+      if (event.pointerId !== undefined &&
+          renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.targetRadius = THREE.MathUtils.clamp(
+          controls.targetRadius + event.deltaY * 0.012,
+          8,
+          28
+        );
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (event) => {
+      const panAmount = 0.45;
+
+      if (event.key === "ArrowLeft") controls.target.x -= panAmount;
+      if (event.key === "ArrowRight") controls.target.x += panAmount;
+      if (event.key === "ArrowUp") controls.target.y += panAmount;
+      if (event.key === "ArrowDown") controls.target.y -= panAmount;
+      if (event.key.toLowerCase() === "r") resetView();
+    });
+
+    function resetView() {
+      controls.target.set(0, 3.1, 0);
+      controls.targetRadius = 15.8;
+      controls.targetTheta = 0.62;
+      controls.targetPhi = 1.12;
+    }
+
+    document.getElementById("resetButton").addEventListener("click", resetView);
+
+    // ------------------------------------------------------------
+    // Kite release animation
+    // ------------------------------------------------------------
+
+    let kiteFrenzy = false;
+    let frenzyElapsed = 0;
+
+    const releaseButton = document.getElementById("releaseButton");
+
+    releaseButton.addEventListener("click", () => {
+      kiteFrenzy = true;
+      frenzyElapsed = 0;
+      releaseButton.textContent = "Kite released";
+    });
+
+    // ------------------------------------------------------------
+    // Animation
+    // ------------------------------------------------------------
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      updateCamera();
+
+      // Boss breathing and aura pulse.
+      boss.position.y = 4.15 + Math.sin(elapsed * 0.85) * 0.12;
+      bossAura.rotation.z = elapsed * 0.18;
+      bossAura.scale.setScalar(1 + Math.sin(elapsed * 1.4) * 0.055);
+      outerAura.scale.setScalar(1 + Math.sin(elapsed * 0.8 + 1) * 0.12);
+      bossLight.intensity = 28 + Math.sin(elapsed * 3.2) * 7;
+      eyeMaterial.emissiveIntensity = 2.7 + Math.sin(elapsed * 4.1) * 0.7;
+
+      // Sword shimmer.
+      sword.rotation.z = -0.22 + Math.sin(elapsed * 1.7) * 0.035;
+      materials.brightGold.emissiveIntensity = 1.1 + Math.sin(elapsed * 2.2) * 0.35;
+
+      // Kite motion.
+      const baseKiteY = 7.15;
+      let kiteY = baseKiteY + Math.sin(elapsed * 1.15) * 0.18;
+
+      if (kiteFrenzy) {
+        kiteY += Math.sin(elapsed * 2.2) * 0.42;
+        kite.rotation.y = Math.sin(elapsed * 1.8) * 0.24;
+        kite.rotation.z = Math.sin(elapsed * 1.4) * 0.08;
+      } else {
+        kite.rotation.y = Math.sin(elapsed * 0.7) * 0.08;
+        kite.rotation.z = Math.sin(elapsed * 0.9) * 0.04;
+      }
+
+      kite.position.y = kiteY;
+      kite.position.x = -0.45 + Math.sin(elapsed * 0.45) * 0.16;
+
+      // Firefly drift.
+      const positionAttribute = fireflyGeometry.getAttribute("position");
+      for (let i = 0; i < fireflyCount; i++) {
+        const phase = fireflyPhases[i];
+        positionAttribute.array[i * 3] += Math.sin(elapsed * 0.5 + phase) * 0.0018;
+        positionAttribute.array[i * 3 + 1] +=
+          Math.cos(elapsed * 0.65 + phase) * 0.0016;
+      }
+      positionAttribute.needsUpdate = true;
+
+      // Update the kite string endpoint.
+      const handWorld = leftHand.getWorldPosition(new THREE.Vector3());
+      const kiteAttach = kite.localToWorld(new THREE.Vector3(0, -1.25, 0));
+
+      linePositions[0] = handWorld.x;
+      linePositions[1] = handWorld.y;
+      linePositions[2] = handWorld.z;
+      linePositions[3] = kiteAttach.x;
+      linePositions[4] = kiteAttach.y;
+      linePositions[5] = kiteAttach.z;
+
+      lineGlowPositions[0] = handWorld.x;
+      lineGlowPositions[1] = handWorld.y;
+      lineGlowPositions[2] = handWorld.z;
+      lineGlowPositions[3] = kiteAttach.x;
+      lineGlowPositions[4] = kiteAttach.y;
+      lineGlowPositions[5] = kiteAttach.z;
+
+      lineGeometry.attributes.position.needsUpdate = true;
+      lineGlowGeometry.attributes.position.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

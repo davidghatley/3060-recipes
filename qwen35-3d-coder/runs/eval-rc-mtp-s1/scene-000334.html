@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brittle Star on a Barrel Sponge</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 30%, #173b3d 0%, #091c20 42%, #03080a 100%);
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 42%, rgba(0, 5, 7, 0.36) 100%);
+    }
+
+    .heading {
+      position: fixed;
+      top: clamp(22px, 4vw, 52px);
+      left: clamp(22px, 4vw, 56px);
+      pointer-events: none;
+      color: #e7eee8;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #78b9b3;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 400;
+      line-height: 0.98;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: rgba(220, 235, 226, 0.62);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .controls {
+      position: fixed;
+      left: clamp(22px, 4vw, 56px);
+      bottom: clamp(20px, 4vw, 42px);
+      pointer-events: none;
+      color: rgba(220, 235, 226, 0.52);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+    .depth {
+      position: fixed;
+      right: clamp(22px, 4vw, 56px);
+      bottom: clamp(20px, 4vw, 42px);
+      pointer-events: none;
+      color: rgba(220, 235, 226, 0.38);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 600px) {
+      .depth {
+        display: none;
+      }
+
+      .subtitle {
+        max-width: 220px;
+        line-height: 1.5;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="stage" aria-label="Interactive three-dimensional brittle star on a sponge"></main>
+  <div class="vignette"></div>
+
+  <header class="heading">
+    <p class="eyebrow">Deep-sea observatory · 1840 meters</p>
+    <h1>Brittle star</h1>
+    <p class="subtitle">Ceratoda, draped across a barrel sponge</p>
+  </header>
+
+  <div class="controls">Drag to orbit · Scroll or pinch to zoom · Double-click to reset</div>
+  <div class="depth">Procedural marine study</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const stage = document.getElementById("stage");
+
+    // ---------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ---------------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x061519, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+
+    stage.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x07191c, 0.047);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 0.45, 0);
+    const desiredCamera = {
+      radius: 8.6,
+      theta: 0.72,
+      phi: 1.14
+    };
+    const currentCamera = { ...desiredCamera };
+
+    const spherical = new THREE.Spherical();
+
+    function updateCamera(delta) {
+      const damping = 1 - Math.exp(-delta * 9);
+
+      currentCamera.radius +=
+        (desiredCamera.radius - currentCamera.radius) * damping;
+      currentCamera.theta +=
+        (desiredCamera.theta - currentCamera.theta) * damping;
+      currentCamera.phi +=
+        (desiredCamera.phi - currentCamera.phi) * damping;
+
+      spherical.set(
+        currentCamera.radius,
+        currentCamera.phi,
+        currentCamera.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(cameraTarget);
+      camera.lookAt(cameraTarget);
+    }
+
+    // ---------------------------------------------------------------------
+    // Lighting
+    // ---------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x9bd6d0, 0x172018, 1.55));
+
+    const keyLight = new THREE.DirectionalLight(0xffe1ad, 3.1);
+    keyLight.position.set(4.5, 7.5, 4.0);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -5;
+    keyLight.shadow.camera.right = 5;
+    keyLight.shadow.camera.top = 5;
+    keyLight.shadow.camera.bottom = -5;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.normalBias = 0.025;
+    scene.add(keyLight);
+
+    const cyanLight = new THREE.PointLight(0x42d8cf, 24, 12, 2);
+    cyanLight.position.set(-4, 2.4, -3.5);
+    scene.add(cyanLight);
+
+    const warmLight = new THREE.PointLight(0xffa95e, 13, 10, 2);
+    warmLight.position.set(3.8, 0.7, 2.7);
+    scene.add(warmLight);
+
+    // ---------------------------------------------------------------------
+    // Procedural sponge textures
+    // ---------------------------------------------------------------------
+
+    function mulberry32(seed) {
+      return function () {
+        let t = (seed += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function createSpongeTextures() {
+      const size = 512;
+      const colorCanvas = document.createElement("canvas");
+      const topCanvas = document.createElement("canvas");
+      const colorBumpCanvas = document.createElement("canvas");
+      const topBumpCanvas = document.createElement("canvas");
+
+      colorCanvas.width = colorCanvas.height = size;
+      topCanvas.width = topCanvas.height = size;
+      colorBumpCanvas.width = colorBumpCanvas.height = size;
+      topBumpCanvas.width = topBumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const topContext = topCanvas.getContext("2d");
+      const colorBumpContext = colorBumpCanvas.getContext("2d");
+      const topBumpContext = topBumpCanvas.getContext("2d");
+
+      const random = mulberry32(481516);
+
+      colorContext.fillStyle = "#c98d54";
+      colorContext.fillRect(0, 0, size, size);
+
+      topContext.fillStyle = "#d9a468";
+      topContext.fillRect(0, 0, size, size);
+
+      colorBumpContext.fillStyle = "#808080";
+      colorBumpContext.fillRect(0, 0, size, size);
+
+      topBumpContext.fillStyle = "#808080";
+      topBumpContext.fillRect(0, 0, size, size);
+
+      // Broad vertical color variation in the sponge tissue.
+      for (let i = 0; i < 90; i++) {
+        const x = random() * size;
+        const width = 8 + random() * 42;
+        const shade = 45 + Math.floor(random() * 35);
+
+        colorContext.fillStyle = `rgba(${shade}, ${shade * 0.55}, ${
+          shade * 0.32
+        }, 0.055)`;
+        colorContext.fillRect(x, 0, width, size);
+
+        topContext.fillStyle = `rgba(${255 - shade}, ${
+          170 - shade * 0.45
+        }, ${90 - shade * 0.2}, 0.06)`;
+        topContext.fillRect(x, 0, width, size);
+      }
+
+      // Surface fibers.
+      for (let i = 0; i < 650; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const length = 8 + random() * 65;
+        const bend = (random() - 0.5) * 10;
+
+        colorContext.strokeStyle = `rgba(91, 47, 22, ${
+          0.025 + random() * 0.07
+        })`;
+        colorContext.lineWidth = 0.5 + random() * 1.4;
+        colorContext.beginPath();
+        colorContext.moveTo(x, y);
+        colorContext.lineTo(x + bend, y + length);
+        colorContext.stroke();
+
+        topContext.strokeStyle = `rgba(255, 221, 168, ${
+          0.025 + random() * 0.06
+        })`;
+        topContext.lineWidth = 0.5 + random() * 1.1;
+        topContext.beginPath();
+        topContext.moveTo(x, y);
+        topContext.lineTo(x + bend, y + length);
+        topContext.stroke();
+      }
+
+      // Pits and pores.
+      for (let i = 0; i < 720; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 1 + random() * 9;
+        const dark = random() > 0.18;
+
+        colorContext.fillStyle = dark
+          ? `rgba(77, 39, 20, ${0.12 + random() * 0.3})`
+          : `rgba(239, 190, 126, ${0.08 + random() * 0.18})`;
+
+        colorContext.beginPath();
+        colorContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorContext.fill();
+
+        topContext.fillStyle = dark
+          ? `rgba(102, 57, 29, ${0.2 + random() * 0.3})`
+          : `rgba(255, 218, 163, ${0.14 + random() * 0.2})`;
+
+        topContext.beginPath();
+        topContext.arc(x, y, radius, 0, Math.PI * 2);
+        topContext.fill();
+
+        colorBumpContext.fillStyle = dark
+          ? `rgba(35, 35, 35, ${0.25 + random() * 0.45})`
+          : `rgba(210, 210, 210, ${0.18 + random() * 0.35})`;
+
+        colorBumpContext.beginPath();
+        colorBumpContext.arc(x, y, radius, 0, Math.PI * 2);
+        colorBumpContext.fill();
+
+        topBumpContext.fillStyle = dark
+          ? `rgba(35, 35, 35, ${0.3 + random() * 0.4})`
+          : `rgba(215, 215, 215, ${0.2 + random() * 0.3})`;
+
+        topBumpContext.beginPath();
+        topBumpContext.arc(x, y, radius, 0, Math.PI * 2);
+        topBumpContext.fill();
+      }
+
+      // Larger irregular openings.
+      for (let i = 0; i < 42; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 5 + random() * 18;
+
+        colorContext.fillStyle = `rgba(72, 34, 17, ${
+          0.12 + random() * 0.25
+        })`;
+        colorContext.beginPath();
+        colorContext.ellipse(
+          x,
+          y,
+          radius,
+          radius * (0.45 + random() * 0.45),
+          random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        colorContext.fill();
+
+        topContext.fillStyle = `rgba(244, 197, 132, ${
+          0.12 + random() * 0.25
+        })`;
+        topContext.beginPath();
+        topContext.ellipse(
+          x,
+          y,
+          radius,
+          radius * (0.45 + random() * 0.45),
+          random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        topContext.fill();
+      }
+
+      const colorTexture = new THREE.CanvasTexture(colorCanvas);
+      const topTexture = new THREE.CanvasTexture(topCanvas);
+      const colorBumpTexture = new THREE.CanvasTexture(colorBumpCanvas);
+      const topBumpTexture = new THREE.CanvasTexture(topBumpCanvas);
+
+      colorTexture.colorSpace = THREE.SRGBColorSpace;
+      topTexture.colorSpace = THREE.SRGBColorSpace;
+
+      colorTexture.wrapS = colorTexture.wrapT = THREE.RepeatWrapping;
+      topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
+      colorBumpTexture.wrapS = colorBumpTexture.wrapT = THREE.RepeatWrapping;
+      topBumpTexture.wrapS = topBumpTexture.wrapT = THREE.RepeatWrapping;
+
+      colorTexture.repeat.set(2.2, 1.2);
+      topTexture.repeat.set(2.2, 1.2);
+
+      const anisotropy = renderer.capabilities.getMaxAnisotropy();
+      colorTexture.anisotropy = anisotropy;
+      topTexture.anisotropy = anisotropy;
+      colorBumpTexture.anisotropy = anisotropy;
+      topBumpTexture.anisotropy = anisotropy;
+
+      return {
+        color: colorTexture,
+        top: topTexture,
+        bump: colorBumpTexture,
+        bumpTop: topBumpTexture
+      };
+    }
+
+    const spongeTextures = createSpongeTextures();
+
+    const spongeSideMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe4a86d,
+      map: spongeTextures.color,
+      bumpMap: spongeTextures.bump,
+      bumpScale: 0.075,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const spongeTopMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf0bd7b,
+      map: spongeTextures.top,
+      bumpMap: spongeTextures.bumpTop,
+      bumpScale: 0.055,
+      roughness: 0.92,
+      metalness: 0
+    });
+
+    const spongeBottomMaterial = new THREE.MeshStandardMaterial({
+      color: 0x765039,
+      map: spongeTextures.color,
+      bumpMap: spongeTextures.bump,
+      bumpScale: 0.06,
+      roughness: 1,
+      metalness: 0
+    });
+
+    // Slightly bulged, organic barrel shape.
+    const spongeGeometry = new THREE.CylinderGeometry(
+      2.05,
+      1.65,
+      2.15,
+      80,
+      14,
+      false
+    );
+
+    const spongePositions = spongeGeometry.attributes.position;
+
+    for (let i = 0; i < spongePositions.count; i++) {
+      const x = spongePositions.getX(i);
+      const y = spongePositions.getY(i);
+      const z = spongePositions.getZ(i);
+
+      const t = THREE.MathUtils.clamp((y + 1.075) / 2.15, 0, 1);
+      const bulge = 1 + 0.075 * Math.sin(Math.PI * t);
+      const irregularity =
+        1 + 0.018 * Math.sin(x * 2.4 + z * 1.7) * Math.cos(y * 2.1);
+
+      spongePositions.setX(i, x * bulge * irregularity);
+      spongePositions.setZ(i, z * bulge * irregularity);
+    }
+
+    spongeGeometry.computeVertexNormals();
+
+    const sponge = new THREE.Mesh(
+      spongeGeometry,
+      [spongeSideMaterial, spongeTopMaterial, spongeBottomMaterial]
+    );
+
+    sponge.position.y = -0.05;
+    sponge.castShadow = true;
+    sponge.receiveShadow = true;
+    scene.add(sponge);
+
+    // Thick, rounded sponge rim.
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.99, 0.13, 18, 112),
+      new THREE.MeshStandardMaterial({
+        color: 0xd99a5c,
+        map: spongeTextures.color,
+        bumpMap: spongeTextures.bump,
+        bumpScale: 0.055,
+        roughness: 0.94
+      })
+    );
+
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 1.015;
+    rim.castShadow = true;
+    rim.receiveShadow = true;
+    scene.add(rim);
+
+    // ---------------------------------------------------------------------
+    // Seafloor
+    // ---------------------------------------------------------------------
+
+    const floorGeometry = new THREE.PlaneGeometry(30, 30, 70, 70);
+    const floorPositions = floorGeometry.attributes.position;
+
+    for (let i = 0; i < floorPositions.count; i++) {
+      const x = floorPositions.getX(i);
+      const y = floorPositions.getY(i);
+
+      const height =
+        Math.sin(x * 0.72) * 0.09 +
+        Math.cos(y * 0.58) * 0.07 +
+        Math.sin((x + y) * 1.15) * 0.035;
+
+      floorPositions.setZ(i, height);
+    }
+
+    floorGeometry.rotateX(-Math.PI / 2);
+    floorGeometry.computeVertexNormals();
+
+    const floor = new THREE.Mesh(
+      floorGeometry,
+      new THREE.MeshStandardMaterial({
+        color: 0x0b2524,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+
+    floor.position.y = -1.16;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // ---------------------------------------------------------------------
+    // Brittle star
+    // ---------------------------------------------------------------------
+
+    const star = new THREE.Group();
+    scene.add(star);
+
+    const armMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe8d8b5,
+      roughness: 0.48,
+      metalness: 0,
+      clearcoat: 0.16,
+      clearcoatRoughness: 0.62,
+      emissive: 0x281d10,
+      emissiveIntensity: 0.12,
+      side: THREE.DoubleSide
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd7c59d,
+      roughness: 0.56,
+      metalness: 0
+    });
+
+    const seamMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9c8058,
+      roughness: 0.8
+    });
+
+    const spineMaterial = new THREE.MeshStandardMaterial({
+      color: 0xbca374,
+      roughness: 0.66
+    });
+
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function cylinderBetween(start, end, startRadius, endRadius, material, segments = 8) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        endRadius,
+        startRadius,
+        length,
+        segments,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      return mesh;
+    }
+
+    function createArm({ angle, reach, heightVariation }) {
+      const arm = new THREE.Group();
+      star.add(arm);
+
+      const points = [
+        new THREE.Vector3(
+          Math.cos(angle) * 0.06,
+          1.35,
+          Math.sin(angle) * 0.06
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * 0.42,
+          1.52 + heightVariation,
+          Math.sin(angle) * 0.42
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * 0.88,
+          1.64 + heightVariation * 0.7,
+          Math.sin(angle) * 0.88
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * 1.35,
+          1.56 + heightVariation,
+          Math.sin(angle) * 1.35
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * 1.8,
+          1.2 + heightVariation * 0.35,
+          Math.sin(angle) * 1.8
+        )
+      ];
+
+      const endHeight = 1.1 - (reach / 2.05);
+
+      points.push(
+        new THREE.Vector3(
+          Math.cos(angle) * reach,
+          endHeight * 1.1,
+          Math.sin(angle) * reach
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * (reach + 0.55),
+          endHeight * 0.48,
+          Math.sin(angle) * (reach + 0.55)
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * (reach + 0.68),
+          endHeight * 0.24,
+          Math.sin(angle) * (reach + 0.68)
+        )
+      );
+
+      const curve = new THREE.CatmullRomCurve3(
+        points,
+        false,
+        "catmullrom",
+        0.35
+      );
+
+      const sampledPoints = curve.getPoints(10);
+      const radii = [
+        0.145,
+        0.125,
+        0.105,
+        0.088,
+        0.073,
+        0.061,
+        0.05,
+        0.04
+      ];
+
+      // Tapered, jointed segments.
+      for (let i = 0; i < sampledPoints.length - 1; i++) {
+        const segmentGroup = new THREE.Group();
+        segmentGroup.position.copy(sampledPoints[i]).add(sampledPoints[i + 1]).multiplyScalar(0.5);
+        segmentGroup.quaternion.setFromUnitVectors(
+          up,
+          new THREE.Vector3().subVectors(sampledPoints[i + 1], sampledPoints[i]).normalize()
+        );
+        arm.add(segmentGroup);
+
+        const startRadius = radii[i];
+        const endRadius = radii[i + 1] * 0.82;
+
+        const segment = cylinderBetween(
+          sampledPoints[i],
+          sampledPoints[i + 1],
+          startRadius,
+          endRadius,
+          armMaterial,
+          8
+        );
+        segmentGroup.add(segment);
+
+        // Small paired spines along each segment.
+        const length = sampledPoints[i].distanceTo(sampledPoints[i + 1]);
+        const localSpineGeometry = new THREE.ConeGeometry(0.021, 0.085, 5);
+
+        for (const side of [-1, 1]) {
+          const spine = new THREE.Mesh(localSpineGeometry, spineMaterial);
+          spine.position.set(
+            side * length * 0.23,
+            length * 0.38,
+            0
+          );
+          spine.castShadow = true;
+          segmentGroup.add(spine);
+        }
+      }
+
+      // Visible articulation points.
+      for (let i = 1; i < sampledPoints.length - 1; i++) {
+        const joint = new THREE.Mesh(
+          new THREE.SphereGeometry(radii[i - 1] * 0.68, 14, 10),
+          jointMaterial
+        );
+
+        joint.position.copy(sampledPoints[i]);
+        joint.castShadow = true;
+        arm.add(joint);
+
+        const crevice = new THREE.Mesh(
+          new THREE.SphereGeometry(radii[i - 1] * 0.31, 10, 7),
+          seamMaterial
+        );
+
+        crevice.position.copy(sampledPoints[i]);
+        arm.add(crevice);
+      }
+
+      return arm;
+    }
+
+    const armDefinitions = [
+      { angle: 0.18, reach: 1.38, heightVariation: 0.02 },
+      { angle: 0.98, reach: 1.68, heightVariation: -0.05 },
+      { angle: 1.95, reach: 2.02, heightVariation: 0.08 },
+      { angle: 2.92, reach: 1.78, heightVariation: -0.04 },
+      { angle: 4.08, reach: 1.42, heightVariation: 0.03 }
+    ];
+
+    armDefinitions.forEach((definition) => createArm(definition));
+
+    // Small central disc.
+    const disc = new THREE.Mesh(
+      new THREE.SphereGeometry(0.42, 36, 20),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xeee1bd,
+        roughness: 0.5,
+        clearcoat: 0.12,
+        emissive: 0x281c0e,
+        emissiveIntensity: 0.1
+      })
+    );
+
+    disc.scale.set(1, 0.28, 0.91);
+    disc.position.y = 1.18;
+    disc.castShadow = true;
+    disc.receiveShadow = true;
+    star.add(disc);
+
+    // Tiny pores on the central disc.
+    const poreGeometry = new THREE.SphereGeometry(0.023, 7, 5);
+    const poreMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8d7353,
+      roughness: 1
+    });
+
+    const poreCount = 30;
+    const pores = new THREE.InstancedMesh(
+      poreGeometry,
+      poreMaterial,
+      poreCount
+    );
+
+    const dummy = new THREE.Object3D();
+    const poreRandom = mulberry32(9917);
+
+    for (let i = 0; i < poreCount; i++) {
+      let x = (poreRandom() - 0.5) * 0.64;
+      let z = (poreRandom() - 0.5) * 0.56;
+
+      const normalized =
+        (x * x) / (0.42 * 0.42) +
+        (z * z) / (0.38 * 0.38);
+
+      if (normalized > 1) {
+        x *= 0.8;
+        z *= 0.8;
+      }
+
+      const y =
+        1.18 +
+        0.12 * Math.sqrt(Math.max(0, 1 - normalized));
+
+      dummy.position.set(x, y, z);
+      dummy.scale.set(1, 0.35, 1);
+      dummy.updateMatrix();
+
+      pores.setMatrixAt(i, dummy.matrix);
+    }
+
+    pores.instanceMatrix.needsUpdate = true;
+    star.add(pores);
+
+    // ---------------------------------------------------------------------
+    // Marine snow and bubbles
+    // ---------------------------------------------------------------------
+
+    const particleCount = 420;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleBaseY = new Float32Array(particleCount);
+    const particlePhase = new Float32Array(particleCount);
+    const particleRandom = mulberry32(7331);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (particleRandom() - 0.5) * 15;
+      particlePositions[i * 3 + 1] = particleRandom() * 7 - 1.2;
+      particlePositions[i * 3 + 2] = (particleRandom() - 0.5) * 15;
+      particleBaseY[i] = particlePositions[i * 3 + 1];
+      particlePhase[i] = particleRandom() * Math.PI * 2;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xb9ded1,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    );
+
+    scene.add(particles);
+
+    const bubbles = [];
+    const bubbleGeometry = new THREE.SphereGeometry(0.035, 8, 6);
+    const bubbleMaterial = new THREE.MeshBasicMaterial({
+      color: 0xa9dcd1,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false
+    });
+
+    const bubbleRandom = mulberry32(1258);
+
+    for (let i = 0; i < 18; i++) {
+      const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+      bubble.position.set(
+        (bubbleRandom() - 0.5) * 10,
+        bubbleRandom() * 5 - 1,
+        (bubbleRandom() - 0.5) * 10
+      );
+      bubble.userData.speed = 0.08 + bubbleRandom() * 0.16;
+      bubble.userData.offset = bubbleRandom() * 6;
+      scene.add(bubble);
+      bubbles.push(bubble);
+    }
+
+    // ---------------------------------------------------------------------
+    // Direct camera controls: orbit, wheel zoom, and touch pinch
+    // ---------------------------------------------------------------------
+
+    const pointers = new Map();
+    let previousPinchDistance = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.classList.add("dragging");
+
+      if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        previousPinchDistance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const previous = pointers.get(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const deltaX = event.clientX - previous.x;
+        const deltaY = event.clientY - previous.y;
+
+        desiredCamera.theta -= deltaX * 0.006;
+        desiredCamera.phi = THREE.MathUtils.clamp(
+          desiredCamera.phi - deltaY * 0.005,
+          0.35,
+          1.52
+        );
+      } else if (pointers.size === 2) {
+        const values = [...pointers.values()];
+        const distance = Math.hypot(
+          values[0].x - values[1].x,
+          values[0].y - values[1].y
+        );
+
+        if (previousPinchDistance > 0 && distance > 0) {
+          desiredCamera.radius = THREE.MathUtils.clamp(
+            desiredCamera.radius * (previousPinchDistance / distance),
+            4.8,
+            14
+          );
+        }
+
+        previousPinchDistance = distance;
+      }
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      previousPinchDistance = 0;
+
+      if (pointers.size === 0) {
+        renderer.domElement.classList.remove("dragging");
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desiredCamera.radius = THREE.MathUtils.clamp(
+          desiredCamera.radius * Math.exp(event.deltaY * 0.001),
+          4.8,
+          14
+        );
+      },
+      { passive: false }
+    );
+
+    function resetCamera() {
+      desiredCamera.radius = 8.6;
+      desiredCamera.theta = 0.72;
+      desiredCamera.phi = 1.14;
+    }
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    renderer.domElement.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") desiredCamera.theta += 0.08;
+      if (event.key === "ArrowRight") desiredCamera.theta -= 0.08;
+      if (event.key === "ArrowUp") {
+        desiredCamera.phi = Math.max(0.35, desiredCamera.phi - 0.06);
+      }
+      if (event.key === "ArrowDown") {
+        desiredCamera.phi = Math.min(1.52, desiredCamera.phi + 0.06);
+      }
+      if (event.key === "+" || event.key === "=") {
+        desiredCamera.radius = Math.max(4.8, desiredCamera.radius - 0.4);
+      }
+      if (event.key === "-" || event.key === "_") {
+        desiredCamera.radius = Math.min(14, desiredCamera.radius + 0.4);
+      }
+    });
+
+    // ---------------------------------------------------------------------
+    // Resize and animation
+    // ---------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let previousTime = performance.now();
+
+    function animate(time) {
+      const delta = Math.min((time - previousTime) / 1000, 0.05);
+      previousTime = time;
+
+      updateCamera(delta);
+
+      // Very subtle movement suggests the flexible animal settling on the sponge.
+      star.rotation.y = Math.sin(time * 0.00024) * 0.025;
+      star.rotation.z = Math.cos(time * 0.0002) * 0.008;
+
+      const positionAttribute = particleGeometry.attributes.position;
+
+      for (let i = 0; i < particleCount; i++) {
+        const index = i * 3;
+        const phase = particlePhase[i];
+
+        positionAttribute.array[index] =
+          Math.sin(time * 0.00016 + phase) * 0.12;
+        positionAttribute.array[index + 1] =
+          particleBaseY[i] + Math.sin(time * 0.00035 + phase) * 0.1;
+        positionAttribute.array[index + 2] =
+          Math.cos(time * 0.00014 + phase) * 0.1;
+      }
+
+      positionAttribute.needsUpdate = true;
+
+      for (const bubble of bubbles) {
+        bubble.position.y += bubble.userData.speed * delta;
+        bubble.position.x += Math.sin(time * 0.0004 + bubble.userData.offset) * 0.0007;
+
+        if (bubble.position.y > 5.8) {
+          bubble.position.y = -1.2;
+          bubble.position.x = (bubbleRandom() - 0.5) * 10;
+          bubble.position.z = (bubbleRandom() - 0.5) * 10;
+        }
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

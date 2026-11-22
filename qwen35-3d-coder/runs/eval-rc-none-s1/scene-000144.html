@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ground-Mounted Photovoltaic Module</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: #f4f7f8;
+      background:
+        radial-gradient(circle at 50% 20%, #edf4f7 0%, #c7d4da 58%, #91a4ad 100%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      outline: none;
+    }
+
+    .info {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 2;
+      max-width: 330px;
+      padding: 17px 19px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 14px;
+      background: rgba(24, 35, 42, 0.72);
+      box-shadow: 0 12px 35px rgba(24, 35, 42, 0.2);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #83c9a6;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .info p {
+      margin: 9px 0 0;
+      color: rgba(244, 247, 248, 0.68);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      right: 22px;
+      bottom: 20px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 12px;
+      background: rgba(24, 35, 42, 0.68);
+      box-shadow: 0 8px 24px rgba(24, 35, 42, 0.18);
+      backdrop-filter: blur(10px);
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 11px;
+      user-select: none;
+    }
+
+    button {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    @media (max-width: 650px) {
+      .info {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        max-width: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .controls .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <div class="eyebrow">Ground-Mounted PV System</div>
+    <h1>Adjustable rail support</h1>
+    <p>
+      Tilted photovoltaic module with two telescoping rails, four adjustable
+      struts, and paired concrete footings.
+    </p>
+  </div>
+
+  <div class="controls">
+    <span class="hint">Drag to orbit · Scroll to zoom · Right-drag to pan</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xb9c8cf, 13, 32);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      innerWidth / innerHeight,
+      0.05,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive three-dimensional photovoltaic module"
+    );
+    document.body.prepend(renderer.domElement);
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xeaf6ff, 0x6f665b, 2.1));
+
+    const sun = new THREE.DirectionalLight(0xfff2d8, 3.2);
+    sun.position.set(-5.5, 9, 6.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -7;
+    sun.shadow.camera.right = 7;
+    sun.shadow.camera.top = 7;
+    sun.shadow.camera.bottom = -7;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 25;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xb9d9ff, 1.15);
+    fill.position.set(6, 4, -5);
+    scene.add(fill);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({
+        color: 0x8d928e,
+        roughness: 0.96,
+        metalness: 0.02
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(30, 60, 0x65757c, 0x748087);
+    grid.position.y = 0.008;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.16;
+    scene.add(grid);
+
+    const materials = {
+      silver: new THREE.MeshStandardMaterial({
+        color: 0xb9c3c9,
+        metalness: 0.84,
+        roughness: 0.27
+      }),
+      brushedSteel: new THREE.MeshStandardMaterial({
+        color: 0x727d83,
+        metalness: 0.78,
+        roughness: 0.34
+      }),
+      darkSteel: new THREE.MeshStandardMaterial({
+        color: 0x354148,
+        metalness: 0.72,
+        roughness: 0.38
+      }),
+      blackSteel: new THREE.MeshStandardMaterial({
+        color: 0x20272b,
+        metalness: 0.68,
+        roughness: 0.4
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xe27828,
+        metalness: 0.45,
+        roughness: 0.36
+      }),
+      concrete: new THREE.MeshStandardMaterial({
+        color: 0xa8a7a0,
+        roughness: 0.95,
+        metalness: 0.01
+      }),
+      concreteDark: new THREE.MeshStandardMaterial({
+        color: 0x858680,
+        roughness: 0.98
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x171c1f,
+        roughness: 0.82
+      }),
+      junction: new THREE.MeshStandardMaterial({
+        color: 0x465157,
+        metalness: 0.58,
+        roughness: 0.4
+      })
+    };
+
+    const panel = new THREE.Group();
+    panel.position.set(0, 3.3, 0.227);
+    panel.rotation.x = 0.28;
+    scene.add(panel);
+
+    const panelWidth = 3.8;
+    const panelHeight = 1.65;
+    const frameDepth = 0.14;
+
+    // Rigid dark backing
+    const backing = new THREE.Mesh(
+      new THREE.BoxGeometry(panelWidth - 0.16, panelHeight - 0.16, 0.08),
+      materials.blackSteel
+    );
+    backing.position.z = -0.012;
+    backing.castShadow = true;
+    backing.receiveShadow = true;
+    panel.add(backing);
+
+    // Thin silver perimeter
+    const verticalFrameGeometry = new THREE.BoxGeometry(
+      0.13,
+      panelHeight,
+      frameDepth
+    );
+    const horizontalFrameGeometry = new THREE.BoxGeometry(
+      panelWidth,
+      0.13,
+      frameDepth
+    );
+
+    for (const x of [-panelWidth / 2 + 0.065, panelWidth / 2 - 0.065]) {
+      const bar = new THREE.Mesh(verticalFrameGeometry, materials.silver);
+      bar.position.set(x, 0, 0);
+      bar.castShadow = true;
+      bar.receiveShadow = true;
+      panel.add(bar);
+    }
+
+    for (const y of [-panelHeight / 2 + 0.065, panelHeight / 2 - 0.065]) {
+      const bar = new THREE.Mesh(horizontalFrameGeometry, materials.silver);
+      bar.position.set(0, y, 0);
+      bar.castShadow = true;
+      bar.receiveShadow = true;
+      panel.add(bar);
+    }
+
+    // Dark blue photovoltaic cells
+    const cellGeometry = new THREE.BoxGeometry(0.59, 0.465, 0.018);
+    const cellMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0x071a31,
+        metalness: 0.34,
+        roughness: 0.24
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x0a2540,
+        metalness: 0.32,
+        roughness: 0.26
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0x071c35,
+        metalness: 0.36,
+        roughness: 0.23
+      })
+    ];
+
+    const columns = 6;
+    const rows = 3;
+    const cellWidth = (panelWidth - 0.2) / columns;
+    const cellHeight = (panelHeight - 0.2) / rows;
+
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        const x =
+          -panelWidth / 2 +
+          cellWidth * (column + 0.5);
+        const y =
+          -panelHeight / 2 +
+          cellHeight * (row + 0.5);
+
+        const cell = new THREE.Mesh(
+          cellGeometry,
+          cellMaterials[(row + column * 2) % cellMaterials.length]
+        );
+        cell.position.set(x, y, 0.091);
+        cell.receiveShadow = true;
+        panel.add(cell);
+      }
+    }
+
+    // Fine grid lines above the cells
+    const gridVertices = [];
+    const gridZ = 0.102;
+
+    for (let column = 0; column <= columns; column++) {
+      const x = -panelWidth / 2 + cellWidth * column;
+      gridVertices.push(x, -panelHeight / 2 + 0.105, gridZ);
+      gridVertices.push(x, panelHeight / 2 - 0.105, gridZ);
+    }
+
+    for (let row = 0; row <= rows; row++) {
+      const y = -panelHeight / 2 + cellHeight * row;
+      gridVertices.push(-panelWidth / 2 + 0.105, y, gridZ);
+      gridVertices.push(panelWidth / 2 - 0.105, y, gridZ);
+    }
+
+    const gridGeometry = new THREE.BufferGeometry();
+    gridGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(gridVertices, 3)
+    );
+
+    const gridLines = new THREE.LineSegments(
+      gridGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0x244c68,
+        transparent: true,
+        opacity: 0.7
+      })
+    );
+    panel.add(gridLines);
+
+    // Junction box mounted to the rear
+    const junctionBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.42, 0.3, 0.18),
+      materials.junction
+    );
+    junctionBox.position.set(1.05, -0.43, -0.15);
+    junctionBox.castShadow = true;
+    junctionBox.receiveShadow = true;
+    panel.add(junctionBox);
+
+    const junctionLid = new THREE.Mesh(
+      new THREE.BoxGeometry(0.46, 0.045, 0.205),
+      materials.darkSteel
+    );
+    junctionLid.position.set(1.05, -0.255, -0.15);
+    junctionLid.castShadow = true;
+    panel.add(junctionLid);
+
+    const screwGeometry = new THREE.CylinderGeometry(
+      0.025,
+      0.025,
+      0.012,
+      12
+    );
+    for (const dx of [-0.15, 0.15]) {
+      for (const dy of [-0.09, 0.09]) {
+        const screw = new THREE.Mesh(screwGeometry, materials.silver);
+        screw.rotation.x = Math.PI / 2;
+        screw.position.set(1.05 + dx, -0.43 + dy, -0.247);
+        panel.add(screw);
+
+        const slot = new THREE.Mesh(
+          new THREE.BoxGeometry(0.035, 0.007, 0.006),
+          materials.blackSteel
+        );
+        slot.position.set(1.05 + dx, -0.43 + dy, -0.253);
+        slot.rotation.z = dx * 2.1;
+        panel.add(slot);
+      }
+    }
+
+    // Two longitudinal steel rails
+    const railHeight = 2.38;
+    const railZ = 0.45;
+
+    for (const z of [-railZ, railZ]) {
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(4.05, 0.13, 0.15),
+        materials.brushedSteel
+      );
+      rail.position.set(0, railHeight, z);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      scene.add(rail);
+
+      const flange = new THREE.Mesh(
+        new THREE.BoxGeometry(4.05, 0.035, 0.25),
+        materials.darkSteel
+      );
+      flange.position.set(0, railHeight - 0.08, z);
+      flange.castShadow = true;
+      scene.add(flange);
+
+      for (const x of [-1.98, 1.98]) {
+        const endCap = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.17, 0.18),
+          materials.blackSteel
+        );
+        endCap.position.set(x, railHeight, z);
+        endCap.castShadow = true;
+        scene.add(endCap);
+      }
+    }
+
+    function addBolt(x, y, z, radius = 0.035) {
+      const bolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, 0.035, 6),
+        materials.silver
+      );
+      bolt.rotation.x = Math.PI / 2;
+      bolt.position.set(x, y, z);
+      scene.add(bolt);
+    }
+
+    // Paired concrete footings
+    for (const x of [-1.45, 1.45]) {
+      const footing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.82, 0.42, 1.25),
+        materials.concrete
+      );
+      footing.position.set(x, 0.21, 0);
+      footing.castShadow = true;
+      footing.receiveShadow = true;
+      scene.add(footing);
+
+      const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(0.88, 0.08, 1.31),
+        materials.concreteDark
+      );
+      cap.position.set(x, 0.45, 0);
+      cap.castShadow = true;
+      cap.receiveShadow = true;
+      scene.add(cap);
+
+      for (const dx of [-0.27, 0.27]) {
+        for (const dz of [-0.39, 0.39]) {
+          addBolt(x + dx, 0.502, dz, 0.043);
+        }
+      }
+    }
+
+    // Four adjustable telescoping struts: two at each rail end
+    const strutX = 1.45;
+
+    function addStrut(x, z) {
+      const footPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.075, 0.34),
+        materials.darkSteel
+      );
+      footPlate.position.set(x, 0.535, z);
+      footPlate.castShadow = true;
+      footPlate.receiveShadow = true;
+      scene.add(footPlate);
+
+      const footPad = new THREE.Mesh(
+        new THREE.BoxGeometry(0.27, 0.055, 0.27),
+        materials.rubber
+      );
+      footPad.position.set(x, 0.585, z);
+      footPad.castShadow = true;
+      scene.add(footPad);
+
+      const outerTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, 0.9, 18),
+        materials.darkSteel
+      );
+      outerTube.position.set(x, 1.0, z);
+      outerTube.castShadow = true;
+      outerTube.receiveShadow = true;
+      scene.add(outerTube);
+
+      // Exposed threaded adjustment section
+      const thread = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.093, 0.093, 0.25, 18),
+        materials.blackSteel
+      );
+      thread.position.set(x, 1.315, z);
+      thread.castShadow = true;
+      scene.add(thread);
+
+      for (let i = 0; i < 5; i++) {
+        const threadRing = new THREE.Mesh(
+          new THREE.TorusGeometry(0.093, 0.011, 6, 18),
+          materials.blackSteel
+        );
+        threadRing.rotation.x = Math.PI / 2;
+        threadRing.position.set(x, 1.235 + i * 0.047, z);
+        threadRing.castShadow = true;
+        scene.add(threadRing);
+      }
+
+      const collar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.135, 0.135, 0.13, 18),
+        materials.orange
+      );
+      collar.position.set(x, 1.45, z);
+      collar.castShadow = true;
+      scene.add(collar);
+
+      const innerTube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.066, 0.066, 0.98, 16),
+        materials.silver
+      );
+      innerTube.position.set(x, 1.93, z);
+      innerTube.castShadow = true;
+      innerTube.receiveShadow = true;
+      scene.add(innerTube);
+
+      // Side adjustment handle
+      const handle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.045, 0.26, 14),
+        materials.orange
+      );
+      handle.rotation.z = Math.PI / 2;
+      handle.position.set(x + 0.16, 1.45, z);
+      handle.castShadow = true;
+      scene.add(handle);
+
+      for (const dx of [-0.11, 0.11]) {
+        const handleJoint = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.06, 0.06, 0.05, 12),
+          materials.darkSteel
+        );
+        handleJoint.rotation.z = Math.PI / 2;
+        handleJoint.position.set(x + 0.16 + dx, 1.45, z);
+        scene.add(handleJoint);
+      }
+    }
+
+    addStrut(-strutX, -railZ);
+    addStrut(-strutX, railZ);
+    addStrut(strutX, -railZ);
+    addStrut(strutX, railZ);
+
+    // Clamp brackets connecting the rails to the tilted module
+    panel.updateMatrixWorld(true);
+
+    for (const x of [-strutX, strutX]) {
+      const railPoint = new THREE.Vector3(x, railHeight + 0.075, -railZ);
+      const targetLocal = new THREE.Vector3(
+        x,
+        -panelHeight / 2 + 0.1,
+        0
+      );
+      const target = panel.worldToLocal(targetLocal);
+
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 1, 0.12),
+        materials.brushedSteel
+      );
+      beam.position.copy(railPoint).add(target).multiplyScalar(0.5);
+      beam.scale.y = railPoint.distanceTo(target);
+      beam.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3().subVectors(target, railPoint).normalize()
+      );
+      beam.castShadow = true;
+      scene.add(beam);
+
+      const railClamp = new THREE.Mesh(
+        new THREE.BoxGeometry(0.27, 0.19, 0.2),
+        materials.darkSteel
+      );
+      railClamp.position.copy(railPoint);
+      railClamp.castShadow = true;
+      scene.add(railClamp);
+
+      const panelClamp = new THREE.Mesh(
+        new THREE.BoxGeometry(0.29, 0.23, 0.19),
+        materials.darkSteel
+      );
+      panelClamp.position.copy(target);
+      panelClamp.castShadow = true;
+      scene.add(panelClamp);
+
+      const rubberPad = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.07, 0.16),
+        materials.rubber
+      );
+      rubberPad.position.copy(target);
+      rubberPad.position.y -= 0.12;
+      rubberPad.castShadow = true;
+      scene.add(rubberPad);
+    }
+
+    // Direct camera controls, implemented without external controls modules
+    const controls = {
+      target: new THREE.Vector3(0, 2.15, 0),
+      radius: 8.6,
+      theta: 0.72,
+      phi: 1.13
+    };
+
+    const initialControls = {
+      target: controls.target.clone(),
+      radius: controls.radius,
+      theta: controls.theta,
+      phi: controls.phi
+    };
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+    }
+
+    function resetView() {
+      controls.target.copy(initialControls.target);
+      controls.radius = initialControls.radius;
+      controls.theta = initialControls.theta;
+      controls.phi = initialControls.phi;
+      updateCamera();
+    }
+
+    const canvas = renderer.domElement;
+    let activePointer = null;
+    let pointerMode = "orbit";
+    let previousX = 0;
+    let previousY = 0;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      activePointer = event.pointerId;
+      pointerMode =
+        event.button === 2 || event.button === 1 || event.shiftKey
+          ? "pan"
+          : "orbit";
+      previousX = event.clientX;
+      previousY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      canvas.style.cursor = pointerMode === "pan" ? "move" : "grabbing";
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== activePointer) return;
+
+      const dx = event.clientX - previousX;
+      const dy = event.clientY - previousY;
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      if (pointerMode === "orbit") {
+        controls.theta -= dx * 0.005;
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi - dy * 0.005,
+          0.18,
+          Math.PI * 0.48
+        );
+      } else {
+        const right = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          0
+        );
+        const up = new THREE.Vector3().setFromMatrixColumn(
+          camera.matrix,
+          1
+        );
+        const panScale = controls.radius * 0.0013;
+
+        controls.target
+          .addScaledVector(right, -dx * panScale)
+          .addScaledVector(up, dy * panScale);
+      }
+
+      updateCamera();
+    });
+
+    function endPointer(event) {
+      if (event.pointerId !== activePointer) return;
+      activePointer = null;
+      canvas.style.cursor = "grab";
+    }
+
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * Math.exp(event.deltaY * 0.001),
+          4.2,
+          16
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetView);
+    document.getElementById("reset").addEventListener("click", resetView);
+
+    addEventListener("keydown", (event) => {
+      if (event.key.toLowerCase() === "r") resetView();
+    });
+
+    addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+
+    canvas.style.cursor = "grab";
+    updateCamera();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>

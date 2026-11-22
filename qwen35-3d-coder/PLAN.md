@@ -257,3 +257,18 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
   gpu_run was still queued for the lock, which left a queued launcher that would have started an orphan server.
   It now finds the server as its own child, waits QC_GPU_WAIT + 900 s, and ends the launcher tree on exit or signal.
 
+## 2026-11-22: session E, the render comparison
+
+- 07:48-11:14 `tools/rendercmp.sh`: the first split's 8 prompts, MTP n=2 vs none, seeds 1 and 2, serve.sh as shipped
+  (64k, one slot, card sampling, server min-p 0.05), 24k cap, sessions capped at 27 min (none seed 2 needed two).
+  Rendered on the CPU and scored with `tools/render.mjs` + `tools/score.py` (`runs/eval-rc-{mtp,none}-s{1,2}/`).
+  Pass: MTP 6 + 4 = 10/16, none 3 + 6 = 9/16 (Fisher p = 1.0). Cap/loops: MTP 1 (335 s1), none 3 (145 s1, 145 s2,
+  335 s1). Throws: MTP 5 (3 syntax errors: 238 s1 `Unexpected identifier`, 048 s2 and 238 s2 duplicate declarations),
+  none 4 (all runtime ReferenceError/TypeError). Decode median 105.7 vs 75.0 tok/s (1.41x); generation wall 39 vs 65
+  min for the same 16 answers. Pooled with the first split: 11/24 vs 15/24, p = 0.39.
+- Verdict: MTP is a reliable opt-in (same pass rate, no more loops, 1.41x). Default unchanged (QC_SPEC=none): the
+  bar for a default change is strong evidence, and the syntax-error lead (3/16 vs 0/16, p = 0.23) is untested.
+- Next, if the default should move: a larger render comparison aimed at the syntax-error lead (e.g. 20 prompts x 2
+  seeds per arm, counting SyntaxError pages separately), or a node --check pass over every generated page so the
+  syntax-slip rate can be counted cheaply across all existing runs.
+

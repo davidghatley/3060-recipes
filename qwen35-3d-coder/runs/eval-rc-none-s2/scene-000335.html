@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buoy Tender — Working Deck</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(9, 24, 31, 0.78);
+      --line: rgba(203, 239, 232, 0.2);
+      --text: #e8f1eb;
+      --muted: #a9bec0;
+      --accent: #8ee0b2;
+      --orange: #ff9b32;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #9ebbc0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .header {
+      position: fixed;
+      top: 24px;
+      left: 26px;
+      z-index: 10;
+      color: var(--text);
+      pointer-events: none;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 7px;
+      color: #d7ebe6;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 24px;
+      height: 2px;
+      content: "";
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(142, 224, 178, 0.6);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 3vw, 42px);
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: #c5d8d4;
+      font-size: 13px;
+    }
+
+    .status {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #dcebe7;
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.45;
+        transform: scale(0.8);
+      }
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 12;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.24);
+      transform: translateX(-50%);
+    }
+
+    .controls button {
+      min-width: 74px;
+      padding: 9px 13px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: #dcebed;
+      background: rgba(255, 255, 255, 0.07);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+
+    .controls button:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .controls button.active {
+      color: #09231d;
+      background: var(--accent);
+    }
+
+    .hint {
+      position: fixed;
+      right: 24px;
+      bottom: 25px;
+      z-index: 10;
+      color: rgba(232, 241, 235, 0.75);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+    }
+
+    .scene-label {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 8;
+      padding: 6px 9px;
+      border: 1px solid rgba(220, 244, 237, 0.25);
+      border-radius: 6px;
+      color: #f0f7f3;
+      background: rgba(10, 29, 35, 0.72);
+      backdrop-filter: blur(7px);
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16);
+    }
+
+    .scene-label::before {
+      position: absolute;
+      top: 50%;
+      left: -22px;
+      width: 20px;
+      height: 1px;
+      content: "";
+      background: rgba(225, 247, 240, 0.65);
+    }
+
+    .scene-label::after {
+      position: absolute;
+      top: calc(50% - 3px);
+      left: -25px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      content: "";
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      color: #dcebed;
+      background: #102a31;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: opacity 500ms ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .header {
+        top: 18px;
+        left: 18px;
+      }
+
+      .status {
+        top: auto;
+        right: 14px;
+        bottom: 88px;
+      }
+
+      .controls {
+        bottom: 14px;
+        width: calc(100% - 28px);
+        justify-content: center;
+      }
+
+      .controls button {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .scene-label {
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading" id="loading">Preparing coastal scene…</div>
+
+  <header class="header">
+    <div class="eyebrow">Coastal Operations Unit 07</div>
+    <h1>Buoy Tender</h1>
+    <div class="subtitle">Class 2 working vessel · stern-mounted service crane</div>
+  </header>
+
+  <div class="status">
+    <span class="status-dot"></span>
+    Working deck active
+  </div>
+
+  <div class="controls">
+    <button id="orbitButton" type="button">Auto orbit</button>
+    <button id="resetButton" type="button">Reset view</button>
+    <button id="fullscreenButton" type="button">Fullscreen</button>
+  </div>
+
+  <div class="hint">DRAG TO ORBIT · SCROLL TO ZOOM</div>
+
+  <div class="scene-label" id="label-crane">Stern crane</div>
+  <div class="scene-label" id="label-deck">Working deck</div>
+  <div class="scene-label" id="label-buoy">Service buoy</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    document.body.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x9ebbc0);
+    scene.fog = new THREE.Fog(0x9ebbc0, 25, 78);
+
+    const camera = new THREE.PerspectiveCamera(
+      43,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      180
+    );
+
+    const clock = new THREE.Clock();
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      hull: new THREE.MeshStandardMaterial({
+        color: 0xe8ece5,
+        roughness: 0.48,
+        metalness: 0.12,
+        side: THREE.DoubleSide
+      }),
+      deck: new THREE.MeshStandardMaterial({
+        color: 0xcbb991,
+        roughness: 0.8,
+        metalness: 0.02
+      }),
+      darkDeck: new THREE.MeshStandardMaterial({
+        color: 0x334643,
+        roughness: 0.92
+      }),
+      orange: new THREE.MeshStandardMaterial({
+        color: 0xf27d20,
+        roughness: 0.48,
+        metalness: 0.12
+      }),
+      yellow: new THREE.MeshStandardMaterial({
+        color: 0xf3b831,
+        roughness: 0.45,
+        metalness: 0.22
+      }),
+      metal: new THREE.MeshStandardMaterial({
+        color: 0x69777a,
+        roughness: 0.36,
+        metalness: 0.78
+      }),
+      darkMetal: new THREE.MeshStandardMaterial({
+        color: 0x243237,
+        roughness: 0.48,
+        metalness: 0.65
+      }),
+      rope: new THREE.MeshStandardMaterial({
+        color: 0x3f4845,
+        roughness: 0.95
+      }),
+      glass: new THREE.MeshStandardMaterial({
+        color: 0x183d48,
+        roughness: 0.2,
+        metalness: 0.45
+      }),
+      white: new THREE.MeshStandardMaterial({
+        color: 0xf4f2e7,
+        roughness: 0.55
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x172125,
+        roughness: 0.92
+      }),
+      red: new THREE.MeshStandardMaterial({
+        color: 0xd9352f,
+        emissive: 0x5c0804,
+        emissiveIntensity: 0.35
+      }),
+      green: new THREE.MeshStandardMaterial({
+        color: 0x35b967,
+        emissive: 0x063c18,
+        emissiveIntensity: 0.4
+      }),
+      lamp: new THREE.MeshStandardMaterial({
+        color: 0xffd25a,
+        emissive: 0xff9e20,
+        emissiveIntensity: 1.4
+      })
+    };
+
+    // Procedural wood texture; no external image assets are used.
+    const woodCanvas = document.createElement("canvas");
+    woodCanvas.width = 512;
+    woodCanvas.height = 512;
+    const woodContext = woodCanvas.getContext("2d");
+
+    woodContext.fillStyle = "#b99a68";
+    woodContext.fillRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 95; i++) {
+      const y = Math.random() * 512;
+      woodContext.strokeStyle = `rgba(77, 48, 22, ${0.035 + Math.random() * 0.08})`;
+      woodContext.lineWidth = 0.5 + Math.random() * 2;
+      woodContext.beginPath();
+      woodContext.moveTo(0, y);
+      woodContext.bezierCurveTo(
+        150,
+        y + Math.random() * 12 - 6,
+        350,
+        y + Math.random() * 12 - 6,
+        512,
+        y + Math.random() * 8 - 4
+      );
+      woodContext.stroke();
+    }
+
+    const woodTexture = new THREE.CanvasTexture(woodCanvas);
+    woodTexture.colorSpace = THREE.SRGBColorSpace;
+    woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
+    woodTexture.repeat.set(2, 4);
+
+    materials.deck.map = woodTexture;
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addMesh(geometry, material, parent = scene) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function addBox(w, h, d, material, x, y, z, parent = scene) {
+      const mesh = addMesh(new THREE.BoxGeometry(w, h, d), material, parent);
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function addCylinder(
+      radiusTop,
+      radiusBottom,
+      height,
+      material,
+      x,
+      y,
+      z,
+      parent = scene,
+      segments = 18
+    ) {
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments),
+        material,
+        parent
+      );
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function setBeam(mesh, a, b) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.scale.set(1, length, 1);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+    }
+
+    function addBeam(a, b, radius, material, parent = scene, segments = 10) {
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(radius, radius, 1, segments),
+        material,
+        parent
+      );
+      setBeam(mesh, new THREE.Vector3(...a), new THREE.Vector3(...b));
+      return mesh;
+    }
+
+    function addTorus(
+      radius,
+      tube,
+      material,
+      x,
+      y,
+      z,
+      parent = scene,
+      arc = Math.PI * 2
+    ) {
+      const mesh = addMesh(
+        new THREE.TorusGeometry(radius, tube, 10, 28, arc),
+        material,
+        parent
+      );
+      mesh.position.set(x, y, z);
+      return mesh;
+    }
+
+    function addRail(a, b, height = 0.78, spacing = 1.15) {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const length = start.distanceTo(end);
+      const count = Math.max(1, Math.ceil(length / spacing));
+
+      for (let i = 0; i <= count; i++) {
+        const p = start.clone().lerp(end, i / count);
+        addBeam(
+          [p.x, 0.75, p.z],
+          [p.x, 0.75 + height, p.z],
+          0.035,
+          materials.metal
+        );
+      }
+
+      addBeam(
+        [start.x, 0.75 + height, start.z],
+        [end.x, 0.75 + height, end.z],
+        0.045,
+        materials.metal
+      );
+
+      addBeam(
+        [start.x, 0.75 + height * 0.48, start.z],
+        [end.x, 0.75 + height * 0.48, end.z],
+        0.025,
+        materials.metal
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0xd8edf0, 0x36504a, 2.0));
+
+    const sun = new THREE.DirectionalLight(0xfff1cf, 3.4);
+    sun.position.set(-12, 20, 9);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -18;
+    sun.shadow.camera.right = 18;
+    sun.shadow.camera.top = 18;
+    sun.shadow.camera.bottom = -18;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 55;
+    sun.shadow.bias = -0.00035;
+    scene.add(sun);
+
+    const rimLight = new THREE.DirectionalLight(0x8bd6e3, 1.1);
+    rimLight.position.set(10, 8, -15);
+    scene.add(rimLight);
+
+    // -------------------------------------------------------------------------
+    // Animated water
+    // -------------------------------------------------------------------------
+
+    const waterGeometry = new THREE.PlaneGeometry(90, 90, 70, 70);
+    waterGeometry.rotateX(-Math.PI / 2);
+
+    const waterMaterial = new THREE.MeshStandardMaterial({
+      color: 0x287d86,
+      roughness: 0.26,
+      metalness: 0.28,
+      transparent: true,
+      opacity: 0.96
+    });
+
+    const water = addMesh(waterGeometry, waterMaterial);
+    water.castShadow = false;
+
+    const waterPositions = waterGeometry.attributes.position;
+
+    function updateWater(time) {
+      for (let i = 0; i < waterPositions.count; i++) {
+        const x = waterPositions.getX(i);
+        const z = waterPositions.getZ(i);
+        const wave =
+          Math.sin(x * 0.52 + time * 0.75) * 0.10 +
+          Math.sin(z * 0.68 - time * 0.58) * 0.065 +
+          Math.sin((x + z) * 1.12 + time * 0.9) * 0.035;
+
+        waterPositions.setY(i, wave);
+      }
+
+      waterPositions.needsUpdate = true;
+      if (frame % 4 === 0) {
+        waterGeometry.computeVertexNormals();
+      }
+    }
+
+    // Soft procedural wake lines.
+    const wakeMaterial = new THREE.LineBasicMaterial({
+      color: 0xd9f1e9,
+      transparent: true,
+      opacity: 0.25
+    });
+
+    for (const side of [-1, 1]) {
+      const points = [];
+      for (let i = 0; i < 7; i++) {
+        points.push(
+          new THREE.Vector3(
+            side * (0.18 + i * 0.24),
+            0.055,
+            5.2 + i * 0.85
+          )
+        );
+      }
+
+      const wake = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        wakeMaterial
+      );
+      scene.add(wake);
+    }
+
+    const foam = addMesh(
+      new THREE.CircleGeometry(1, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0xc8e5df,
+        transparent: true,
+        opacity: 0.08,
+        depthWrite: false
+      })
+    );
+    foam.rotation.x = -Math.PI / 2;
+    foam.scale.set(2.35, 0.72, 1);
+    foam.position.set(0, 0.045, 0);
+    foam.castShadow = false;
+    foam.receiveShadow = false;
+
+    // -------------------------------------------------------------------------
+    // Boat hull
+    // Bow points toward +Z; the stern is at -Z.
+    // -------------------------------------------------------------------------
+
+    const boat = new THREE.Group();
+    boat.position.y = 0.08;
+    scene.add(boat);
+
+    const hullStations = [
+      { z: -5.25, w: 0.92, keel: 0.28, top: 0.68 },
+      { z: -4.85, w: 1.15, keel: 0.22, top: 0.70 },
+      { z: -3.45, w: 1.25, keel: 0.18, top: 0.68 },
+      { z: -1.45, w: 1.28, keel: 0.17, top: 0.67 },
+      { z: 1.10, w: 1.18, keel: 0.20, top: 0.66 },
+      { z: 2.75, w: 0.96, keel: 0.27, top: 0.61 },
+      { z: 4.25, w: 0.62, keel: 0.38, top: 0.53 },
+      { z: 5.45, w: 0.28, keel: 0.48, top: 0.43 },
+      { z: 6.15, w: 0.08, keel: 0.52, top: 0.38 }
+    ];
+
+    function createHullGeometry() {
+      const vertices = [];
+      const indices = [];
+
+      for (const station of hullStations) {
+        const w = station.w;
+        const k = station.keel;
+        const t = station.top;
+
+        const ring = [
+          [ w, t],
+          [w * 0.98, k + 0.28],
+          [0, k],
+          [-w * 0.98, k + 0.28],
+          [-w, t]
+        ];
+
+        for (const [x, y] of ring) {
+          vertices.push(x, y, station.z);
+        }
+      }
+
+      for (let i = 0; i < hullStations.length - 1; i++) {
+        for (let j = 0; j < 4; j++) {
+          const a = i * 5 + j;
+          const b = i * 5 + (j + 1) % 5;
+          const c = (i + 1) * 5 + j;
+          const d = (i + 1) * 5 + (j + 1) % 5;
+
+          indices.push(a, c, b, b, c, d);
+        }
+      }
+
+      const sternCenter = vertices.length / 3;
+      vertices.push(0, 0.4, hullStations[0].z);
+
+      const bowCenter = vertices.length / 3;
+      vertices.push(0, 0.4, hullStations[hullStations.length - 1].z);
+
+      for (let j = 0; j < 5; j++) {
+        indices.push(sternCenter, (j + 1) % 5, j);
+      }
+
+      const last = (hullStations.length - 1) * 5;
+      indices.push(bowCenter, last, last + 1, bowCenter, last + 1, last + 4);
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    const hull = addMesh(createHullGeometry(), materials.hull, boat);
+    hull.receiveShadow = true;
+
+    // Orange rubbing stripe and dark protective strip.
+    for (const side of [-1, 1]) {
+      const stripePoints = hullStations.map((station) =>
+        new THREE.Vector3(side * station.w * 1.005, station.top - 0.14, station.z)
+      );
+
+      const stripeCurve = new THREE.CatmullRomCurve3(stripePoints);
+      const stripe = addMesh(
+        new THREE.TubeGeometry(stripeCurve, 70, 0.035, 7, false),
+        materials.orange,
+        boat
+      );
+
+      const stripePoints2 = hullStations.map((station) =>
+        new THREE.Vector3(side * station.w * 1.008, station.top - 0.31, station.z)
+      );
+
+      const stripeCurve2 = new THREE.CatmullRomCurve3(stripePoints2);
+      addMesh(
+        new THREE.TubeGeometry(stripeCurve2, 70, 0.026, 6, false),
+        materials.darkMetal,
+        boat
+      );
+    }
+
+    // Main deck, rotated to face upward.
+    const deckShape = new THREE.Shape();
+    const deckOutline = [
+      [-1.05, -5.25],
+      [1.05, -5.25],
+      [1.20, -4.80],
+      [1.25, -3.45],
+      [1.15, -1.45],
+      [0.92, 1.05],
+      [0.62, 2.75],
+      [0.30, 4.40],
+      [0.00, 5.75],
+      [-0.30, 4.40],
+      [-0.62, 2.75],
+      [-0.92, 1.05],
+      [-1.15, -1.45],
+      [-1.25, -3.45],
+      [-1.20, -4.80]
+    ];
+
+    for (let i = 0; i < deckOutline.length; i++) {
+      const [x, z] = deckOutline[i];
+      if (i === 0) deckShape.moveTo(x, -z);
+      else deckShape.lineTo(x, -z);
+    }
+    deckShape.closePath();
+
+    const deckGeometry = new THREE.ShapeGeometry(deckShape, 12);
+    deckGeometry.rotateX(-Math.PI / 2);
+
+    const deck = addMesh(deckGeometry, materials.deck, boat);
+    deck.position.y = 0.705;
+
+    // Individual wooden planks on the stern working deck.
+    const plankWidth = 0.255;
+    const plankCount = 8;
+    const plankMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0xc8aa78,
+        map: woodTexture,
+        roughness: 0.84
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xb99567,
+        map: woodTexture,
+        roughness: 0.86
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xd0b281,
+        map: woodTexture,
+        roughness: 0.82
+      })
+    ];
+
+    for (let i = 0; i < plankCount; i++) {
+      const plank = addBox(
+        plankWidth,
+        0.075,
+        3.62,
+        plankMaterials[i % plankMaterials.length],
+        -0.93 + i * 0.286,
+        0.755,
+        -3.24,
+        boat
+      );
+      plank.rotation.y = (Math.random() - 0.5) * 0.004;
+    }
+
+    // Dark non-slip center mat.
+    addBox(1.18, 0.035, 2.45, materials.darkDeck, 0, 0.805, -3.72, boat);
+
+    // Deck rails.
+    addRail([-1.20, -5.02], [1.20, -5.02]);
+    addRail([-1.20, -4.82], [-1.16, 2.85]);
+    addRail([1.20, -4.82], [1.16, 2.85]);
+    addRail([-0.65, 4.35], [0.65, 4.35]);
+
+    // -------------------------------------------------------------------------
+    // Forward wheelhouse
+    // -------------------------------------------------------------------------
+
+    addBox(1.72, 0.76, 1.62, materials.white, 0, 1.10, 3.28, boat);
+    addBox(1.90, 0.12, 1.80, materials.darkMetal, 0, 1.53, 3.28, boat);
+
+    addBox(1.32, 0.40, 0.035, materials.glass, 0, 1.30, 4.095, boat);
+    addBox(0.035, 0.40, 1.08, materials.glass, -0.865, 1.30, 3.30, boat);
+    addBox(0.035, 0.40, 1.08, materials.glass, 0.865, 1.30, 3.30, boat);
+
+    addCylinder(0.025, 0.025, 1.65, materials.metal, 0.57, 2.25, 3.30, boat, 8);
+    addTorus(0.18, 0.025, materials.metal, 0.57, 3.02, 3.30, boat);
+
+    // Navigation lights.
+    const portLight = addMesh(
+      new THREE.SphereGeometry(0.10, 12, 8),
+      materials.red,
+      boat
+    );
+    portLight.position.set(-0.30, 0.86, 5.35);
+
+    const starboardLight = addMesh(
+      new THREE.SphereGeometry(0.10, 12, 8),
+      materials.green,
+      boat
+    );
+    starboardLight.position.set(0.30, 0.86, 5.35);
+
+    // -------------------------------------------------------------------------
+    // Stern crane
+    // -------------------------------------------------------------------------
+
+    addCylinder(0.48, 0.56, 0.22, materials.darkMetal, 0, 0.86, -4.65, boat, 24);
+    addCylinder(0.29, 0.42, 0.92, materials.yellow, 0, 1.38, -4.65, boat, 20);
+
+    addBeam(
+      [0, 1.82, -4.65],
+      [0.13, 4.88, -4.48],
+      0.14,
+      materials.yellow,
+      boat,
+      16
+    );
+
+    // A-frame and hydraulic support.
+    addBeam(
+      [-0.42, 1.95, -4.72],
+      [0.55, 4.30, -4.25],
+      0.065,
+      materials.metal,
+      boat
+    );
+
+    addBeam(
+      [0, 2.75, -4.65],
+      [0.98, 3.55, -2.82],
+      0.065,
+      materials.metal,
+      boat
+    );
+
+    addBeam(
+      [0.98, 3.55, -2.82],
+      [1.27, 3.62, -2.65],
+      0.045,
+      materials.darkMetal,
+      boat
+    );
+
+    // Main boom and counterweight.
+    addBeam(
+      [0.13, 4.88, -4.48],
+      [1.75, 4.15, -1.55],
+      0.115,
+      materials.yellow,
+      boat,
+      16
+    );
+
+    addBeam(
+      [0.13, 4.88, -4.48],
+      [-1.38, 3.78, -5.18],
+      0.095,
+      materials.yellow,
+      boat,
+      14
+    );
+
+    addBox(0.55, 0.35, 0.72, materials.darkMetal, -1.25, 3.62, -5.15, boat);
+
+    // Boom tip sheave.
+    const sheave = addCylinder(
+      0.24,
+      0.24,
+      0.13,
+      materials.darkMetal,
+      1.75,
+      4.15,
+      -1.55,
+      boat,
+      20
+    );
+    sheave.rotation.z = Math.PI / 2;
+
+    addTorus(0.27, 0.035, materials.metal, 1.75, 4.15, -1.40, boat);
+
+    // Hook assembly.
+    const hookGroup = new THREE.Group();
+    hookGroup.position.set(0, 2.25, -1.65);
+    boat.add(hookGroup);
+
+    addBox(0.22, 0.34, 0.25, materials.darkMetal, 0, 0, 0, hookGroup);
+
+    const hook = addTorus(
+      0.18,
+      0.045,
+      materials.darkMetal,
+      0,
+      -0.19,
+      0,
+      hookGroup,
+      Math.PI * 1.58
+    );
+    hook.rotation.z = -0.2;
+
+    // Two lifting cables.
+    const cableGeometry = new THREE.CylinderGeometry(0.018, 0.018, 1, 7);
+    const cableMaterial = materials.rope;
+
+    const cableA = addMesh(cableGeometry, cableMaterial, boat);
+    const cableB = addMesh(cableGeometry, cableMaterial, boat);
+
+    // -------------------------------------------------------------------------
+    // Deck equipment
+    // -------------------------------------------------------------------------
+
+    // Control console.
+    addBox(0.58, 0.42, 0.34, materials.orange, -0.18, 1.00, -3.78, boat);
+    addBox(0.43, 0.27, 0.035, materials.darkMetal, -0.18, 1.08, -3.59, boat);
+    addBox(0.08, 0.04, 0.03, materials.lamp, -0.18, 1.14, -3.565, boat);
+
+    // Tool chest.
+    addBox(0.78, 0.66, 0.64, materials.orange, 0.78, 1.06, -2.55, boat);
+    addBox(0.65, 0.04, 0.04, materials.darkMetal, 0.78, 1.22, -2.225, boat);
+    addCylinder(0.055, 0.055, 0.04, materials.metal, 0.78, 1.24, -2.19, boat, 10);
+
+    // Workbench.
+    addBox(1.48, 0.12, 0.68, materials.deck, -0.43, 1.20, -1.15, boat);
+    for (const x of [-1.10, 0.26]) {
+      for (const z of [-1.43, -0.87]) {
+        addBox(0.09, 0.48, 0.09, materials.darkMetal, x, 0.94, z, boat);
+      }
+    }
+    addBox(0.48, 0.16, 0.30, materials.darkMetal, -0.58, 1.34, -1.18, boat);
+    addBox(0.22, 0.025, 0.10, materials.lamp, -0.58, 1.43, -1.16, boat);
+
+    // Coiled hose.
+    const hose = addTorus(
+      0.29,
+      0.055,
+      materials.rope,
+      -0.83,
+      0.84,
+      -3.34,
+      boat
+    );
+    hose.rotation.x = Math.PI / 2;
+
+    addTorus(
+      0.22,
+      0.045,
+      materials.rope,
+      -0.83,
+      0.84,
+      -3.34,
+      boat
+    ).rotation.x = Math.PI / 2;
+
+    // Storage crate.
+    addBox(0.62, 0.42, 0.58, materials.darkDeck, 0.92, 1.00, -3.10, boat);
+    for (const x of [0.68, 1.16]) {
+      addBox(0.055, 0.45, 0.60, materials.orange, x, 1.00, -3.10, boat);
+    }
+
+    // Life ring.
+    const lifeRing = addTorus(
+      0.29,
+      0.075,
+      materials.orange,
+      1.22,
+      1.17,
+      -0.65,
+      boat
+    );
+    lifeRing.rotation.y = Math.PI / 2;
+
+    // Small access ladder on the port side.
+    for (const x of [-1.31, -1.43]) {
+      addBeam(
+        [x, 0.78, -4.75],
+        [x, 0.78, -5.55],
+        0.035,
+        materials.metal,
+        boat
+      );
+    }
+
+    for (let i = 0; i < 4; i++) {
+      addBeam(
+        [-1.31, 0.86 + i * 0.18, -4.75],
+        [-1.43, 0.86 + i * 0.18, -5.55],
+        0.035,
+        materials.metal,
+        boat
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Crew member for scale and active-deck context
+    // -------------------------------------------------------------------------
+
+    const worker = new THREE.Group();
+    worker.position.set(-0.73, 0.78, -2.55);
+    boat.add(worker);
+
+    const trousers = new THREE.MeshStandardMaterial({
+      color: 0x26383d,
+      roughness: 0.9
+    });
+
+    const vest = new THREE.MeshStandardMaterial({
+      color: 0xf07824,
+      roughness: 0.62
+    });
+
+    const skin = new THREE.MeshStandardMaterial({
+      color: 0xc98f68,
+      roughness: 0.8
+    });
+
+    const helmet = new THREE.MeshStandardMaterial({
+      color: 0xe7e3d5,
+      roughness: 0.55
+    });
+
+    addCylinder(0.105, 0.12, 0.58, trousers, -0.12, 0.29, 0, worker, 10);
+    addCylinder(0.105, 0.12, 0.58, trousers, 0.12, 0.29, 0, worker, 10);
+
+    addBox(0.47, 0.62, 0.30, vest, 0, 0.86, 0, worker);
+    addBox(0.49, 0.09, 0.32, materials.white, 0, 0.86, 0, worker);
+
+    const head = addMesh(new THREE.SphereGeometry(0.19, 16, 12), skin, worker);
+    head.position.set(0, 1.34, 0);
+
+    const helmetShell = addMesh(
+      new THREE.SphereGeometry(0.21, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      helmet,
+      worker
+    );
+    helmetShell.position.set(0, 1.41, 0);
+
+    addCylinder(0.23, 0.23, 0.035, helmet, 0, 1.43, 0, worker, 16);
+    addCylinder(0.018, 0.018, 0.42, materials.metal, 0, 1.62, 0, worker, 8);
+
+    const armLeft = addBeam(
+      [-0.28, 1.08, 0],
+      [-0.42, 0.68, 0.08],
+      0.075,
+      vest,
+      worker
+    );
+
+    const armRight = addBeam(
+      [0.28, 1.08, 0],
+      [0.43, 0.73, 0.16],
+      0.075,
+      vest,
+      worker
+    );
+
+    const glove = addMesh(
+      new THREE.SphereGeometry(0.08, 10, 8),
+      materials.darkMetal,
+      worker
+    );
+    glove.position.set(0.43, 0.64, 0.19);
+
+    // -------------------------------------------------------------------------
+    // Service buoy being lifted by the crane
+    // -------------------------------------------------------------------------
+
+    const serviceBuoy = new THREE.Group();
+    serviceBuoy.position.set(0, 1.18, -1.65);
+    boat.add(serviceBuoy);
+
+    const buoyBody = addMesh(
+      new THREE.SphereGeometry(0.5, 24, 18),
+      materials.orange,
+      serviceBuoy
+    );
+    buoyBody.scale.set(0.82, 1.22, 0.82);
+    buoyBody.position.y = 0.36;
+
+    const buoyBand = addTorus(
+      0.39,
+      0.075,
+      materials.darkMetal,
+      0,
+      0.28,
+      0,
+      serviceBuoy
+    );
+    buoyBand.rotation.x = Math.PI / 2;
+
+    const buoyTop = addMesh(
+      new THREE.SphereGeometry(0.22, 18, 12),
+      materials.white,
+      serviceBuoy
+    );
+    buoyTop.position.y = 0.82;
+
+    const buoyCap = addMesh(
+      new THREE.ConeGeometry(0.18, 0.18, 14),
+      materials.orange,
+      serviceBuoy
+    );
+    buoyCap.position.y = 1.02;
+
+    const buoyLight = addMesh(
+      new THREE.SphereGeometry(0.075, 12, 8),
+      materials.lamp,
+      serviceBuoy
+    );
+    buoyLight.position.y = 1.14;
+
+    // Sling lines from the hook to the buoy.
+    const slingA = addMesh(cableGeometry, materials.rope, boat);
+    const slingB = addMesh(cableGeometry, materials.rope, boat);
+
+    // -------------------------------------------------------------------------
+    // Distant mooring buoy
+    // -------------------------------------------------------------------------
+
+    const distantBuoy = new THREE.Group();
+    distantBuoy.position.set(4.2, 0, 3.2);
+    scene.add(distantBuoy);
+
+    const distantBody = addMesh(
+      new THREE.SphereGeometry(0.48, 20, 14),
+      materials.orange,
+      distantBuoy
+    );
+    distantBody.scale.set(0.8, 1.25, 0.8);
+    distantBody.position.y = 0.36;
+
+    addTorus(
+      0.38,
+      0.07,
+      materials.white,
+      0,
+      0.35,
+      0,
+      distantBuoy
+    ).rotation.x = Math.PI / 2;
+
+    addCylinder(0.08, 0.10, 0.55, materials.white, 0, 1.02, 0, distantBuoy, 12);
+    addCylinder(0.025, 0.025, 1.2, materials.metal, 0, 1.65, 0, distantBuoy, 8);
+
+    // Mooring line from the tender to the distant buoy.
+    const mooringCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(1.15, 0.55, -1.8),
+      new THREE.Vector3(2.3, 0.12, 0.4),
+      new THREE.Vector3(3.45, 0.1, 1.8),
+      new THREE.Vector3(4.2, 0.75, 3.2)
+    ]);
+
+    addMesh(
+      new THREE.TubeGeometry(mooringCurve, 36, 0.018, 6, false),
+      materials.rope
+    );
+
+    // -------------------------------------------------------------------------
+    // Background islands
+    // -------------------------------------------------------------------------
+
+    const islandMaterial = new THREE.MeshStandardMaterial({
+      color: 0x607a70,
+      roughness: 1
+    });
+
+    for (const [x, z, sx, sy, sz] of [
+      [-15, 20, 5, 1.4, 3],
+      [18, 25, 6, 1.8, 3.5],
+      [-23, 30, 4, 1.1, 2.5]
+    ]) {
+      const island = addMesh(
+        new THREE.ConeGeometry(1, 3.2, 7),
+        islandMaterial,
+        scene
+      );
+      island.position.set(x, -0.35, z);
+      island.scale.set(sx, sy, sz);
+      island.rotation.y = x * 0.13;
+    }
+
+    // -------------------------------------------------------------------------
+    // Custom orbit controls — no external control modules
+    // -------------------------------------------------------------------------
+
+    const cameraState = {
+      target: new THREE.Vector3(0, 1.05, -0.55),
+      radius: 18.5,
+      theta: -2.25,
+      phi: 1.05,
+      desiredRadius: 18.5,
+      desiredTheta: -2.25,
+      desiredPhi: 1.05
+    };
+
+    let dragging = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let autoOrbit = false;
+
+    const orbitButton = document.getElementById("orbitButton");
+    const resetButton = document.getElementById("resetButton");
+    const fullscreenButton = document.getElementById("fullscreenButton");
+
+    orbitButton.addEventListener("click", () => {
+      autoOrbit = !autoOrbit;
+      orbitButton.classList.toggle("active", autoOrbit);
+      orbitButton.textContent = autoOrbit ? "Stop orbit" : "Auto orbit";
+    });
+
+    resetButton.addEventListener("click", () => {
+      cameraState.desiredRadius = 18.5;
+      cameraState.desiredTheta = -2.25;
+      cameraState.desiredPhi = 1.05;
+    });
+
+    fullscreenButton.addEventListener("click", async () => {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    });
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const dx = event.clientX - lastPointerX;
+      const dy = event.clientY - lastPointerY;
+
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+
+      cameraState.desiredTheta -= dx * 0.006;
+      cameraState.desiredPhi = THREE.MathUtils.clamp(
+        cameraState.desiredPhi - dy * 0.005,
+        0.28,
+        1.48
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraState.desiredRadius = THREE.MathUtils.clamp(
+          cameraState.desiredRadius * Math.exp(event.deltaY * 0.001),
+          8,
+          34
+        );
+      },
+      { passive: false }
+    );
+
+    // -------------------------------------------------------------------------
+    // Screen-space labels
+    // -------------------------------------------------------------------------
+
+    const labels = [
+      {
+        element: document.getElementById("label-crane"),
+        position: new THREE.Vector3(1.75, 4.35, -1.55)
+      },
+      {
+        element: document.getElementById("label-deck"),
+        position: new THREE.Vector3(-0.65, 1.15, -2.75)
+      },
+      {
+        element: document.getElementById("label-buoy"),
+        position: new THREE.Vector3(0, 0.85, -1.65)
+      }
+    ];
+
+    const projected = new THREE.Vector3();
+
+    function updateLabels() {
+      for (const label of labels) {
+        projected.copy(label.position).project(camera);
+
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          Math.abs(projected.x) < 1.15 &&
+          Math.abs(projected.y) < 1.15;
+
+        label.element.style.display = visible ? "block" : "none";
+
+        if (visible) {
+          const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+          label.element.style.left = `${x}px`;
+          label.element.style.top = `${y}px`;
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    let frame = 0;
+
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
+
+      // Smooth camera response.
+      if (autoOrbit && !dragging) {
+        cameraState.desiredTheta += dt * 0.085;
+      }
+
+      cameraState.radius = damp(
+        cameraState.radius,
+        cameraState.desiredRadius,
+        6.5,
+        dt
+      );
+
+      cameraState.theta = damp(
+        cameraState.theta,
+        cameraState.desiredTheta,
+        7,
+        dt
+      );
+
+      cameraState.phi = damp(
+        cameraState.phi,
+        cameraState.desiredPhi,
+        7,
+        dt
+      );
+
+      const sinPhi = Math.sin(cameraState.phi);
+
+      camera.position.set(
+        cameraState.target.x +
+          cameraState.radius * sinPhi * Math.sin(cameraState.theta),
+        cameraState.target.y + cameraState.radius * Math.cos(cameraState.phi),
+        cameraState.target.z +
+          cameraState.radius * sinPhi * Math.cos(cameraState.theta)
+      );
+
+      camera.lookAt(cameraState.target);
+
+      // Gentle vessel motion.
+      boat.position.y = 0.08 + Math.sin(time * 0.72) * 0.035;
+      boat.rotation.z = Math.sin(time * 0.51) * 0.007;
+      boat.rotation.x = Math.sin(time * 0.39 + 0.8) * 0.004;
+
+      updateWater(time);
+
+      // Crane cable and buoy motion.
+      hookGroup.position.y = 2.25 + Math.sin(time * 1.12) * 0.16;
+
+      const hookPoint = new THREE.Vector3(
+        0,
+        hookGroup.position.y - 0.08,
+        -1.65
+      );
+
+      const buoyTopPoint = serviceBuoy.localToWorld(
+        new THREE.Vector3(0, 1.14, 0)
+      );
+
+      setBeam(cableA, new THREE.Vector3(1.62, 4.15, -1.55), hookPoint);
+      setBeam(cableB, new THREE.Vector3(1.88, 4.15, -1.55), hookPoint);
+
+      setBeam(slingA, hookPoint, buoyTopPoint);
+      setBeam(slingB, new THREE.Vector3(-0.18, hookGroup.position.y - 0.08, -1.75), buoyTopPoint);
+
+      serviceBuoy.position.set(
+        0,
+        hookGroup.position.y - 1.14,
+        -1.65
+      );
+
+      serviceBuoy.rotation.z = Math.sin(time * 1.35) * 0.035;
+      serviceBuoy.rotation.x = Math.cos(time * 0.98) * 0.025;
+
+      // Worker subtle motion.
+      armLeft.rotation.z = -0.18 + Math.sin(time * 1.4) * 0.08;
+      armRight.rotation.z = -0.13 + Math.sin(time * 1.4 + 0.5) * 0.08;
+
+      // Navigation and crane beacon.
+      materials.lamp.emissiveIntensity = 1.1 + Math.sin(time * 3.2) * 0.45;
+
+      updateLabels();
+      renderer.render(scene, camera);
+
+      frame++;
+    }
+
+    renderer.setAnimationLoop(animate);
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+      setTimeout(() => loading.remove(), 600);
+    });
+  </script>
+</body>
+</html>

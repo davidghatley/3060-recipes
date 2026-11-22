@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drip Irrigation Manifold — 8 Emitters</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel: rgba(10, 24, 31, 0.78);
+      --border: rgba(151, 216, 232, 0.22);
+      --accent: #55d9ff;
+      --text: #e9f7fb;
+      --muted: #91aab4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #07131a;
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas:active {
+      cursor: grabbing;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      max-width: 360px;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 20;
+      display: flex;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--text);
+      background: rgba(12, 29, 37, 0.86);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(12px);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(85, 217, 255, 0.55);
+      background: rgba(20, 48, 59, 0.94);
+      transform: translateY(-1px);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .info {
+      position: fixed;
+      left: 24px;
+      bottom: 24px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #50e3a4;
+      box-shadow: 0 0 12px #50e3a4;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      color: #bdefff;
+      background: #07131a;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: opacity 300ms ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 650px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        max-width: none;
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        top: auto;
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .info {
+        left: 14px;
+        bottom: 68px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+
+  <section class="title-card">
+    <div class="eyebrow">Precision irrigation system</div>
+    <h1>Drip Manifold 08</h1>
+    <p class="subtitle">
+      Eight adjustable micro-emitters mounted on a compact distribution manifold.
+    </p>
+  </section>
+
+  <nav class="controls" aria-label="Scene controls">
+    <button id="flowButton" type="button">Flow: On</button>
+    <button id="resetButton" type="button">Reset View</button>
+  </nav>
+
+  <div class="info">
+    <span class="status-dot"></span>
+    <span>8 emitter ports · 1/4 in manifold · adjustable cap</span>
+  </div>
+
+  <div class="loading" id="loading">Loading scene…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // -------------------------------------------------------------------------
+    // Renderer and scene
+    // -------------------------------------------------------------------------
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "Interactive 3D drip irrigation manifold with eight emitters"
+    );
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07131a);
+    scene.fog = new THREE.Fog(0x07131a, 13, 30);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    // -------------------------------------------------------------------------
+    // Lighting
+    // -------------------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x9edfff, 0x172018, 2.0));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(5, 10, 7);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -10;
+    keyLight.shadow.camera.right = 10;
+    keyLight.shadow.camera.top = 10;
+    keyLight.shadow.camera.bottom = -10;
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 30;
+    keyLight.shadow.bias = -0.0003;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x48cfff, 2.0);
+    rimLight.position.set(-7, 5, -6);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xffb86b, 18, 12, 2);
+    warmLight.position.set(4, 3, 3);
+    scene.add(warmLight);
+
+    // -------------------------------------------------------------------------
+    // Materials
+    // -------------------------------------------------------------------------
+
+    const materials = {
+      body: new THREE.MeshStandardMaterial({
+        color: 0xb8c6ca,
+        metalness: 0.82,
+        roughness: 0.28
+      }),
+      darkBody: new THREE.MeshStandardMaterial({
+        color: 0x17303b,
+        metalness: 0.65,
+        roughness: 0.34
+      }),
+      black: new THREE.MeshStandardMaterial({
+        color: 0x11191d,
+        metalness: 0.25,
+        roughness: 0.48
+      }),
+      rubber: new THREE.MeshStandardMaterial({
+        color: 0x080d10,
+        metalness: 0.05,
+        roughness: 0.88
+      }),
+      brass: new THREE.MeshStandardMaterial({
+        color: 0xd5a84e,
+        metalness: 0.88,
+        roughness: 0.25
+      }),
+      blue: new THREE.MeshStandardMaterial({
+        color: 0x168fc2,
+        metalness: 0.48,
+        roughness: 0.25
+      }),
+      blueDark: new THREE.MeshStandardMaterial({
+        color: 0x07567b,
+        metalness: 0.42,
+        roughness: 0.32
+      }),
+      soil: new THREE.MeshStandardMaterial({
+        color: 0x34281d,
+        metalness: 0,
+        roughness: 1
+      }),
+      floor: new THREE.MeshStandardMaterial({
+        color: 0x102126,
+        metalness: 0.15,
+        roughness: 0.88
+      })
+    };
+
+    // -------------------------------------------------------------------------
+    // Geometry helpers
+    // -------------------------------------------------------------------------
+
+    function addMesh(geometry, material, parent = scene) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function cylinderBetween(
+      start,
+      end,
+      radius,
+      material,
+      parent = scene,
+      radialSegments = 16
+    ) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const mesh = addMesh(
+        new THREE.CylinderGeometry(
+          radius,
+          radius,
+          length,
+          radialSegments
+        ),
+        material,
+        parent
+      );
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+
+      return mesh;
+    }
+
+    function makeTube(points, radius, material, parent = scene) {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point))
+      );
+
+      const mesh = addMesh(
+        new THREE.TubeGeometry(curve, 64, radius, 10, false),
+        material,
+        parent
+      );
+
+      return { curve, mesh };
+    }
+
+    function makeLabel(text, position) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 64;
+
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      context.fillStyle = "rgba(8, 20, 26, 0.88)";
+      context.strokeStyle = "rgba(111, 218, 244, 0.45)";
+      context.lineWidth = 3;
+      context.beginPath();
+      context.roundRect(5, 5, 246, 54, 18);
+      context.fill();
+      context.stroke();
+
+      context.fillStyle = "#dff8ff";
+      context.font = "700 28px system-ui, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(text, 128, 33);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+
+      sprite.position.set(...position);
+      sprite.scale.set(0.82, 0.205, 1);
+      scene.add(sprite);
+
+      return sprite;
+    }
+
+    // -------------------------------------------------------------------------
+    // Ground and irrigation bed
+    // -------------------------------------------------------------------------
+
+    const floor = addMesh(
+      new THREE.PlaneGeometry(30, 22),
+      materials.floor
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.015;
+
+    const grid = new THREE.GridHelper(24, 48, 0x28424a, 0x183038);
+    grid.position.y = 0.005;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.28;
+    scene.add(grid);
+
+    const bed = addMesh(
+      new THREE.BoxGeometry(9.4, 0.08, 2.15),
+      materials.soil
+    );
+    bed.position.set(0, 0.04, 1.02);
+    bed.castShadow = false;
+
+    // -------------------------------------------------------------------------
+    // Main manifold
+    // -------------------------------------------------------------------------
+
+    const manifold = new THREE.Group();
+    scene.add(manifold);
+
+    const manifoldBody = addMesh(
+      new THREE.BoxGeometry(8.4, 0.76, 1.15),
+      materials.body,
+      manifold
+    );
+    manifoldBody.position.set(0, 2.43, 0);
+
+    const manifoldTop = addMesh(
+      new THREE.BoxGeometry(8.58, 0.12, 1.31),
+      materials.darkBody,
+      manifold
+    );
+    manifoldTop.position.set(0, 2.87, 0);
+
+    const manifoldFront = addMesh(
+      new THREE.BoxGeometry(7.95, 0.55, 0.08),
+      materials.darkBody,
+      manifold
+    );
+    manifoldFront.position.set(0, 2.43, 0.61);
+
+    // Reinforcing ribs.
+    for (const x of [-3.4, -1.7, 0, 1.7, 3.4]) {
+      const rib = addMesh(
+        new THREE.BoxGeometry(0.09, 0.79, 1.19),
+        materials.darkBody,
+        manifold
+      );
+      rib.position.set(x, 2.43, 0);
+    }
+
+    // Front panel screws.
+    for (const x of [-3.6, -2.4, -1.2, 0, 1.2, 2.4, 3.6]) {
+      for (const y of [2.16, 2.68]) {
+        const screw = addMesh(
+          new THREE.CylinderGeometry(0.035, 0.035, 0.025, 12),
+          materials.brass,
+          manifold
+        );
+        screw.rotation.x = Math.PI / 2;
+        screw.position.set(x, y, 0.665);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Eight emitter ports
+    // -------------------------------------------------------------------------
+
+    const emitterXs = [];
+    const branchCurves = [];
+    const flowParticles = [];
+    const emitterLabels = [];
+
+    for (let i = 0; i < 8; i++) {
+      const x = -3.36 + i * 1.08;
+      emitterXs.push(x);
+
+      // Vertical supply connection under each port.
+      cylinderBetween(
+        new THREE.Vector3(x, 3.02, 0),
+        new THREE.Vector3(x, 2.78, 0),
+        0.075,
+        materials.black,
+        manifold
+      );
+
+      // Port base.
+      const portBase = addMesh(
+        new THREE.CylinderGeometry(0.21, 0.24, 0.22, 24),
+        materials.black,
+        manifold
+      );
+      portBase.position.set(x, 3.05, 0);
+
+      // Adjustable emitter body.
+      const emitterBody = addMesh(
+        new THREE.CylinderGeometry(0.145, 0.18, 0.25, 24),
+        materials.brass,
+        manifold
+      );
+      emitterBody.position.set(x, 3.27, 0);
+
+      // Blue cap.
+      const emitterCap = addMesh(
+        new THREE.CylinderGeometry(0.16, 0.14, 0.13, 24),
+        materials.blue,
+        manifold
+      );
+      emitterCap.position.set(x, 3.46, 0);
+
+      // Fine detail ring.
+      const ring = addMesh(
+        new THREE.TorusGeometry(0.15, 0.022, 8, 24),
+        materials.blueDark,
+        manifold
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(x, 3.34, 0);
+
+      // Small status mark on the cap.
+      const indicator = addMesh(
+        new THREE.BoxGeometry(0.055, 0.035, 0.045),
+        materials.white ||
+          new THREE.MeshStandardMaterial({
+            color: 0xd9ffff,
+            emissive: 0x2c9bb6,
+            emissiveIntensity: 0.7
+          }),
+        manifold
+      );
+      indicator.position.set(x + 0.08, 3.46, 0);
+
+      // Branch tube: from emitter down to the ground lateral.
+      const branch = makeTube(
+        [
+          [x, 3.02, 0],
+          [x, 2.35, 0],
+          [x, 1.45, 0],
+          [x, 0.35, 0],
+          [x, 0.13, 0.65],
+          [x, 0.13, 1.55]
+        ],
+        0.052,
+        materials.rubber,
+        scene
+      );
+      branchCurves.push(branch.curve);
+
+      const label = makeLabel(
+        `E-${String(i + 1).padStart(2, "0")}`,
+        [x, 3.73, 0.18]
+      );
+      emitterLabels.push(label);
+
+      // Flow particle in the emitter branch.
+      const particle = addMesh(
+        new THREE.SphereGeometry(0.065, 12, 12),
+        new THREE.MeshBasicMaterial({
+          color: 0x65e6ff,
+          transparent: true,
+          opacity: 0.9
+        }),
+        scene
+      );
+
+      particle.castShadow = false;
+      flowParticles.push({
+        mesh: particle,
+        curve: branch.curve,
+        offset: i / 8,
+        speed: 0.16 + i * 0.006
+      });
+    }
+
+    // Ground lateral line.
+    cylinderBetween(
+      new THREE.Vector3(-4.2, 0.13, 1.55),
+      new THREE.Vector3(4.2, 0.13, 1.55),
+      0.065,
+      materials.rubber
+    );
+
+    // Coupling collars on the lateral line.
+    for (const x of [-3.4, -1.7, 0, 1.7, 3.4]) {
+      const collar = addMesh(
+        new THREE.CylinderGeometry(0.085, 0.085, 0.16, 16),
+        materials.blueDark
+      );
+      collar.position.set(x, 0.13, 1.55);
+    }
+
+    // -------------------------------------------------------------------------
+    // Supply line, valve, and pressure gauge
+    // -------------------------------------------------------------------------
+
+    cylinderBetween(
+      new THREE.Vector3(-5.4, 1.25, 0),
+      new THREE.Vector3(-4.2, 1.25, 0),
+      0.145,
+      materials.black
+    );
+
+    cylinderBetween(
+      new THREE.Vector3(-4.2, 1.25, 0),
+      new THREE.Vector3(-4.2, 2.75, 0),
+      0.145,
+      materials.black
+    );
+
+    cylinderBetween(
+      new THREE.Vector3(4.2, 2.43, 0),
+      new THREE.Vector3(5.05, 2.43, 0),
+      0.145,
+      materials.black
+    );
+
+    // Valve body.
+    cylinderBetween(
+      new THREE.Vector3(-4.48, 1.25, 0),
+      new THREE.Vector3(-3.92, 1.25, 0),
+      0.23,
+      materials.darkBody
+    );
+
+    // Valve wheel.
+    const valveWheel = addMesh(
+      new THREE.TorusGeometry(0.24, 0.045, 10, 32),
+      materials.blue,
+      scene
+    );
+    valveWheel.position.set(-4.2, 1.25, 0.52);
+
+    cylinderBetween(
+      new THREE.Vector3(-4.2, 1.0, 0.52),
+      new THREE.Vector3(-4.2, 1.5, 0.52),
+      0.025,
+      materials.blue
+    );
+
+    cylinderBetween(
+      new THREE.Vector3(-4.38, 1.25, 0.52),
+      new THREE.Vector3(-4.02, 1.25, 0.52),
+      0.025,
+      materials.blue
+    );
+
+    // Pressure gauge.
+    const gaugeBody = addMesh(
+      new THREE.CylinderGeometry(0.22, 0.22, 0.12, 32),
+      materials.brass
+    );
+    gaugeBody.rotation.x = Math.PI / 2;
+    gaugeBody.position.set(3.9, 2.2, 0.75);
+
+    const gaugeFace = addMesh(
+      new THREE.CircleGeometry(0.185, 32),
+      new THREE.MeshStandardMaterial({
+        color: 0xe8eee8,
+        roughness: 0.75
+      })
+    );
+    gaugeFace.position.set(3.9, 2.2, 0.815);
+
+    const gaugeNeedle = addMesh(
+      new THREE.BoxGeometry(0.018, 0.12, 0.012),
+      new THREE.MeshBasicMaterial({ color: 0xff4d4d })
+    );
+    gaugeNeedle.position.set(3.92, 2.27, 0.825);
+    gaugeNeedle.rotation.z = -0.65;
+
+    // -------------------------------------------------------------------------
+    // Flow animation
+    // -------------------------------------------------------------------------
+
+    const mainCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-5.4, 1.25, 0),
+      new THREE.Vector3(-4.2, 1.25, 0),
+      new THREE.Vector3(-4.2, 2.0, 0),
+      new THREE.Vector3(-4.2, 2.9, 0)
+    ]);
+
+    const mainFlowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x65e6ff,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    for (let i = 0; i < 4; i++) {
+      const particle = addMesh(
+        new THREE.SphereGeometry(0.075, 12, 12),
+        mainFlowMaterial,
+        scene
+      );
+      particle.castShadow = false;
+
+      flowParticles.push({
+        mesh: particle,
+        curve: mainCurve,
+        offset: i / 4,
+        speed: 0.11
+      });
+    }
+
+    let flowEnabled = true;
+
+    const flowButton = document.getElementById("flowButton");
+    flowButton.addEventListener("click", () => {
+      flowEnabled = !flowEnabled;
+      flowGroup.visible = flowEnabled;
+      flowButton.textContent = `Flow: ${flowEnabled ? "On" : "Off"}`;
+    });
+
+    const flowGroup = new THREE.Group();
+    scene.add(flowGroup);
+
+    // Move particles along their respective paths.
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+
+      for (const particle of flowParticles) {
+        const t = (elapsed * particle.speed + particle.offset) % 1;
+        particle.mesh.position.copy(particle.curve.getPointAt(t));
+
+        const pulse = 0.85 + Math.sin(elapsed * 5 + t * 8) * 0.18;
+        particle.mesh.scale.setScalar(pulse);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // -------------------------------------------------------------------------
+    // Custom camera controls — no external controls module
+    // -------------------------------------------------------------------------
+
+    const target = new THREE.Vector3(0, 1.75, 0);
+    const spherical = new THREE.Spherical(11.8, 1.08, 0.72);
+
+    function updateCamera() {
+      camera.position.setFromSpherical(spherical).add(target);
+      camera.lookAt(target);
+    }
+
+    function resetCamera() {
+      spherical.set(11.8, 1.08, 0.72);
+      target.set(0, 1.75, 0);
+      updateCamera();
+    }
+
+    updateCamera();
+
+    const pointers = new Map();
+    let lastPointer = null;
+    let previousPinchDistance = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        lastPointer = {
+          x: event.clientX,
+          y: event.clientY
+        };
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        previousPinchDistance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1 && lastPointer) {
+        const dx = event.clientX - lastPointer.x;
+        const dy = event.clientY - lastPointer.y;
+
+        spherical.theta -= dx * 0.006;
+        spherical.phi = THREE.MathUtils.clamp(
+          spherical.phi - dy * 0.005,
+          0.32,
+          1.48
+        );
+
+        lastPointer = {
+          x: event.clientX,
+          y: event.clientY
+        };
+
+        updateCamera();
+      } else if (pointers.size === 2) {
+        const points = [...pointers.values()];
+        const distance = Math.hypot(
+          points[0].x - points[1].x,
+          points[0].y - points[1].y
+        );
+
+        if (previousPinchDistance > 0) {
+          spherical.radius = THREE.MathUtils.clamp(
+            spherical.radius *
+              (previousPinchDistance / Math.max(distance, 1)),
+            6,
+            20
+          );
+          updateCamera();
+        }
+
+        previousPinchDistance = distance;
+      }
+    });
+
+    function endPointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        lastPointer = { ...remaining };
+      } else {
+        lastPointer = null;
+        previousPinchDistance = 0;
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endPointer);
+    renderer.domElement.addEventListener("pointercancel", endPointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        spherical.radius = THREE.MathUtils.clamp(
+          spherical.radius * Math.exp(event.deltaY * 0.001),
+          6,
+          20
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      const step = 0.08;
+
+      if (event.key === "ArrowLeft") spherical.theta += step;
+      if (event.key === "ArrowRight") spherical.theta -= step;
+      if (event.key === "ArrowUp") spherical.phi -= step;
+      if (event.key === "ArrowDown") spherical.phi += step;
+      if (event.key === "+" || event.key === "=") spherical.radius -= 0.5;
+      if (event.key === "-" || event.key === "_") spherical.radius += 0.5;
+      if (event.key.toLowerCase() === "r") resetCamera();
+
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.32, 1.48);
+      spherical.radius = THREE.MathUtils.clamp(spherical.radius, 6, 20);
+      updateCamera();
+    });
+
+    document
+      .getElementById("resetButton")
+      .addEventListener("click", resetCamera);
+
+    // -------------------------------------------------------------------------
+    // Resize and render
+    // -------------------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    renderer.render(scene, camera);
+    loading.classList.add("hidden");
+
+    animate();
+  </script>
+</body>
+</html>
