@@ -4,6 +4,7 @@
 # Arms are interleaved per prompt pair; each server session stays under ~30 min (gpu-share rule).
 #   tools/looprate.sh            # all four batches
 #   SMOKE=1 tools/looprate.sh    # 64 tokens, one prompt and seed per arm
+#   ONLY="mtp-b" tools/looprate.sh  # rerun only the named batches (arm-tag, space-separated)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 S=runs/mtprepro/D-looprate; mkdir -p "$S"
@@ -12,6 +13,7 @@ MAX=16000 SEEDS=1,2,3,4
 [ -n "${SMOKE:-}" ] && { S=$S/smoke; mkdir -p "$S"; MAX=64 SEEDS=1; }
 batch() {  # arm ids tag
   local arm=$1 ids=$2 tag=$3 spec=none
+  [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $arm-$tag "* ]] && return 0
   [ "$arm" = mtp ] && spec=draft-mtp
   [ -n "${SMOKE:-}" ] && ids=${ids%%,*}
   echo "== $(date +%T) $arm $tag ($ids, seeds $SEEDS)"
