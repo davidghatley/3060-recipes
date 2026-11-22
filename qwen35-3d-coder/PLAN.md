@@ -271,4 +271,9 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
 - Next, if the default should move: a larger render comparison aimed at the syntax-error lead (e.g. 20 prompts x 2
   seeds per arm, counting SyntaxError pages separately), or a node --check pass over every generated page so the
   syntax-slip rate can be counted cheaply across all existing runs.
+- 13:30 Syntax-slip count over every scored run (first error per page in `runs/**/score.json`, CPU only): MTP 5/19
+  finished pages (qualify-mtp 2/4, rc 3/15) vs Q5_K_M no-spec 0/35 (qualify-nospec 0/8, rc 0/13, eval-q5km-own 0/14),
+  Q8_0 0/15, Q4_K_M 2/13. Fisher 5/19 vs 0/35: p = 0.004 (pool mixes prompt sets and settings). The slips look like
+  Q4_K_M's. Verdict: MTP stays opt-in on quality, not only on caution. Next: `mtp_repro.py force` at each slip token
+  (was it plausible to the target?), and MTP on Q8_0 (batched verify ~1.04x one token) to test the verify-path idea.
 

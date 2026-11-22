@@ -11,7 +11,7 @@
 ## Verdict
 
 - **Ships: Q5_K_M without speculation (`serve.sh`): 77.5 tok/s task-weighted, 1.28× the Q8_0 baseline (60.6).** It decodes at 80.7 tok/s while reasoning and 74.0 tok/s while writing code. Its pages work as often as Q8_0's (render eval 9 vs 10 of 20).
-- **MTP is a reliable opt-in (`QC_SPEC=draft-mtp`), 1.41× faster on the real task (105.7 vs 75.0 tok/s median), and not yet the default.** Its first quality check, one answer per prompt, failed: 1 page of 8 worked against 6. The follow-up found no engine bug (state matches a clean prefill through 12k tokens), no higher loop rate (0/16 vs 2/16 on the prompts that looped), and the same page pass rate with 2 seeds per arm (10/16 vs 9/16). One lead is open: 3 of MTP's 16 pages had syntax-error slips against 0 of 16. See [Does MTP break long answers?](#does-mtp-break-long-answers).
+- **MTP is opt-in (`QC_SPEC=draft-mtp`): 1.41× faster on the real task (105.7 vs 75.0 tok/s median), and not the default.** Its first quality check, one answer per prompt, failed: 1 page of 8 worked against 6. The follow-up found no engine bug (state matches a clean prefill through 12k tokens), no higher loop rate (0/16 vs 2/16 on the prompts that looped), and the same page pass rate with 2 seeds per arm (10/16 vs 9/16). But 5 of its 19 finished pages across all runs failed on token-slip syntax errors, against 0 of 35 for no-spec Q5_K_M (p = 0.004). See [Does MTP break long answers?](#does-mtp-break-long-answers).
 - **Q4_K_M does not ship either.** It is the fastest quant (84.8 no-spec, 107.1 with MTP), but it passed 5 of 20 prompts in the render eval, and 62% of its finished pages threw an error, against 29% for Q5_K_M and 33% for Q8_0.
 - **A custom CUDA kernel is not worth writing yet.** Fixing MTP is worth +31% (77.5 → 101.7, measured) and needs no new CUDA code. After that, a phase-aware MTP/DFlash switch (+8%) and a vocabulary-pruned MTP LM head (+10–13% while writing code) each beat a custom kernel (~+5% on the task with MTP on). Without speculation, a fused single-token decode kernel would be worth ~+15%. See [the kernel section](#is-a-custom-cuda-kernel-worth-writing).
 
@@ -50,7 +50,7 @@ MTP n=2 on Q4_K_M was measured in three separate sessions: R 92.8 / 92.8 / 92.6 
 |---|---|---|
 | Quant Q8_0 → Q5_K_M | decode 63.6 → 82.5 tok/s (llama-bench tg128); KLD 0.001 → 0.007; render eval 10 → 9 of 20 | **kept** |
 | Quant Q8_0 → Q4_K_M | decode 63.6 → 91.0 tok/s; KLD 0.026; render eval 10 → 5 of 20, 62% of finished pages throw | rejected on quality |
-| MTP head restored, n=2 | +5% reasoning, +64% code (Q4_K_M); +31% task on Q5_K_M | **opt-in**: first 8-prompt check failed (1/8 vs 6/8); re-check with 2 seeds: 10/16 vs 9/16 pages, loops 1/16 vs 3/16 |
+| MTP head restored, n=2 | +5% reasoning, +64% code (Q4_K_M); +31% task on Q5_K_M | **opt-in**: pages 10/16 vs 9/16 and loops 1/16 vs 3/16 with 2 seeds, but syntax-slip pages 5/19 vs 0/35 |
 | MTP n=3 / n=4 / n=6 | n=3 loses 13% in reasoning; n≥4 worse | rejected |
 | MTP + `--spec-draft-p-min` 0.5 / 0.75 | higher acceptance, fewer accepted tokens; task 99–103 | rejected |
 | DFlash (z-lab drafter, n=15) | 158 tok/s writing code, but 71.5 reasoning (acceptance 7%) | rejected for this model |
@@ -196,13 +196,22 @@ Counting the gate's first MTP run of scene-000048, MTP looped on 5 of 9 answers 
   | decode, median | 105.7 tok/s (97–114) | | 75.0 tok/s (74–78) | |
 
   MTP 10/16 vs no speculation 9/16 (Fisher p = 1.0). Loops: MTP 1/16, none 3/16. Pooled with the first split: 11/24 vs 15/24, p = 0.39. The seed-to-seed swing inside one arm (3 vs 6 for no-spec) is as large as the first split's gap, which is why one sample per prompt misled.
-- **One open lead.** The kind of failure differs a little. 3 of MTP's 5 throwing pages are syntax errors from a duplicated or garbled declaration (`Identifier 'resetCamera' has already been declared`, `Unexpected identifier 'isOpen'`). All 4 no-spec throws are runtime errors (`line is not defined`). The first split also had a duplicate `const` under MTP. 3/16 vs 0/16 is p = 0.23, so it is a lead, not a finding. A Q4_K_M-style precision slip would look like this; a sampler that is exact in distribution shouldn't produce it more often.
+- **But MTP makes a kind of error that no-spec Q5_K_M doesn't.** 3 of MTP's 5 throwing pages here are syntax errors from a duplicated or garbled token (`Identifier 'resetCamera' has already been declared`, `Unexpected identifier 'isOpen'`). All 4 no-spec throws are runtime errors (`line is not defined`). Counting every scored run (`runs/**/score.json`, first error per page):
 
-**Verdict: MTP is a reliable opt-in.** Same page pass rate, no more loops, and 1.41× faster on the real task (105.7 vs 75.0 tok/s median). `serve.sh` still defaults to no speculation: the evidence shows no difference, which is not yet strong evidence of none, and the syntax-error lead is untested. Switching the default is a one-line change (`QC_SPEC`) if that bar is met.
+  | | finished pages | syntax-error pages |
+  |---|---:|---:|
+  | Q5_K_M + MTP n=2 (first split + this comparison) | 19 | **5** |
+  | Q5_K_M, no speculation (first split + this comparison + the 20-prompt render eval) | 35 | **0** |
+  | Q8_0, no speculation (render eval) | 15 | 0 |
+  | Q4_K_M, no speculation (render eval) | 13 | 2 |
+
+  5/19 vs 0/35 is Fisher p = 0.004. The pool mixes prompt sets and settings (the render eval used 4 slots and a 32k cap), so this is strong but not clean. The slips look like Q4_K_M's: duplicate declarations, a garbled identifier, `rgba(16721477,1)`. A sampler that is exact in distribution shouldn't produce them more often than no-spec decode at the same quant, so something in the speculative path behaves like lower precision. One untested candidate is the batched 3-token verify (a different Q5_K kernel path from single-token decode; see the kernel analysis below). The state checks (median logprob difference ≤ 0.002 nats) wouldn't see a rare per-token flip.
+
+**Verdict: MTP stays opt-in, not the default.** It is 1.41× faster on the real task, its pages pass as often (10/16 vs 9/16), and it loops less (1/16 vs 3/16). But it makes token-slip syntax errors that no-spec Q5_K_M has not made in 35 pages. Next, to find the cause: re-score the tokens at each slip with a no-spec forced prefill (`tools/mtp_repro.py force`), to see whether the slip token was plausible to the target, and run MTP on Q8_0, whose batched verify costs almost the same as one token.
 
 ### Is MTP lossless?
 
-**In distribution, yes as far as measured** (see the follow-up under [Does MTP break long answers?](#does-mtp-break-long-answers)); pages work as often (10/16 vs 9/16). It is not token-identical at temperature 0, as expected from batched verify numerics. At temperature 0 (3 prompts × 2 phases × 512 tokens), the two no-spec runs are identical to each other. Against them:
+**In distribution, yes as far as measured** (see the follow-up under [Does MTP break long answers?](#does-mtp-break-long-answers)); pages pass as often (10/16 vs 9/16), but MTP pages have more token-slip syntax errors (5/19 vs 0/35). It is not token-identical at temperature 0, as expected from batched verify numerics. At temperature 0 (3 prompts × 2 phases × 512 tokens), the two no-spec runs are identical to each other. Against them:
 
 - MTP n=2 matches on 4 of 6 outputs;
 - MTP n=4 with p-min 0.5 matches on 1 of 6.
