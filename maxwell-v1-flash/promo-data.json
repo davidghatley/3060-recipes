@@ -1,0 +1,63 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md / README.md / best-config.json. Speed values are [value, ledger label, ledger case] and are checked against runs/ledger.jsonl (decode_tps, or prefill_tps for pp-* and needle-* cases); needle results [ctx, label, case] read 'found' from the same file; codeeval against runs/codeeval-<label>.json; KLD [value, run] against runs/kld/summary.txt; the card line's failed allocation against its server log; statements in 'text' are matched word for word in RESULTS.md. promo/tools/prep.py refuses to mark the set measured if any differ. Derived numbers (speed-ups, lever gains, means of controls) are computed in prep and compared with the rounded figures RESULTS.md states.",
+ "model": {"name": "Maxwell-V1-Flash", "size": "35B-A3B", "_source": "RESULTS.md: '35B MoE, ~3B active; 45 layers: 3 dense + 42 with 256 routed experts, top-12'", "experts": 256, "top_k": 12, "layers": 45},
+ "engine": {"name": "llama.cpp", "short": "d3c3e242c", "patch": "AtomicChat maxwell-moe-port.patch"},
+ "weights": {"file": "AD-Q4_K-IQ4_XS", "gb": 20.8, "by": "AtomicChat"},
+ "ctx": 65536,
+ "stock": {
+  "_what": "stock llama.cpp flags on the port build: --fit picks the split, f16 KV, ub 512, mmap, 64k (PLAN row 1 rerun on a quiet host)",
+  "decode": [35.9, "m01-stock-fit-r", "code-0k-med"],
+  "prefill_8k": [363.9, "m01-stock-fit-r", "pp-8k-med"],
+  "decode_32k": [27.4, "m01-stock-fit-deep", "code-32k-med"],
+  "prefill_32k": [333.4, "m01-stock-fit-deep", "needle-32k"],
+  "vram_gb": 10.9
+ },
+ "tuned": {
+  "_what": "serve.sh default = configs/13-ub1024-cache1900.json, qualification batch b12 (F1-F3)",
+  "decode": [48.0, "f01-base", "code-0k-med"],
+  "decode_32k": [33.6, "f02-base-deep", "code-32k-med"],
+  "prefill_8k": [786.5, "f03-base-pp", "pp-8k-med"],
+  "prefill_32k": [638.1, "f03-base-pp", "pp-32k-med"],
+  "prefill_65k": [509.1, "f03-base-pp", "pp-65k-med"],
+  "needles_32k": ["32k", "f02-base-deep", "needle-32k"],
+  "codeeval": "f04-base-code",
+  "vram_gb": 11.25,
+  "cache_mib": 1900, "ub": 1024
+ },
+ "levers": {
+  "_what": "each lever against the controls run either side of it (PLAN / RESULTS 'What was tried' rows)",
+  "pinned_controls": [[39.5, "m03-ctl-a", "code-0k-med"], [39.6, "m03-ctl-b", "code-0k-med"], [39.8, "m03-ctl-c", "code-0k-med"], [39.7, "m03-ctl-d", "code-0k-med"], [39.6, "m03-ctl-e", "code-0k-med"]],
+  "cache_decode": [52.7, "m06-cpumoe-cache4800", "code-0k-med"],
+  "loadmode_controls_pp": [[424.6, "m03-ctl-a", "pp-8k-med"], [424.1, "m03-ctl-b", "pp-8k-med"], [425.5, "m03-ctl-c", "pp-8k-med"], [425.5, "m03-ctl-d", "pp-8k-med"], [425.3, "m03-ctl-e", "pp-8k-med"]],
+  "loadmode_pp": [586.7, "m05-loadmode-none", "pp-8k-med"],
+  "q8_empty": [55.1, "m07-cache-lmnone", "code-0k-med"],
+  "f16_empty": [[49.0, "m09-f16kv", "code-0k-med"], [48.4, "m09-f16kv-r", "code-0k-med"]],
+  "q8_32k": [[22.0, "d07-a", "code-32k-med"], [22.2, "d07-b", "code-32k-med"]],
+  "f16_32k": [34.1, "d09-f16kv", "code-32k-med"],
+  "ub512_pp": [[497.0, "m09-f16kv", "pp-8k-med"], [496.6, "m09-f16kv-r", "pp-8k-med"]],
+  "ub1024": {"decode": [47.4, "m13-ub1024-c1900", "code-0k-med"], "prefill": [786.8, "m13-ub1024-c1900", "pp-8k-med"]},
+  "pinned_layers": 12, "cache_mib_tuning": 4800
+ },
+ "uncensored": {
+  "decode": [23.2, "u01-unc", "code-0k-med"],
+  "controls": [[47.6, "u00-base-a", "code-0k-med"], [47.3, "u00-base-b", "code-0k-med"]],
+  "decode_32k": [19.4, "u02-unc-deep", "code-32k-med"],
+  "kld": [[0.387, "k01-uncensored-lora wiki"], [0.167, "k01-uncensored-lora code"]]
+ },
+ "card_line": {"flags": "-ngl 99 -c 32768", "log": "runs/server-m00-card-line.log", "mib": 19397},
+ "results_md": {
+  "_what": "figures RESULTS.md states as rounded; prep checks its own derivations against these",
+  "speedup_decode": 1.34, "speedup_decode_32k": 1.23, "speedup_prefill_8k": 2.16,
+  "cache_gain_pct": 33, "loadmode_gain_pct": 38, "q8_slower_at_32k_pct": 35, "ub1024_prefill_pct": 58, "ub1024_decode_pct": -2.7
+ },
+ "text": {
+  "_what": "statements the copy and plates make that are not in the ledger; each must appear word for word in RESULTS.md (or README.md where marked)",
+  "needles_62k": "At 59–62k (90–94%) none of 4 base runs was clean",
+  "needles_32k": "At 32k (48% of the window) all three codes come back exactly in every base run (4 of 4)",
+  "f16_crossover": "f16 is faster from about 4k tokens of context",
+  "lora_halves": "halves decode: 23.2 tok/s against 47.6 / 47.3 base controls",
+  "quant_drift": "Quant drift against BF16 is not measured here.",
+  "card_line": "The model card's line (`-ngl 99 -c 32768`) does not load on 12 GB.",
+  "readme_q8_35": "q8_0 KV decodes 35% slower than f16 at 32k"
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "status": "measured",
+ "problems": [],
+ "model": {
+  "name": "Maxwell-V1-Flash",
+  "size": "35B-A3B",
+  "_source": "RESULTS.md: '35B MoE, ~3B active; 45 layers: 3 dense + 42 with 256 routed experts, top-12'",
+  "experts": 256,
+  "top_k": 12,
+  "layers": 45
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "short": "d3c3e242c",
+  "patch": "AtomicChat maxwell-moe-port.patch"
+ },
+ "weights": {
+  "file": "AD-Q4_K-IQ4_XS",
+  "gb": 20.8,
+  "by": "AtomicChat"
+ },
+ "ctx": 65536,
+ "stock": {
+  "decode": 35.9,
+  "prefill_8k": 363.9,
+  "decode_32k": 27.4,
+  "prefill_32k": 333.4,
+  "vram_gb": 10.9
+ },
+ "tuned": {
+  "decode": 48.0,
+  "decode_32k": 33.6,
+  "prefill_8k": 786.5,
+  "prefill_32k": 638.1,
+  "prefill_65k": 509.1,
+  "needles_32k": [
+   "32k",
+   "3/3"
+  ],
+  "codeeval": [
+   7,
+   8
+  ],
+  "vram_gb": 11.25,
+  "cache_mib": 1900,
+  "ub": 1024
+ },
+ "levers": {
+  "pinned": 39.64,
+  "cache": 52.7,
+  "lm_ctl": 425.0,
+  "lm": 586.7,
+  "q8_empty": 55.1,
+  "f16_empty": 48.7,
+  "q8_32k": 22.1,
+  "f16_32k": 34.1,
+  "ub512_pp": 496.8,
+  "ub1024_pp": 786.8,
+  "ub1024_dec": 47.4,
+  "pinned_layers": 12,
+  "cache_mib": 4800
+ },
+ "uncensored": {
+  "decode": 23.2,
+  "control": 47.45,
+  "controls": [
+   47.6,
+   47.3
+  ],
+  "decode_32k": 19.4,
+  "kld": [
+   0.387,
+   0.167
+  ]
+ },
+ "derived": {
+  "speedup_decode": 1.3370473537604457,
+  "speedup_decode_32k": 1.2262773722627738,
+  "speedup_prefill_8k": 2.161308051662545,
+  "speedup_prefill_32k": 1.913917216556689,
+  "cache_gain_pct": 32.946518668012104,
+  "loadmode_gain_pct": 38.04705882352941,
+  "q8_slower_at_32k_pct": 35.19061583577713,
+  "ub1024_prefill_pct": 58.37359098228663,
+  "ub1024_decode_pct": -2.6694045174538106,
+  "lora_cost_pct": -51.106427818756586
+ },
+ "card_line": {
+  "flags": "-ngl 99 -c 32768",
+  "mib": 19397
+ }
+}
