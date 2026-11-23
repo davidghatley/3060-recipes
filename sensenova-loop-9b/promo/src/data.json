@@ -1,0 +1,210 @@
+{
+ "status": "measured",
+ "problems": [],
+ "model": {
+  "name": "SenseNova-Loop-9B",
+  "size": "9B",
+  "layers": 32,
+  "loop": "4–27",
+  "passes": 56,
+  "_source": "RESULTS.md: '32 physical layers, layers 4–27 run twice (56 layer passes per token), 3 Gated DeltaNet : 1 full attention'"
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "master": "29b52d398",
+  "pr": 32588,
+  "head": "0ba8e4adf"
+ },
+ "weights": {
+  "default": {
+   "file": "Q5_K_M",
+   "gb": 6.66,
+   "by": "SenseNova",
+   "mtp": true
+  },
+  "uncensored": {
+   "file": "Q6_K",
+   "gb": 7.37,
+   "by": "satellitedown",
+   "mtp": false
+  }
+ },
+ "ctx": 131072,
+ "long_ctx": 262144,
+ "stock": {
+  "decode": 24.38,
+  "prefill_8k": 857.1,
+  "window": 129280,
+  "vram_mib": 11082
+ },
+ "tuned": {
+  "decode_off": 31.69,
+  "decode_on": 33.53,
+  "accept_off": 0.705,
+  "accept_on": 0.744,
+  "prefill_8k": 829.2,
+  "decode_120k": 15.77,
+  "range_off": [
+   27.36,
+   36.3
+  ],
+  "range_on": [
+   20.74,
+   37.38
+  ],
+  "needles_65k": [
+   "65k",
+   "3/3"
+  ],
+  "needles_124k": [
+   "124k",
+   "3/3"
+  ],
+  "vram_mib": 10586
+ },
+ "controls": {
+  "off": [
+   24.31,
+   24.36,
+   24.41
+  ],
+  "on": [
+   24.27,
+   24.35,
+   24.36
+  ],
+  "off_mean": 24.36,
+  "on_mean": 24.326666666666668
+ },
+ "greedy": {
+  "identical_off": 3,
+  "identical_on": 0,
+  "n": 8,
+  "rows": [
+   {
+    "i": 0,
+    "plain": 24.28,
+    "mtp": 35.93,
+    "accept": 0.791970802919708,
+    "same": true
+   },
+   {
+    "i": 1,
+    "plain": 24.27,
+    "mtp": 28.28,
+    "accept": 0.6020408163265306,
+    "same": false
+   },
+   {
+    "i": 2,
+    "plain": 24.26,
+    "mtp": 22.57,
+    "accept": 0.3875,
+    "same": false
+   },
+   {
+    "i": 3,
+    "plain": 24.25,
+    "mtp": 28.28,
+    "accept": 0.5882352941176471,
+    "same": true
+   },
+   {
+    "i": 4,
+    "plain": 24.28,
+    "mtp": 31.6,
+    "accept": 0.6863636363636364,
+    "same": false
+   },
+   {
+    "i": 5,
+    "plain": 24.29,
+    "mtp": 38.55,
+    "accept": 0.835820895522388,
+    "same": true
+   },
+   {
+    "i": 6,
+    "plain": 24.28,
+    "mtp": 31.13,
+    "accept": 0.665,
+    "same": false
+   },
+   {
+    "i": 7,
+    "plain": 24.28,
+    "mtp": 27.6,
+    "accept": 0.5660377358490566,
+    "same": false
+   }
+  ],
+  "prose_i": 2,
+  "prose_mtp": 22.57,
+  "prose_plain": 24.26,
+  "prose_accept_pct": 38.75,
+  "plain_mean": 24.27375
+ },
+ "long": {
+  "decode": 24.28,
+  "decode_242k": 10.21,
+  "prefill_241k": 454.8,
+  "ttft_248k": 552.0,
+  "prompt_248k": 247531,
+  "needles_130k": [
+   "130k",
+   "3/3"
+  ],
+  "needles_248k": [
+   "248k",
+   "3/3"
+  ],
+  "vram_mib": 10466
+ },
+ "uncensored": {
+  "stock": [
+   22.17,
+   22.18
+  ],
+  "tuned": 22.15,
+  "needles_124k": [
+   "124k",
+   "3/3"
+  ],
+  "codeeval": [
+   4,
+   8
+  ],
+  "codeeval_default": [
+   6,
+   8
+  ],
+  "refusal_classifier": {
+   "answered": 20,
+   "refused": 0,
+   "n": 20
+  },
+  "refusal_classifier_default": {
+   "answered": 9,
+   "refused": 11,
+   "n": 20
+  },
+  "answered_by_hand": 20,
+  "softened": 4,
+  "answered_default_by_hand": 4,
+  "probe_n": 20,
+  "image": [
+   true,
+   true
+  ],
+  "stock_mean": 22.175
+ },
+ "derived": {
+  "gain_off_pct": 30.090311986863718,
+  "gain_on_pct": 37.832282817210185,
+  "gain_off_vs_stock_pct": 29.983593109105833,
+  "prefill_cost_pct": 3.2551627581379083,
+  "accept_off_pct": 70.5,
+  "accept_on_pct": 74.4,
+  "unc_speed_pct": -0.11273957158963732
+ }
+}

@@ -1,0 +1,86 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md / README.md / best-config.json. Speed values are [value, ledger label, ledger case] (optionally a 4th element naming the field) and are checked against runs/ledger.jsonl (decode_tps, or prefill_tps for pp-* cases; needle-* cases read ttft_s); ranges [min, max, label, case] against the same row's min/max; needles [ctx, label, case] read 'found'; codeeval against runs/codeeval-<label>.json; the refusal classifier against runs/refusal-<label>.json; greedy identity and per-prompt speed against runs/greedy/; image answers against runs/smoke-*-mmproj.json; statements in 'text' are matched word for word in RESULTS.md (keys starting readme_ in README.md). promo/tools/prep.py refuses to mark the set measured if any differ. Derived numbers (gains, means of controls, acceptance) are computed in prep and compared with the rounded figures RESULTS.md states.",
+ "model": {"name": "SenseNova-Loop-9B", "size": "9B", "layers": 32, "loop": "4–27", "passes": 56,
+   "_source": "RESULTS.md: '32 physical layers, layers 4–27 run twice (56 layer passes per token), 3 Gated DeltaNet : 1 full attention'"},
+ "engine": {"name": "llama.cpp", "master": "29b52d398", "pr": 32588, "head": "0ba8e4adf"},
+ "weights": {
+  "default": {"file": "Q5_K_M", "gb": 6.66, "by": "SenseNova", "mtp": true},
+  "uncensored": {"file": "Q6_K", "gb": 7.37, "by": "satellitedown", "mtp": false}
+ },
+ "ctx": 131072,
+ "long_ctx": 262144,
+ "stock": {
+  "_what": "the model card's flags; --fit picks 129,280 at f16 K/V, every layer on the GPU (b01)",
+  "decode": [24.38, "b01-stock", "code-0k-med"],
+  "prefill_8k": [857.1, "b01-stock", "pp-8k-med"],
+  "window": 129280,
+  "vram_mib": 11082
+ },
+ "tuned": {
+  "_what": "serve.sh default: 128k q8_0 K/V, MTP n=2. Decode from the b03 confirmation between controls; prefill, depth and needles from the measure set b05",
+  "decode_off": [31.69, "b03-q8-mtp2-a", "code-0k-med"],
+  "decode_on": [33.53, "b03-q8-mtp2-a-think", "code-0k-med"],
+  "range_off": [27.36, 36.3, "b03-q8-mtp2-a", "code-0k-med"],
+  "range_on": [20.74, 37.38, "b03-q8-mtp2-a-think", "code-0k-med"],
+  "accept_off": [0.705, "b03-q8-mtp2-a", "code-0k-med", "accept"],
+  "accept_on": [0.744, "b03-q8-mtp2-a-think", "code-0k-med", "accept"],
+  "prefill_8k": [829.2, "b05-def", "pp-8k-med"],
+  "decode_120k": [15.77, "b05-def", "code-120k-med"],
+  "needles_65k": ["65k", "b05-def", "needle-65k"],
+  "needles_124k": ["124k", "b05-def", "needle-123k"],
+  "vram_mib": 10586
+ },
+ "controls": {
+  "_what": "b03: three plain-decoding controls (128k q8_0, no speculation) interleaved with the MTP runs, thinking off and on",
+  "off": [[24.31, "b03-q8-ctl-a", "code-0k-med"], [24.36, "b03-q8-ctl-b", "code-0k-med"], [24.41, "b03-q8-ctl-c", "code-0k-med"]],
+  "on": [[24.27, "b03-q8-ctl-a-think", "code-0k-med"], [24.35, "b03-q8-ctl-b-think", "code-0k-med"], [24.36, "b03-q8-ctl-c-think", "code-0k-med"]]
+ },
+ "greedy": {
+  "_what": "temperature 0, 8 prompts; plain vs MTP texts compared exactly; prompt 2 is the low-acceptance prose prompt",
+  "off": ["greedy-b03-q8-ctl-a", "greedy-b03-q8-mtp2-a"],
+  "on": ["greedy-b06-def-nospec-greedy-think", "greedy-b06-def-greedy-think"],
+  "identical_off": 3, "identical_on": 0, "n": 8,
+  "prose_i": 2, "prose_mtp": 22.6, "prose_plain": 24.3, "prose_accept_pct": 39
+ },
+ "long": {
+  "_what": "SNL_PROFILE=long: 256k q4_0 K/V, no MTP (b09)",
+  "decode": [24.28, "b09-def-long", "code-0k-med"],
+  "decode_242k": [10.21, "b09-def-long", "code-241k-med"],
+  "prefill_241k": [454.8, "b09-def-long", "pp-241k-med"],
+  "needles_130k": ["130k", "b09-def-long", "needle-131k"],
+  "needles_248k": ["248k", "b09-def-long", "needle-248k"],
+  "ttft_248k": [552.0, "b09-def-long", "needle-248k"],
+  "prompt_248k": [247531, "b09-def-long", "needle-248k", "prompt_n"],
+  "vram_mib": 10466
+ },
+ "uncensored": {
+  "_what": "satellitedown abliterated Q6_K, no MTP head: stock / tuned / stock in one hold (b08); quality on the tuned profile",
+  "stock": [[22.17, "b08-unc-stock-a", "code-0k-med"], [22.18, "b08-unc-stock-b", "code-0k-med"]],
+  "tuned": [22.15, "b08-unc-tuned", "code-0k-med"],
+  "needles_124k": ["124k", "b07-unc", "needle-123k"],
+  "codeeval": "b08-unc-nothink",
+  "codeeval_default": "b06-def-nothink",
+  "refusal": "b08-unc-nothink",
+  "refusal_default": "b06-def-nothink",
+  "answered_by_hand": 20, "softened": 4, "answered_default_by_hand": 4, "probe_n": 20,
+  "image": ["smoke-b06-def-mmproj", "smoke-b08-unc-mmproj"]
+ },
+ "results_md": {
+  "_what": "figures RESULTS.md / README.md state as rounded; prep checks its own derivations against these",
+  "gain_off_pct": 30, "gain_on_pct": 38, "prefill_cost_pct": 3, "accept_off_pct": 70, "accept_on_pct": 74
+ },
+ "text": {
+  "_what": "statements the copy and plates make that are not in a run file as such; each must appear word for word in RESULTS.md (or README.md where marked)",
+  "pr": "llama.cpp master 29b52d398 + PR #32588 (8 commits, head 0ba8e4adf)",
+  "stock_unknown": "Stock master does not know the `sensenova_loop` architecture.",
+  "spread": "one thinking answer ran at 20.7 tok/s, and on the greedy set the prose prompt with 39% acceptance ran at 22.6 against 24.3 plain",
+  "greedy": "greedy answers match on 3/8 prompts thinking off and 0/8 thinking on, diverging into equally coherent wording",
+  "above_256k": "Above 256k does not fit",
+  "ttft": "a 247k prompt waits 552 s for its first token",
+  "refusal": "default answers 4 of 20, uncensored answers 20 of 20 (4 softened)",
+  "image": "Image input works on both variants with the official projector.",
+  "no_kld": "No KLD (no reference file on disk).",
+  "unc_speed": "tuned and stock decode at the same 22.15–22.18 tok/s",
+  "readme_acceptance": "MTP accepts 70–74% of its 2-token drafts on coding answers."
+ }
+}
