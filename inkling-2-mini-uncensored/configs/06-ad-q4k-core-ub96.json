@@ -1,0 +1,2 @@
+{"id": "06-ad-q4k-core-ub96", "from": "05-ad-q4k-core-ub64", "change": "ub 64 -> 96 (largest step between the ub 64 that loads and the ub 128 that does not)",
+ "serve": "VARIANT=atomicchat INK_UBATCH=96 ./serve.sh", "build": "r2inkfix-19c41d2ff", "model": "AD-Q4_K as in 04", "lora": null, "flags": "base serve.sh defaults with -ub 96", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

@@ -1,0 +1,3 @@
+{"id": "05-ad-q4k-core-ub64", "from": "04-ad-q4k-core-ub128", "change": "ub 128 -> 64 (halves the relative-bias mask buffer)",
+ "serve": "VARIANT=atomicchat INK_UBATCH=64 ./serve.sh", "build": "r2inkfix-19c41d2ff", "model": "AD-Q4_K as in 04", "lora": null,
+ "flags": "base serve.sh defaults with -ub 64", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

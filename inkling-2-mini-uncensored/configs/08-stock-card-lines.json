@@ -1,0 +1,4 @@
+{"id": "08-stock-card-lines", "role": "baseline: each model card's own llama-server line on stock master 225a5345b, default --fit placement",
+ "serve": "STOCK=nokeepai|atomicchat tools/stock.sh", "build": "master-225a5345b",
+ "flags": {"nokeepai": "-m Inkling-2-Mini-IQ4_NL.gguf --lora Inkling-2-Mini-Unbound-v2-LoRA-r64.gguf -ngl 99 -c 32768 --jinja", "atomicchat": "-m Inkling-2-Mini-Uncensored-AD-Q4_K.gguf -ngl 99 -c 32768 --jinja"},
+ "env": {"GPU_RUN_MEM": "44G"}}

@@ -1,0 +1,15 @@
+  general.architecture = inkling2_loop
+  general.type = adapter
+  adapter.type = lora
+  adapter.lora.alpha = 64.0
+  general.name = Inkling-2-Mini-Unbound-v2-LoRA-r64
+attn_gate                  48 tensors      31.5 MiB  F32  layers 24  lora_a shape (2304, 64)
+attn_k                     48 tensors      19.5 MiB  F32  layers 24  lora_a shape (2304, 64)
+attn_output                48 tensors      31.5 MiB  F32  layers 24  lora_a shape (3072, 64)
+attn_q                     48 tensors      31.5 MiB  F32  layers 24  lora_a shape (2304, 64)
+attn_v                     48 tensors      19.5 MiB  F32  layers 24  lora_a shape (2304, 64)
+total 133.5 MiB in 240 tensors, 120 edited weights
+edited weights missing from base: 0 []
+  blk.0.attn_gate.weight: base [2304, 3072]  lora_a [2304, 64]  lora_b [64, 3072]
+  blk.0.attn_k.weight: base [2304, 1024]  lora_a [2304, 64]  lora_b [64, 1024]
+  blk.0.attn_output.weight: base [3072, 2304]  lora_a [3072, 64]  lora_b [64, 2304]

@@ -1,0 +1,4 @@
+{"id": "04-ad-q4k-core-ub128", "from": "00-base-control", "change": "model = AtomicChat baked AD-Q4_K (no LoRA), base layout unchanged (core 6-17 experts on GPU, ub 128)",
+ "serve": "VARIANT=atomicchat ./serve.sh", "build": "r2inkfix-19c41d2ff",
+ "model": "/mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-AD-Q4_K.gguf (AtomicChat/Inkling-2-Mini-Uncensored-GGUF @ 40886ab6, sha256 36e99f1f...; experts Q4_K gate_up / Q5_0 down, 587 MiB per layer, core 6.88 GiB)", "lora": null,
+ "flags": "base serve.sh defaults", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

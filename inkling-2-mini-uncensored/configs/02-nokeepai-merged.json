@@ -1,0 +1,4 @@
+{"id": "02-nokeepai-merged", "from": "01-nokeepai-lora", "change": "LoRA merged offline into the base's Q8_0 attention tensors (tools/merge_lora.py: W + B@A, re-quantized to Q8_0; every other tensor byte-identical) instead of --lora",
+ "serve": "VARIANT=nokeepai-merged ./serve.sh", "build": "r2inkfix-19c41d2ff",
+ "model": "/mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-r64-merged-IQ4_NL.gguf (17,627,940,832 bytes; built from ggml-org IQ4_NL @ db61c5b4 + nokeepai r64 @ c61cf03f)", "lora": null,
+ "flags": "base serve.sh defaults + --alias", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}
