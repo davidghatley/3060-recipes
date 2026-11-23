@@ -1,0 +1,57 @@
+{
+ "id": "b09-def-long",
+ "build": "llama.cpp pr32588-0ba8e4adf (master 29b52d398 + PR #32588)",
+ "command": "/mnt/scratch/llama.cpp/pr32588-0ba8e4adf/bin/llama-server -m /mnt/models/llm/sensenova-loop-9b/SenseNova-Loop-9B-Q5_K_M.gguf --alias sensenova-loop-9b-default --no-mmproj -ngl 99 --fit off -c 262144 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --host 127.0.0.1 --port 8103",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 10462,
+   "prefill_tps": 850.4
+  },
+  {
+   "case": "pp-32k-med",
+   "vram_mib": 10472,
+   "prefill_tps": 783.1
+  },
+  {
+   "case": "pp-241k-med",
+   "vram_mib": 10472,
+   "prefill_tps": 454.8
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 10462,
+   "decode_tps": 24.28,
+   "min": 24.26,
+   "max": 24.31
+  },
+  {
+   "case": "code-241k-med",
+   "vram_mib": 10456,
+   "decode_tps": 10.21,
+   "min": 10.2,
+   "max": 10.22
+  },
+  {
+   "case": "needle-131k",
+   "vram_mib": 10466,
+   "prompt_n": 130483,
+   "found": "3/3",
+   "prefill_tps": 583.2,
+   "ttft_s": 223.7,
+   "decode_tps": 13.94,
+   "answer": "ZZAXJZOM | M8JY3W1U | A4WYY20C"
+  },
+  {
+   "case": "needle-248k",
+   "vram_mib": 10466,
+   "prompt_n": 247531,
+   "found": "3/3",
+   "prefill_tps": 448.5,
+   "ttft_s": 552.0,
+   "decode_tps": 10.0,
+   "answer": "56UXH73C | Y0GG9G4X | A2Z9GUGB"
+  }
+ ],
+ "server_log": "runs/server-b09-def-long.log"
+}

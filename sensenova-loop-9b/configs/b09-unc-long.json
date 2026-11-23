@@ -1,0 +1,30 @@
+{
+ "id": "b09-unc-long",
+ "build": "llama.cpp pr32588-0ba8e4adf (master 29b52d398 + PR #32588)",
+ "command": "/mnt/scratch/llama.cpp/pr32588-0ba8e4adf/bin/llama-server -m /mnt/models/llm/sensenova-loop-9b/abliterated/SenseNova-Loop-9B-abliterated-upstream-Q6_K.gguf --alias sensenova-loop-9b-uncensored --no-mmproj -ngl 99 --fit off -c 262144 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --host 127.0.0.1 --port 8103",
+ "results": [
+  {
+   "case": "pp-3k-med",
+   "vram_mib": 11176,
+   "prefill_tps": 820.1
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11176,
+   "decode_tps": 22.12,
+   "min": 22.12,
+   "max": 22.13
+  },
+  {
+   "case": "needle-131k",
+   "vram_mib": 11176,
+   "prompt_n": 130479,
+   "found": "3/3",
+   "prefill_tps": 572.3,
+   "ttft_s": 228.0,
+   "decode_tps": 13.14,
+   "answer": "YECDNVJO | W3ZFSHC7 | EZ4CO1QK"
+  }
+ ],
+ "server_log": "runs/server-b09-unc-long.log"
+}

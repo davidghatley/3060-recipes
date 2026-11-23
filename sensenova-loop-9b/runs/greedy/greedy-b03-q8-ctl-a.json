@@ -1,0 +1,69 @@
+{
+ "label": "b03-q8-ctl-a",
+ "rows": [
+  {
+   "i": 0,
+   "text": "To write a Python function that returns the n-th Fibonacci number iteratively, we can follow these steps:\n\n1. **Handle Base Cases**: The Fibonacci sequence starts with `F(0) = 0` and `F(1) = 1`. If `n` is 0 or 1, return `n` directly.\n2. **Iterative Approach**: For `n > 1`, initialize two variables to represent the previous two Fibonacci numbers (`a = 0` and `b = 1`). Then, loop from 2 to `n`, updating these variables iteratively.\n3. **Return the Result**: After the loop, `b` will hold the n-th Fibonacci number.\n\nHere\u2019s the implementation with a docstring:\n\n```python\ndef fibonacci(n):\n    \"\"\"\n    Returns the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence is defined as:\n    F(0) = 0, F(1) = 1, and F(n) = F(n-1) + F(n-2) for n > 1.\n\n    Parameters:\n    n (int): The position in the Fibonacci sequence (non-negative integer).\n\n    Returns:\n    int: The n-th Fibonacci number.\n\n    Raises:\n    ValueError: If `n` is negative.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"Input must be a non-negative integer.\")\n    \n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```\n\n### Example Usage:\n```python\nprint(fibonacci(0))  # Output: 0\nprint(fibonacci(1))  # Output: 1\nprint(fibonacci(10))  # Output: 55\n```\n\n",
+   "n": 400,
+   "decode_tps": 24.28,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes and their fixes:\n\n1. **The script lacks the executable bit.**\n   - **Fix:** Run `chmod +x ./build.sh` to make the file executable.\n\n2. **The shebang line is missing or incorrect.**\n   - **Fix:** Ensure the first line of `build.sh` is `#!/usr/bin/env bash` (or another valid interpreter path like `#!/bin/bash`).\n\n3. **The script is missing read permissions.**\n   - **Fix:** Run `chmod +r ./build.sh` to ensure the file can be read by the current user.",
+   "n": 130,
+   "decode_tps": 24.27,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a neural network architecture designed to learn temporal patterns by modeling the differences, or deltas, between consecutive input frames. It applies a gating mechanism to control how much of the previous state influences the current prediction, allowing the network to selectively attend to relevant changes over time. This design improves efficiency and performance in tasks like video understanding and time-series forecasting by focusing on dynamic transitions rather than raw inputs. The gating ensures that the network can ignore redundant or static information while emphasizing meaningful temporal evolution.",
+   "n": 103,
+   "decode_tps": 24.26,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "I'll start by exploring the repository structure and reading the failing test to understand what's expected.\n\n<tool_call>\n<function=command>\npwd && ls -la && echo \"---\" && find . -name \"test_parser.py\" -not -path \"*/node_modules/*\" 2>/dev/null\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=command>\nls -la\n</parameter>\n</function>\n</tool_call>",
+   "n": 95,
+   "decode_tps": 24.25,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "To count the lines of Python code in a git repository while excluding test files, you can use the following bash one-liner:\n\n```bash\ngit ls-files '*.py' | grep -v '/tests/' | grep -v '/test/' | grep -v '_test\\.py$' | xargs wc -l\n```\n\n### Explanation:\n1. **`git ls-files '*.py'`**: Lists all tracked Python files in the repository.\n2. **`grep -v '/tests/'`**: Excludes files in directories named `tests`.\n3. **`grep -v '/test/'`**: Excludes files in directories named `test`.\n4. **`grep -v '_test\\.py$'`**: Excludes files with names ending in `_test.py`.\n5. **`xargs wc -l`**: Counts the lines in the remaining Python files.\n\n### Note:\n- Adjust the `grep` patterns if your test files or directories have different names.\n- If you want to exclude all files in any directory named `test*` (e.g., `tests`, `test`, `testing`), you can use:\n  ```bash\n  git ls-files '*.py' | grep -vE '/test' | grep -vE '_test\\.py$' | xargs wc -l\n  ```\n\nThis one-liner will give you the total number of lines in all non-test Python files in your git repository.",
+   "n": 308,
+   "decode_tps": 24.28,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "To solve the expression \\( 17 \\times 23 + 144 \\div 12 \\), we'll follow the order of operations (PEMDAS/BODMAS):\n\n1. **Multiplication and Division** (from left to right):\n   - First, calculate \\( 17 \\times 23 \\):\n     \\[\n     17 \\times 23 = 391\n     \\]\n   - Next, calculate \\( 144 \\div 12 \\):\n     \\[\n     144 \\div 12 = 12\n     \\]\n\n2. **Addition**:\n   - Now, add the results from the multiplication and division:\n     \\[\n     391 + 12 = 403\n     \\]\n\n**Final Answer:**\n\\[\n\\boxed{403}\n\\]",
+   "n": 199,
+   "decode_tps": 24.29,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "To create a TypeScript type guard for checking if a value is a `string[]`, you can use the `Array.isArray` function combined with a `typeof` check. Here's how you can implement it:\n\n```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.every(item => typeof item === 'string');\n}\n```\n\n### Explanation:\n1. **`Array.isArray(x)`**: This checks if `x` is an array.\n2. **`x.every(item => typeof item === 'string')`**: This ensures that every element in the array is a string.\n\n### Usage Example:\n```typescript\nfunction checkArray(x: unknown): void {\n  if (isStringArray(x)) {\n    // TypeScript now knows `x` is a `string[]`\n    console.log(x.map(item => item.toUpperCase()));\n  }\n}\n\ncheckArray(['hello', 'world']); // Works fine\ncheckArray([1, 2, 3]); // TypeScript will catch this error\n```\n\nThis type guard ensures that only arrays containing exclusively strings are accepted, providing type safety in your code.",
+   "n": 247,
+   "decode_tps": 24.28,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "- **What it is:** A rule stating that a distributed system cannot simultaneously guarantee all three of: Consistency, Availability, and Partition Tolerance.\n- **Partition Tolerance (P):** In a network, communication can always fail. You must accept that parts of the system may be unreachable.\n- **Consistency (C):** Every read returns the most recent write.\n- **Availability (A):** Every request gets a response, even if it is stale.\n- **The trade-off:** Since P is mandatory, you must choose between C and A. Most systems pick **AP** (prioritizing uptime), while banking systems often pick **CP** (prioritizing accuracy).",
+   "n": 142,
+   "decode_tps": 24.28,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

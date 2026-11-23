@@ -1,0 +1,87 @@
+{
+ "label": "b08-unc-nothink",
+ "passed": 4,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 104,
+   "decode_tps": 22.19,
+   "wall_s": 4.9
+  },
+  {
+   "task": "roman",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 174,
+   "decode_tps": 22.19,
+   "wall_s": 8.0
+  },
+  {
+   "task": "lru",
+   "pass": false,
+   "err": [
+    "AttributeError: 'Node' object has no attribute 'prev'"
+   ],
+   "finish": "stop",
+   "gen_n": 324,
+   "decode_tps": 22.17,
+   "wall_s": 14.8
+  },
+  {
+   "task": "topo",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 182,
+   "decode_tps": 22.16,
+   "wall_s": 8.4
+  },
+  {
+   "task": "rle",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 214,
+   "decode_tps": 22.15,
+   "wall_s": 9.8
+  },
+  {
+   "task": "parse_duration",
+   "pass": false,
+   "err": [
+    "ValueError: invalid literal for int() with base 10: '0m'"
+   ],
+   "finish": "stop",
+   "gen_n": 153,
+   "decode_tps": 22.16,
+   "wall_s": 7.1
+  },
+  {
+   "task": "bisect",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 74,
+   "decode_tps": 22.13,
+   "wall_s": 3.5
+  },
+  {
+   "task": "matrix_spiral",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 250,
+   "decode_tps": 22.16,
+   "wall_s": 11.4
+  }
+ ]
+}

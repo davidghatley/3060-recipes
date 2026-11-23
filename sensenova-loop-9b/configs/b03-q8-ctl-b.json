@@ -1,0 +1,20 @@
+{
+ "id": "b03-q8-ctl-b",
+ "build": "llama.cpp pr32588-0ba8e4adf (master 29b52d398 + PR #32588)",
+ "command": "/mnt/scratch/llama.cpp/pr32588-0ba8e4adf/bin/llama-server -m /mnt/models/llm/sensenova-loop-9b/SenseNova-Loop-9B-Q5_K_M.gguf --alias sensenova-loop-9b-default --no-mmproj -ngl 99 --fit off -c 131072 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --host 127.0.0.1 --port 8103",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 9698,
+   "prefill_tps": 847.2
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 9698,
+   "decode_tps": 24.36,
+   "min": 24.31,
+   "max": 24.37
+  }
+ ],
+ "server_log": "runs/server-b03-q8-ctl-b.log"
+}
