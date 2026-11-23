@@ -1,0 +1,21 @@
+{
+ "id": "b04-mtp-128k-q4",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf --alias qwen35-9b-heretic --no-mmproj -ngl 99 --fit off -c 131072 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q4_0 -ctv q4_0 --spec-type draft-mtp --spec-draft-n-max 2 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --presence-penalty 0 --host 127.0.0.1 --port 8106",
+ "results": [
+  {
+   "case": "pp-3k-med",
+   "vram_mib": 11352,
+   "prefill_tps": 1676.7
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11344,
+   "decode_tps": 61.62,
+   "min": 57.63,
+   "max": 65.61,
+   "accept": 0.817
+  }
+ ],
+ "server_log": "runs/server-b04-mtp-128k-q4.log"
+}

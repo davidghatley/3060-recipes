@@ -1,0 +1,58 @@
+== base wiki
+0.14.779.866 I Final estimate: PPL = 8.4977 +/- 0.34415
+== base code
+0.18.290.389 I Final estimate: PPL = 2.2737 +/- 0.06316
+== headq8 wiki (/mnt/scratch/tmp-qwen35-9b-heretic/Qwen3.5-9B-Defiant-Fable-Heretic-MTP-Q6_K-headQ8_0-local.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   8.495678 ±   0.344020
+Mean PPL(base)                :   8.481281 ±   0.341858
+Mean PPL(Q)/PPL(base)         :   1.001698 ±   0.001502
+Mean PPL(Q)-PPL(base)         :   0.014397 ±   0.012814
+Mean    KLD:   0.000093 ±   0.000001
+99.0%   KLD:   0.000349
+Same top p: 99.363 ± 0.125 %
+== headq8 code (/mnt/scratch/tmp-qwen35-9b-heretic/Qwen3.5-9B-Defiant-Fable-Heretic-MTP-Q6_K-headQ8_0-local.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.274181 ±   0.063176
+Mean PPL(base)                :   2.273719 ±   0.063164
+Mean PPL(Q)/PPL(base)         :   1.000204 ±   0.000140
+Mean PPL(Q)-PPL(base)         :   0.000463 ±   0.000318
+Mean    KLD:   0.000038 ±   0.000001
+99.0%   KLD:   0.000299
+Same top p: 99.755 ± 0.077 %
+== kv-q8 wiki (/mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf -ctk q8_0 -ctv q8_0)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   8.507337 ±   0.344531
+Mean PPL(base)                :   8.481281 ±   0.341858
+Mean PPL(Q)/PPL(base)         :   1.003072 ±   0.001546
+Mean PPL(Q)-PPL(base)         :   0.026057 ±   0.013266
+Mean    KLD:   0.000364 ±   0.000009
+99.0%   KLD:   0.002642
+Same top p: 99.020 ± 0.154 %
+== kv-q8 code (/mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf -ctk q8_0 -ctv q8_0)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.275232 ±   0.063147
+Mean PPL(base)                :   2.273719 ±   0.063164
+Mean PPL(Q)/PPL(base)         :   1.000666 ±   0.000914
+Mean PPL(Q)-PPL(base)         :   0.001514 ±   0.002076
+Mean    KLD:   0.001259 ±   0.000060
+99.0%   KLD:   0.018218
+Same top p: 99.044 ± 0.152 %
+== kv-q4 wiki (/mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf -ctk q4_0 -ctv q4_0)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   8.502079 ±   0.344411
+Mean PPL(base)                :   8.481281 ±   0.341858
+Mean PPL(Q)/PPL(base)         :   1.002452 ±   0.001960
+Mean PPL(Q)-PPL(base)         :   0.020798 ±   0.016709
+Mean    KLD:   0.002552 ±   0.000066
+99.0%   KLD:   0.019265
+Same top p: 97.475 ± 0.246 %
+== kv-q4 code (/mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf -ctk q4_0 -ctv q4_0)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.286420 ±   0.063827
+Mean PPL(base)                :   2.273719 ±   0.063164
+Mean PPL(Q)/PPL(base)         :   1.005586 ±   0.002147
+Mean PPL(Q)-PPL(base)         :   0.012701 ±   0.004904
+Mean    KLD:   0.007308 ±   0.000341
+99.0%   KLD:   0.099822
+Same top p: 97.426 ± 0.248 %

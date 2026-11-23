@@ -1,0 +1,83 @@
+{
+ "label": "b07-fast",
+ "passed": 6,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 478,
+   "decode_tps": 83.65,
+   "wall_s": 5.8
+  },
+  {
+   "task": "roman",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 589,
+   "decode_tps": 81.12,
+   "wall_s": 7.4
+  },
+  {
+   "task": "lru",
+   "pass": false,
+   "err": [
+    "AttributeError: 'NoneType' object has no attribute 'next' and no __dict__ for setting new attributes"
+   ],
+   "finish": "stop",
+   "gen_n": 1053,
+   "decode_tps": 81.45,
+   "wall_s": 13.0
+  },
+  {
+   "task": "topo",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 813,
+   "decode_tps": 79.87,
+   "wall_s": 10.3
+  },
+  {
+   "task": "rle",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 689,
+   "decode_tps": 83.66,
+   "wall_s": 8.3
+  },
+  {
+   "task": "parse_duration",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 1099,
+   "decode_tps": 76.41,
+   "wall_s": 14.5
+  },
+  {
+   "task": "bisect",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 386,
+   "decode_tps": 81.73,
+   "wall_s": 4.8
+  },
+  {
+   "task": "matrix_spiral",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 878,
+   "decode_tps": 83.07,
+   "wall_s": 10.7
+  }
+ ]
+}
