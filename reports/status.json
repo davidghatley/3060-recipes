@@ -1,7 +1,7 @@
 {
- "spine": "3060-recipes · trending batch 1 · update 3",
- "headline": "Since the last image: all weights down, Inkling uncensored qualifying, 27B family tuned",
- "subhead": "All 19 files verified by 01:04. Inkling uncensored runs at base speed (29.6 tok/s, needles 3/3 at 62k). The 27B pi-adapted runs 16.6 tok/s at 32k and 19.7 at 16k with everything on the GPU; its finetunes are being confirmed one by one.",
+ "spine": "3060-recipes · trending batch 1 · update 4",
+ "headline": "Since the last image: two recipes committed with social packages, SenseNova MTP confirmed, Maxwell tuning",
+ "subhead": "27B family and Inkling uncensored are qualified, committed, and their videos and stills are on your phone and in the launch kit. SenseNova runs +30-38% with MTP (31.7 tok/s); its quality gates are running. Maxwell is at 36.3 tok/s (stock 31.5).",
  "manifest": "notes/trending-batch-1-weights.tsv",
  "download_log": "download-batch1.log",
  "sizes_gb": {
@@ -28,31 +28,31 @@
  "tiles": [
   {
    "name": "qwen38-27b-family",
-   "state": "confirming variants",
-   "stage": "qualify",
-   "progress": 70,
-   "note": "pi: 16.6 tok/s at 32k (stock 7.9), 19.7 at 16k all on GPU, 7.5 at 128k; needles 3/3 up to 123k; codeeval 7/8. MTP rejected (+1.8% best case, -12% prefill). Heretic died at 30k, being refit; huihui running."
+   "state": "done + promo",
+   "stage": "promo",
+   "progress": 100,
+   "note": "pi 16.6 tok/s at 32k (stock 7.9), 19.7 at 16k; huihui 20.8, DaisyRose 14.4, Heretic 11.6. Needles 3/3 all four. Promo sent 06:55."
   },
   {
    "name": "inkling-2-mini-uncensored",
-   "state": "write-up",
-   "stage": "write-up",
-   "progress": 85,
-   "note": "AtomicChat AD-Q4_K: 29.6 tok/s, 24.1 at 32k, needles 3/3 at 32k and 62k, codeeval 8/8, 20/20 answered, KLD 0.014. nokeepai merged: base speed, KLD 0.042 (5x the quant drift)."
+   "state": "done + promo",
+   "stage": "promo",
+   "progress": 100,
+   "note": "AtomicChat AD-Q4_K: 29.6 tok/s, 20/20 answered (base 8), KLD 0.014, needles 3/3 at 62k. Promo sent 07:13."
   },
   {
    "name": "sensenova-loop-9b",
-   "state": "ready, waits for GPU slot",
-   "stage": "weights",
-   "progress": 10,
-   "note": "Trending #10. Looped 9B, fits in VRAM. Needs llama.cpp PR #32588. Abliterated variant included."
+   "state": "gates running",
+   "stage": "qualify",
+   "progress": 70,
+   "note": "MTP n=2 at 128k q8_0: 31.7 tok/s off / 33.5 thinking on (controls 24.3), prefill -3%. Nothing above 256k fits; 256k q4_0 loads without MTP."
   },
   {
    "name": "maxwell-v1-flash",
-   "state": "weights + engine ready",
-   "stage": "weights",
-   "progress": 10,
-   "note": "Trending #17. 35B MoE, 3B active. Needs the AtomicChat port patch on d3c3e242c. Uncensored LoRA included."
+   "state": "hill-climb",
+   "stage": "climb",
+   "progress": 35,
+   "note": "Card line does not load. Stock 31.5 tok/s, prefill 333; ncmoe 33 + q8_0 KV: 36.3, prefill 396 (62% of ceiling). Lever batch and expert sweep running."
   },
   {
    "name": "nemotron-bolt-e4b",
@@ -93,7 +93,7 @@
   {
    "name": "Recipe agents",
    "state": "running",
-   "note": "27B family (port 8101) and Inkling uncensored (8102) ran all night, sharing the GPU lock in under-30-minute holds."
+   "note": "SenseNova and Maxwell share the GPU lock. Agents get cut off while batches run; batches keep going and fresh agents pick up from PLAN STATUS."
   },
   {
    "name": "Thread mining",
@@ -107,8 +107,13 @@
   },
   {
    "name": "2 TB drive",
-   "state": "waiting",
-   "note": "Journaled HFS+, so Linux mounts it read-only. Not mounted. Batch does not depend on it."
+   "state": "verified",
+   "note": "All 117,346 files match the archive copy. Reformat commands handed over; waiting on you."
+  },
+  {
+   "name": "Social packages",
+   "state": "2 done",
+   "note": "27B family and Inkling uncensored: 4 stills, 4 videos each, threads with verified handles. On the phone and in the launch kit artifact."
   }
  ],
  "engines": [
@@ -133,68 +138,63 @@
    "for": "Maxwell-V1-Flash"
   }
  ],
- "storage_note": "All weights are in, so the 17 GB left on the fast drive is enough. Scratch has 84 GB free after the duplicate was deleted.",
+ "storage_note": "All weights are in, so the 17 GB left on the fast drive is enough. Scratch has about 90 GB free after the duplicate was deleted.",
  "decisions": [
   {
-   "q": "Inkling default",
-   "finding": "AtomicChat baked file: base speed, KLD 0.014; nokeepai: KLD 0.042",
-   "decision": "AtomicChat AD-Q4_K at ub 96 is the default; nokeepai merged kept as an option"
+   "q": "SenseNova default",
+   "finding": "MTP n=2 +30-38% median, one slow outlier, 3/8 greedy match",
+   "decision": "Ship MTP at 128k q8_0 with the outliers published"
   },
   {
-   "q": "AtomicChat LoRA",
-   "finding": "Applies with experts in RAM but costs 26% decode",
-   "decision": "Use the baked file, not the runtime LoRA"
+   "q": "SenseNova ubatch",
+   "finding": "1024: +3.5% prefill for 0.38 GB",
+   "decision": "Keep 512; leaves room for image input"
   },
   {
-   "q": "27B MTP head",
-   "finding": "+1.8% at best, -12% prefill, answers drift from no-spec",
-   "decision": "Rejected; off by default"
-  },
-  {
-   "q": "27B profiles",
-   "finding": "16k fits entirely on the GPU",
-   "decision": "default 32k, fast 16k, long 128k"
+   "q": "Maxwell KLD",
+   "finding": "Q8_0 38 GB, BF16 72 GB; 17 GB free",
+   "decision": "Not measured; said so in the recipe"
   },
   {
    "q": "Refusal probe",
-   "finding": "The regex missed one refusal on pi",
-   "decision": "Every count is re-read by hand before it is quoted"
+   "finding": "Missed curly apostrophes",
+   "decision": "Fixed in scripts/; counts still hand-read"
   },
   {
-   "q": "DeepSeek duplicate",
-   "finding": "Byte-identical",
-   "decision": "Scratch copy deleted with your OK"
+   "q": "Old agents",
+   "finding": "Kept waking after handing back",
+   "decision": "Stopped; their GPU batches kept running"
   }
  ],
  "next": [
   {
    "gate": true,
    "title": "Waiting on David",
-   "text": "Only the 2 TB drive inspection (sudo mount from the chat). Nothing is blocked on it."
+   "text": "2 TB reformat (commands in chat). SenseNova Q8_0 reference, 9.8 GB: yes or no. Merge + push before posting."
   },
   {
-   "title": "Inkling uncensored",
-   "text": "Finish README and RESULTS, then I review the numbers against runs/ and commit."
+   "title": "SenseNova",
+   "text": "Read the gate batches, write README and RESULTS, commit, then its social package."
   },
   {
-   "title": "27B family",
-   "text": "Refit heretic for 30k, confirm huihui and DaisyRose, then the variants table."
+   "title": "Maxwell",
+   "text": "Finish the climb, test the uncensored LoRA cost, gates, write-up."
   },
   {
-   "title": "Next agents",
-   "text": "SenseNova starts as soon as one slot frees, then Maxwell, Nemotron and the 9B Heretic."
+   "title": "Next recipes",
+   "text": "Nemotron Bolt E4B and the 9B Heretic once a slot frees."
   },
   {
-   "title": "Social packages",
-   "text": "Inkling uncensored first: stills for your review, then video and post text with verified handles."
+   "title": "Launch kit",
+   "text": "Each new package lands in the same artifact."
   },
   {
-   "title": "Index",
-   "text": "README rows, AGENTS layout lines and the trending snapshot note at the end."
+   "title": "Next batch",
+   "text": "notes/trending-2026-11-23.md: Surogate 35B-A3B, the NVIDIA 27B draft model, Olala."
   }
  ],
  "footer": {
-  "branch": "trending-batch-1 · 3c37741",
+  "branch": "trending-batch-1 · 9b39fe8",
   "snapshot": "HF trendingScore, max 64B, 2026-11-22",
   "gpu": "RTX 3060 12 GB · 62 GB RAM",
   "manifest": "notes/trending-batch-1-weights.tsv",
