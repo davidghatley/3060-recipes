@@ -1,0 +1,483 @@
+{
+  "$schema": "https://davidghatley.github.io/3060-recipes/schema/credits.schema.json",
+  "groups": [
+    {
+      "id": "models",
+      "title": "Model authors"
+    },
+    {
+      "id": "quantizers",
+      "title": "Quantizers and drafters"
+    },
+    {
+      "id": "engines",
+      "title": "Engines"
+    },
+    {
+      "id": "upstream-prs",
+      "title": "llama.cpp pull requests and issues we built on"
+    },
+    {
+      "id": "method",
+      "title": "Method"
+    },
+    {
+      "id": "tools",
+      "title": "Evaluation tools"
+    },
+    {
+      "id": "platforms",
+      "title": "Platforms"
+    }
+  ],
+  "credits": [
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "group": "models",
+      "made": "DeepSeek-V4.1-Flash, a 763B MoE.",
+      "used_for": "The model behind the Strata recipe.",
+      "recipes": [
+        "deepseek-v41-strata"
+      ],
+      "links": [
+        {
+          "label": "deepseek-ai on Hugging Face",
+          "url": "https://huggingface.co/deepseek-ai"
+        }
+      ]
+    },
+    {
+      "id": "recursivesi",
+      "name": "RecursiveSI",
+      "group": "models",
+      "made": "Flint, a 40B MoE with 2.5B active parameters.",
+      "used_for": "The model behind the 128k coding recipe.",
+      "recipes": [
+        "flint"
+      ],
+      "links": [
+        {
+          "label": "RecursiveSI/flint",
+          "url": "https://huggingface.co/RecursiveSI/flint"
+        }
+      ]
+    },
+    {
+      "id": "ccore",
+      "name": "ccore",
+      "group": "models",
+      "made": "Qwen3.5-4B-3D-Coder and the ThreeJS-3D-Scenes dataset.",
+      "used_for": "The fine-tune we serve; the render eval's prompts come from the dataset's validation split.",
+      "recipes": [
+        "qwen35-3d-coder"
+      ],
+      "links": [
+        {
+          "label": "ccore/Qwen3.5-4B-3D-Coder",
+          "url": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder"
+        },
+        {
+          "label": "ThreeJS-3D-Scenes dataset",
+          "url": "https://huggingface.co/datasets/ccore/ThreeJS-3D-Scenes"
+        }
+      ]
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen",
+      "group": "models",
+      "made": "Qwen3.5-4B with its multi-token-prediction head, and Qwen3.8-27B.",
+      "used_for": "The 15 mtp.* tensors grafted back into the 3D coder came from Qwen3.5-4B; Kintsugi-27B is built on Qwen3.8-27B.",
+      "recipes": [
+        "qwen35-3d-coder",
+        "kintsugi-27b"
+      ],
+      "links": [
+        {
+          "label": "Qwen/Qwen3.5-4B",
+          "url": "https://huggingface.co/Qwen/Qwen3.5-4B"
+        },
+        {
+          "label": "Qwen on Hugging Face",
+          "url": "https://huggingface.co/Qwen"
+        }
+      ]
+    },
+    {
+      "id": "thinking-machines",
+      "name": "Thinking Machines",
+      "group": "models",
+      "made": "Inkling-2-Mini, a 26.4B looped MoE with image input and NVFP4 experts.",
+      "used_for": "The model behind the loop-core placement recipe; our NVFP4 repack copies the checkpoint's own 4-bit experts.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "thinkingmachines/Inkling-2-Mini",
+          "url": "https://huggingface.co/thinkingmachines/Inkling-2-Mini"
+        }
+      ]
+    },
+    {
+      "id": "carypalmer",
+      "name": "Cary Palmer",
+      "group": "models",
+      "made": "Kintsugi-27B: Qwen3.8-27B at 2.47 bpw as EXL3 trellis codes, the DFlash2 drafter, and the llama.cpp fork and bundle that run it.",
+      "used_for": "Model, drafter and engine for the Kintsugi recipe, used as shipped in bundle v1.1.1.",
+      "recipes": [
+        "kintsugi-27b"
+      ],
+      "links": [
+        {
+          "label": "CaryPalmer/Kintsugi-27B",
+          "url": "https://huggingface.co/CaryPalmer/Kintsugi-27B"
+        },
+        {
+          "label": "professorpalmer/Kintsugi-27B",
+          "url": "https://github.com/professorpalmer/Kintsugi-27B"
+        }
+      ]
+    },
+    {
+      "id": "ggml-org",
+      "name": "ggml-org",
+      "group": "quantizers",
+      "made": "Reference GGUFs for Flint and Inkling-2-Mini, with imatrix.",
+      "used_for": "Flint-Q4_K_M.gguf and Inkling-2-Mini-IQ4_NL.gguf are the files the two recipes serve; the Q8_0 files are the KLD references.",
+      "recipes": [
+        "flint",
+        "inkling-2-mini",
+        "qwen35-3d-coder"
+      ],
+      "links": [
+        {
+          "label": "ggml-org/Flint-GGUF",
+          "url": "https://huggingface.co/ggml-org/Flint-GGUF"
+        },
+        {
+          "label": "ggml-org/Inkling-2-Mini-GGUF",
+          "url": "https://huggingface.co/ggml-org/Inkling-2-Mini-GGUF"
+        }
+      ]
+    },
+    {
+      "id": "unsloth",
+      "name": "Unsloth",
+      "group": "quantizers",
+      "made": "Dynamic 2-bit and 3-bit GGUFs of Inkling-2-Mini, the DSpark drafter GGUF, and UD quants of Flint.",
+      "used_for": "The Mainline_Support files are the max-speed options of the Inkling recipe (41.4 tok/s whole-on-GPU); UD-Q3_K_XL was the smaller-expert test on Flint.",
+      "recipes": [
+        "inkling-2-mini",
+        "flint"
+      ],
+      "links": [
+        {
+          "label": "unsloth/Inkling-2-Mini-GGUF",
+          "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF"
+        },
+        {
+          "label": "unsloth/flint-GGUF",
+          "url": "https://huggingface.co/unsloth/flint-GGUF"
+        }
+      ]
+    },
+    {
+      "id": "bartowski",
+      "name": "bartowski",
+      "group": "quantizers",
+      "made": "GGUF quants of Flint with a published imatrix.",
+      "used_for": "The imatrix used when we requantized only the RAM-resident experts.",
+      "recipes": [
+        "flint"
+      ],
+      "links": [
+        {
+          "label": "bartowski/RecursiveSI_flint-GGUF",
+          "url": "https://huggingface.co/bartowski/RecursiveSI_flint-GGUF"
+        }
+      ]
+    },
+    {
+      "id": "ista-daslab",
+      "name": "ISTA-DASLab",
+      "group": "quantizers",
+      "made": "The GSQ-RCO quantisation of DeepSeek-V4.1-Flash and its GGUFs.",
+      "used_for": "The 2.00 bpw build whose \"runs on 12 GB\" claim the DeepSeek recipe checks.",
+      "recipes": [
+        "deepseek-v41-strata"
+      ],
+      "links": [
+        {
+          "label": "ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF",
+          "url": "https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF"
+        }
+      ]
+    },
+    {
+      "id": "z-lab",
+      "name": "z-lab",
+      "group": "quantizers",
+      "made": "The Qwen3.5-4B-DFlash drafter.",
+      "used_for": "Measured against MTP on the 3D coder: fastest while writing code (163 tok/s), not used because acceptance falls to 4-7% while reasoning.",
+      "recipes": [
+        "qwen35-3d-coder"
+      ],
+      "links": [
+        {
+          "label": "z-lab/Qwen3.5-4B-DFlash",
+          "url": "https://huggingface.co/z-lab/Qwen3.5-4B-DFlash"
+        }
+      ]
+    },
+    {
+      "id": "llama-cpp",
+      "name": "llama.cpp (ggml-org and contributors)",
+      "group": "engines",
+      "made": "The inference engine: CUDA backend, MoE expert placement and the adaptive MoE cache, MTP and DFlash speculation, the converter, llama-bench and llama-perplexity.",
+      "used_for": "The engine for Flint, the 3D coder and Inkling-2-Mini, and the base of the Kintsugi fork.",
+      "recipes": [
+        "flint",
+        "qwen35-3d-coder",
+        "inkling-2-mini",
+        "kintsugi-27b"
+      ],
+      "links": [
+        {
+          "label": "ggml-org/llama.cpp",
+          "url": "https://github.com/ggml-org/llama.cpp"
+        }
+      ]
+    },
+    {
+      "id": "strata",
+      "name": "Strata (Niko1221)",
+      "group": "engines",
+      "made": "An engine, packer and install planner that runs frontier-size MoEs from VRAM, RAM and SSD together.",
+      "used_for": "Runs DeepSeek-V4.1-Flash 763B on the 12 GB card.",
+      "recipes": [
+        "deepseek-v41-strata"
+      ],
+      "links": [
+        {
+          "label": "Niko1221/Strata",
+          "url": "https://github.com/Niko1221/Strata"
+        }
+      ]
+    },
+    {
+      "id": "pcuenca",
+      "name": "pcuenca",
+      "group": "upstream-prs",
+      "made": "Inkling 2 Mini support in llama.cpp (#32694) and the build-mask-in-chunks PR (#32752).",
+      "used_for": "#32694 is why the model runs on llama.cpp at all; #32752 is one of two open PRs we measured that make 64k fit without our patches.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32694",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32694"
+        },
+        {
+          "label": "#32752",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32752"
+        }
+      ]
+    },
+    {
+      "id": "danielhanchen",
+      "name": "danielhanchen",
+      "group": "upstream-prs",
+      "made": "The loop-slot fix after the scale pass (#32704).",
+      "used_for": "Made NVFP4 GGUFs work on stock master, so our round-1 loop-scale patch was dropped.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32704",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32704"
+        }
+      ]
+    },
+    {
+      "id": "mtclinton",
+      "name": "mtclinton",
+      "group": "upstream-prs",
+      "made": "The issue reporting NaN perplexity for inkling2_loop on CUDA (#32710), with its analysis.",
+      "used_for": "The upstream record of the op-offload NaN our placement matrix measures.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32710",
+          "url": "https://github.com/ggml-org/llama.cpp/issues/32710"
+        }
+      ]
+    },
+    {
+      "id": "pwilkin",
+      "name": "pwilkin",
+      "group": "upstream-prs",
+      "made": "Compact bias on FLASH_ATTN_EXT (#32740) and Inkling 2 DSpark support (#32218).",
+      "used_for": "#32740 measured here at 2.5x prefill at 8k, 2.9x at 62k and +20% decode at 62k; #32218 is the drafter support behind our DSpark test.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32740",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32740"
+        },
+        {
+          "label": "#32218",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32218"
+        }
+      ]
+    },
+    {
+      "id": "izento",
+      "name": "Izento",
+      "group": "upstream-prs",
+      "made": "Fit that prioritises looped MoE layers in device memory (#32777).",
+      "used_for": "With --fit-target 0 it is the only automatic placement that matched our hand-written one.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32777",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32777"
+        }
+      ]
+    },
+    {
+      "id": "oxsilaris06",
+      "name": "Oxsilaris06",
+      "group": "upstream-prs",
+      "made": "Measured DSpark fixes for 16 GB cards (#32773).",
+      "used_for": "Part of the DSpark build we tested at 32k.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "#32773",
+          "url": "https://github.com/ggml-org/llama.cpp/pull/32773"
+        }
+      ]
+    },
+    {
+      "id": "0xsero",
+      "name": "0xSero / Sybil Solutions",
+      "group": "method",
+      "made": "The inference-optimisation skill (ceilings first, one change per run with controls, output gated as well as speed) and the local-ai-registry.",
+      "used_for": "The tuning method behind the Flint and Inkling recipes; its q8_0 KV gotcha is one we confirmed on Flint.",
+      "recipes": [
+        "flint",
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "sybil-solutions/inference-optimisation-skill",
+          "url": "https://github.com/sybil-solutions/inference-optimisation-skill"
+        },
+        {
+          "label": "sybil-solutions/local-ai-registry",
+          "url": "https://github.com/sybil-solutions/local-ai-registry"
+        }
+      ]
+    },
+    {
+      "id": "apolinario",
+      "name": "apolinario",
+      "group": "tools",
+      "made": "The decision-index evaluation kit.",
+      "used_for": "Scored the loop-pass experiment (3 passes 40.13, 2 passes 4.95, 1 pass 2.59).",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "apolinario/decision-index",
+          "url": "https://github.com/apolinario/decision-index"
+        }
+      ]
+    },
+    {
+      "id": "multimodalart",
+      "name": "multimodalart",
+      "group": "tools",
+      "made": "The Jev Decision Index Space and its published index.",
+      "used_for": "The reference index our loop-pass scores are placed against.",
+      "recipes": [
+        "inkling-2-mini"
+      ],
+      "links": [
+        {
+          "label": "multimodalart/jev-decision-index",
+          "url": "https://huggingface.co/spaces/multimodalart/jev-decision-index"
+        }
+      ]
+    },
+    {
+      "id": "huggingface",
+      "name": "Hugging Face",
+      "group": "platforms",
+      "made": "The Hub: model, dataset and Space hosting, with an open API that exposes file sizes and sha256 checksums.",
+      "used_for": "Every model, quant and drafter in these recipes is fetched from the Hub at a pinned revision and checked against the API's sha256; the base model's MTP tensors were fetched with HTTP range requests.",
+      "recipes": [
+        "deepseek-v41-strata",
+        "flint",
+        "qwen35-3d-coder",
+        "inkling-2-mini",
+        "kintsugi-27b"
+      ],
+      "links": [
+        {
+          "label": "huggingface.co",
+          "url": "https://huggingface.co"
+        },
+        {
+          "label": "Hub API",
+          "url": "https://huggingface.co/docs/hub/api"
+        }
+      ]
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA",
+      "group": "platforms",
+      "made": "The GeForce RTX 3060 12 GB, CUDA, cuBLAS, CUDA graphs and nvidia-smi; the NVFP4 4-bit format.",
+      "used_for": "Every recipe runs on CUDA on this card; cuBLAS SGEMV is our VRAM bandwidth probe (342 GB/s), nvidia-smi dmon is the telemetry, and Inkling's experts ship in NVFP4.",
+      "recipes": [
+        "deepseek-v41-strata",
+        "flint",
+        "qwen35-3d-coder",
+        "inkling-2-mini",
+        "kintsugi-27b"
+      ],
+      "links": [
+        {
+          "label": "RTX 3060",
+          "url": "https://www.nvidia.com/en-us/geforce/graphics-cards/30-series/rtx-3060-3060ti/"
+        },
+        {
+          "label": "CUDA Toolkit",
+          "url": "https://developer.nvidia.com/cuda-toolkit"
+        },
+        {
+          "label": "cuBLAS",
+          "url": "https://developer.nvidia.com/cublas"
+        },
+        {
+          "label": "nvidia-smi",
+          "url": "https://docs.nvidia.com/deploy/nvidia-smi/index.html"
+        }
+      ]
+    }
+  ]
+}

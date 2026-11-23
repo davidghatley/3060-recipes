@@ -1,0 +1,23 @@
+name: validate
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r site/requirements.txt
+      - name: Recipes and findings
+        run: python3 scripts/validate_recipe.py --findings
+      - name: No private details in published files
+        run: |
+          if git grep -nIE '/home/[a-z]|/mnt/|\.ts\.net|@me\.com' -- '*/recipe.json' 'findings/' 'skills/' 'site/' 'CONTRIBUTING.md' ':!site/build.py'; then
+            echo "private paths or addresses found"; exit 1; fi
+      - name: Site builds with no broken internal links
+        run: python3 site/build.py --check

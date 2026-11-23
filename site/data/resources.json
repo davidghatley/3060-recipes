@@ -1,0 +1,140 @@
+{
+  "resources": [
+    {
+      "id": "llama-cpp",
+      "title": "llama.cpp",
+      "kind": "engine",
+      "url": "https://github.com/ggml-org/llama.cpp",
+      "why": "Engine for three recipes; llama-bench and llama-perplexity give the speed and KLD numbers.",
+      "by": "ggml-org and contributors"
+    },
+    {
+      "id": "strata",
+      "title": "Strata",
+      "kind": "engine",
+      "url": "https://github.com/Niko1221/Strata",
+      "why": "Engine for models far larger than RAM plus VRAM; its install plan says what will sit where before you download.",
+      "by": "Niko1221"
+    },
+    {
+      "id": "kintsugi-bundle",
+      "title": "Kintsugi-27B bundle",
+      "kind": "engine",
+      "url": "https://github.com/professorpalmer/Kintsugi-27B/releases",
+      "why": "The llama.cpp fork with EXL3 trellis kernels, tiered K/V cache and the DFlash2 drafter.",
+      "by": "Cary Palmer"
+    },
+    {
+      "id": "ik-llama-cpp",
+      "title": "ik_llama.cpp",
+      "kind": "engine",
+      "url": "https://github.com/ikawrakow/ik_llama.cpp",
+      "why": "A llama.cpp fork we compared against stock llama.cpp on Flint.",
+      "by": "ikawrakow"
+    },
+    {
+      "id": "inference-optimisation-skill",
+      "title": "inference-optimisation skill",
+      "kind": "method",
+      "url": "https://github.com/sybil-solutions/inference-optimisation-skill",
+      "why": "The tuning loop we follow: compute the ceiling, change one thing, A/B against controls, qualify before publishing.",
+      "by": "0xSero / Sybil Solutions"
+    },
+    {
+      "id": "local-ai-registry",
+      "title": "local-ai-registry",
+      "kind": "registry",
+      "url": "https://github.com/sybil-solutions/local-ai-registry",
+      "why": "A registry of tuned local-model recipes across hardware; where our Flint recipe was submitted.",
+      "by": "0xSero / Sybil Solutions"
+    },
+    {
+      "id": "hf-hub-api",
+      "title": "Hugging Face Hub API",
+      "kind": "api",
+      "url": "https://huggingface.co/docs/hub/api",
+      "why": "Trending surveys, file sizes and the sha256 of every file before download; no token needed for public repos.",
+      "by": "Hugging Face"
+    },
+    {
+      "id": "ggml-org-gguf",
+      "title": "ggml-org GGUFs",
+      "kind": "quant-source",
+      "url": "https://huggingface.co/ggml-org",
+      "why": "Reference quants with imatrix, made with the same converter the engine ships.",
+      "by": "ggml-org"
+    },
+    {
+      "id": "unsloth-gguf",
+      "title": "Unsloth GGUFs",
+      "kind": "quant-source",
+      "url": "https://huggingface.co/unsloth",
+      "why": "Dynamic low-bit quants; the only Inkling files that fit a 12 GB card whole.",
+      "by": "Unsloth"
+    },
+    {
+      "id": "bartowski-gguf",
+      "title": "bartowski GGUFs",
+      "kind": "quant-source",
+      "url": "https://huggingface.co/bartowski",
+      "why": "Wide quant ladders with published imatrix files.",
+      "by": "bartowski"
+    },
+    {
+      "id": "decision-index",
+      "title": "decision-index kit",
+      "kind": "tool",
+      "url": "https://github.com/apolinario/decision-index",
+      "why": "A scoring kit we used to show that cutting loop passes destroys quality.",
+      "by": "apolinario"
+    },
+    {
+      "id": "jev-decision-index",
+      "title": "Jev Decision Index",
+      "kind": "tool",
+      "url": "https://huggingface.co/spaces/multimodalart/jev-decision-index",
+      "why": "The published index to compare decision-index scores against.",
+      "by": "multimodalart"
+    },
+    {
+      "id": "nvidia-smi",
+      "title": "nvidia-smi dmon",
+      "kind": "tool",
+      "url": "https://docs.nvidia.com/deploy/nvidia-smi/index.html",
+      "why": "One-second VRAM, utilisation and PCIe telemetry during every benchmark run.",
+      "by": "NVIDIA"
+    },
+    {
+      "id": "cuda-graphs",
+      "title": "CUDA graphs",
+      "kind": "tool",
+      "url": "https://developer.nvidia.com/blog/cuda-graphs/",
+      "why": "Background for the cudaGraphInstantiate out-of-memory failure that hits layouts loaded too close to the card's limit.",
+      "by": "NVIDIA"
+    },
+    {
+      "id": "opencode",
+      "title": "opencode",
+      "kind": "tool",
+      "url": "https://opencode.ai",
+      "why": "The coding agent the Flint recipe is tuned behind; its 11k-token system prompt is our cold-prefill test.",
+      "by": "opencode"
+    },
+    {
+      "id": "bench-py",
+      "title": "scripts/bench.py",
+      "kind": "our-script",
+      "url": "https://github.com/davidghatley/3060-recipes/blob/main/scripts/bench.py",
+      "why": "Streaming prefill and decode tok/s plus a 1 s sampler of VRAM, RAM, page cache, CPU and disk reads.",
+      "by": "3060-recipes"
+    },
+    {
+      "id": "codeeval-py",
+      "title": "scripts/codeeval.py",
+      "kind": "our-script",
+      "url": "https://github.com/davidghatley/3060-recipes/blob/main/scripts/codeeval.py",
+      "why": "Eight Python tasks checked against asserts at temperature 0, against any OpenAI-compatible server.",
+      "by": "3060-recipes"
+    }
+  ]
+}

@@ -1,6 +1,15 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="site/assets/readme-dark.png">
+  <img alt="3060 recipes: measured ways to run models far larger than 12 GB on one RTX 3060" src="site/assets/readme-light.png">
+</picture>
+
 # 3060-recipes
 
 How to run models that don't fit in VRAM on a single RTX 3060 12 GB (with 62 GB RAM and NVMe), with measured tokens/s.
+
+**Site:** [davidghatley.github.io/3060-recipes](https://davidghatley.github.io/3060-recipes/) · for agents: [`llms.txt`](https://davidghatley.github.io/3060-recipes/llms.txt), [`recipes.json`](https://davidghatley.github.io/3060-recipes/recipes.json), [`AGENTS.md`](https://davidghatley.github.io/3060-recipes/AGENTS.md)
+
+Own a 3060? [Report your numbers for a recipe or submit your own](CONTRIBUTING.md). The [`skills/`](skills/) folder has agent skills for finding, running and submitting recipes.
 
 | Recipe | Model | Engine | Decode | Prefill |
 |---|---|---|---|---|
@@ -15,6 +24,16 @@ How to run models that don't fit in VRAM on a single RTX 3060 12 GB (with 62 GB 
 - `scripts/bench.py`: streaming prefill/decode client plus a 1 s sampler (VRAM, RAM, page cache, CPU busy, reads on the disk that holds the model). Used by deepseek-v41-strata.
 - `scripts/codeeval.py`: 8 Python tasks checked against asserts at temperature 0. It is a copy of `inkling-2-mini/tools/codeeval.py` with `--url` and `--out` required, so it can be pointed at any server. The two copies should become one.
 - "Start a server through `gpu_run`, wait until it is healthy, run tests, stop it" exists four times: `flint/experiments/tools/srv.sh`, `qwen35-3d-coder/tools/with_server.sh` (and `qualify.sh`, `evalrun.sh`), `deepseek-v41-strata/run_variant.sh`, `inkling-2-mini/tools/serverrun.sh`. On 2026-11-22 the flint and qwen copies had the same bug. While queued for the GPU lock they trusted whatever answered on their port, and gave up without ending the queued launcher, which later started a server with no owner. It was fixed in both by finding the server as the script's own child and ending the launcher tree on exit. `qualify.sh` still finds its server by port, so use it only when the lock is free. `evalrun.sh` takes the lock before it starts its server, so it is not exposed. `inkling-2-mini/tools/serverrun.sh` has the same structure as the old flint copy and should get the same check. A shared helper would stop the next bug being fixed in only one place.
+
+## Site
+
+`site/build.py` turns each recipe's `recipe.json`, README and RESULTS, the `findings/` notes and `site/data/` into the static site in `_site/` (HTML plus a Markdown twin of every page, JSON indexes, `llms.txt`). GitHub Actions builds and deploys it on every push to `main`.
+
+```sh
+python3 -m venv .venv && .venv/bin/pip install -r site/requirements.txt
+.venv/bin/python scripts/validate_recipe.py --findings   # every recipe.json and finding
+.venv/bin/python site/build.py --check                  # builds _site/, fails on broken links or private paths
+```
 
 ## License
 
