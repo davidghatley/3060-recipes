@@ -24,5 +24,7 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
 - `kintsugi-27b/`: Kintsugi-27B (Qwen3.8-27B dense, EXL3 trellis 2.47 bpw GGUF, 262k window) on the author's llama.cpp fork bundle v1.1.1; tiered K/V cache (VRAM cells + rest in RAM), DFlash2 drafter. `serve.sh` holds the GPU lock while serving (the bundle's launcher detaches)
 - `qwen38-27b-family/`: four Qwen3.8-27B finetunes (pi-adapted, Huihui abliterated, DaisyRose, DavidAU Heretic) on llama.cpp master 225a5345b; one tuned config (q4_0 K/V, ub 256, FFN of layers 0–2 in RAM), `VARIANT=` and `Q38_PROFILE=fast|long` switches. MTP rejected
 - `inkling-2-mini-uncensored/`: AtomicChat's baked AD-Q4_K (default) and nokeepai's Unbound LoRA (merged by `tools/merge_lora.py`) on the base Inkling build and layout at ub 96; refusal probe, KLD and LoRA-cost comparison
+- `maxwell-v1-flash/`: Maxwell-V1-Flash 35B-A3B MoE (AtomicChat AD-Q4_K-IQ4_XS, 64k) on llama.cpp `maxwell-4f969ad24` (d3c3e242c + AtomicChat port patch); all routed experts in RAM with a 1900 MiB MoE cache, `--load-mode none`, f16 KV, ub 1024, `GPU_RUN_MEM=44G`. Uncensored LoRA at runtime halves speed
+- `nemotron-bolt-e4b/`: NVIDIA Nemotron-3.5-Bolt-E4B (Q4_K_M, 64k) all in VRAM on master 225a5345b with NVIDIA's DFlash drafter (n=7, `-bs`); `nospec` profile for long prompts, `multi` for 4 × 32k slots. Drafter carries an NVIDIA evaluation licence
 - `scripts/`: shared helpers (benchmark client etc.)
 - `notes/`, `docs/`: research notes
