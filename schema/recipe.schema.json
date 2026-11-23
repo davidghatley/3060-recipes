@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://davidghatley.github.io/3060-recipes/schema/recipe.schema.json",
+  "title": "3060-recipes recipe",
+  "description": "One measured way to run one model on a 12 GB RTX 3060. Every number names the file and line it was read from.",
+  "type": "object",
+  "required": ["id", "title", "summary", "status", "updated", "model", "weights", "engine", "hardware", "serve", "context_tokens", "placement", "results", "credits", "contributor"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Folder name."},
+    "title": {"type": "string"},
+    "summary": {"type": "string", "maxLength": 320, "description": "One or two sentences: what runs, how, and the headline speed."},
+    "status": {"enum": ["measured", "draft", "superseded"]},
+    "updated": {"type": "string", "format": "date"},
+    "use_cases": {"type": "array", "items": {"type": "string"}, "description": "Short tags an agent can match on, e.g. coding, long-context, vision, 3d-scenes."},
+    "model": {
+      "type": "object", "required": ["name", "hf_repo", "architecture"], "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"}, "hf_repo": {"type": "string", "description": "owner/name on Hugging Face"},
+        "params": {"type": "string"}, "architecture": {"type": "string", "description": "dense, MoE, looped MoE ..."},
+        "license": {"type": "string"}
+      }
+    },
+    "weights": {
+      "type": "object", "required": ["format", "quant", "source"], "additionalProperties": false,
+      "properties": {
+        "format": {"type": "string"}, "quant": {"type": "string"}, "bpw": {"type": "number"},
+        "size_gb": {"type": "number"}, "source": {"type": "string", "description": "URL of the repo the file came from"},
+        "file": {"type": "string"}, "revision": {"type": "string"}, "notes": {"type": "string"}
+      }
+    },
+    "engine": {
+      "type": "object", "required": ["name", "repo", "version"], "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"}, "repo": {"type": "string"}, "version": {"type": "string", "description": "Tag, build number or commit."},
+        "patches": {"type": "array", "items": {"type": "string"}}, "cuda": {"type": "string"}
+      }
+    },
+    "hardware": {
+      "type": "object", "required": ["gpu", "vram_gb", "ram_gb", "cpu"], "additionalProperties": false,
+      "properties": {
+        "gpu": {"type": "string"}, "vram_gb": {"type": "number"}, "ram_gb": {"type": "number"}, "cpu": {"type": "string"},
+        "disk": {"type": "string"}, "os": {"type": "string"}, "driver": {"type": "string"}, "notes": {"type": "string"}
+      }
+    },
+    "serve": {
+      "type": "object", "required": ["command"], "additionalProperties": false,
+      "properties": {
+        "command": {"type": "string", "description": "The command a reader runs, relative to the recipe folder."},
+        "script": {"type": "string"}, "port": {"type": "integer"}, "api": {"type": "string", "description": "e.g. OpenAI-compatible /v1"},
+        "key_flags": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "context_tokens": {"type": "integer"},
+    "placement": {"type": "string", "description": "What sits in VRAM, what sits in RAM, what streams from disk."},
+    "results": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["metric", "value", "unit", "source"], "additionalProperties": false,
+        "properties": {
+          "metric": {"enum": ["decode", "prefill", "ttft", "startup", "vram_peak", "ram_peak", "needles", "quality", "other"]},
+          "label": {"type": "string", "description": "Conditions: prompt size, context depth, profile."},
+          "value": {"type": ["number", "string"]}, "unit": {"type": "string"},
+          "baseline": {"type": "number", "description": "Stock flags, same conditions."},
+          "ceiling": {"type": "number", "description": "Theoretical maximum from measured bandwidth."},
+          "headline": {"type": "boolean"},
+          "source": {"type": "string", "pattern": "^[^:]+:[0-9]+(-[0-9]+)?$", "description": "path:line in this repo"}
+        }
+      }
+    },
+    "caveats": {"type": "array", "items": {"type": "string"}},
+    "credits": {"type": "array", "items": {"type": "string"}, "description": "ids from site/data/credits.json"},
+    "findings": {"type": "array", "items": {"type": "string"}, "description": "slugs in findings/"},
+    "contributor": {
+      "type": "object", "required": ["name", "github"], "additionalProperties": false,
+      "properties": {"name": {"type": "string"}, "github": {"type": "string"}}
+    },
+    "reproductions": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["github", "date", "hardware", "decode"], "additionalProperties": false,
+        "properties": {"github": {"type": "string"}, "date": {"type": "string"}, "hardware": {"type": "string"}, "decode": {"type": "number"}, "prefill": {"type": "number"}, "notes": {"type": "string"}, "issue": {"type": "string"}}
+      }
+    }
+  }
+}

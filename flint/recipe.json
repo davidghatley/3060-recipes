@@ -1,0 +1,162 @@
+{
+  "id": "flint",
+  "title": "Flint 40B-A2.5B at 128k on llama.cpp",
+  "summary": "A 23.4 GB MoE GGUF on a 12 GB card at 128k context: every routed expert in RAM, the freed VRAM spent on llama.cpp's adaptive MoE cache. 58.8 tok/s decode, 1,708 tok/s prefill.",
+  "status": "measured",
+  "updated": "2026-11-22",
+  "use_cases": [
+    "coding",
+    "agents",
+    "long-context",
+    "opencode"
+  ],
+  "model": {
+    "name": "Flint",
+    "hf_repo": "RecursiveSI/flint",
+    "params": "40B, 2.5B active",
+    "architecture": "MoE, 49 layers, 256 experts top-6 plus shared experts"
+  },
+  "weights": {
+    "format": "GGUF",
+    "quant": "Q4_K_M",
+    "size_gb": 23.4,
+    "source": "https://huggingface.co/ggml-org/Flint-GGUF",
+    "file": "Flint-Q4_K_M.gguf"
+  },
+  "engine": {
+    "name": "llama.cpp",
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "version": "b12242 (3b4d6ab3f), release build",
+    "cuda": "12.8"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "vram_gb": 12,
+    "ram_gb": 62,
+    "cpu": "Intel Core i5-12500",
+    "disk": "NVMe SSD",
+    "os": "Linux",
+    "driver": "610.57.04",
+    "notes": "PCIe Gen4 x16. RAM read bandwidth measured at 57 GB/s."
+  },
+  "serve": {
+    "command": "./serve.sh",
+    "script": "serve.sh",
+    "port": 8081,
+    "api": "OpenAI-compatible",
+    "key_flags": [
+      "-ngl 99 -ncmoe 49",
+      "--moe-cache-mib 2944 --moe-cache-cpu-share 0.95",
+      "-c 131072 -np 1 -t 6",
+      "-b 4096 -ub 4096",
+      "--load-mode none",
+      "-fa on -ctk f16 -ctv f16",
+      "--spec-type ngram-map-k",
+      "--fit off"
+    ]
+  },
+  "context_tokens": 131072,
+  "placement": "All routed experts in RAM (about 20 GB, read into RAM, not mmap'd). VRAM holds the dense layers, the f16 KV cache and a 2944 MiB cache of the hottest experts.",
+  "results": [
+    {
+      "metric": "decode",
+      "label": "prose, 128k profile",
+      "value": 58.8,
+      "unit": "tok/s",
+      "baseline": 48.2,
+      "ceiling": 76,
+      "headline": true,
+      "source": "flint/RESULTS.md:18"
+    },
+    {
+      "metric": "decode",
+      "label": "code task (mostly reasoning)",
+      "value": "55.0-55.8",
+      "unit": "tok/s",
+      "baseline": 46.7,
+      "source": "flint/RESULTS.md:19"
+    },
+    {
+      "metric": "decode",
+      "label": "at 32k depth",
+      "value": "46.8-47.2",
+      "unit": "tok/s",
+      "baseline": 34.0,
+      "source": "flint/RESULTS.md:20"
+    },
+    {
+      "metric": "decode",
+      "label": "prose, 64k profile (FLINT_PROFILE=64k)",
+      "value": 63.4,
+      "unit": "tok/s",
+      "source": "flint/RESULTS.md:26"
+    },
+    {
+      "metric": "prefill",
+      "label": "cold 11k-token opencode system prompt",
+      "value": 1708,
+      "unit": "tok/s",
+      "baseline": 329,
+      "ceiling": 2600,
+      "headline": true,
+      "source": "flint/RESULTS.md:15"
+    },
+    {
+      "metric": "prefill",
+      "label": "121k-token prompt",
+      "value": 989,
+      "unit": "tok/s",
+      "source": "flint/RESULTS.md:17"
+    },
+    {
+      "metric": "ttft",
+      "label": "cold 11k-token prompt",
+      "value": 6.4,
+      "unit": "s",
+      "baseline": 33.4,
+      "source": "flint/RESULTS.md:16"
+    },
+    {
+      "metric": "needles",
+      "label": "3 codes at 60k and at 120k",
+      "value": "3/3, 3/3",
+      "unit": "found",
+      "source": "flint/RESULTS.md:21"
+    },
+    {
+      "metric": "vram_peak",
+      "label": "after a 121k request",
+      "value": 11585,
+      "unit": "MiB",
+      "source": "flint/RESULTS.md:22"
+    },
+    {
+      "metric": "quality",
+      "label": "KL divergence vs the all-GPU path, wikitext (CPU experts without cache: 0.076)",
+      "value": 0.07,
+      "unit": "KLD",
+      "source": "flint/README.md:19"
+    }
+  ],
+  "caveats": [
+    "The cache needs --moe-cache-cpu-share 0.95; 1.0 freezes it and loses most of the gain.",
+    "q8_0 KV costs 29% decode at 32k depth on this model; keep f16.",
+    "If your job runner caps memory and counts page cache, allow about 44 GB.",
+    "Smaller expert quants (Q3_K, UD-Q3_K_XL) were slower or too lossy and did not ship."
+  ],
+  "credits": [
+    "recursivesi",
+    "ggml-org",
+    "llama-cpp",
+    "bartowski",
+    "unsloth",
+    "0xsero",
+    "huggingface",
+    "nvidia"
+  ],
+  "findings": [],
+  "contributor": {
+    "name": "David Hatley",
+    "github": "davidghatley"
+  }
+}

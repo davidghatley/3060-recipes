@@ -1,0 +1,169 @@
+{
+  "id": "deepseek-v41-strata",
+  "title": "DeepSeek-V4.1-Flash 763B on Strata",
+  "summary": "A 763B MoE at 2.00 bpw on a 12 GB card: dense weights and about 260 experts in VRAM, a 27 GB expert store in RAM, the rest read from NVMe. It runs, at about 5 tok/s decode.",
+  "status": "measured",
+  "updated": "2026-11-22",
+  "use_cases": [
+    "frontier-size-model",
+    "offline-batch",
+    "claim-check"
+  ],
+  "model": {
+    "name": "DeepSeek-V4.1-Flash",
+    "hf_repo": "ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF",
+    "params": "763B",
+    "architecture": "MoE, 384 routed experts per layer, 6 active"
+  },
+  "weights": {
+    "format": "GGUF",
+    "quant": "IQ2_XXS (GSQ-RCO)",
+    "bpw": 2.0,
+    "size_gb": 257,
+    "source": "https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF",
+    "notes": "Installed by Strata as model IST-DAS-2.00bpw; 257 GB on disk including the 111 GB Engram n-gram table."
+  },
+  "engine": {
+    "name": "Strata",
+    "repo": "https://github.com/Niko1221/Strata",
+    "version": "Strata Terminal 0.1.54 (release v0.2.8), engine strata-dsv41 0.1.54",
+    "cuda": "13"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "vram_gb": 12,
+    "ram_gb": 62,
+    "cpu": "Intel Core i5-12500",
+    "disk": "NVMe SSD",
+    "os": "Linux",
+    "driver": "610.57",
+    "notes": "PCIe 4.0 x16. Needs about 260 GB of free NVMe and about 35 GB of free RAM."
+  },
+  "serve": {
+    "command": "strata install -- --family deepseek41 --model IST-DAS-2.00bpw --data-dir <weights dir> --yes --no-start && ./run_variant.sh faster",
+    "script": "run_variant.sh",
+    "port": 8080,
+    "api": "OpenAI-compatible",
+    "key_flags": [
+      "Faster mode (5 experts, the default)",
+      "--experts 6 for Full quality",
+      "memory cap of 44 GB if your job runner counts page cache"
+    ]
+  },
+  "context_tokens": 8192,
+  "placement": "VRAM: dense weights (5.86 GB) and 252-262 of 15,360 routed experts. RAM: a store of about 2,600 hot experts (26-27 GB). NVMe: the other ~100 GB of experts read in place, and the 111 GB Engram table read a few rows per token.",
+  "results": [
+    {
+      "metric": "decode",
+      "label": "chat, Faster mode",
+      "value": 4.98,
+      "unit": "tok/s",
+      "headline": true,
+      "source": "deepseek-v41-strata/RESULTS.md:31"
+    },
+    {
+      "metric": "decode",
+      "label": "code, Faster mode",
+      "value": 4.78,
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:31"
+    },
+    {
+      "metric": "decode",
+      "label": "chat, Full quality (6 experts)",
+      "value": 4.1,
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:32"
+    },
+    {
+      "metric": "decode",
+      "label": "after a 4K prompt, Faster mode",
+      "value": 4.57,
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:31"
+    },
+    {
+      "metric": "prefill",
+      "label": "4K prompt, Faster mode",
+      "value": 91,
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:31"
+    },
+    {
+      "metric": "prefill",
+      "label": "8K prompt, Faster mode",
+      "value": 126,
+      "unit": "tok/s",
+      "headline": true,
+      "source": "deepseek-v41-strata/RESULTS.md:31"
+    },
+    {
+      "metric": "prefill",
+      "label": "60-token prompt (first token after 12-19 s)",
+      "value": "3.5-4.7",
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:36"
+    },
+    {
+      "metric": "startup",
+      "label": "server up and warm-up reply done",
+      "value": 35,
+      "unit": "s",
+      "source": "deepseek-v41-strata/RESULTS.md:37"
+    },
+    {
+      "metric": "vram_peak",
+      "label": "while serving",
+      "value": "11.3-11.8",
+      "unit": "GB",
+      "source": "deepseek-v41-strata/RESULTS.md:38"
+    },
+    {
+      "metric": "ram_peak",
+      "label": "cgroup peak, Faster mode (page cache counted)",
+      "value": 34.9,
+      "unit": "GB",
+      "source": "deepseek-v41-strata/RESULTS.md:39"
+    },
+    {
+      "metric": "other",
+      "label": "NVMe read rate while decoding, median",
+      "value": "1.3-1.4",
+      "unit": "GB/s",
+      "source": "deepseek-v41-strata/RESULTS.md:40"
+    },
+    {
+      "metric": "decode",
+      "label": "same run with the weights on a 7200 rpm hard disk (not a controlled comparison)",
+      "value": 0.46,
+      "unit": "tok/s",
+      "source": "deepseek-v41-strata/RESULTS.md:52"
+    },
+    {
+      "metric": "ttft",
+      "label": "60-token prompt, weights on the hard disk",
+      "value": "201-210",
+      "unit": "s",
+      "source": "deepseek-v41-strata/RESULTS.md:53"
+    }
+  ],
+  "caveats": [
+    "A measurement report, not a tuned recipe: no llama.cpp baseline and no CPU-vs-NVMe separation yet.",
+    "About half of Strata's published 8-11 tok/s for a 3060 with 46 GB RAM.",
+    "Not for interactive coding: a short question waits 12-19 s for its first token.",
+    "Storage sets the speed. The same run from a hard disk decoded at 0.46 tok/s.",
+    "Full quality at an 8K prompt gave an unexplained slow result (1.99 tok/s) and is excluded."
+  ],
+  "credits": [
+    "deepseek",
+    "ista-daslab",
+    "strata",
+    "huggingface",
+    "nvidia"
+  ],
+  "findings": [],
+  "contributor": {
+    "name": "David Hatley",
+    "github": "davidghatley"
+  }
+}

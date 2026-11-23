@@ -1,0 +1,142 @@
+{
+  "id": "kintsugi-27b",
+  "title": "Kintsugi-27B at 2.47 bpw with a 262k window",
+  "summary": "Qwen3.8-27B as EXL3 trellis codes in one 10.5 GB GGUF, on the author's llama.cpp fork. With the DFlash2 drafter it decodes at 39 tok/s on chat and 60 on code, against 16 without.",
+  "status": "measured",
+  "updated": "2026-11-22",
+  "use_cases": [
+    "coding",
+    "agents",
+    "long-context",
+    "dense-model"
+  ],
+  "model": {
+    "name": "Kintsugi-27B",
+    "hf_repo": "CaryPalmer/Kintsugi-27B",
+    "params": "27B",
+    "architecture": "dense (Qwen3.8-27B)",
+    "license": "Apache-2.0"
+  },
+  "weights": {
+    "format": "GGUF (EXL3 trellis)",
+    "quant": "EXL3 trellis 2.47 bpw",
+    "bpw": 2.47,
+    "size_gb": 10.5,
+    "source": "https://huggingface.co/CaryPalmer/Kintsugi-27B",
+    "file": "Kintsugi-27B-12G.gguf",
+    "notes": "Drafter: dflash-Qwen3.8-27B-Q4_0.gguf (1.1 GB) from the same repo. Stock llama.cpp cannot load the model file."
+  },
+  "engine": {
+    "name": "Kintsugi llama.cpp fork",
+    "repo": "https://github.com/professorpalmer/Kintsugi-27B",
+    "version": "Linux bundle v1.1.1",
+    "cuda": "12.8 runtime"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "vram_gb": 12,
+    "ram_gb": 62,
+    "cpu": "Intel Core i5-12500",
+    "disk": "NVMe SSD",
+    "os": "Linux",
+    "driver": "615.78.08",
+    "notes": "The desktop is on the same card (about 1 GB), so the launcher keeps a 600 MiB margin."
+  },
+  "serve": {
+    "command": "./serve.sh",
+    "script": "serve.sh",
+    "port": 8080,
+    "api": "OpenAI chat and responses at /v1, Anthropic at /v1/messages",
+    "key_flags": [
+      "launcher defaults: q4_0 K/V, 262,144 window, thinking medium",
+      "KINTSUGI_DRAFT=off to disable the drafter",
+      "KINTSUGI_CTX, KINTSUGI_KV, KINTSUGI_THINK pass through"
+    ]
+  },
+  "context_tokens": 262144,
+  "placement": "Weights (10.5 GB) and drafter in VRAM. Tiered K/V cache: 7,168 cells in VRAM with the drafter on (61,952 without), the rest of the window in RAM.",
+  "results": [
+    {
+      "metric": "decode",
+      "label": "chat, drafter on",
+      "value": 39.4,
+      "unit": "tok/s",
+      "baseline": 16.2,
+      "ceiling": 33,
+      "headline": true,
+      "source": "kintsugi-27b/RESULTS.md:19"
+    },
+    {
+      "metric": "decode",
+      "label": "code, drafter on",
+      "value": 60.2,
+      "unit": "tok/s",
+      "baseline": 16.1,
+      "headline": true,
+      "source": "kintsugi-27b/RESULTS.md:20"
+    },
+    {
+      "metric": "decode",
+      "label": "after a 4k prompt, drafter on",
+      "value": 35.1,
+      "unit": "tok/s",
+      "baseline": 16.0,
+      "source": "kintsugi-27b/RESULTS.md:21"
+    },
+    {
+      "metric": "decode",
+      "label": "after a 26k prompt, drafter on",
+      "value": 34.2,
+      "unit": "tok/s",
+      "baseline": 15.2,
+      "source": "kintsugi-27b/RESULTS.md:23"
+    },
+    {
+      "metric": "prefill",
+      "label": "6k prompt, drafter on",
+      "value": 628,
+      "unit": "tok/s",
+      "source": "kintsugi-27b/RESULTS.md:22"
+    },
+    {
+      "metric": "prefill",
+      "label": "26k prompt, drafter on",
+      "value": 591,
+      "unit": "tok/s",
+      "headline": true,
+      "source": "kintsugi-27b/RESULTS.md:23"
+    },
+    {
+      "metric": "vram_peak",
+      "label": "after warm-up, drafter on (10,858 without)",
+      "value": 11182,
+      "unit": "MiB",
+      "source": "kintsugi-27b/RESULTS.md:25"
+    },
+    {
+      "metric": "other",
+      "label": "K/V cells kept in VRAM, drafter on (61,952 without)",
+      "value": 7168,
+      "unit": "cells",
+      "source": "kintsugi-27b/RESULTS.md:24"
+    }
+  ],
+  "caveats": [
+    "The baseline here is the same engine with the drafter off, not stock llama.cpp. The 33 tok/s ceiling is for undrafted decode (10.5 GB per token at 342 GB/s).",
+    "Not measured past 26k tokens of context, where most of the K/V cache is read from RAM.",
+    "Answer quality was not measured here; the card's HumanEval and AppWorld numbers are the author's.",
+    "The bundle's launcher detaches, so serve.sh waits on the engine to keep a GPU queue lock held."
+  ],
+  "credits": [
+    "carypalmer",
+    "qwen",
+    "llama-cpp",
+    "huggingface",
+    "nvidia"
+  ],
+  "findings": [],
+  "contributor": {
+    "name": "David Hatley",
+    "github": "davidghatley"
+  }
+}

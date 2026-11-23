@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://davidghatley.github.io/3060-recipes/schema/recipes-index.schema.json",
+  "title": "3060-recipes index",
+  "type": "object",
+  "required": [
+    "recipes"
+  ],
+  "properties": {
+    "recipes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "context_tokens",
+          "serve_command",
+          "url",
+          "json"
+        ],
+        "properties": {
+          "decode_tok_s": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "prefill_tok_s": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

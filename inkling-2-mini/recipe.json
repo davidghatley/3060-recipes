@@ -1,0 +1,189 @@
+{
+  "id": "inkling-2-mini",
+  "title": "Inkling-2-Mini 26.4B looped MoE at 64k on llama.cpp",
+  "summary": "A 17.6 GB looped MoE on a 12 GB card: the experts of the loop core (layers 6-17, read three times per token) on the GPU, the rest in RAM. 29.0 tok/s decode against 17.5 stock, 145 tok/s prefill at 8k.",
+  "status": "measured",
+  "updated": "2026-11-22",
+  "use_cases": [
+    "coding",
+    "reasoning",
+    "vision",
+    "long-context"
+  ],
+  "model": {
+    "name": "Inkling-2-Mini",
+    "hf_repo": "thinkingmachines/Inkling-2-Mini",
+    "params": "26.4B",
+    "architecture": "looped MoE, 24 layers, 128 experts (8 active); layers 6-17 run 3 times per token; image input"
+  },
+  "weights": {
+    "format": "GGUF",
+    "quant": "IQ4_NL",
+    "size_gb": 17.6,
+    "source": "https://huggingface.co/ggml-org/Inkling-2-Mini-GGUF",
+    "file": "Inkling-2-Mini-IQ4_NL.gguf",
+    "revision": "db61c5b4",
+    "notes": "Options: Unsloth's Mainline_Support 2-bit and 3-bit files (unsloth/Inkling-2-Mini-GGUF @ 45fd0876) and our NVFP4 repack."
+  },
+  "engine": {
+    "name": "llama.cpp",
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "version": "master 225a5345b (build 12627)",
+    "patches": [
+      "inkling-2-mini/patches/0001 and 0002: F16 relative-bias mask, needed only for 64k with IQ4_NL"
+    ],
+    "cuda": "12.9"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "vram_gb": 12,
+    "ram_gb": 62,
+    "cpu": "Intel Core i5-12500",
+    "disk": "NVMe SSD",
+    "os": "Linux",
+    "driver": "615.78.08",
+    "notes": "sm_86. The desktop holds 0.95 GB of the card. RAM read bandwidth 57.1 GB/s at 6 threads."
+  },
+  "serve": {
+    "command": "INK_NO_GPU_RUN=1 ./serve.sh",
+    "script": "serve.sh",
+    "port": 8085,
+    "api": "OpenAI-compatible",
+    "key_flags": [
+      "-ngl 99 --fit off",
+      "-ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU'",
+      "-c 65536 -np 1 -t 6",
+      "-b 2048 -ub 128",
+      "-fa on -ctk q8_0 -ctv q8_0",
+      "--jinja --reasoning-format deepseek"
+    ]
+  },
+  "context_tokens": 65536,
+  "placement": "VRAM: all dense weights and the experts of loop-core layers 6-17 (6.4 GiB). RAM: the experts of layers 0-5 and 18-23, mmap'd.",
+  "results": [
+    {
+      "metric": "decode",
+      "label": "coding answer, empty context",
+      "value": 29.0,
+      "unit": "tok/s",
+      "baseline": 17.5,
+      "headline": true,
+      "source": "inkling-2-mini/RESULTS.md:11"
+    },
+    {
+      "metric": "decode",
+      "label": "at 32k context",
+      "value": 23.6,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:48"
+    },
+    {
+      "metric": "decode",
+      "label": "at 62k context",
+      "value": 20.2,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:48"
+    },
+    {
+      "metric": "prefill",
+      "label": "8k prompt",
+      "value": 145,
+      "unit": "tok/s",
+      "baseline": 39,
+      "headline": true,
+      "source": "inkling-2-mini/RESULTS.md:11"
+    },
+    {
+      "metric": "prefill",
+      "label": "32k prompt",
+      "value": 122.9,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:49"
+    },
+    {
+      "metric": "prefill",
+      "label": "62k prompt",
+      "value": 102.9,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:49"
+    },
+    {
+      "metric": "needles",
+      "label": "at 32k and at 62k",
+      "value": "3/3, 3/3",
+      "unit": "found",
+      "source": "inkling-2-mini/RESULTS.md:50"
+    },
+    {
+      "metric": "vram_peak",
+      "label": "while serving at 64k",
+      "value": 10.6,
+      "unit": "GB",
+      "source": "inkling-2-mini/RESULTS.md:11"
+    },
+    {
+      "metric": "quality",
+      "label": "KL divergence vs Q8_0, wikitext-2 (NVFP4 repack: 0.0029)",
+      "value": 0.0085,
+      "unit": "KLD",
+      "source": "inkling-2-mini/RESULTS.md:306"
+    },
+    {
+      "metric": "decode",
+      "label": "option: UD-IQ2_XXS, whole model on the GPU (KLD 10.7x IQ4_NL)",
+      "value": 41.4,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:25"
+    },
+    {
+      "metric": "prefill",
+      "label": "option: UD-IQ2_XXS, 8k prompt",
+      "value": 295,
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:25"
+    },
+    {
+      "metric": "decode",
+      "label": "option: 128k profile, empty / after 124k",
+      "value": "26.4 / 14.6",
+      "unit": "tok/s",
+      "source": "inkling-2-mini/README.md:41"
+    },
+    {
+      "metric": "prefill",
+      "label": "option: master + PR #32740 at ub 512, 8k / 62k prompt",
+      "value": "362.5 / 297.1",
+      "unit": "tok/s",
+      "source": "inkling-2-mini/RESULTS.md:63"
+    }
+  ],
+  "caveats": [
+    "Stock master gives NaN prompts for any batch of 32 or more tokens through a loop-core layer whose experts are in RAM with op offload on, including -ot exps=CPU and image prompts. This layout is not affected.",
+    "Stock master loads 64k with IQ4_NL and runs out of memory on the first request; use the two patches, or -c 32768.",
+    "128k needs the 6-15 layout at ub 64 without op offload.",
+    "A layout that loads within about 0.4 GB of the card's limit fails on its first request.",
+    "The 2-bit files pass needles and the coding eval; only KLD shows how far they are from the full model."
+  ],
+  "credits": [
+    "thinking-machines",
+    "ggml-org",
+    "llama-cpp",
+    "unsloth",
+    "pcuenca",
+    "danielhanchen",
+    "mtclinton",
+    "pwilkin",
+    "izento",
+    "oxsilaris06",
+    "apolinario",
+    "multimodalart",
+    "0xsero",
+    "huggingface",
+    "nvidia"
+  ],
+  "findings": [],
+  "contributor": {
+    "name": "David Hatley",
+    "github": "davidghatley"
+  }
+}

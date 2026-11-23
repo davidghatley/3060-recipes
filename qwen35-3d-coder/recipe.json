@@ -1,0 +1,157 @@
+{
+  "id": "qwen35-3d-coder",
+  "title": "Qwen3.5-4B-3D-Coder, tuned for decode speed",
+  "summary": "A 4B three.js scene writer that fits in VRAM at any quant. Q5_K_M without speculation ships at 77.5 tok/s task-weighted, 1.28x the Q8_0 baseline; the restored MTP head reaches 101.7 and stays opt-in.",
+  "status": "measured",
+  "updated": "2026-11-22",
+  "use_cases": [
+    "3d-scenes",
+    "three.js",
+    "code-generation",
+    "fits-in-vram"
+  ],
+  "model": {
+    "name": "Qwen3.5-4B-3D-Coder",
+    "hf_repo": "ccore/Qwen3.5-4B-3D-Coder",
+    "params": "4B",
+    "architecture": "dense hybrid, 32 layers: 8 full-attention and 24 Gated DeltaNet"
+  },
+  "weights": {
+    "format": "GGUF",
+    "quant": "Q5_K_M",
+    "source": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+    "revision": "4b9f05f",
+    "notes": "Our own quant, built by tools/build_quants.sh from the checkpoint with the base model's 15 mtp.* tensors (Qwen/Qwen3.5-4B) grafted back in."
+  },
+  "engine": {
+    "name": "llama.cpp",
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "version": "b12242 (3b4d6ab3f)",
+    "cuda": "12.8"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3060",
+    "vram_gb": 12,
+    "ram_gb": 62,
+    "cpu": "Intel Core i5-12500",
+    "disk": "NVMe SSD",
+    "os": "Linux",
+    "driver": "615.78.08",
+    "notes": "VRAM bandwidth measured at 342 GB/s (cuBLAS SGEMV, 1 GiB)."
+  },
+  "serve": {
+    "command": "tools/download.sh && tools/build_quants.sh && ./serve.sh",
+    "script": "serve.sh",
+    "port": 8083,
+    "api": "OpenAI-compatible",
+    "key_flags": [
+      "-ngl 99 -fa on -ctk f16 -ctv f16",
+      "-c 65536 -np 1",
+      "-ub 2048",
+      "no speculation by default; QC_SPEC=draft-mtp to opt in",
+      "sampling from the model card: T 0.6, top-p 0.95, top-k 20"
+    ]
+  },
+  "context_tokens": 65536,
+  "placement": "Everything in VRAM (7.1 GB of the card while serving at 64k).",
+  "results": [
+    {
+      "metric": "decode",
+      "label": "task-weighted (55% reasoning, 45% writing code)",
+      "value": 77.5,
+      "unit": "tok/s",
+      "baseline": 60.6,
+      "headline": true,
+      "source": "qwen35-3d-coder/RESULTS.md:34"
+    },
+    {
+      "metric": "decode",
+      "label": "while reasoning",
+      "value": 80.7,
+      "unit": "tok/s",
+      "baseline": 62.5,
+      "source": "qwen35-3d-coder/RESULTS.md:34"
+    },
+    {
+      "metric": "decode",
+      "label": "while writing the page",
+      "value": 74.0,
+      "unit": "tok/s",
+      "baseline": 58.3,
+      "source": "qwen35-3d-coder/RESULTS.md:34"
+    },
+    {
+      "metric": "decode",
+      "label": "opt-in: restored MTP head, n=2, task-weighted",
+      "value": 101.7,
+      "unit": "tok/s",
+      "baseline": 60.6,
+      "headline": true,
+      "source": "qwen35-3d-coder/RESULTS.md:36"
+    },
+    {
+      "metric": "decode",
+      "label": "Q4_K_M without speculation (rejected: fails the render eval)",
+      "value": 84.8,
+      "unit": "tok/s",
+      "baseline": 60.6,
+      "source": "qwen35-3d-coder/RESULTS.md:33"
+    },
+    {
+      "metric": "prefill",
+      "label": "32k prompt, 12.9 s",
+      "value": 2480,
+      "unit": "tok/s",
+      "headline": true,
+      "source": "qwen35-3d-coder/RESULTS.md:43"
+    },
+    {
+      "metric": "prefill",
+      "label": "62k prompt, 29.9 s",
+      "value": 2070,
+      "unit": "tok/s",
+      "source": "qwen35-3d-coder/RESULTS.md:43"
+    },
+    {
+      "metric": "vram_peak",
+      "label": "whole card while serving, no speculation (8.0 with MTP)",
+      "value": 7.1,
+      "unit": "GB",
+      "source": "qwen35-3d-coder/RESULTS.md:150"
+    },
+    {
+      "metric": "quality",
+      "label": "mean KL divergence, Q5_K_M",
+      "value": 0.00732,
+      "unit": "KLD",
+      "source": "qwen35-3d-coder/RESULTS.md:85"
+    },
+    {
+      "metric": "quality",
+      "label": "render eval: pages that work out of 20 (Q8_0: 10, Q4_K_M: 5)",
+      "value": 9,
+      "unit": "pages",
+      "source": "qwen35-3d-coder/RESULTS.md:51"
+    }
+  ],
+  "caveats": [
+    "MTP is opt-in. No engine bug was found and the page pass rate is the same (10/16 vs 9/16), but 5 of 19 finished MTP pages failed on syntax errors against 0 of 35 without speculation; the cause is unknown and may be chance.",
+    "Q4_K_M is faster but 62% of its finished pages throw an error.",
+    "DFlash is the fastest while writing code (163 tok/s) and loses while reasoning (acceptance 4-7%), so it is not used.",
+    "The decode baseline is the official Q8_0 without speculation."
+  ],
+  "credits": [
+    "ccore",
+    "qwen",
+    "z-lab",
+    "llama-cpp",
+    "ggml-org",
+    "huggingface",
+    "nvidia"
+  ],
+  "findings": [],
+  "contributor": {
+    "name": "David Hatley",
+    "github": "davidghatley"
+  }
+}

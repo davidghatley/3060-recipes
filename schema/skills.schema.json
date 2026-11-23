@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://davidghatley.github.io/3060-recipes/schema/skills.schema.json",
+  "title": "3060-recipes skills index",
+  "type": "object",
+  "required": [
+    "skills"
+  ],
+  "properties": {
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "skill_md",
+          "tarball",
+          "files",
+          "license"
+        ]
+      }
+    },
+    "external": {
+      "type": "array"
+    }
+  }
+}

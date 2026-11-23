@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://davidghatley.github.io/3060-recipes/schema/credits.schema.json",
+  "title": "3060-recipes credits",
+  "type": "object",
+  "required": [
+    "groups",
+    "credits"
+  ],
+  "properties": {
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ]
+      }
+    },
+    "credits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "group",
+          "made",
+          "used_for"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "made": {
+            "type": "string"
+          },
+          "used_for": {
+            "type": "string"
+          },
+          "recipes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "url"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
