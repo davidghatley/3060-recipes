@@ -1,0 +1,50 @@
+  general.architecture = gemma4
+  general.type = model
+  general.sampling.top_k = 64
+  general.sampling.top_p = 0.949999988079071
+  general.sampling.temp = 1.0
+  general.name = Nemotron 3.5 Bolt E4B
+  general.size_label = 7.5B
+  gemma4.block_count = 42
+  gemma4.context_length = 65536
+  gemma4.embedding_length = 2560
+  gemma4.feed_forward_length = 10240
+  gemma4.attention.head_count = 8
+  gemma4.attention.head_count_kv = 2
+  gemma4.rope.freq_base = 1000000.0
+  gemma4.rope.freq_base_swa = 10000.0
+  gemma4.attention.layer_norm_rms_epsilon = 9.999999974752427e-07
+  gemma4.attention.key_length = 512
+  gemma4.attention.value_length = 512
+  gemma4.final_logit_softcapping = 30.0
+  gemma4.attention.sliding_window = 512
+  gemma4.attention.shared_kv_layers = 18
+  gemma4.embedding_length_per_layer_input = 256
+  gemma4.attention.sliding_window_pattern = [42 x type 7] first=[True, True, True, True]
+  gemma4.attention.key_length_swa = 256
+  gemma4.attention.value_length_swa = 256
+  gemma4.rope.dimension_count = 512
+  gemma4.rope.dimension_count_swa = 256
+  tokenizer.ggml.model = gemma4
+  general.quantization_version = 2
+  general.file_type = 15
+  quantize.imatrix.file = /lustre/fsw/portfolios/llmservice/projects/llmservice_nemo_mlops/users/ameyasunilm/projects/gemma_nemotron/operations/bolt_iq4_
+  quantize.imatrix.dataset = /lustre/fsw/portfolios/llmservice/projects/llmservice_nemo_mlops/users/ameyasunilm/projects/gemma_nemotron/operations/bolt_iq4_
+  quantize.imatrix.entries_count = 342
+  quantize.imatrix.chunks_count = 510
+  tokenizer.chat_template = {%- if conversational_mode | default(false) -%}
+    {%- set spoken_instruction = "You are having a spoken conversation with the user. Respond as briefly as possible while still addressing their questi
+tensors 720, total 6.165 GB (5.741 GiB)
+  per_layer_token_embd.weight            2.995 GB  ['Q8_0']
+  blk.*.ffn_down                         0.761 GB  ['Q4_K', 'Q6_K']
+  token_embd.weight                      0.713 GB  ['Q8_0']
+  blk.*.ffn_gate                         0.619 GB  ['Q4_K']
+  blk.*.ffn_up                           0.619 GB  ['Q4_K']
+  blk.*.attn_output                      0.145 GB  ['Q4_K']
+  blk.*.attn_q                           0.145 GB  ['Q4_K']
+  per_layer_model_proj.weight            0.055 GB  ['BF16']
+  blk.*.attn_v                           0.044 GB  ['Q4_K', 'Q6_K']
+  blk.*.attn_k                           0.036 GB  ['Q4_K']
+  blk.*.inp_gate                         0.015 GB  ['Q4_K']
+  blk.*.proj                             0.015 GB  ['Q4_K']
+per layer (MB): {0: 59, 1: 59, 2: 59, 3: 59, 4: 59, 5: 60, 6: 52, 7: 59, 8: 52, 9: 52, 10: 59, 11: 60, 12: 52, 13: 59, 14: 52, 15: 52, 16: 59, 17: 60, 18: 52, 19: 59, 20: 52, 21: 52, 22: 59, 23: 60, 24: 52, 25: 59, 26: 52, 27: 52, 28: 59, 29: 60, 30: 52, 31: 59, 32: 52, 33: 52, 34: 59, 35: 60, 36: 59, 37: 59, 38: 59, 39: 59, 40: 59, 41: 67}

@@ -1,0 +1,5 @@
+block matmul params 3.945 B (2.365 GB), per_layer_model_proj 0.028 B (0.055 GB), tied LM head 0.671 B (0.713 GB)
+per decode token: 4.644 B params, 3.133 GB read; 9.29 GFLOP
+embedding lookups per token: token_embd row 2.7 KB, per_layer_token_embd row 11.4 KB (table 2.99 GB)
+layers 42, KV-shared from layer 24; global layers [5, 11, 17, 23, 29, 35, 41]; global with own KV [5, 11, 17, 23]
+f16 K+V bytes/token: global layer 4096 B, swa layer 2048 B; stored global 16384 B/token; read by all 7 global layers 28672 B/token

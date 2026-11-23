@@ -1,0 +1,59 @@
+{
+ "id": "b07-default",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/nemotron-bolt-e4b/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf --alias nemotron-bolt -ngl 999 -c 65536 -np 1 -t 6 -b 2048 -ub 1024 -fa on -ctk f16 -ctv f16 -bs --spec-draft-model /mnt/models/llm/nemotron-bolt-e4b/dflash/Nemotron-3.5-Bolt-E4B-DFlash-BF16.gguf --spec-type draft-dflash --spec-draft-n-max 7 --spec-draft-ngl 999 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 64 --min-p 0 --host 127.0.0.1 --port 8105",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 8572,
+   "prefill_tps": 3031.1
+  },
+  {
+   "case": "pp-32k-med",
+   "vram_mib": 8574,
+   "prefill_tps": 2471.6
+  },
+  {
+   "case": "pp-60k-med",
+   "vram_mib": 8584,
+   "prefill_tps": 2006.1
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 8584,
+   "decode_tps": 216.65,
+   "min": 165.6,
+   "max": 269.14,
+   "accept": 0.482
+  },
+  {
+   "case": "code-60k-med",
+   "vram_mib": 8584,
+   "decode_tps": 157.82,
+   "min": 121.53,
+   "max": 180.01,
+   "accept": 0.454
+  },
+  {
+   "case": "needle-32k",
+   "vram_mib": 8584,
+   "prompt_n": 32498,
+   "found": "3/3",
+   "prefill_tps": 2440.3,
+   "ttft_s": 13.3,
+   "decode_tps": 70.25,
+   "answer": "NGDGKDAI | CQRLAFTZ | AESVRT0N"
+  },
+  {
+   "case": "needle-61k",
+   "vram_mib": 8584,
+   "prompt_n": 61359,
+   "found": "3/3",
+   "prefill_tps": 1985.8,
+   "ttft_s": 30.9,
+   "decode_tps": 61.09,
+   "answer": "C4T8LX9G | 6BJNP6DW | 5F5G5EO5"
+  }
+ ],
+ "server_log": "runs/server-b07-default.log"
+}

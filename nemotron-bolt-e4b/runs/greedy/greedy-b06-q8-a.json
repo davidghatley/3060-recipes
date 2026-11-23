@@ -1,0 +1,69 @@
+{
+ "label": "b06-q8-a",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci_iterative(n):\n    \"\"\"\n    Calculates the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence starts with F(0) = 0 and F(1) = 1.\n    F(n) = F(n-1) + F(n-2) for n > 1.\n\n    Args:\n        n (int): The index of the Fibonacci number to return (must be non-negative).\n\n    Returns:\n        int: The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is a negative integer.\n\n    Examples:\n        >>> fibonacci_iterative(0)\n        0\n        >>> fibonacci_iterative(1)\n        1\n        >>> fibonacci_iterative(6)\n        8\n    \"\"\"\n    if not isinstance(n, int) or n < 0:\n        raise ValueError(\"Input 'n' must be a non-negative integer.\")\n\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n\n    # Initialize the first two numbers\n    a = 0  # F(i-2)\n    b = 1  # F(i-1)\n\n    # Iterate from the 2nd number up to the n-th number\n    for _ in range(2",
+   "n": 300,
+   "decode_tps": 337.79,
+   "draft_n": 317,
+   "accepted": 253
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes for a \"Permission denied\" error when running `./build.sh`, along with the fix for each:\n\n| # | Most Likely Cause | Explanation | Fix |\n|---|---|---|---|\n| 1 | **The script file itself lacks execute permission.** | Even if you own the file, the operating system needs explicit permission to *run* it as a program. | Run: `chmod +x build.sh` |\n| 2 | **You are not running the script from the correct directory.** | `./` means \"in the current directory.\" If you are in `/home/user` but the script is in `/home/user/scripts`, the shell won't find it or execute it correctly. | Navigate to the directory containing the script: `cd /path/to/build.sh` then run: `./build.sh` |\n| 3 | **The script tries to access a resource (file, directory, network) you don't have permission for.** | The error might not be about running the script, but about something *inside* the script (e.g., `cat sensitive.txt` or `mkdir output/`). | Check the script's contents (`cat build.sh`) and ensure the user running the script has **read/write/execute** permissions on all files/directories it interacts with. (e.g., `chmod 775 data_folder",
+   "n": 300,
+   "decode_tps": 157.3,
+   "draft_n": 676,
+   "accepted": 200
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a specialized neural network component designed to control information flow within a network. It incorporates gating mechanisms, similar to those in LSTMs, to selectively pass or suppress input signals. This selective control allows the network to better manage long-term dependencies and prevent vanishing gradients. Consequently, it enhances the model's ability to learn complex sequential patterns efficiently.",
+   "n": 77,
+   "decode_tps": 132.43,
+   "draft_n": 210,
+   "accepted": 46
+  },
+  {
+   "i": 3,
+   "text": "Here are the step-by-step tool calls I would make to fix the `IndexError` in `tests/test_parser.py::test_empty` when processing an empty string:\n\n**Goal:** Modify the parser logic (or the test setup) so that an empty input string does not cause an `IndexError`.\n\n**Step 1: Examine the Failing Test and Code**\n* **Tool Call:** `read_file(\"tests/test_parser.py\")`\n* **Purpose:** To see the definition of `test_empty` and how it calls the parser.\n* **Tool Call:** `read_file(\"src/parser.py\")` (or the relevant parser file)\n* **Purpose:** To locate the code path that is executed when an empty string (`\"\"`) is passed to the parsing function, and identify where the `IndexError` occurs (e.g., accessing `s[0]`, `s[i]`, etc., without checking the length).\n\n**Step 2: Analyze the Error Location**\n* **Action:** Based on the file contents, pinpoint the exact line in `src/parser.py` causing the `IndexError` (e.g., `if char == 'a': ...` when the string is empty).\n\n**Step 3: Propose and Implement the Fix**\n* **Tool Call:** `edit_file(\"src/parser.py\", \"",
+   "n": 300,
+   "decode_tps": 183.05,
+   "draft_n": 595,
+   "accepted": 214
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files | grep '\\.py$' | grep -v 'test' | xargs wc -l\n```\n\n**Explanation:**\n\n1. **`git ls-files`**: Lists all files currently tracked by Git in the repository.\n2. **`grep '\\.py$'`**: Filters the list to include only files ending with `.py` (Python files).\n3. **`grep -v 'test'`**: Filters out any filenames that contain the string `test` (e.g., `test_utils.py`, `tests/test_module.py`).\n4. **`xargs wc -l`**: Takes the list of filtered filenames and passes them as arguments to `wc -l`, which counts the lines in each file.\n\n**Output:**\n\nThis command will output the line count for each matching file, followed by a total line count at the end (e.g., `123 file1.py`, `456 file2.py`, `579 total`).\n\n**If you only want the *total* count:**\n\n```bash\ngit ls-files | grep '\\.py$' | grep -v 'test' | xargs wc -l | tail -n 1 | awk '{print $1}'\n```\n\nThis pipes the output to `tail -n 1` (gets the total line) and then `awk '{print $1}'",
+   "n": 300,
+   "decode_tps": 187.51,
+   "draft_n": 577,
+   "accepted": 216
+  },
+  {
+   "i": 5,
+   "text": "Here is the step-by-step calculation:\n\nThe expression is: $17 \\times 23 + 144 / 12$\n\n**Step 1: Perform the multiplication**\n$$17 \\times 23$$\n$$17 \\times 20 = 340$$\n$$17 \\times 3 = 51$$\n$$340 + 51 = 391$$\n\n**Step 2: Perform the division**\n$$144 / 12$$\n$$144 \\div 12 = 12$$\n\n**Step 3: Perform the addition**\nNow substitute the results back into the original expression:\n$$391 + 12$$\n$$391 + 12 = 403$$\n\n**Answer:**\n$17 \\times 23 + 144 / 12 = 403$",
+   "n": 206,
+   "decode_tps": 315.19,
+   "draft_n": 238,
+   "accepted": 171
+  },
+  {
+   "i": 6,
+   "text": "```typescript\n/**\n * Type guard to check if the given value is an array where all elements are strings.\n * @param x The value to check.\n * @returns True if x is a string[], false otherwise.\n */\nfunction isStringArray(x: unknown): x is string[] {\n  // 1. Check if x is an array\n  if (!Array.isArray(x)) {\n    return false;\n  }\n\n  // 2. Check if every element in the array is a string\n  // We use .every() for efficient checking.\n  return x.every(item => typeof item === 'string');\n}\n\n// --- Examples ---\n\n// 1. Valid case\nconst validArray: string[] = [\"apple\", \"banana\", \"cherry\"];\nif (isStringArray(validArray)) {\n  // Inside this block, TypeScript knows validArray is string[]\n  console.log(\"Valid Array:\", validArray.join(', ')); // Output: apple, banana, cherry\n}\n\n// 2. Invalid case (contains a number)\nconst mixedArray: (string | number)[] = [\"hello\", 123, \"world\"];\nif (!isStringArray(mixedArray)) {\n  console.log(\"Mixed Array is not a string array.\"); // Output: Mixed Array is not a string array.\n}\n\n// 3. Invalid case",
+   "n": 300,
+   "decode_tps": 223.57,
+   "draft_n": 483,
+   "accepted": 229
+  },
+  {
+   "i": 7,
+   "text": "Here's the CAP theorem summarized for a junior engineer:\n\n* **CAP stands for Consistency, Availability, and Partition Tolerance.** These are the three properties in distributed systems.\n* **You can only guarantee *two* out of the three.** In a real-world network, partitions *will* happen, so you must choose between C and A.\n* **Consistency (C):** Every read receives the most recent write (all nodes agree immediately).\n* **Availability (A):** Every request receives a (non-error) response, even if some nodes are down.\n* **Practical Choice:** Most modern systems prioritize **AP** (Availability during partitions) or **CP** (Consistency during partitions), depending on the application's needs (e.g., banking needs CP; social media feeds often tolerate AP).",
+   "n": 170,
+   "decode_tps": 157.92,
+   "draft_n": 392,
+   "accepted": 113
+  }
+ ]
+}
