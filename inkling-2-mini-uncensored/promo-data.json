@@ -1,0 +1,54 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md. Speed values are [value, ledger label, ledger case] and are checked against runs/ledger.jsonl; KLD values are [value, kld run] and are checked against runs/kld/summary.txt; refusal counts against runs/refusal-reread.json; codeeval against runs/codeeval-<label>.json; image answers against runs/smoke-*.json. promo/tools/prep.py refuses to mark the set measured if any differ. Derived numbers (speed-ups, percent costs, the KLD ratio) are computed in prep.",
+ "engine": {"name": "llama.cpp", "build": "master 225a5345b + 2 F16-mask patches", "short": "225a5345b"},
+ "base_recipe": {
+  "_source": "../inkling-2-mini/RESULTS.md (base recipe, not re-measured here); checked by text match",
+  "kld": [0.0085, 0.0088], "kld_text": "0.0085 / 0.0088"
+ },
+ "stock": {
+  "_what": "the usual MoE offload line on stock master (every expert in RAM, --no-op-offload), AD-Q4_K; the model cards' own -ngl 99 lines do not load on 12 GB",
+  "decode": [17.2, "u07-stock-ad-expcpu", "code-0k-med"],
+  "prefill_8k": [51.8, "u07-stock-ad-expcpu", "pp-8k-med"],
+  "card_line_mib": [15279, 16331]
+ },
+ "variants": [
+  {"id": "base", "name": "UNEDITED", "by": "ggml-org IQ4_NL", "file": "Inkling-2-Mini-IQ4_NL.gguf",
+   "decode": [29.0, "u05-base-ctl-a", "code-0k-med"], "decode_b": [29.0, "u05-base-ctl-b", "code-0k-med"],
+   "prefill_8k": [145.6, "u05-base-ctl-a", "pp-8k-med"], "prefill_8k_b": [145.1, "u05-base-ctl-b", "pp-8k-med"],
+   "kld": null, "refusal": "q-base", "codeeval": "q-base"},
+  {"id": "atomicchat", "name": "ATOMICCHAT AD-Q4_K", "by": "AtomicChat", "file": "Inkling-2-Mini-Uncensored-AD-Q4_K.gguf", "how": "baked",
+   "decode": [29.6, "u05-ad-core-ub96", "code-0k-med"], "prefill_8k": [136.7, "u05-ad-core-ub96", "pp-8k-med"],
+   "controls": [[29.0, "u05-base-ctl-a", "code-0k-med"], [29.0, "u05-base-ctl-b", "code-0k-med"]],
+   "decode_32k": [24.1, "d-ad-ub96", "code-32k-med"],
+   "needles": [["32k", "d-ad-ub96", "needle-32k"], ["62k", "d-ad-ub96", "needle-62k"]],
+   "kld": [[0.0142, "atomicchat-ad-q4k wiki"], [0.0109, "atomicchat-ad-q4k code"]],
+   "refusal": "q-atomicchat", "codeeval": "q-atomicchat", "image": "smoke-v-ad-64k-ub64-mmproj-q8.json"},
+  {"id": "nokeepai-merged", "name": "NOKEEPAI MERGED", "by": "nokeepai", "file": "merged into IQ4_NL locally", "how": "merged",
+   "decode": [29.0, "u02-nokeepai-merged", "code-0k-med"], "prefill_8k": [146.0, "u02-nokeepai-merged", "pp-8k-med"],
+   "controls": [[28.9, "u02-base-ctl-a", "code-0k-med"], [28.9, "u02-base-ctl-b", "code-0k-med"]],
+   "decode_32k": [23.6, "d-nokeepai-merged", "code-32k-med"],
+   "needles": [["32k", "d-nokeepai-merged", "needle-32k"], ["62k", "d-nokeepai-merged", "needle-62k"]],
+   "kld": [[0.0423, "nokeepai-merged wiki"], [0.0305, "nokeepai-merged code"]],
+   "refusal": "q-nokeepai-merged", "codeeval": "q-nokeepai-merged", "image": "smoke-s-nokeepai-merged-32k.json"},
+  {"id": "nokeepai", "name": "NOKEEPAI LORA", "by": "nokeepai", "file": "rank-64 LoRA at runtime", "how": "runtime",
+   "decode": [27.0, "u01-nokeepai", "code-0k-med"], "prefill_8k": [144.3, "u01-nokeepai", "pp-8k-med"],
+   "controls": [[29.1, "u01-base-ctl-a", "code-0k-med"], [28.9, "u01-base-ctl-b", "code-0k-med"]],
+   "kld": [[0.0427, "nokeepai-lora wiki"], [0.0314, "nokeepai-lora code"]],
+   "refusal": "q-nokeepai", "codeeval": "q-nokeepai"},
+  {"id": "atomicchat-lora", "name": "ATOMICCHAT LORA", "by": "AtomicChat", "file": "rank-1 LoRA at runtime", "how": "runtime",
+   "decode": [21.4, "u02-atomicchat-lora", "code-0k-med"], "prefill_8k": [136.1, "u02-atomicchat-lora", "pp-8k-med"],
+   "controls": [[28.9, "u02-base-ctl-b", "code-0k-med"], [29.0, "u02-base-ctl-c", "code-0k-med"]],
+   "kld": [[0.0133, "atomicchat-lora wiki"], [0.0116, "atomicchat-lora code"]],
+   "refusal": "q-atomicchat-lora", "codeeval": "q-atomicchat-lora", "image": "smoke-s-atomicchat-lora-32k.json"}
+ ],
+ "results_md": {
+  "_what": "figures RESULTS.md states as rounded; prep checks its own derivations against these",
+  "speedup_decode_vs_stock": 1.72, "speedup_prefill_vs_stock": 2.64,
+  "nokeepai_runtime_cost_pct": 7, "atomicchat_lora_cost_pct": 26, "nokeepai_vs_atomicchat_kld": 3, "nokeepai_wiki_ppl_pct": 6
+ },
+ "facts": {
+  "_source": "README.md / RESULTS.md of this recipe (file sizes from the GGUF headers, adapter shapes from tools/lora_info.py)",
+  "ad_q4k_gb": 16.5, "merged_gb": 17.6, "ub": 96, "ctx": 65536, "probe_n": 20, "codeeval_n": 8,
+  "nokeepai_rank": 64, "atomicchat_rank": 1
+ }
+}
