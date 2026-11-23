@@ -1,0 +1,147 @@
+{
+ "status": "measured",
+ "problems": [],
+ "engine": {
+  "name": "llama.cpp",
+  "build": "master 225a5345b",
+  "stock": true
+ },
+ "pi": {
+  "quant": "IQ3_XXS",
+  "file_gb": 11.4,
+  "publisher": "netprojects",
+  "stock": {
+   "decode": 7.93,
+   "prefill_8k": 474.6,
+   "placement": "-ngl 49 (16 layers in RAM)",
+   "layers_in_ram": 16
+  },
+  "profiles": {
+   "fast": {
+    "ctx": 16384,
+    "decode": 19.72,
+    "decode_deep": 17.57,
+    "deep_at": "15k",
+    "needles": [
+     "8k 3/3",
+     "14k 3/3"
+    ],
+    "ffn_in_ram": 0
+   },
+   "default": {
+    "ctx": 32768,
+    "decode": 16.62,
+    "decode_deep": 13.76,
+    "deep_at": "30k",
+    "needles": [
+     "16k 3/3",
+     "30k 3/3"
+    ],
+    "ffn_in_ram": 3,
+    "ram_gb": 0.29,
+    "vram_gb": 11.9
+   },
+   "long": {
+    "ctx": 131072,
+    "decode": 7.48,
+    "decode_deep": 5.63,
+    "deep_at": "120k",
+    "needles": [
+     "65k 3/3",
+     "123k 3/3"
+    ],
+    "ffn_in_ram": 26
+   }
+  },
+  "ceiling": 31.7,
+  "speedup": 2.0958385876418664,
+  "speedup_fast": 2.4867591424968474
+ },
+ "members": [
+  {
+   "id": "pi",
+   "name": "pi-adapted",
+   "by": "harness-hub",
+   "file": "netprojects IQ3_XXS, 11.4 GB",
+   "controls": [
+    7.93
+   ],
+   "stock": 7.93,
+   "tuned": 16.62,
+   "speedup": 2.0958385876418664
+  },
+  {
+   "id": "huihui",
+   "name": "Huihui abliterated",
+   "by": "huihui-ai",
+   "file": "GSQ-RCO IQ3_XXS mix, 10.4 GB",
+   "controls": [
+    9.89,
+    9.89
+   ],
+   "stock": 9.89,
+   "tuned": 20.77,
+   "speedup": 2.1001011122345803
+  },
+  {
+   "id": "daisyrose",
+   "name": "DaisyRose-27B",
+   "by": "RadixArk",
+   "file": "bartowski IQ3_XXS, 12.2 GB",
+   "controls": [
+    8.19,
+    7.87
+   ],
+   "stock": 8.03,
+   "tuned": 14.35,
+   "speedup": 1.7870485678704857
+  },
+  {
+   "id": "heretic",
+   "name": "Heretic",
+   "by": "DavidAU",
+   "file": "IQ2_M, BF16 LM head, 12.1 GB",
+   "controls": [
+    6.96,
+    6.97
+   ],
+   "stock": 6.965,
+   "tuned": 11.62,
+   "speedup": 1.6683417085427135
+  }
+ ],
+ "flags": [
+  {
+   "flag": "-ctk q4_0 -ctv q4_0",
+   "note": "K/V 2,048 → 576 MIB"
+  },
+  {
+   "flag": "-ub 256",
+   "note": "COMPUTE 269 → 220 MIB"
+  },
+  {
+   "flag": "-ot 'blk\\.(0|1|2)\\.ffn_(up|gate|down)=CPU'",
+   "note": "0.29 GB IN RAM"
+  },
+  {
+   "flag": "-ngl 99 --fit off -c 32768",
+   "note": "NEEDLES 3/3"
+  }
+ ],
+ "mtp": {
+  "accept": "91–98%",
+  "vram_mib": 650,
+  "ffn_pushed": "6–10",
+  "decode": 16.03,
+  "controls": [
+   16.45,
+   16.66
+  ],
+  "best_case": "+1.8% at 16k",
+  "best_case_prefill": "12%",
+  "verdict": "rejected"
+ },
+ "ram_cost_ms_per_gb": 29,
+ "kld": null,
+ "kld_note": "not measured (no higher-precision reference on disk); netprojects reports KLD 0.1244 for pi IQ3_XXS vs its Q8_0"
+}
