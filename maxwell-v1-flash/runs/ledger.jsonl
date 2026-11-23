@@ -1,0 +1,655 @@
+{"label": "m00-card-line", "case": "env", "t": 1795442331, "env": {"MX_KV": "f16", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "fit", "MX_CONTEXT": "32768", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": ["-ngl", "99"]}
+{"label": "m01-stock-fit", "case": "env", "t": 1795442349, "env": {"MX_KV": "f16", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "fit", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m01-stock-fit", "case": "host-start", "t": 1795442354, "loadavg": "3.06 2.51 2.91", "compilers": 0, "vram_mib": 10860}
+{"label": "m01-stock-fit", "case": "lora-adapters", "t": 1795442354, "adapters": []}
+{"label": "m01-stock-fit", "case": "pp-8k", "t": 1795442386.9872212, "vram_mib": 10898, "prompt_n": 8003, "prefill_tps": 330.8, "ttft_s": 24.19}
+{"label": "m01-stock-fit", "case": "pp-8k", "t": 1795442411.3979108, "vram_mib": 10908, "prompt_n": 8112, "prefill_tps": 336.0, "ttft_s": 24.15}
+{"label": "m01-stock-fit", "case": "pp-8k-med", "t": 1795442411.4161735, "vram_mib": 10908, "prefill_tps": 333.4}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442420.3252206, "vram_mib": 10908, "gen_n": 244, "prompt_n": 62, "decode_tps": 31.3, "finish": "stop", "content_chars": 649, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442430.0493534, "vram_mib": 10898, "gen_n": 276, "prompt_n": 66, "decode_tps": 31.3, "finish": "stop", "content_chars": 871, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442438.3379648, "vram_mib": 10898, "gen_n": 235, "prompt_n": 57, "decode_tps": 31.7, "finish": "stop", "content_chars": 855, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442447.162653, "vram_mib": 10898, "gen_n": 246, "prompt_n": 67, "decode_tps": 31.3, "finish": "stop", "content_chars": 596, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442453.481539, "vram_mib": 10898, "gen_n": 173, "prompt_n": 75, "decode_tps": 32.3, "finish": "stop", "content_chars": 618, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k", "t": 1795442458.658956, "vram_mib": 10898, "gen_n": 137, "prompt_n": 67, "decode_tps": 32.3, "finish": "stop", "content_chars": 516, "loop": 0.0}
+{"label": "m01-stock-fit", "case": "code-0k-med", "t": 1795442458.675235, "vram_mib": 10898, "decode_tps": 31.5, "min": 31.3, "max": 32.3, "max_loop": 0.0}
+{"label": "m01-stock-fit", "case": "host-end", "t": 1795442458, "loadavg": "7.65 4.16 3.46", "compilers": 0, "vram_mib": 10898}
+{"label": "m01-stock-fit", "case": "mem-speed", "t": 1795442458, "cgroup_peak_mib": 22167, "rss_hwm_mib": 21693, "vram_mib": 10898}
+{"label": "m02-ncmoe33-q8", "case": "env", "t": 1795442459, "env": {"MX_KV": "q8_0", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "ncmoe", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m02-ncmoe33-q8", "case": "host-start", "t": 1795442461, "loadavg": "7.65 4.16 3.46", "compilers": 0, "vram_mib": 11360}
+{"label": "m02-ncmoe33-q8", "case": "lora-adapters", "t": 1795442461, "adapters": []}
+{"label": "m02-ncmoe33-q8", "case": "pp-8k", "t": 1795442490.157747, "vram_mib": 11388, "prompt_n": 8006, "prefill_tps": 395.3, "ttft_s": 20.26}
+{"label": "m02-ncmoe33-q8", "case": "pp-8k", "t": 1795442510.8551414, "vram_mib": 11388, "prompt_n": 8109, "prefill_tps": 395.7, "ttft_s": 20.5}
+{"label": "m02-ncmoe33-q8", "case": "pp-8k-med", "t": 1795442510.8688958, "vram_mib": 11388, "prefill_tps": 395.5}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442517.4221327, "vram_mib": 11388, "gen_n": 209, "prompt_n": 62, "decode_tps": 36.6, "finish": "stop", "content_chars": 587, "loop": 0.0}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442529.1655512, "vram_mib": 11388, "gen_n": 404, "prompt_n": 66, "decode_tps": 36.7, "finish": "stop", "content_chars": 1255, "loop": 0.02}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442536.3520384, "vram_mib": 11388, "gen_n": 228, "prompt_n": 57, "decode_tps": 35.1, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442539.5736074, "vram_mib": 11388, "gen_n": 91, "prompt_n": 67, "decode_tps": 36.9, "finish": "stop", "content_chars": 208, "loop": 0.0}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442544.6468778, "vram_mib": 11388, "gen_n": 154, "prompt_n": 75, "decode_tps": 35.8, "finish": "stop", "content_chars": 523, "loop": 0.0}
+{"label": "m02-ncmoe33-q8", "case": "code-0k", "t": 1795442546.1933339, "vram_mib": 11388, "gen_n": 28, "prompt_n": 67, "decode_tps": 36.0, "finish": "stop", "content_chars": 84, "loop": 0.0}
+{"label": "m02-ncmoe33-q8", "case": "code-0k-med", "t": 1795442546.2067728, "vram_mib": 11388, "decode_tps": 36.3, "min": 35.1, "max": 36.9, "max_loop": 0.02}
+{"label": "m02-ncmoe33-q8", "case": "host-end", "t": 1795442546, "loadavg": "9.87 5.57 4.01", "compilers": 0, "vram_mib": 11388}
+{"label": "m02-ncmoe33-q8", "case": "mem-speed", "t": 1795442546, "cgroup_peak_mib": 22167, "rss_hwm_mib": 20232, "vram_mib": 11388}
+{"label": "m03-ctl-a", "case": "env", "t": 1795443526, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-a", "case": "host-start", "t": 1795443528, "loadavg": "1.26 1.80 2.79", "compilers": 0, "vram_mib": 11370}
+{"label": "m03-ctl-a", "case": "lora-adapters", "t": 1795443528, "adapters": []}
+{"label": "m03-ctl-a", "case": "pp-8k", "t": 1795443554.7712624, "vram_mib": 11388, "prompt_n": 8008, "prefill_tps": 423.1, "ttft_s": 18.93}
+{"label": "m03-ctl-a", "case": "pp-8k", "t": 1795443573.9336908, "vram_mib": 11388, "prompt_n": 8110, "prefill_tps": 426.2, "ttft_s": 19.03}
+{"label": "m03-ctl-a", "case": "pp-8k-med", "t": 1795443573.9460378, "vram_mib": 11388, "prefill_tps": 424.6}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443579.3590777, "vram_mib": 11388, "gen_n": 185, "prompt_n": 62, "decode_tps": 39.8, "finish": "stop", "content_chars": 557, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443585.040334, "vram_mib": 11388, "gen_n": 197, "prompt_n": 66, "decode_tps": 39.5, "finish": "stop", "content_chars": 620, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443590.9306905, "vram_mib": 11388, "gen_n": 206, "prompt_n": 57, "decode_tps": 39.5, "finish": "stop", "content_chars": 800, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443595.2051911, "vram_mib": 11388, "gen_n": 139, "prompt_n": 67, "decode_tps": 39.2, "finish": "stop", "content_chars": 320, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443600.3196404, "vram_mib": 11388, "gen_n": 173, "prompt_n": 75, "decode_tps": 39.6, "finish": "stop", "content_chars": 618, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k", "t": 1795443604.209411, "vram_mib": 11388, "gen_n": 126, "prompt_n": 67, "decode_tps": 39.7, "finish": "stop", "content_chars": 474, "loop": 0.0}
+{"label": "m03-ctl-a", "case": "code-0k-med", "t": 1795443604.2217019, "vram_mib": 11388, "decode_tps": 39.5, "min": 39.2, "max": 39.8, "max_loop": 0.0}
+{"label": "m03-ctl-a", "case": "host-end", "t": 1795443604, "loadavg": "3.17 2.17 2.83", "compilers": 0, "vram_mib": 11388}
+{"label": "m03-ctl-a", "case": "mem-speed", "t": 1795443604, "cgroup_peak_mib": 1453, "rss_hwm_mib": 20232, "vram_mib": 11388}
+{"label": "m03-ub2048", "case": "env", "t": 1795443605, "env": {"MX_UBATCH": "2048", "MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-b", "case": "env", "t": 1795443607, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-b", "case": "host-start", "t": 1795443609, "loadavg": "2.91 2.13 2.82", "compilers": 0, "vram_mib": 11360}
+{"label": "m03-ctl-b", "case": "lora-adapters", "t": 1795443609, "adapters": []}
+{"label": "m03-ctl-b", "case": "pp-8k", "t": 1795443634.9963431, "vram_mib": 11388, "prompt_n": 8009, "prefill_tps": 423.5, "ttft_s": 18.91}
+{"label": "m03-ctl-b", "case": "pp-8k", "t": 1795443654.21759, "vram_mib": 11388, "prompt_n": 8107, "prefill_tps": 424.7, "ttft_s": 19.09}
+{"label": "m03-ctl-b", "case": "pp-8k-med", "t": 1795443654.2303886, "vram_mib": 11388, "prefill_tps": 424.1}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443661.353767, "vram_mib": 11388, "gen_n": 253, "prompt_n": 62, "decode_tps": 39.7, "finish": "stop", "content_chars": 656, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443668.0888622, "vram_mib": 11388, "gen_n": 238, "prompt_n": 66, "decode_tps": 39.4, "finish": "stop", "content_chars": 747, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443674.5233872, "vram_mib": 11388, "gen_n": 228, "prompt_n": 57, "decode_tps": 39.4, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443678.3468077, "vram_mib": 11388, "gen_n": 124, "prompt_n": 67, "decode_tps": 39.9, "finish": "stop", "content_chars": 288, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443682.8342957, "vram_mib": 11388, "gen_n": 150, "prompt_n": 75, "decode_tps": 39.9, "finish": "stop", "content_chars": 514, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k", "t": 1795443686.785156, "vram_mib": 11388, "gen_n": 128, "prompt_n": 67, "decode_tps": 39.6, "finish": "stop", "content_chars": 502, "loop": 0.0}
+{"label": "m03-ctl-b", "case": "code-0k-med", "t": 1795443686.7976935, "vram_mib": 11388, "decode_tps": 39.6, "min": 39.4, "max": 39.9, "max_loop": 0.0}
+{"label": "m03-ctl-b", "case": "host-end", "t": 1795443686, "loadavg": "3.69 2.44 2.87", "compilers": 0, "vram_mib": 11388}
+{"label": "m03-ctl-b", "case": "mem-speed", "t": 1795443686, "cgroup_peak_mib": 1457, "rss_hwm_mib": 20233, "vram_mib": 11388}
+{"label": "m04-ncmoe32", "case": "env", "t": 1795443687, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "32", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m04-ncmoe32", "case": "host-start", "t": 1795443689, "loadavg": "3.39 2.40 2.85", "compilers": 0, "vram_mib": 11776}
+{"label": "m04-ncmoe32", "case": "lora-adapters", "t": 1795443689, "adapters": []}
+{"label": "m04-ncmoe32", "case": "pp-8k", "t": 1795443715.3538423, "vram_mib": 11804, "prompt_n": 8007, "prefill_tps": 434.5, "ttft_s": 18.43}
+{"label": "m04-ncmoe32", "case": "pp-8k", "t": 1795443734.0856876, "vram_mib": 11804, "prompt_n": 8109, "prefill_tps": 436.0, "ttft_s": 18.6}
+{"label": "m04-ncmoe32", "case": "pp-8k-med", "t": 1795443734.0985093, "vram_mib": 11804, "prefill_tps": 435.2}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443740.2933447, "vram_mib": 11804, "gen_n": 220, "prompt_n": 62, "decode_tps": 40.3, "finish": "stop", "content_chars": 601, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443744.4221673, "vram_mib": 11804, "gen_n": 139, "prompt_n": 66, "decode_tps": 40.2, "finish": "stop", "content_chars": 450, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443754.5325434, "vram_mib": 11804, "gen_n": 380, "prompt_n": 57, "decode_tps": 40.1, "finish": "stop", "content_chars": 1395, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443759.5381575, "vram_mib": 11804, "gen_n": 174, "prompt_n": 67, "decode_tps": 40.3, "finish": "stop", "content_chars": 400, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443763.968594, "vram_mib": 11804, "gen_n": 149, "prompt_n": 75, "decode_tps": 40.1, "finish": "stop", "content_chars": 486, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k", "t": 1795443767.8244708, "vram_mib": 11804, "gen_n": 128, "prompt_n": 67, "decode_tps": 40.5, "finish": "stop", "content_chars": 473, "loop": 0.0}
+{"label": "m04-ncmoe32", "case": "code-0k-med", "t": 1795443767.836927, "vram_mib": 11804, "decode_tps": 40.2, "min": 40.1, "max": 40.5, "max_loop": 0.0}
+{"label": "m04-ncmoe32", "case": "host-end", "t": 1795443767, "loadavg": "4.38 2.81 2.95", "compilers": 0, "vram_mib": 11804}
+{"label": "m04-ncmoe32", "case": "mem-speed", "t": 1795443767, "cgroup_peak_mib": 1459, "rss_hwm_mib": 20232, "vram_mib": 11804}
+{"label": "m03-ctl-c", "case": "env", "t": 1795443768, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-c", "case": "host-start", "t": 1795443770, "loadavg": "4.38 2.81 2.95", "compilers": 0, "vram_mib": 11360}
+{"label": "m03-ctl-c", "case": "lora-adapters", "t": 1795443771, "adapters": []}
+{"label": "m03-ctl-c", "case": "pp-8k", "t": 1795443796.8075283, "vram_mib": 11388, "prompt_n": 8007, "prefill_tps": 424.2, "ttft_s": 18.87}
+{"label": "m03-ctl-c", "case": "pp-8k", "t": 1795443815.9402142, "vram_mib": 11388, "prompt_n": 8110, "prefill_tps": 426.8, "ttft_s": 19.0}
+{"label": "m03-ctl-c", "case": "pp-8k-med", "t": 1795443815.9529598, "vram_mib": 11388, "prefill_tps": 425.5}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443822.2624683, "vram_mib": 11388, "gen_n": 221, "prompt_n": 62, "decode_tps": 39.8, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443829.8592598, "vram_mib": 11398, "gen_n": 273, "prompt_n": 66, "decode_tps": 39.5, "finish": "stop", "content_chars": 877, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443836.680684, "vram_mib": 11398, "gen_n": 245, "prompt_n": 57, "decode_tps": 39.7, "finish": "stop", "content_chars": 870, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443840.101324, "vram_mib": 11388, "gen_n": 108, "prompt_n": 67, "decode_tps": 39.9, "finish": "stop", "content_chars": 257, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443845.26141, "vram_mib": 11388, "gen_n": 177, "prompt_n": 75, "decode_tps": 39.9, "finish": "stop", "content_chars": 632, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k", "t": 1795443849.7108827, "vram_mib": 11388, "gen_n": 148, "prompt_n": 67, "decode_tps": 39.6, "finish": "stop", "content_chars": 544, "loop": 0.0}
+{"label": "m03-ctl-c", "case": "code-0k-med", "t": 1795443849.7237601, "vram_mib": 11388, "decode_tps": 39.8, "min": 39.5, "max": 39.9, "max_loop": 0.0}
+{"label": "m03-ctl-c", "case": "host-end", "t": 1795443849, "loadavg": "4.12 3.09 3.04", "compilers": 0, "vram_mib": 11388}
+{"label": "m03-ctl-c", "case": "mem-speed", "t": 1795443849, "cgroup_peak_mib": 1459, "rss_hwm_mib": 20233, "vram_mib": 11388}
+{"label": "m05-loadmode-none", "case": "env", "t": 1795443850, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m05-loadmode-none", "case": "host-start", "t": 1795443856, "loadavg": "3.87 3.05 3.02", "compilers": 0, "vram_mib": 11386}
+{"label": "m05-loadmode-none", "case": "lora-adapters", "t": 1795443856, "adapters": []}
+{"label": "m05-loadmode-none", "case": "pp-8k", "t": 1795443877.6494527, "vram_mib": 11414, "prompt_n": 8009, "prefill_tps": 586.8, "ttft_s": 13.65}
+{"label": "m05-loadmode-none", "case": "pp-8k", "t": 1795443891.6415732, "vram_mib": 11414, "prompt_n": 8108, "prefill_tps": 586.6, "ttft_s": 13.82}
+{"label": "m05-loadmode-none", "case": "pp-8k-med", "t": 1795443891.6573193, "vram_mib": 11414, "prefill_tps": 586.7}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443899.1358135, "vram_mib": 11414, "gen_n": 277, "prompt_n": 62, "decode_tps": 39.7, "finish": "stop", "content_chars": 796, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443906.5864568, "vram_mib": 11414, "gen_n": 280, "prompt_n": 66, "decode_tps": 39.9, "finish": "stop", "content_chars": 936, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443912.9702907, "vram_mib": 11414, "gen_n": 239, "prompt_n": 57, "decode_tps": 39.9, "finish": "stop", "content_chars": 884, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443917.2918103, "vram_mib": 11414, "gen_n": 153, "prompt_n": 67, "decode_tps": 39.4, "finish": "stop", "content_chars": 328, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443921.606448, "vram_mib": 11414, "gen_n": 155, "prompt_n": 75, "decode_tps": 40.1, "finish": "stop", "content_chars": 525, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k", "t": 1795443925.2804022, "vram_mib": 11414, "gen_n": 129, "prompt_n": 67, "decode_tps": 39.9, "finish": "stop", "content_chars": 519, "loop": 0.0}
+{"label": "m05-loadmode-none", "case": "code-0k-med", "t": 1795443925.2970183, "vram_mib": 11414, "decode_tps": 39.9, "min": 39.4, "max": 40.1, "max_loop": 0.0}
+{"label": "m05-loadmode-none", "case": "host-end", "t": 1795443925, "loadavg": "4.06 3.21 3.08", "compilers": 0, "vram_mib": 11414}
+{"label": "m05-loadmode-none", "case": "mem-speed", "t": 1795443925, "cgroup_peak_mib": 14397, "rss_hwm_mib": 14507, "vram_mib": 11414}
+{"label": "m03-ctl-d", "case": "env", "t": 1795443926, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-d", "case": "host-start", "t": 1795443928, "loadavg": "3.82 3.17 3.06", "compilers": 0, "vram_mib": 11360}
+{"label": "m03-ctl-d", "case": "lora-adapters", "t": 1795443928, "adapters": []}
+{"label": "m03-ctl-d", "case": "pp-8k", "t": 1795443954.6719224, "vram_mib": 11388, "prompt_n": 8009, "prefill_tps": 425.0, "ttft_s": 18.84}
+{"label": "m03-ctl-d", "case": "pp-8k", "t": 1795443973.8352673, "vram_mib": 11388, "prompt_n": 8108, "prefill_tps": 426.1, "ttft_s": 19.03}
+{"label": "m03-ctl-d", "case": "pp-8k-med", "t": 1795443973.8476145, "vram_mib": 11388, "prefill_tps": 425.5}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795443980.1669385, "vram_mib": 11388, "gen_n": 221, "prompt_n": 62, "decode_tps": 39.7, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795443987.2040975, "vram_mib": 11388, "gen_n": 252, "prompt_n": 66, "decode_tps": 39.6, "finish": "stop", "content_chars": 790, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795443993.9356742, "vram_mib": 11388, "gen_n": 242, "prompt_n": 57, "decode_tps": 39.8, "finish": "stop", "content_chars": 873, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795443999.8176477, "vram_mib": 11388, "gen_n": 206, "prompt_n": 67, "decode_tps": 39.9, "finish": "stop", "content_chars": 501, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795444005.0726118, "vram_mib": 11388, "gen_n": 178, "prompt_n": 75, "decode_tps": 39.3, "finish": "stop", "content_chars": 636, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k", "t": 1795444009.0975995, "vram_mib": 11388, "gen_n": 132, "prompt_n": 67, "decode_tps": 39.9, "finish": "stop", "content_chars": 520, "loop": 0.0}
+{"label": "m03-ctl-d", "case": "code-0k-med", "t": 1795444009.1096904, "vram_mib": 11388, "decode_tps": 39.7, "min": 39.3, "max": 39.9, "max_loop": 0.0}
+{"label": "m03-ctl-d", "case": "host-end", "t": 1795444009, "loadavg": "4.12 3.32 3.12", "compilers": 0, "vram_mib": 11388}
+{"label": "m03-ctl-d", "case": "mem-speed", "t": 1795444009, "cgroup_peak_mib": 14397, "rss_hwm_mib": 20233, "vram_mib": 11388}
+{"label": "m06-cpumoe-cache4800", "case": "env", "t": 1795444010, "env": {"MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "m06-cpumoe-cache4800", "case": "host-start", "t": 1795444012, "loadavg": "4.12 3.32 3.12", "compilers": 0, "vram_mib": 11176}
+{"label": "m06-cpumoe-cache4800", "case": "lora-adapters", "t": 1795444012, "adapters": []}
+{"label": "m06-cpumoe-cache4800", "case": "pp-8k", "t": 1795444039.1020167, "vram_mib": 11230, "prompt_n": 8008, "prefill_tps": 392.8, "ttft_s": 20.39}
+{"label": "m06-cpumoe-cache4800", "case": "pp-8k", "t": 1795444059.8078084, "vram_mib": 11230, "prompt_n": 8111, "prefill_tps": 394.3, "ttft_s": 20.57}
+{"label": "m06-cpumoe-cache4800", "case": "pp-8k-med", "t": 1795444059.8200576, "vram_mib": 11230, "prefill_tps": 393.5}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444066.0589013, "vram_mib": 11230, "gen_n": 221, "prompt_n": 62, "decode_tps": 40.3, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444070.2112722, "vram_mib": 11230, "gen_n": 184, "prompt_n": 66, "decode_tps": 53.2, "finish": "stop", "content_chars": 575, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444075.232547, "vram_mib": 11230, "gen_n": 228, "prompt_n": 57, "decode_tps": 52.3, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444078.5276036, "vram_mib": 11230, "gen_n": 137, "prompt_n": 67, "decode_tps": 53.5, "finish": "stop", "content_chars": 333, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444082.0420644, "vram_mib": 11230, "gen_n": 153, "prompt_n": 75, "decode_tps": 54.8, "finish": "stop", "content_chars": 511, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k", "t": 1795444086.122399, "vram_mib": 11230, "gen_n": 165, "prompt_n": 67, "decode_tps": 49.1, "finish": "stop", "content_chars": 678, "loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "code-0k-med", "t": 1795444086.1347332, "vram_mib": 11230, "decode_tps": 52.7, "min": 40.3, "max": 54.8, "max_loop": 0.0}
+{"label": "m06-cpumoe-cache4800", "case": "host-end", "t": 1795444086, "loadavg": "3.45 3.23 3.10", "compilers": 0, "vram_mib": 11230}
+{"label": "m06-cpumoe-cache4800", "case": "mem-speed", "t": 1795444086, "cgroup_peak_mib": 14397, "rss_hwm_mib": 21020, "vram_mib": 11230}
+{"label": "m03-ctl-e", "case": "env", "t": 1795444087, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m03-ctl-e", "case": "host-start", "t": 1795444089, "loadavg": "3.33 3.21 3.09", "compilers": 0, "vram_mib": 11360}
+{"label": "m03-ctl-e", "case": "lora-adapters", "t": 1795444089, "adapters": []}
+{"label": "m03-ctl-e", "case": "pp-8k", "t": 1795444115.0438051, "vram_mib": 11388, "prompt_n": 8006, "prefill_tps": 425.1, "ttft_s": 18.83}
+{"label": "m03-ctl-e", "case": "pp-8k", "t": 1795444134.233789, "vram_mib": 11388, "prompt_n": 8108, "prefill_tps": 425.5, "ttft_s": 19.06}
+{"label": "m03-ctl-e", "case": "pp-8k-med", "t": 1795444134.2465417, "vram_mib": 11388, "prefill_tps": 425.3}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444141.2375376, "vram_mib": 11388, "gen_n": 248, "prompt_n": 62, "decode_tps": 39.7, "finish": "stop", "content_chars": 750, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444147.063001, "vram_mib": 11388, "gen_n": 203, "prompt_n": 66, "decode_tps": 39.5, "finish": "stop", "content_chars": 621, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444155.4637394, "vram_mib": 11388, "gen_n": 306, "prompt_n": 57, "decode_tps": 39.5, "finish": "stop", "content_chars": 1107, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444160.3267715, "vram_mib": 11388, "gen_n": 166, "prompt_n": 67, "decode_tps": 40.0, "finish": "stop", "content_chars": 385, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444164.9298544, "vram_mib": 11388, "gen_n": 155, "prompt_n": 75, "decode_tps": 40.0, "finish": "stop", "content_chars": 525, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k", "t": 1795444168.4764748, "vram_mib": 11388, "gen_n": 112, "prompt_n": 67, "decode_tps": 39.5, "finish": "stop", "content_chars": 414, "loop": 0.0}
+{"label": "m03-ctl-e", "case": "code-0k-med", "t": 1795444168.488606, "vram_mib": 11388, "decode_tps": 39.6, "min": 39.5, "max": 40.0, "max_loop": 0.0}
+{"label": "m03-ctl-e", "case": "host-end", "t": 1795444168, "loadavg": "3.80 3.27 3.12", "compilers": 0, "vram_mib": 11388}
+{"label": "m03-ctl-e", "case": "mem-speed", "t": 1795444168, "cgroup_peak_mib": 14397, "rss_hwm_mib": 20232, "vram_mib": 11388}
+{"label": "q01-base", "case": "env", "t": 1795444359, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_THINK": "0", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "q01-base", "case": "host-start", "t": 1795444362, "loadavg": "1.79 2.93 3.05", "compilers": 0, "vram_mib": 11360}
+{"label": "q01-base", "case": "lora-adapters", "t": 1795444362, "adapters": []}
+{"label": "q01-base", "case": "host-end", "t": 1795444626, "loadavg": "6.04 4.79 3.81", "compilers": 0, "vram_mib": 11374}
+{"label": "q01-base", "case": "mem-quality", "t": 1795444627, "cgroup_peak_mib": 1114, "rss_hwm_mib": 20232, "vram_mib": 11374}
+{"label": "c06-a", "case": "env", "t": 1795444639, "env": {"MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c06-a", "case": "host-start", "t": 1795444641, "loadavg": "4.93 4.60 3.76", "compilers": 0, "vram_mib": 11176}
+{"label": "c06-a", "case": "lora-adapters", "t": 1795444641, "adapters": []}
+{"label": "c06-a", "case": "pp-8k", "t": 1795444668.046688, "vram_mib": 11230, "prompt_n": 8008, "prefill_tps": 393.3, "ttft_s": 20.36}
+{"label": "c06-a", "case": "pp-8k", "t": 1795444688.700795, "vram_mib": 11240, "prompt_n": 8109, "prefill_tps": 395.1, "ttft_s": 20.52}
+{"label": "c06-a", "case": "pp-8k-med", "t": 1795444688.7130759, "vram_mib": 11240, "prefill_tps": 394.2}
+{"label": "c06-a", "case": "code-0k", "t": 1795444693.4357831, "vram_mib": 11240, "gen_n": 214, "prompt_n": 62, "decode_tps": 54.0, "finish": "stop", "content_chars": 593, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k", "t": 1795444698.0908232, "vram_mib": 11240, "gen_n": 209, "prompt_n": 66, "decode_tps": 53.1, "finish": "stop", "content_chars": 641, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k", "t": 1795444703.0702374, "vram_mib": 11240, "gen_n": 228, "prompt_n": 57, "decode_tps": 52.8, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k", "t": 1795444707.855186, "vram_mib": 11240, "gen_n": 213, "prompt_n": 67, "decode_tps": 52.6, "finish": "stop", "content_chars": 558, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k", "t": 1795444711.1442254, "vram_mib": 11240, "gen_n": 138, "prompt_n": 75, "decode_tps": 54.1, "finish": "stop", "content_chars": 441, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k", "t": 1795444714.7901654, "vram_mib": 11240, "gen_n": 142, "prompt_n": 67, "decode_tps": 48.6, "finish": "stop", "content_chars": 538, "loop": 0.0}
+{"label": "c06-a", "case": "code-0k-med", "t": 1795444714.802218, "vram_mib": 11240, "decode_tps": 53.0, "min": 48.6, "max": 54.1, "max_loop": 0.0}
+{"label": "c06-a", "case": "host-end", "t": 1795444714, "loadavg": "4.04 4.29 3.71", "compilers": 0, "vram_mib": 11240}
+{"label": "c06-a", "case": "mem-speed", "t": 1795444714, "cgroup_peak_mib": 1494, "rss_hwm_mib": 21026, "vram_mib": 11240}
+{"label": "m07-cache-lmnone", "case": "env", "t": 1795444715, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "m07-cache-lmnone", "case": "host-start", "t": 1795444721, "loadavg": "3.80 4.23 3.69", "compilers": 0, "vram_mib": 11222}
+{"label": "m07-cache-lmnone", "case": "lora-adapters", "t": 1795444721, "adapters": []}
+{"label": "m07-cache-lmnone", "case": "pp-8k", "t": 1795444743.1980586, "vram_mib": 11266, "prompt_n": 8006, "prefill_tps": 522.3, "ttft_s": 15.33}
+{"label": "m07-cache-lmnone", "case": "pp-8k", "t": 1795444758.881931, "vram_mib": 11266, "prompt_n": 8109, "prefill_tps": 522.6, "ttft_s": 15.52}
+{"label": "m07-cache-lmnone", "case": "pp-8k-med", "t": 1795444758.8978498, "vram_mib": 11266, "prefill_tps": 522.4}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444764.0742126, "vram_mib": 11266, "gen_n": 250, "prompt_n": 62, "decode_tps": 54.3, "finish": "stop", "content_chars": 794, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444767.9661703, "vram_mib": 11266, "gen_n": 189, "prompt_n": 66, "decode_tps": 55.5, "finish": "stop", "content_chars": 589, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444772.6910565, "vram_mib": 11266, "gen_n": 234, "prompt_n": 57, "decode_tps": 54.9, "finish": "stop", "content_chars": 850, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444779.095687, "vram_mib": 11266, "gen_n": 327, "prompt_n": 67, "decode_tps": 55.5, "finish": "stop", "content_chars": 794, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444782.3686774, "vram_mib": 11266, "gen_n": 152, "prompt_n": 75, "decode_tps": 55.2, "finish": "stop", "content_chars": 507, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k", "t": 1795444785.4067504, "vram_mib": 11266, "gen_n": 130, "prompt_n": 67, "decode_tps": 51.4, "finish": "stop", "content_chars": 511, "loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "code-0k-med", "t": 1795444785.4187484, "vram_mib": 11266, "decode_tps": 55.1, "min": 51.4, "max": 55.5, "max_loop": 0.0}
+{"label": "m07-cache-lmnone", "case": "host-end", "t": 1795444785, "loadavg": "3.46 4.00 3.65", "compilers": 0, "vram_mib": 11266}
+{"label": "m07-cache-lmnone", "case": "mem-speed", "t": 1795444785, "cgroup_peak_mib": 19440, "rss_hwm_mib": 19529, "vram_mib": 11266}
+{"label": "c06-b", "case": "env", "t": 1795444787, "env": {"MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c06-b", "case": "host-start", "t": 1795444791, "loadavg": "3.18 3.93 3.63", "compilers": 0, "vram_mib": 11176}
+{"label": "c06-b", "case": "lora-adapters", "t": 1795444791, "adapters": []}
+{"label": "c06-b", "case": "pp-8k", "t": 1795444818.2575965, "vram_mib": 11230, "prompt_n": 8007, "prefill_tps": 395.7, "ttft_s": 20.23}
+{"label": "c06-b", "case": "pp-8k", "t": 1795444838.8332036, "vram_mib": 11230, "prompt_n": 8110, "prefill_tps": 396.7, "ttft_s": 20.44}
+{"label": "c06-b", "case": "pp-8k-med", "t": 1795444838.8457084, "vram_mib": 11230, "prefill_tps": 396.2}
+{"label": "c06-b", "case": "code-0k", "t": 1795444843.6552548, "vram_mib": 11230, "gen_n": 220, "prompt_n": 62, "decode_tps": 54.2, "finish": "stop", "content_chars": 601, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k", "t": 1795444847.3329697, "vram_mib": 11230, "gen_n": 157, "prompt_n": 66, "decode_tps": 53.1, "finish": "stop", "content_chars": 476, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k", "t": 1795444853.6070917, "vram_mib": 11230, "gen_n": 288, "prompt_n": 57, "decode_tps": 51.2, "finish": "stop", "content_chars": 1022, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k", "t": 1795444856.9939222, "vram_mib": 11230, "gen_n": 141, "prompt_n": 67, "decode_tps": 52.9, "finish": "stop", "content_chars": 326, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k", "t": 1795444860.5206435, "vram_mib": 11230, "gen_n": 153, "prompt_n": 75, "decode_tps": 54.6, "finish": "stop", "content_chars": 511, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k", "t": 1795444863.894292, "vram_mib": 11230, "gen_n": 131, "prompt_n": 67, "decode_tps": 49.3, "finish": "stop", "content_chars": 485, "loop": 0.0}
+{"label": "c06-b", "case": "code-0k-med", "t": 1795444863.9065526, "vram_mib": 11230, "decode_tps": 53.0, "min": 49.3, "max": 54.6, "max_loop": 0.0}
+{"label": "c06-b", "case": "host-end", "t": 1795444863, "loadavg": "2.83 3.60 3.53", "compilers": 0, "vram_mib": 11230}
+{"label": "c06-b", "case": "mem-speed", "t": 1795444863, "cgroup_peak_mib": 19440, "rss_hwm_mib": 21021, "vram_mib": 11230}
+{"label": "m08-cache5600", "case": "env", "t": 1795444865, "env": {"MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "5600"}, "args": []}
+{"label": "c06-c", "case": "env", "t": 1795444866, "env": {"MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c06-c", "case": "host-start", "t": 1795444868, "loadavg": "2.60 3.54 3.51", "compilers": 0, "vram_mib": 11176}
+{"label": "c06-c", "case": "lora-adapters", "t": 1795444868, "adapters": []}
+{"label": "c06-c", "case": "pp-8k", "t": 1795444893.7450614, "vram_mib": 11230, "prompt_n": 8007, "prefill_tps": 394.7, "ttft_s": 20.29}
+{"label": "c06-c", "case": "pp-8k", "t": 1795444914.36288, "vram_mib": 11230, "prompt_n": 8110, "prefill_tps": 395.9, "ttft_s": 20.48}
+{"label": "c06-c", "case": "pp-8k-med", "t": 1795444914.3750653, "vram_mib": 11230, "prefill_tps": 395.3}
+{"label": "c06-c", "case": "code-0k", "t": 1795444920.0182478, "vram_mib": 11230, "gen_n": 256, "prompt_n": 62, "decode_tps": 52.3, "finish": "stop", "content_chars": 765, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k", "t": 1795444924.0462036, "vram_mib": 11230, "gen_n": 176, "prompt_n": 66, "decode_tps": 52.8, "finish": "stop", "content_chars": 570, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k", "t": 1795444929.0559208, "vram_mib": 11230, "gen_n": 228, "prompt_n": 57, "decode_tps": 52.4, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k", "t": 1795444934.448699, "vram_mib": 11230, "gen_n": 255, "prompt_n": 67, "decode_tps": 54.7, "finish": "stop", "content_chars": 653, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k", "t": 1795444938.0329883, "vram_mib": 11230, "gen_n": 155, "prompt_n": 75, "decode_tps": 54.1, "finish": "stop", "content_chars": 525, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k", "t": 1795444942.0937638, "vram_mib": 11230, "gen_n": 165, "prompt_n": 67, "decode_tps": 49.4, "finish": "stop", "content_chars": 618, "loop": 0.0}
+{"label": "c06-c", "case": "code-0k-med", "t": 1795444942.1066198, "vram_mib": 11230, "decode_tps": 52.6, "min": 49.4, "max": 54.7, "max_loop": 0.0}
+{"label": "c06-c", "case": "host-end", "t": 1795444942, "loadavg": "3.48 3.51 3.50", "compilers": 0, "vram_mib": 11230}
+{"label": "c06-c", "case": "mem-speed", "t": 1795444942, "cgroup_peak_mib": 19440, "rss_hwm_mib": 21024, "vram_mib": 11230}
+{"label": "q02-uncensored", "case": "env", "t": 1795444943, "env": {"MX_NO_GPU_RUN": "1", "MX_NCMOE": "33", "MX_THINK": "0", "VARIANT": "uncensored", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "q02-uncensored", "case": "host-start", "t": 1795444945, "loadavg": "3.20 3.45 3.48", "compilers": 0, "vram_mib": 11382}
+{"label": "q02-uncensored", "case": "lora-adapters", "t": 1795444945, "adapters": [{"id":0,"path":"/mnt/models/llm/maxwell-v1-flash/uncensored/Maxwell-V1-Flash-Uncensored-LoRA.gguf","scale":1.0,"task_name":"","prompt_prefix":""}]}
+{"label": "q02-uncensored", "case": "host-end", "t": 1795445279, "loadavg": "6.14 5.24 4.27", "compilers": 0, "vram_mib": 11388}
+{"label": "q02-uncensored", "case": "mem-quality", "t": 1795445279, "cgroup_peak_mib": 1188, "rss_hwm_mib": 20232, "vram_mib": 11388}
+{"label": "d07-a", "case": "env", "t": 1795445318, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "d07-a", "case": "host-start", "t": 1795445324, "loadavg": "3.45 4.65 4.11", "compilers": 0, "vram_mib": 11212}
+{"label": "d07-a", "case": "lora-adapters", "t": 1795445324, "adapters": []}
+{"label": "d07-a", "case": "code-32k", "t": 1795445410.6536872, "vram_mib": 11264, "gen_n": 195, "prompt_n": 32253, "decode_tps": 22.1, "finish": "stop", "content_chars": 565, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k", "t": 1795445423.1767838, "vram_mib": 11264, "gen_n": 265, "prompt_n": 32257, "decode_tps": 22.2, "finish": "stop", "content_chars": 842, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k", "t": 1795445438.5848134, "vram_mib": 11264, "gen_n": 323, "prompt_n": 32248, "decode_tps": 21.7, "finish": "stop", "content_chars": 1158, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k", "t": 1795445453.1614773, "vram_mib": 11274, "gen_n": 308, "prompt_n": 32258, "decode_tps": 22.0, "finish": "stop", "content_chars": 744, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k", "t": 1795445474.508626, "vram_mib": 11264, "gen_n": 454, "prompt_n": 32266, "decode_tps": 21.9, "finish": "stop", "content_chars": 1616, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k", "t": 1795445479.9284754, "vram_mib": 11264, "gen_n": 101, "prompt_n": 32258, "decode_tps": 20.9, "finish": "stop", "content_chars": 407, "loop": 0.0}
+{"label": "d07-a", "case": "code-32k-med", "t": 1795445479.9449797, "vram_mib": 11264, "decode_tps": 22.0, "min": 20.9, "max": 22.2, "max_loop": 0.0}
+{"label": "d07-a", "case": "needle-32k", "t": 1795445551.1608095, "vram_mib": 11264, "prompt_n": 31742, "found": "3/3", "prefill_tps": 455.8, "decode_tps": 20.2, "answer": "6TSIP49B | DZ3A8QZY | QE8Z6C8R"}
+{"label": "d07-a", "case": "needle-62k", "t": 1795445709.7260365, "vram_mib": 11274, "prompt_n": 58903, "found": "2/3", "prefill_tps": 378.5, "decode_tps": 13.6, "answer": "88OOTJ2A | # SECRET ACCESS CODE: MG7DVJS3 | # SECRET ACCESS CODE: 88OOTJ2A"}
+{"label": "d07-a", "case": "host-end", "t": 1795445709, "loadavg": "1.61 2.89 3.55", "compilers": 0, "vram_mib": 11274}
+{"label": "d07-a", "case": "mem-deep", "t": 1795445709, "cgroup_peak_mib": 21661, "rss_hwm_mib": 21757, "vram_mib": 11274}
+{"label": "d09-f16kv", "case": "env", "t": 1795445711, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "d09-f16kv", "case": "host-start", "t": 1795445718, "loadavg": "1.52 2.83 3.52", "compilers": 0, "vram_mib": 11214}
+{"label": "d09-f16kv", "case": "lora-adapters", "t": 1795445718, "adapters": []}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445806.8851902, "vram_mib": 11256, "gen_n": 271, "prompt_n": 32253, "decode_tps": 33.2, "finish": "stop", "content_chars": 754, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445814.4797363, "vram_mib": 11256, "gen_n": 244, "prompt_n": 32257, "decode_tps": 35.0, "finish": "stop", "content_chars": 815, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445820.0528562, "vram_mib": 11256, "gen_n": 169, "prompt_n": 32248, "decode_tps": 33.8, "finish": "stop", "content_chars": 625, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445826.9907055, "vram_mib": 11256, "gen_n": 217, "prompt_n": 32258, "decode_tps": 34.4, "finish": "stop", "content_chars": 536, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445842.080491, "vram_mib": 11256, "gen_n": 512, "prompt_n": 32266, "decode_tps": 35.5, "finish": "length", "content_chars": 2075, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k", "t": 1795445846.0319648, "vram_mib": 11256, "gen_n": 104, "prompt_n": 32258, "decode_tps": 31.3, "finish": "stop", "content_chars": 398, "loop": 0.0}
+{"label": "d09-f16kv", "case": "code-32k-med", "t": 1795445846.0480938, "vram_mib": 11256, "decode_tps": 34.1, "min": 31.3, "max": 35.5, "max_loop": 0.0}
+{"label": "d09-f16kv", "case": "needle-32k", "t": 1795445920.0546544, "vram_mib": 11256, "prompt_n": 31740, "found": "3/3", "prefill_tps": 437.6, "decode_tps": 28.5, "answer": "VT8KW5K5 | MLMK0QJ8 | U57WBUR3"}
+{"label": "d09-f16kv", "case": "needle-62k", "t": 1795446081.8192244, "vram_mib": 11268, "prompt_n": 58905, "found": "2/3", "prefill_tps": 367.8, "decode_tps": 25.6, "answer": "DVX50HR6 | TTWAHUPH | 3P2W5XVW"}
+{"label": "d09-f16kv", "case": "host-end", "t": 1795446081, "loadavg": "1.13 1.91 2.91", "compilers": 0, "vram_mib": 11268}
+{"label": "d09-f16kv", "case": "mem-deep", "t": 1795446081, "cgroup_peak_mib": 24315, "rss_hwm_mib": 24397, "vram_mib": 11268}
+{"label": "d07-b", "case": "env", "t": 1795446083, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "d07-b", "case": "host-start", "t": 1795446091, "loadavg": "1.19 1.90 2.89", "compilers": 0, "vram_mib": 11222}
+{"label": "d07-b", "case": "lora-adapters", "t": 1795446092, "adapters": []}
+{"label": "d07-b", "case": "code-32k", "t": 1795446179.0413196, "vram_mib": 11274, "gen_n": 216, "prompt_n": 32253, "decode_tps": 22.3, "finish": "stop", "content_chars": 606, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k", "t": 1795446186.9229882, "vram_mib": 11264, "gen_n": 162, "prompt_n": 32257, "decode_tps": 22.1, "finish": "stop", "content_chars": 518, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k", "t": 1795446194.9175234, "vram_mib": 11264, "gen_n": 165, "prompt_n": 32248, "decode_tps": 22.1, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k", "t": 1795446206.8276253, "vram_mib": 11264, "gen_n": 251, "prompt_n": 32258, "decode_tps": 22.2, "finish": "stop", "content_chars": 624, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k", "t": 1795446224.7775922, "vram_mib": 11264, "gen_n": 388, "prompt_n": 32266, "decode_tps": 22.4, "finish": "stop", "content_chars": 1352, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k", "t": 1795446229.8740444, "vram_mib": 11264, "gen_n": 96, "prompt_n": 32258, "decode_tps": 21.3, "finish": "stop", "content_chars": 381, "loop": 0.0}
+{"label": "d07-b", "case": "code-32k-med", "t": 1795446229.886237, "vram_mib": 11264, "decode_tps": 22.2, "min": 21.3, "max": 22.4, "max_loop": 0.0}
+{"label": "d07-b", "case": "needle-32k", "t": 1795446301.0493371, "vram_mib": 11274, "prompt_n": 31743, "found": "3/3", "prefill_tps": 455.4, "decode_tps": 20.3, "answer": "1UVS6TSQ | 1LYNB8MO | NL1V4FZL"}
+{"label": "d07-b", "case": "host-end", "t": 1795446301, "loadavg": "2.06 2.26 2.84", "compilers": 0, "vram_mib": 11274}
+{"label": "d07-b", "case": "mem-deep", "t": 1795446301, "cgroup_peak_mib": 24315, "rss_hwm_mib": 20254, "vram_mib": 11274}
+{"label": "c07-a", "case": "env", "t": 1795447573, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c07-a", "case": "host-start", "t": 1795447585, "loadavg": "1.21 1.24 1.63", "compilers": 0, "vram_mib": 11222}
+{"label": "c07-a", "case": "lora-adapters", "t": 1795447585, "adapters": []}
+{"label": "c07-a", "case": "pp-8k", "t": 1795447606.529062, "vram_mib": 11276, "prompt_n": 8006, "prefill_tps": 521.9, "ttft_s": 15.34}
+{"label": "c07-a", "case": "pp-8k", "t": 1795447622.2320926, "vram_mib": 11266, "prompt_n": 8108, "prefill_tps": 521.8, "ttft_s": 15.54}
+{"label": "c07-a", "case": "pp-8k-med", "t": 1795447622.244164, "vram_mib": 11266, "prefill_tps": 521.8}
+{"label": "c07-a", "case": "code-0k", "t": 1795447627.5820174, "vram_mib": 11266, "gen_n": 258, "prompt_n": 62, "decode_tps": 54.0, "finish": "stop", "content_chars": 814, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k", "t": 1795447631.914043, "vram_mib": 11266, "gen_n": 212, "prompt_n": 66, "decode_tps": 55.2, "finish": "stop", "content_chars": 694, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k", "t": 1795447636.9188828, "vram_mib": 11266, "gen_n": 247, "prompt_n": 57, "decode_tps": 54.4, "finish": "stop", "content_chars": 893, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k", "t": 1795447640.5876687, "vram_mib": 11266, "gen_n": 178, "prompt_n": 67, "decode_tps": 56.4, "finish": "stop", "content_chars": 445, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k", "t": 1795447643.62409, "vram_mib": 11266, "gen_n": 143, "prompt_n": 75, "decode_tps": 56.8, "finish": "stop", "content_chars": 469, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k", "t": 1795447645.8334417, "vram_mib": 11266, "gen_n": 86, "prompt_n": 67, "decode_tps": 50.6, "finish": "stop", "content_chars": 329, "loop": 0.0}
+{"label": "c07-a", "case": "code-0k-med", "t": 1795447645.8490567, "vram_mib": 11266, "decode_tps": 54.8, "min": 50.6, "max": 56.8, "max_loop": 0.0}
+{"label": "c07-a", "case": "host-end", "t": 1795447645, "loadavg": "2.71 1.62 1.73", "compilers": 0, "vram_mib": 11266}
+{"label": "c07-a", "case": "mem-speed", "t": 1795447645, "cgroup_peak_mib": 22363, "rss_hwm_mib": 19523, "vram_mib": 11266}
+{"label": "m09-f16kv", "case": "env", "t": 1795447647, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "m09-f16kv", "case": "host-start", "t": 1795447675, "loadavg": "2.09 1.57 1.71", "compilers": 0, "vram_mib": 11204}
+{"label": "m09-f16kv", "case": "lora-adapters", "t": 1795447675, "adapters": []}
+{"label": "m09-f16kv", "case": "pp-8k", "t": 1795447697.204366, "vram_mib": 11258, "prompt_n": 8008, "prefill_tps": 497.1, "ttft_s": 16.11}
+{"label": "m09-f16kv", "case": "pp-8k", "t": 1795447713.691921, "vram_mib": 11258, "prompt_n": 8108, "prefill_tps": 496.8, "ttft_s": 16.32}
+{"label": "m09-f16kv", "case": "pp-8k-med", "t": 1795447713.704174, "vram_mib": 11258, "prefill_tps": 497.0}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447718.7132878, "vram_mib": 11258, "gen_n": 208, "prompt_n": 62, "decode_tps": 47.6, "finish": "stop", "content_chars": 585, "loop": 0.0}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447727.3206427, "vram_mib": 11258, "gen_n": 405, "prompt_n": 66, "decode_tps": 50.2, "finish": "stop", "content_chars": 1300, "loop": 0.03}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447731.6636717, "vram_mib": 11258, "gen_n": 184, "prompt_n": 57, "decode_tps": 47.9, "finish": "stop", "content_chars": 677, "loop": 0.0}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447735.898344, "vram_mib": 11258, "gen_n": 184, "prompt_n": 67, "decode_tps": 50.0, "finish": "stop", "content_chars": 404, "loop": 0.0}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447739.5681884, "vram_mib": 11258, "gen_n": 155, "prompt_n": 75, "decode_tps": 50.0, "finish": "stop", "content_chars": 525, "loop": 0.0}
+{"label": "m09-f16kv", "case": "code-0k", "t": 1795447741.7647748, "vram_mib": 11258, "gen_n": 74, "prompt_n": 67, "decode_tps": 45.0, "finish": "stop", "content_chars": 257, "loop": 0.0}
+{"label": "m09-f16kv", "case": "code-0k-med", "t": 1795447741.7768981, "vram_mib": 11258, "decode_tps": 49.0, "min": 45.0, "max": 50.2, "max_loop": 0.03}
+{"label": "m09-f16kv", "case": "host-end", "t": 1795447741, "loadavg": "3.30 1.95 1.83", "compilers": 0, "vram_mib": 11258}
+{"label": "m09-f16kv", "case": "mem-speed", "t": 1795447741, "cgroup_peak_mib": 36709, "rss_hwm_mib": 20260, "vram_mib": 11258}
+{"label": "c07-b", "case": "env", "t": 1795447743, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c07-b", "case": "host-start", "t": 1795447751, "loadavg": "3.03 1.93 1.82", "compilers": 0, "vram_mib": 11212}
+{"label": "c07-b", "case": "lora-adapters", "t": 1795447751, "adapters": []}
+{"label": "c07-b", "case": "pp-8k", "t": 1795447771.7263339, "vram_mib": 11266, "prompt_n": 8005, "prefill_tps": 523.1, "ttft_s": 15.3}
+{"label": "c07-b", "case": "pp-8k", "t": 1795447787.4043555, "vram_mib": 11266, "prompt_n": 8111, "prefill_tps": 522.8, "ttft_s": 15.51}
+{"label": "c07-b", "case": "pp-8k-med", "t": 1795447787.4164212, "vram_mib": 11266, "prefill_tps": 523.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447791.9311485, "vram_mib": 11266, "gen_n": 221, "prompt_n": 62, "decode_tps": 56.2, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447798.4830112, "vram_mib": 11266, "gen_n": 338, "prompt_n": 66, "decode_tps": 55.8, "finish": "stop", "content_chars": 1096, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447805.8843968, "vram_mib": 11266, "gen_n": 365, "prompt_n": 57, "decode_tps": 52.6, "finish": "stop", "content_chars": 1336, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447812.994914, "vram_mib": 11266, "gen_n": 374, "prompt_n": 67, "decode_tps": 56.7, "finish": "stop", "content_chars": 1031, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447816.32051, "vram_mib": 11266, "gen_n": 153, "prompt_n": 75, "decode_tps": 54.5, "finish": "stop", "content_chars": 511, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k", "t": 1795447819.2096403, "vram_mib": 11266, "gen_n": 122, "prompt_n": 67, "decode_tps": 51.2, "finish": "stop", "content_chars": 469, "loop": 0.0}
+{"label": "c07-b", "case": "code-0k-med", "t": 1795447819.2216733, "vram_mib": 11266, "decode_tps": 55.2, "min": 51.2, "max": 56.7, "max_loop": 0.0}
+{"label": "c07-b", "case": "host-end", "t": 1795447819, "loadavg": "3.71 2.31 1.96", "compilers": 0, "vram_mib": 11266}
+{"label": "c07-b", "case": "mem-speed", "t": 1795447819, "cgroup_peak_mib": 37144, "rss_hwm_mib": 19539, "vram_mib": 11266}
+{"label": "m09-f16kv-r", "case": "env", "t": 1795447821, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "m09-f16kv-r", "case": "host-start", "t": 1795447827, "loadavg": "3.49 2.28 1.95", "compilers": 0, "vram_mib": 11204}
+{"label": "m09-f16kv-r", "case": "lora-adapters", "t": 1795447827, "adapters": []}
+{"label": "m09-f16kv-r", "case": "pp-8k", "t": 1795447849.8333414, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.5, "ttft_s": 16.13}
+{"label": "m09-f16kv-r", "case": "pp-8k", "t": 1795447866.3943725, "vram_mib": 11258, "prompt_n": 8108, "prefill_tps": 496.7, "ttft_s": 16.32}
+{"label": "m09-f16kv-r", "case": "pp-8k-med", "t": 1795447866.4065762, "vram_mib": 11258, "prefill_tps": 496.6}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447872.110486, "vram_mib": 11258, "gen_n": 239, "prompt_n": 62, "decode_tps": 47.7, "finish": "stop", "content_chars": 629, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447877.3878896, "vram_mib": 11258, "gen_n": 233, "prompt_n": 66, "decode_tps": 49.1, "finish": "stop", "content_chars": 715, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447884.9549973, "vram_mib": 11258, "gen_n": 329, "prompt_n": 57, "decode_tps": 46.6, "finish": "stop", "content_chars": 1201, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447888.4912076, "vram_mib": 11258, "gen_n": 146, "prompt_n": 67, "decode_tps": 49.1, "finish": "stop", "content_chars": 364, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447892.0835376, "vram_mib": 11258, "gen_n": 152, "prompt_n": 75, "decode_tps": 50.3, "finish": "stop", "content_chars": 507, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k", "t": 1795447897.2871816, "vram_mib": 11258, "gen_n": 215, "prompt_n": 67, "decode_tps": 46.2, "finish": "stop", "content_chars": 812, "loop": 0.0}
+{"label": "m09-f16kv-r", "case": "code-0k-med", "t": 1795447897.303433, "vram_mib": 11258, "decode_tps": 48.4, "min": 46.2, "max": 50.3, "max_loop": 0.0}
+{"label": "m09-f16kv-r", "case": "host-end", "t": 1795447897, "loadavg": "4.12 2.66 2.10", "compilers": 0, "vram_mib": 11258}
+{"label": "m09-f16kv-r", "case": "mem-speed", "t": 1795447897, "cgroup_peak_mib": 37862, "rss_hwm_mib": 20254, "vram_mib": 11258}
+{"label": "c07-c", "case": "env", "t": 1795447899, "env": {"MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "4800"}, "args": []}
+{"label": "c07-c", "case": "host-start", "t": 1795447906, "loadavg": "3.72 2.62 2.10", "compilers": 0, "vram_mib": 11212}
+{"label": "c07-c", "case": "lora-adapters", "t": 1795447906, "adapters": []}
+{"label": "c07-c", "case": "pp-8k", "t": 1795447927.6018453, "vram_mib": 11276, "prompt_n": 8010, "prefill_tps": 522.8, "ttft_s": 15.32}
+{"label": "c07-c", "case": "pp-8k", "t": 1795447943.2985008, "vram_mib": 11276, "prompt_n": 8109, "prefill_tps": 522.7, "ttft_s": 15.51}
+{"label": "c07-c", "case": "pp-8k-med", "t": 1795447943.3136783, "vram_mib": 11276, "prefill_tps": 522.7}
+{"label": "c07-c", "case": "code-0k", "t": 1795447947.846538, "vram_mib": 11276, "gen_n": 220, "prompt_n": 62, "decode_tps": 55.8, "finish": "stop", "content_chars": 601, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k", "t": 1795447952.5346732, "vram_mib": 11276, "gen_n": 231, "prompt_n": 66, "decode_tps": 55.1, "finish": "stop", "content_chars": 754, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k", "t": 1795447957.3959074, "vram_mib": 11276, "gen_n": 240, "prompt_n": 57, "decode_tps": 54.6, "finish": "stop", "content_chars": 865, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k", "t": 1795447960.2967203, "vram_mib": 11276, "gen_n": 130, "prompt_n": 67, "decode_tps": 54.5, "finish": "stop", "content_chars": 301, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k", "t": 1795447963.2488391, "vram_mib": 11276, "gen_n": 137, "prompt_n": 75, "decode_tps": 56.4, "finish": "stop", "content_chars": 437, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k", "t": 1795447966.3485713, "vram_mib": 11276, "gen_n": 132, "prompt_n": 67, "decode_tps": 51.0, "finish": "stop", "content_chars": 500, "loop": 0.0}
+{"label": "c07-c", "case": "code-0k-med", "t": 1795447966.364974, "vram_mib": 11276, "decode_tps": 54.9, "min": 51.0, "max": 56.4, "max_loop": 0.0}
+{"label": "c07-c", "case": "host-end", "t": 1795447966, "loadavg": "3.27 2.64 2.13", "compilers": 0, "vram_mib": 11276}
+{"label": "c07-c", "case": "mem-speed", "t": 1795447966, "cgroup_peak_mib": 37862, "rss_hwm_mib": 19523, "vram_mib": 11276}
+{"label": "c09-a", "case": "env", "t": 1795447968, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-a", "case": "host-start", "t": 1795447976, "loadavg": "2.84 2.57 2.11", "compilers": 0, "vram_mib": 11204}
+{"label": "c09-a", "case": "lora-adapters", "t": 1795447976, "adapters": []}
+{"label": "c09-a", "case": "pp-8k", "t": 1795447998.3798726, "vram_mib": 11258, "prompt_n": 8007, "prefill_tps": 496.5, "ttft_s": 16.13}
+{"label": "c09-a", "case": "pp-8k", "t": 1795448014.9621892, "vram_mib": 11258, "prompt_n": 8108, "prefill_tps": 496.8, "ttft_s": 16.32}
+{"label": "c09-a", "case": "pp-8k-med", "t": 1795448014.9785218, "vram_mib": 11258, "prefill_tps": 496.7}
+{"label": "c09-a", "case": "code-0k", "t": 1795448021.7760115, "vram_mib": 11258, "gen_n": 284, "prompt_n": 62, "decode_tps": 46.8, "finish": "stop", "content_chars": 890, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k", "t": 1795448026.3778522, "vram_mib": 11258, "gen_n": 200, "prompt_n": 66, "decode_tps": 49.2, "finish": "stop", "content_chars": 616, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k", "t": 1795448031.1792135, "vram_mib": 11258, "gen_n": 205, "prompt_n": 57, "decode_tps": 47.7, "finish": "stop", "content_chars": 787, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k", "t": 1795448035.8343618, "vram_mib": 11258, "gen_n": 207, "prompt_n": 67, "decode_tps": 50.5, "finish": "stop", "content_chars": 471, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k", "t": 1795448039.1507628, "vram_mib": 11258, "gen_n": 138, "prompt_n": 75, "decode_tps": 50.4, "finish": "stop", "content_chars": 441, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k", "t": 1795448042.4688733, "vram_mib": 11258, "gen_n": 126, "prompt_n": 67, "decode_tps": 45.7, "finish": "stop", "content_chars": 484, "loop": 0.0}
+{"label": "c09-a", "case": "code-0k-med", "t": 1795448042.4856725, "vram_mib": 11258, "decode_tps": 48.5, "min": 45.7, "max": 50.5, "max_loop": 0.0}
+{"label": "c09-a", "case": "host-end", "t": 1795448042, "loadavg": "3.59 2.76 2.21", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-a", "case": "mem-speed", "t": 1795448042, "cgroup_peak_mib": 20668, "rss_hwm_mib": 20246, "vram_mib": 11258}
+{"label": "m10-share090", "case": "env", "t": 1795448044, "env": {"MX_KV": "f16", "MX_MOE_CACHE_SHARE": "0.90", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "m10-share090", "case": "host-start", "t": 1795448053, "loadavg": "3.02 2.67 2.19", "compilers": 0, "vram_mib": 11204}
+{"label": "m10-share090", "case": "lora-adapters", "t": 1795448053, "adapters": []}
+{"label": "m10-share090", "case": "pp-8k", "t": 1795448076.0065722, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.8, "ttft_s": 16.11}
+{"label": "m10-share090", "case": "pp-8k", "t": 1795448092.5736508, "vram_mib": 11258, "prompt_n": 8110, "prefill_tps": 496.9, "ttft_s": 16.32}
+{"label": "m10-share090", "case": "pp-8k-med", "t": 1795448092.590098, "vram_mib": 11258, "prefill_tps": 496.8}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448100.0790064, "vram_mib": 11258, "gen_n": 324, "prompt_n": 62, "decode_tps": 47.9, "finish": "stop", "content_chars": 898, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448106.430699, "vram_mib": 11258, "gen_n": 289, "prompt_n": 66, "decode_tps": 49.7, "finish": "stop", "content_chars": 941, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448111.6579232, "vram_mib": 11258, "gen_n": 228, "prompt_n": 57, "decode_tps": 48.3, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448114.323147, "vram_mib": 11258, "gen_n": 104, "prompt_n": 67, "decode_tps": 49.4, "finish": "stop", "content_chars": 246, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448117.9609923, "vram_mib": 11258, "gen_n": 155, "prompt_n": 75, "decode_tps": 50.6, "finish": "stop", "content_chars": 527, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k", "t": 1795448121.41285, "vram_mib": 11258, "gen_n": 134, "prompt_n": 67, "decode_tps": 46.3, "finish": "stop", "content_chars": 520, "loop": 0.0}
+{"label": "m10-share090", "case": "code-0k-med", "t": 1795448121.4291422, "vram_mib": 11258, "decode_tps": 48.8, "min": 46.3, "max": 50.6, "max_loop": 0.0}
+{"label": "m10-share090", "case": "host-end", "t": 1795448121, "loadavg": "3.26 2.78 2.25", "compilers": 0, "vram_mib": 11258}
+{"label": "m10-share090", "case": "mem-speed", "t": 1795448121, "cgroup_peak_mib": 21858, "rss_hwm_mib": 20254, "vram_mib": 11258}
+{"label": "c09-b", "case": "env", "t": 1795448123, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-b", "case": "host-start", "t": 1795448130, "loadavg": "2.84 2.70 2.23", "compilers": 0, "vram_mib": 11204}
+{"label": "c09-b", "case": "lora-adapters", "t": 1795448130, "adapters": []}
+{"label": "c09-b", "case": "pp-8k", "t": 1795448152.5984564, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.2, "ttft_s": 16.13}
+{"label": "c09-b", "case": "pp-8k", "t": 1795448169.1508887, "vram_mib": 11258, "prompt_n": 8109, "prefill_tps": 496.7, "ttft_s": 16.33}
+{"label": "c09-b", "case": "pp-8k-med", "t": 1795448169.1632578, "vram_mib": 11258, "prefill_tps": 496.5}
+{"label": "c09-b", "case": "code-0k", "t": 1795448175.2825134, "vram_mib": 11258, "gen_n": 250, "prompt_n": 62, "decode_tps": 46.3, "finish": "stop", "content_chars": 753, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k", "t": 1795448180.914019, "vram_mib": 11258, "gen_n": 252, "prompt_n": 66, "decode_tps": 49.5, "finish": "stop", "content_chars": 790, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k", "t": 1795448186.178708, "vram_mib": 11258, "gen_n": 228, "prompt_n": 57, "decode_tps": 48.0, "finish": "stop", "content_chars": 828, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k", "t": 1795448189.7402496, "vram_mib": 11258, "gen_n": 154, "prompt_n": 67, "decode_tps": 51.3, "finish": "stop", "content_chars": 363, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k", "t": 1795448193.8479023, "vram_mib": 11258, "gen_n": 178, "prompt_n": 75, "decode_tps": 50.4, "finish": "stop", "content_chars": 636, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k", "t": 1795448196.670432, "vram_mib": 11258, "gen_n": 101, "prompt_n": 67, "decode_tps": 44.6, "finish": "stop", "content_chars": 401, "loop": 0.0}
+{"label": "c09-b", "case": "code-0k-med", "t": 1795448196.6865613, "vram_mib": 11258, "decode_tps": 48.7, "min": 44.6, "max": 51.3, "max_loop": 0.0}
+{"label": "c09-b", "case": "host-end", "t": 1795448196, "loadavg": "3.62 2.88 2.32", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-b", "case": "mem-speed", "t": 1795448196, "cgroup_peak_mib": 21883, "rss_hwm_mib": 20252, "vram_mib": 11258}
+{"label": "m11-hybrid42", "case": "env", "t": 1795448198, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "ncmoe", "MX_NCMOE": "42", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "850"}, "args": []}
+{"label": "m11-hybrid42", "case": "host-start", "t": 1795448204, "loadavg": "3.14 2.81 2.30", "compilers": 0, "vram_mib": 11198}
+{"label": "m11-hybrid42", "case": "lora-adapters", "t": 1795448204, "adapters": []}
+{"label": "m11-hybrid42", "case": "pp-8k", "t": 1795448225.8727286, "vram_mib": 11252, "prompt_n": 8007, "prefill_tps": 510.1, "ttft_s": 15.7}
+{"label": "m11-hybrid42", "case": "pp-8k", "t": 1795448241.9449086, "vram_mib": 11252, "prompt_n": 8110, "prefill_tps": 510.1, "ttft_s": 15.9}
+{"label": "m11-hybrid42", "case": "pp-8k-med", "t": 1795448241.9571123, "vram_mib": 11252, "prefill_tps": 510.1}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448248.1434665, "vram_mib": 11252, "gen_n": 239, "prompt_n": 62, "decode_tps": 42.9, "finish": "stop", "content_chars": 734, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448253.8200722, "vram_mib": 11252, "gen_n": 235, "prompt_n": 66, "decode_tps": 45.5, "finish": "stop", "content_chars": 729, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448259.287416, "vram_mib": 11252, "gen_n": 217, "prompt_n": 57, "decode_tps": 43.6, "finish": "stop", "content_chars": 792, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448261.9567213, "vram_mib": 11252, "gen_n": 96, "prompt_n": 67, "decode_tps": 44.9, "finish": "stop", "content_chars": 211, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448265.9096694, "vram_mib": 11252, "gen_n": 154, "prompt_n": 75, "decode_tps": 45.2, "finish": "stop", "content_chars": 523, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k", "t": 1795448270.1133502, "vram_mib": 11262, "gen_n": 156, "prompt_n": 67, "decode_tps": 42.5, "finish": "stop", "content_chars": 615, "loop": 0.0}
+{"label": "m11-hybrid42", "case": "code-0k-med", "t": 1795448270.1256125, "vram_mib": 11262, "decode_tps": 44.2, "min": 42.5, "max": 45.5, "max_loop": 0.0}
+{"label": "m11-hybrid42", "case": "host-end", "t": 1795448270, "loadavg": "3.68 2.95 2.38", "compilers": 0, "vram_mib": 11262}
+{"label": "m11-hybrid42", "case": "mem-speed", "t": 1795448270, "cgroup_peak_mib": 21883, "rss_hwm_mib": 18986, "vram_mib": 11262}
+{"label": "c09-c", "case": "env", "t": 1795448272, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-c", "case": "host-start", "t": 1795448278, "loadavg": "3.18 2.87 2.36", "compilers": 0, "vram_mib": 11214}
+{"label": "c09-c", "case": "lora-adapters", "t": 1795448278, "adapters": []}
+{"label": "c09-c", "case": "pp-8k", "t": 1795448299.97129, "vram_mib": 11258, "prompt_n": 8005, "prefill_tps": 496.5, "ttft_s": 16.12}
+{"label": "c09-c", "case": "pp-8k", "t": 1795448316.5166628, "vram_mib": 11258, "prompt_n": 8110, "prefill_tps": 496.1, "ttft_s": 16.35}
+{"label": "c09-c", "case": "pp-8k-med", "t": 1795448316.5288146, "vram_mib": 11258, "prefill_tps": 496.3}
+{"label": "c09-c", "case": "code-0k", "t": 1795448321.622641, "vram_mib": 11258, "gen_n": 209, "prompt_n": 62, "decode_tps": 47.7, "finish": "stop", "content_chars": 587, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k", "t": 1795448327.2474527, "vram_mib": 11258, "gen_n": 249, "prompt_n": 66, "decode_tps": 48.9, "finish": "stop", "content_chars": 775, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k", "t": 1795448331.6003923, "vram_mib": 11258, "gen_n": 183, "prompt_n": 57, "decode_tps": 47.7, "finish": "stop", "content_chars": 664, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k", "t": 1795448334.9847596, "vram_mib": 11258, "gen_n": 138, "prompt_n": 67, "decode_tps": 48.9, "finish": "stop", "content_chars": 316, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k", "t": 1795448338.691892, "vram_mib": 11258, "gen_n": 157, "prompt_n": 75, "decode_tps": 50.1, "finish": "stop", "content_chars": 541, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k", "t": 1795448342.1560624, "vram_mib": 11258, "gen_n": 132, "prompt_n": 67, "decode_tps": 45.5, "finish": "stop", "content_chars": 524, "loop": 0.0}
+{"label": "c09-c", "case": "code-0k-med", "t": 1795448342.1721873, "vram_mib": 11258, "decode_tps": 48.3, "min": 45.5, "max": 50.1, "max_loop": 0.0}
+{"label": "c09-c", "case": "host-end", "t": 1795448342, "loadavg": "3.70 3.01 2.44", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-c", "case": "mem-speed", "t": 1795448342, "cgroup_peak_mib": 21927, "rss_hwm_mib": 20240, "vram_mib": 11258}
+{"label": "m12-ub1024", "case": "env", "t": 1795448344, "env": {"MX_KV": "f16", "MX_UBATCH": "1024", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "1700"}, "args": []}
+{"label": "m12-ub1024", "case": "host-start", "t": 1795448350, "loadavg": "3.36 2.96 2.43", "compilers": 0, "vram_mib": 10976}
+{"label": "m12-ub1024", "case": "lora-adapters", "t": 1795448350, "adapters": []}
+{"label": "m12-ub1024", "case": "pp-8k", "t": 1795448366.4884493, "vram_mib": 11044, "prompt_n": 8008, "prefill_tps": 783.0, "ttft_s": 10.23}
+{"label": "m12-ub1024", "case": "pp-8k", "t": 1795448377.0171754, "vram_mib": 11044, "prompt_n": 8112, "prefill_tps": 784.3, "ttft_s": 10.34}
+{"label": "m12-ub1024", "case": "pp-8k-med", "t": 1795448377.030329, "vram_mib": 11044, "prefill_tps": 783.7}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448383.8114653, "vram_mib": 11044, "gen_n": 278, "prompt_n": 62, "decode_tps": 45.9, "finish": "stop", "content_chars": 865, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448389.7976377, "vram_mib": 11044, "gen_n": 263, "prompt_n": 66, "decode_tps": 48.3, "finish": "stop", "content_chars": 822, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448394.7597783, "vram_mib": 11044, "gen_n": 207, "prompt_n": 57, "decode_tps": 46.5, "finish": "stop", "content_chars": 739, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448397.7467313, "vram_mib": 11044, "gen_n": 113, "prompt_n": 67, "decode_tps": 46.7, "finish": "stop", "content_chars": 263, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448401.9773939, "vram_mib": 11044, "gen_n": 178, "prompt_n": 75, "decode_tps": 48.7, "finish": "stop", "content_chars": 636, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k", "t": 1795448405.4286594, "vram_mib": 11044, "gen_n": 129, "prompt_n": 67, "decode_tps": 44.7, "finish": "stop", "content_chars": 541, "loop": 0.0}
+{"label": "m12-ub1024", "case": "code-0k-med", "t": 1795448405.445473, "vram_mib": 11044, "decode_tps": 46.6, "min": 44.7, "max": 48.7, "max_loop": 0.0}
+{"label": "m12-ub1024", "case": "host-end", "t": 1795448405, "loadavg": "4.17 3.22 2.55", "compilers": 0, "vram_mib": 11044}
+{"label": "m12-ub1024", "case": "mem-speed", "t": 1795448405, "cgroup_peak_mib": 22015, "rss_hwm_mib": 20327, "vram_mib": 11044}
+{"label": "c09-d", "case": "env", "t": 1795448407, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-d", "case": "host-start", "t": 1795448413, "loadavg": "3.76 3.17 2.54", "compilers": 0, "vram_mib": 11204}
+{"label": "c09-d", "case": "lora-adapters", "t": 1795448413, "adapters": []}
+{"label": "c09-d", "case": "pp-8k", "t": 1795448436.063575, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.1, "ttft_s": 16.14}
+{"label": "c09-d", "case": "pp-8k", "t": 1795448452.5705674, "vram_mib": 11258, "prompt_n": 8108, "prefill_tps": 496.3, "ttft_s": 16.34}
+{"label": "c09-d", "case": "pp-8k-med", "t": 1795448452.5828679, "vram_mib": 11258, "prefill_tps": 496.2}
+{"label": "c09-d", "case": "code-0k", "t": 1795448458.7225006, "vram_mib": 11258, "gen_n": 256, "prompt_n": 62, "decode_tps": 47.2, "finish": "stop", "content_chars": 761, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k", "t": 1795448464.2042143, "vram_mib": 11258, "gen_n": 245, "prompt_n": 66, "decode_tps": 49.5, "finish": "stop", "content_chars": 763, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k", "t": 1795448469.7625558, "vram_mib": 11258, "gen_n": 241, "prompt_n": 57, "decode_tps": 47.7, "finish": "stop", "content_chars": 871, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k", "t": 1795448476.0963683, "vram_mib": 11258, "gen_n": 291, "prompt_n": 67, "decode_tps": 50.4, "finish": "stop", "content_chars": 725, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k", "t": 1795448480.1942773, "vram_mib": 11258, "gen_n": 177, "prompt_n": 75, "decode_tps": 50.2, "finish": "stop", "content_chars": 632, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k", "t": 1795448483.650084, "vram_mib": 11258, "gen_n": 131, "prompt_n": 67, "decode_tps": 45.2, "finish": "stop", "content_chars": 525, "loop": 0.0}
+{"label": "c09-d", "case": "code-0k-med", "t": 1795448483.666905, "vram_mib": 11258, "decode_tps": 48.6, "min": 45.2, "max": 50.4, "max_loop": 0.0}
+{"label": "c09-d", "case": "host-end", "t": 1795448483, "loadavg": "4.10 3.30 2.63", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-d", "case": "mem-speed", "t": 1795448483, "cgroup_peak_mib": 22015, "rss_hwm_mib": 20264, "vram_mib": 11258}
+{"label": "c09-e", "case": "env", "t": 1795448947, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-e", "case": "host-start", "t": 1795448953, "loadavg": "1.08 1.60 2.03", "compilers": 0, "vram_mib": 11204}
+{"label": "c09-e", "case": "lora-adapters", "t": 1795448953, "adapters": []}
+{"label": "c09-e", "case": "pp-8k", "t": 1795448974.2736304, "vram_mib": 11258, "prompt_n": 8007, "prefill_tps": 496.3, "ttft_s": 16.13}
+{"label": "c09-e", "case": "pp-8k", "t": 1795448990.8094285, "vram_mib": 11258, "prompt_n": 8106, "prefill_tps": 496.4, "ttft_s": 16.33}
+{"label": "c09-e", "case": "pp-8k-med", "t": 1795448990.8215358, "vram_mib": 11258, "prefill_tps": 496.3}
+{"label": "c09-e", "case": "code-0k", "t": 1795448997.0505154, "vram_mib": 11258, "gen_n": 261, "prompt_n": 62, "decode_tps": 46.9, "finish": "stop", "content_chars": 840, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k", "t": 1795449002.4029212, "vram_mib": 11258, "gen_n": 240, "prompt_n": 66, "decode_tps": 49.8, "finish": "stop", "content_chars": 759, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k", "t": 1795449007.9346504, "vram_mib": 11258, "gen_n": 241, "prompt_n": 57, "decode_tps": 47.9, "finish": "stop", "content_chars": 871, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k", "t": 1795449014.6128945, "vram_mib": 11258, "gen_n": 302, "prompt_n": 67, "decode_tps": 49.3, "finish": "stop", "content_chars": 765, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k", "t": 1795449018.7125223, "vram_mib": 11258, "gen_n": 177, "prompt_n": 75, "decode_tps": 50.2, "finish": "stop", "content_chars": 632, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k", "t": 1795449022.313218, "vram_mib": 11258, "gen_n": 137, "prompt_n": 67, "decode_tps": 45.0, "finish": "stop", "content_chars": 530, "loop": 0.0}
+{"label": "c09-e", "case": "code-0k-med", "t": 1795449022.32904, "vram_mib": 11258, "decode_tps": 48.6, "min": 45.0, "max": 50.2, "max_loop": 0.0}
+{"label": "c09-e", "case": "host-end", "t": 1795449022, "loadavg": "2.72 1.89 2.10", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-e", "case": "mem-speed", "t": 1795449022, "cgroup_peak_mib": 20159, "rss_hwm_mib": 20261, "vram_mib": 11258}
+{"label": "m13-ub1024-c1900", "case": "env", "t": 1795449024, "env": {"MX_KV": "f16", "MX_UBATCH": "1024", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "1900"}, "args": []}
+{"label": "m13-ub1024-c1900", "case": "host-start", "t": 1795449030, "loadavg": "2.60 1.89 2.09", "compilers": 0, "vram_mib": 11176}
+{"label": "m13-ub1024-c1900", "case": "lora-adapters", "t": 1795449030, "adapters": []}
+{"label": "m13-ub1024-c1900", "case": "pp-8k", "t": 1795449046.325676, "vram_mib": 11244, "prompt_n": 8006, "prefill_tps": 786.1, "ttft_s": 10.18}
+{"label": "m13-ub1024-c1900", "case": "pp-8k", "t": 1795449056.8623667, "vram_mib": 11244, "prompt_n": 8108, "prefill_tps": 787.5, "ttft_s": 10.3}
+{"label": "m13-ub1024-c1900", "case": "pp-8k-med", "t": 1795449056.8784266, "vram_mib": 11244, "prefill_tps": 786.8}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449062.5699427, "vram_mib": 11244, "gen_n": 230, "prompt_n": 62, "decode_tps": 46.1, "finish": "stop", "content_chars": 726, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449068.2653015, "vram_mib": 11244, "gen_n": 256, "prompt_n": 66, "decode_tps": 49.6, "finish": "stop", "content_chars": 836, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449075.0821443, "vram_mib": 11244, "gen_n": 290, "prompt_n": 57, "decode_tps": 45.9, "finish": "stop", "content_chars": 1030, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449078.65789, "vram_mib": 11244, "gen_n": 147, "prompt_n": 67, "decode_tps": 48.7, "finish": "stop", "content_chars": 324, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449082.7919538, "vram_mib": 11244, "gen_n": 177, "prompt_n": 75, "decode_tps": 49.7, "finish": "stop", "content_chars": 632, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k", "t": 1795449086.0460982, "vram_mib": 11244, "gen_n": 122, "prompt_n": 67, "decode_tps": 45.3, "finish": "stop", "content_chars": 443, "loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "code-0k-med", "t": 1795449086.0622494, "vram_mib": 11244, "decode_tps": 47.4, "min": 45.3, "max": 49.7, "max_loop": 0.0}
+{"label": "m13-ub1024-c1900", "case": "host-end", "t": 1795449086, "loadavg": "3.28 2.19 2.18", "compilers": 0, "vram_mib": 11244}
+{"label": "m13-ub1024-c1900", "case": "mem-speed", "t": 1795449086, "cgroup_peak_mib": 20230, "rss_hwm_mib": 20331, "vram_mib": 11244}
+{"label": "c09-f", "case": "env", "t": 1795449088, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-f", "case": "host-start", "t": 1795449095, "loadavg": "2.93 2.15 2.17", "compilers": 0, "vram_mib": 11204}
+{"label": "c09-f", "case": "lora-adapters", "t": 1795449095, "adapters": []}
+{"label": "c09-f", "case": "pp-8k", "t": 1795449117.7066934, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.1, "ttft_s": 16.14}
+{"label": "c09-f", "case": "pp-8k", "t": 1795449134.2677205, "vram_mib": 11268, "prompt_n": 8111, "prefill_tps": 496.8, "ttft_s": 16.33}
+{"label": "c09-f", "case": "pp-8k-med", "t": 1795449134.2842743, "vram_mib": 11268, "prefill_tps": 496.5}
+{"label": "c09-f", "case": "code-0k", "t": 1795449139.6314602, "vram_mib": 11268, "gen_n": 221, "prompt_n": 62, "decode_tps": 47.7, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k", "t": 1795449145.4146538, "vram_mib": 11268, "gen_n": 260, "prompt_n": 66, "decode_tps": 49.5, "finish": "stop", "content_chars": 818, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k", "t": 1795449149.7282865, "vram_mib": 11268, "gen_n": 183, "prompt_n": 57, "decode_tps": 48.0, "finish": "stop", "content_chars": 664, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k", "t": 1795449153.8007555, "vram_mib": 11268, "gen_n": 175, "prompt_n": 67, "decode_tps": 49.7, "finish": "stop", "content_chars": 442, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k", "t": 1795449157.6563213, "vram_mib": 11268, "gen_n": 166, "prompt_n": 75, "decode_tps": 50.5, "finish": "stop", "content_chars": 581, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k", "t": 1795449161.6259542, "vram_mib": 11268, "gen_n": 154, "prompt_n": 67, "decode_tps": 45.2, "finish": "stop", "content_chars": 617, "loop": 0.0}
+{"label": "c09-f", "case": "code-0k-med", "t": 1795449161.6429913, "vram_mib": 11268, "decode_tps": 48.8, "min": 45.2, "max": 50.5, "max_loop": 0.0}
+{"label": "c09-f", "case": "host-end", "t": 1795449161, "loadavg": "3.62 2.44 2.26", "compilers": 0, "vram_mib": 11268}
+{"label": "c09-f", "case": "mem-speed", "t": 1795449161, "cgroup_peak_mib": 20332, "rss_hwm_mib": 20246, "vram_mib": 11268}
+{"label": "m14-ub2048-c1100", "case": "env", "t": 1795449163, "env": {"MX_KV": "f16", "MX_UBATCH": "2048", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "1100"}, "args": []}
+{"label": "m14-ub2048-c1100", "case": "host-start", "t": 1795449170, "loadavg": "3.14 2.37 2.25", "compilers": 0, "vram_mib": 10730}
+{"label": "m14-ub2048-c1100", "case": "lora-adapters", "t": 1795449170, "adapters": []}
+{"label": "m14-ub2048-c1100", "case": "pp-8k", "t": 1795449184.369412, "vram_mib": 10826, "prompt_n": 8008, "prefill_tps": 1126.3, "ttft_s": 7.11}
+{"label": "m14-ub2048-c1100", "case": "pp-8k", "t": 1795449191.8026426, "vram_mib": 10826, "prompt_n": 8108, "prefill_tps": 1128.1, "ttft_s": 7.19}
+{"label": "m14-ub2048-c1100", "case": "pp-8k-med", "t": 1795449191.8148472, "vram_mib": 10826, "prefill_tps": 1127.2}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449198.8298783, "vram_mib": 10826, "gen_n": 266, "prompt_n": 62, "decode_tps": 42.2, "finish": "stop", "content_chars": 842, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449204.817222, "vram_mib": 10826, "gen_n": 247, "prompt_n": 66, "decode_tps": 45.4, "finish": "stop", "content_chars": 770, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449210.8665597, "vram_mib": 10826, "gen_n": 239, "prompt_n": 57, "decode_tps": 43.2, "finish": "stop", "content_chars": 862, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449214.549858, "vram_mib": 10826, "gen_n": 140, "prompt_n": 67, "decode_tps": 45.0, "finish": "stop", "content_chars": 326, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449219.0067601, "vram_mib": 10826, "gen_n": 177, "prompt_n": 75, "decode_tps": 45.8, "finish": "stop", "content_chars": 632, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k", "t": 1795449223.4395025, "vram_mib": 10826, "gen_n": 162, "prompt_n": 67, "decode_tps": 42.0, "finish": "stop", "content_chars": 640, "loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "code-0k-med", "t": 1795449223.4549093, "vram_mib": 10826, "decode_tps": 44.1, "min": 42.0, "max": 45.8, "max_loop": 0.0}
+{"label": "m14-ub2048-c1100", "case": "host-end", "t": 1795449223, "loadavg": "4.37 2.80 2.40", "compilers": 0, "vram_mib": 10826}
+{"label": "m14-ub2048-c1100", "case": "mem-speed", "t": 1795449223, "cgroup_peak_mib": 20595, "rss_hwm_mib": 20495, "vram_mib": 10826}
+{"label": "c09-g", "case": "env", "t": 1795449225, "env": {"MX_KV": "f16", "MX_LOAD_MODE": "none", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "cpu", "MX_PORT": "8104", "GPU_RUN_MEM": "44G", "MX_MOE_CACHE_MIB": "2100"}, "args": []}
+{"label": "c09-g", "case": "host-start", "t": 1795449234, "loadavg": "3.86 2.74 2.38", "compilers": 0, "vram_mib": 11214}
+{"label": "c09-g", "case": "lora-adapters", "t": 1795449234, "adapters": []}
+{"label": "c09-g", "case": "pp-8k", "t": 1795449256.441472, "vram_mib": 11258, "prompt_n": 8006, "prefill_tps": 496.2, "ttft_s": 16.13}
+{"label": "c09-g", "case": "pp-8k", "t": 1795449273.0223763, "vram_mib": 11258, "prompt_n": 8112, "prefill_tps": 496.4, "ttft_s": 16.34}
+{"label": "c09-g", "case": "pp-8k-med", "t": 1795449273.0359745, "vram_mib": 11258, "prefill_tps": 496.3}
+{"label": "c09-g", "case": "code-0k", "t": 1795449278.642964, "vram_mib": 11258, "gen_n": 227, "prompt_n": 62, "decode_tps": 46.4, "finish": "stop", "content_chars": 724, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k", "t": 1795449284.2816474, "vram_mib": 11258, "gen_n": 251, "prompt_n": 66, "decode_tps": 49.2, "finish": "stop", "content_chars": 811, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k", "t": 1795449289.807403, "vram_mib": 11258, "gen_n": 240, "prompt_n": 57, "decode_tps": 47.8, "finish": "stop", "content_chars": 868, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k", "t": 1795449296.1637247, "vram_mib": 11258, "gen_n": 302, "prompt_n": 67, "decode_tps": 52.1, "finish": "stop", "content_chars": 763, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k", "t": 1795449300.013422, "vram_mib": 11258, "gen_n": 164, "prompt_n": 75, "decode_tps": 50.0, "finish": "stop", "content_chars": 570, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k", "t": 1795449304.3130004, "vram_mib": 11258, "gen_n": 171, "prompt_n": 67, "decode_tps": 45.6, "finish": "stop", "content_chars": 685, "loop": 0.0}
+{"label": "c09-g", "case": "code-0k-med", "t": 1795449304.329431, "vram_mib": 11258, "decode_tps": 48.5, "min": 45.6, "max": 52.1, "max_loop": 0.0}
+{"label": "c09-g", "case": "host-end", "t": 1795449304, "loadavg": "4.06 2.94 2.47", "compilers": 0, "vram_mib": 11258}
+{"label": "c09-g", "case": "mem-speed", "t": 1795449304, "cgroup_peak_mib": 21776, "rss_hwm_mib": 20259, "vram_mib": 11258}
+{"label": "f01-base", "case": "env", "t": 1795450500, "env": {"MX_NO_GPU_RUN": "1", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "f01-base", "case": "host-start", "t": 1795450513, "loadavg": "1.02 1.11 1.45", "compilers": 0, "vram_mib": 11176}
+{"label": "f01-base", "case": "lora-adapters", "t": 1795450513, "adapters": []}
+{"label": "f01-base", "case": "pp-8k", "t": 1795450529.715568, "vram_mib": 11244, "prompt_n": 8007, "prefill_tps": 785.6, "ttft_s": 10.19}
+{"label": "f01-base", "case": "pp-8k", "t": 1795450540.2036498, "vram_mib": 11244, "prompt_n": 8109, "prefill_tps": 786.4, "ttft_s": 10.31}
+{"label": "f01-base", "case": "pp-8k-med", "t": 1795450540.215844, "vram_mib": 11244, "prefill_tps": 786.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450544.875148, "vram_mib": 11244, "gen_n": 186, "prompt_n": 62, "decode_tps": 46.3, "finish": "stop", "content_chars": 559, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450550.2832043, "vram_mib": 11244, "gen_n": 239, "prompt_n": 66, "decode_tps": 49.1, "finish": "stop", "content_chars": 770, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450555.6929317, "vram_mib": 11244, "gen_n": 230, "prompt_n": 57, "decode_tps": 46.9, "finish": "stop", "content_chars": 829, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450562.4910557, "vram_mib": 11244, "gen_n": 312, "prompt_n": 67, "decode_tps": 50.0, "finish": "stop", "content_chars": 852, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450566.1654043, "vram_mib": 11244, "gen_n": 152, "prompt_n": 75, "decode_tps": 49.1, "finish": "stop", "content_chars": 507, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k", "t": 1795450569.8741913, "vram_mib": 11244, "gen_n": 141, "prompt_n": 67, "decode_tps": 44.8, "finish": "stop", "content_chars": 538, "loop": 0.0}
+{"label": "f01-base", "case": "code-0k-med", "t": 1795450569.891119, "vram_mib": 11244, "decode_tps": 48.0, "min": 44.8, "max": 50.0, "max_loop": 0.0}
+{"label": "f01-base", "case": "host-end", "t": 1795450569, "loadavg": "3.26 1.67 1.62", "compilers": 0, "vram_mib": 11244}
+{"label": "f01-base", "case": "mem-speed", "t": 1795450569, "cgroup_peak_mib": 23586, "rss_hwm_mib": 20336, "vram_mib": 11244}
+{"label": "f02-base-deep", "case": "env", "t": 1795450572, "env": {"MX_NO_GPU_RUN": "1", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "f02-base-deep", "case": "host-start", "t": 1795450583, "loadavg": "3.06 1.68 1.62", "compilers": 0, "vram_mib": 11176}
+{"label": "f02-base-deep", "case": "lora-adapters", "t": 1795450583, "adapters": []}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450646.9366863, "vram_mib": 11244, "gen_n": 249, "prompt_n": 32253, "decode_tps": 33.1, "finish": "stop", "content_chars": 742, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450654.83351, "vram_mib": 11244, "gen_n": 251, "prompt_n": 32257, "decode_tps": 34.5, "finish": "stop", "content_chars": 784, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450664.6898997, "vram_mib": 11244, "gen_n": 303, "prompt_n": 32248, "decode_tps": 32.7, "finish": "stop", "content_chars": 1102, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450671.654876, "vram_mib": 11244, "gen_n": 216, "prompt_n": 32258, "decode_tps": 34.1, "finish": "stop", "content_chars": 594, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450682.849739, "vram_mib": 11244, "gen_n": 372, "prompt_n": 32266, "decode_tps": 35.4, "finish": "stop", "content_chars": 1088, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k", "t": 1795450686.6129103, "vram_mib": 11244, "gen_n": 98, "prompt_n": 32258, "decode_tps": 31.3, "finish": "stop", "content_chars": 357, "loop": 0.0}
+{"label": "f02-base-deep", "case": "code-32k-med", "t": 1795450686.6293676, "vram_mib": 11244, "decode_tps": 33.6, "min": 31.3, "max": 35.4, "max_loop": 0.0}
+{"label": "f02-base-deep", "case": "needle-32k", "t": 1795450737.1438165, "vram_mib": 11244, "prompt_n": 31744, "found": "3/3", "prefill_tps": 648.4, "decode_tps": 29.0, "answer": "Z4O4ZKLO | G85E6MSS | 5F4T8QNK", "expected": ["Z4O4ZKLO", "G85E6MSS", "5F4T8QNK"]}
+{"label": "f02-base-deep", "case": "needle-65k", "t": 1795450862.9700398, "vram_mib": 11244, "prompt_n": 61937, "found": "3/3", "prefill_tps": 498.7, "decode_tps": 25.1, "answer": "KZNXE2QA | 37XQBKMW | 3MX5EULOM", "expected": ["KZNXE2QA", "37XQBKMW", "MX5EULOM"]}
+{"label": "f02-base-deep", "case": "needle-65k", "t": 1795450985.5470407, "vram_mib": 11254, "prompt_n": 58967, "found": "3/3", "prefill_tps": 489.9, "decode_tps": 26.2, "answer": "NP9UIYYT | TUSALH45 | GCZBYBC6", "expected": ["GCZBYBC6", "TUSALH45", "NP9UIYYT"]}
+{"label": "f02-base-deep", "case": "host-end", "t": 1795450985, "loadavg": "1.79 2.28 1.99", "compilers": 0, "vram_mib": 11254}
+{"label": "f02-base-deep", "case": "mem-deep", "t": 1795450985, "cgroup_peak_mib": 31996, "rss_hwm_mib": 24560, "vram_mib": 11254}
+{"label": "f03-base-pp", "case": "env", "t": 1795450987, "env": {"MX_NO_GPU_RUN": "1", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "f03-base-pp", "case": "host-start", "t": 1795451001, "loadavg": "1.84 2.26 1.99", "compilers": 0, "vram_mib": 11186}
+{"label": "f03-base-pp", "case": "lora-adapters", "t": 1795451001, "adapters": []}
+{"label": "f03-base-pp", "case": "pp-8k", "t": 1795451018.344033, "vram_mib": 11254, "prompt_n": 8006, "prefill_tps": 786.0, "ttft_s": 10.19}
+{"label": "f03-base-pp", "case": "pp-8k", "t": 1795451028.88568, "vram_mib": 11254, "prompt_n": 8108, "prefill_tps": 787.0, "ttft_s": 10.3}
+{"label": "f03-base-pp", "case": "pp-8k-med", "t": 1795451028.8980114, "vram_mib": 11254, "prefill_tps": 786.5}
+{"label": "f03-base-pp", "case": "pp-32k", "t": 1795451079.176567, "vram_mib": 11244, "prompt_n": 31907, "prefill_tps": 639.4, "ttft_s": 49.9}
+{"label": "f03-base-pp", "case": "pp-32k", "t": 1795451130.1749697, "vram_mib": 11244, "prompt_n": 32095, "prefill_tps": 636.8, "ttft_s": 50.4}
+{"label": "f03-base-pp", "case": "pp-32k-med", "t": 1795451130.1905775, "vram_mib": 11244, "prefill_tps": 638.1}
+{"label": "f03-base-pp", "case": "pp-65k", "t": 1795451259.5437827, "vram_mib": 11244, "prompt_n": 65404, "prefill_tps": 509.3, "ttft_s": 128.43}
+{"label": "f03-base-pp", "case": "pp-65k", "t": 1795451388.98003, "vram_mib": 11244, "prompt_n": 65077, "prefill_tps": 508.9, "ttft_s": 127.88}
+{"label": "f03-base-pp", "case": "pp-65k-med", "t": 1795451388.9968803, "vram_mib": 11244, "prefill_tps": 509.1}
+{"label": "f03-base-pp", "case": "host-end", "t": 1795451389, "loadavg": "2.04 2.31 2.10", "compilers": 0, "vram_mib": 11244}
+{"label": "f03-base-pp", "case": "mem-pp", "t": 1795451389, "cgroup_peak_mib": 40470, "rss_hwm_mib": 25952, "vram_mib": 11244}
+{"label": "f04-base-code", "case": "env", "t": 1795451391, "env": {"MX_NO_GPU_RUN": "1", "MX_THINK": "0", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "f04-base-code", "case": "host-start", "t": 1795451404, "loadavg": "1.73 2.23 2.07", "compilers": 0, "vram_mib": 11176}
+{"label": "f04-base-code", "case": "lora-adapters", "t": 1795451404, "adapters": []}
+{"label": "f04-base-code", "case": "host-end", "t": 1795451435, "loadavg": "2.82 2.45 2.15", "compilers": 0, "vram_mib": 11216}
+{"label": "f04-base-code", "case": "mem-code", "t": 1795451435, "cgroup_peak_mib": 40470, "rss_hwm_mib": 18885, "vram_mib": 11216}
+{"label": "u00-base-a", "case": "env", "t": 1795452034, "env": {"MX_NO_GPU_RUN": "1", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "u00-base-a", "case": "host-start", "t": 1795452041, "loadavg": "0.90 1.25 1.65", "compilers": 0, "vram_mib": 11176}
+{"label": "u00-base-a", "case": "lora-adapters", "t": 1795452041, "adapters": []}
+{"label": "u00-base-a", "case": "pp-8k", "t": 1795452057.3367548, "vram_mib": 11244, "prompt_n": 8005, "prefill_tps": 784.9, "ttft_s": 10.2}
+{"label": "u00-base-a", "case": "pp-8k", "t": 1795452067.82228, "vram_mib": 11244, "prompt_n": 8108, "prefill_tps": 786.1, "ttft_s": 10.31}
+{"label": "u00-base-a", "case": "pp-8k-med", "t": 1795452067.834588, "vram_mib": 11244, "prefill_tps": 785.5}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452073.1739187, "vram_mib": 11244, "gen_n": 221, "prompt_n": 62, "decode_tps": 47.0, "finish": "stop", "content_chars": 603, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452079.0935128, "vram_mib": 11244, "gen_n": 259, "prompt_n": 66, "decode_tps": 48.1, "finish": "stop", "content_chars": 879, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452084.6058633, "vram_mib": 11244, "gen_n": 235, "prompt_n": 57, "decode_tps": 46.9, "finish": "stop", "content_chars": 855, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452092.5712316, "vram_mib": 11244, "gen_n": 358, "prompt_n": 67, "decode_tps": 48.3, "finish": "stop", "content_chars": 991, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452096.7820685, "vram_mib": 11244, "gen_n": 178, "prompt_n": 75, "decode_tps": 48.9, "finish": "stop", "content_chars": 636, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k", "t": 1795452101.3750672, "vram_mib": 11244, "gen_n": 167, "prompt_n": 67, "decode_tps": 41.3, "finish": "stop", "content_chars": 633, "loop": 0.0}
+{"label": "u00-base-a", "case": "code-0k-med", "t": 1795452101.3886144, "vram_mib": 11244, "decode_tps": 47.6, "min": 41.3, "max": 48.9, "max_loop": 0.0}
+{"label": "u00-base-a", "case": "host-end", "t": 1795452101, "loadavg": "3.46 1.87 1.84", "compilers": 0, "vram_mib": 11244}
+{"label": "u00-base-a", "case": "mem-speed", "t": 1795452101, "cgroup_peak_mib": 20246, "rss_hwm_mib": 20348, "vram_mib": 11244}
+{"label": "u01-unc", "case": "env", "t": 1795452103, "env": {"MX_NO_GPU_RUN": "1", "VARIANT": "uncensored", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "u01-unc", "case": "host-start", "t": 1795452110, "loadavg": "3.16 1.86 1.83", "compilers": 0, "vram_mib": 11162}
+{"label": "u01-unc", "case": "lora-adapters", "t": 1795452110, "adapters": [{"id":0,"path":"/mnt/models/llm/maxwell-v1-flash/uncensored/Maxwell-V1-Flash-Uncensored-LoRA.gguf","scale":1.0,"task_name":"","prompt_prefix":""}]}
+{"label": "u01-unc", "case": "pp-8k", "t": 1795452133.2419767, "vram_mib": 11260, "prompt_n": 8008, "prefill_tps": 635.0, "ttft_s": 12.61}
+{"label": "u01-unc", "case": "pp-8k", "t": 1795452146.214919, "vram_mib": 11260, "prompt_n": 8108, "prefill_tps": 634.1, "ttft_s": 12.79}
+{"label": "u01-unc", "case": "pp-8k-med", "t": 1795452146.2270522, "vram_mib": 11260, "prefill_tps": 634.5}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452156.9937005, "vram_mib": 11260, "gen_n": 226, "prompt_n": 62, "decode_tps": 22.4, "finish": "stop", "content_chars": 593, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452167.1196523, "vram_mib": 11260, "gen_n": 225, "prompt_n": 66, "decode_tps": 23.5, "finish": "stop", "content_chars": 700, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452178.2236862, "vram_mib": 11260, "gen_n": 241, "prompt_n": 57, "decode_tps": 22.8, "finish": "stop", "content_chars": 874, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452185.7867932, "vram_mib": 11260, "gen_n": 168, "prompt_n": 67, "decode_tps": 24.1, "finish": "stop", "content_chars": 407, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452192.3442688, "vram_mib": 11260, "gen_n": 144, "prompt_n": 75, "decode_tps": 24.2, "finish": "stop", "content_chars": 473, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k", "t": 1795452198.6912491, "vram_mib": 11260, "gen_n": 128, "prompt_n": 67, "decode_tps": 22.2, "finish": "stop", "content_chars": 499, "loop": 0.0}
+{"label": "u01-unc", "case": "code-0k-med", "t": 1795452198.7032652, "vram_mib": 11260, "decode_tps": 23.2, "min": 22.2, "max": 24.2, "max_loop": 0.0}
+{"label": "u01-unc", "case": "host-end", "t": 1795452198, "loadavg": "4.04 2.44 2.03", "compilers": 0, "vram_mib": 11260}
+{"label": "u01-unc", "case": "mem-speed", "t": 1795452198, "cgroup_peak_mib": 20291, "rss_hwm_mib": 20389, "vram_mib": 11260}
+{"label": "u00-base-b", "case": "env", "t": 1795452200, "env": {"MX_NO_GPU_RUN": "1", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "u00-base-b", "case": "host-start", "t": 1795452208, "loadavg": "3.57 2.39 2.02", "compilers": 0, "vram_mib": 11176}
+{"label": "u00-base-b", "case": "lora-adapters", "t": 1795452208, "adapters": []}
+{"label": "u00-base-b", "case": "pp-8k", "t": 1795452224.7613323, "vram_mib": 11244, "prompt_n": 8006, "prefill_tps": 785.8, "ttft_s": 10.19}
+{"label": "u00-base-b", "case": "pp-8k", "t": 1795452235.2420123, "vram_mib": 11244, "prompt_n": 8107, "prefill_tps": 786.7, "ttft_s": 10.31}
+{"label": "u00-base-b", "case": "pp-8k-med", "t": 1795452235.2546186, "vram_mib": 11244, "prefill_tps": 786.2}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452240.684436, "vram_mib": 11244, "gen_n": 225, "prompt_n": 62, "decode_tps": 46.9, "finish": "stop", "content_chars": 608, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452244.8970659, "vram_mib": 11244, "gen_n": 175, "prompt_n": 66, "decode_tps": 47.6, "finish": "stop", "content_chars": 563, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452250.3883529, "vram_mib": 11244, "gen_n": 234, "prompt_n": 57, "decode_tps": 47.0, "finish": "stop", "content_chars": 849, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452254.6764529, "vram_mib": 11244, "gen_n": 182, "prompt_n": 67, "decode_tps": 48.8, "finish": "stop", "content_chars": 459, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452258.337286, "vram_mib": 11244, "gen_n": 152, "prompt_n": 75, "decode_tps": 49.3, "finish": "stop", "content_chars": 507, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k", "t": 1795452262.2924595, "vram_mib": 11244, "gen_n": 152, "prompt_n": 67, "decode_tps": 44.7, "finish": "stop", "content_chars": 547, "loop": 0.0}
+{"label": "u00-base-b", "case": "code-0k-med", "t": 1795452262.304685, "vram_mib": 11244, "decode_tps": 47.3, "min": 44.7, "max": 49.3, "max_loop": 0.0}
+{"label": "u00-base-b", "case": "host-end", "t": 1795452262, "loadavg": "4.06 2.66 2.13", "compilers": 0, "vram_mib": 11244}
+{"label": "u00-base-b", "case": "mem-speed", "t": 1795452262, "cgroup_peak_mib": 20526, "rss_hwm_mib": 20321, "vram_mib": 11244}
+{"label": "u02-unc-deep", "case": "env", "t": 1795452264, "env": {"MX_NO_GPU_RUN": "1", "VARIANT": "uncensored", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "u02-unc-deep", "case": "host-start", "t": 1795452271, "loadavg": "3.51 2.59 2.11", "compilers": 0, "vram_mib": 11162}
+{"label": "u02-unc-deep", "case": "lora-adapters", "t": 1795452271, "adapters": [{"id":0,"path":"/mnt/models/llm/maxwell-v1-flash/uncensored/Maxwell-V1-Flash-Uncensored-LoRA.gguf","scale":1.0,"task_name":"","prompt_prefix":""}]}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452353.4988153, "vram_mib": 11274, "gen_n": 217, "prompt_n": 32253, "decode_tps": 18.6, "finish": "stop", "content_chars": 582, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452360.29025, "vram_mib": 11274, "gen_n": 121, "prompt_n": 32257, "decode_tps": 19.7, "finish": "stop", "content_chars": 394, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452369.5036106, "vram_mib": 11274, "gen_n": 164, "prompt_n": 32248, "decode_tps": 19.0, "finish": "stop", "content_chars": 605, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452381.2587898, "vram_mib": 11274, "gen_n": 218, "prompt_n": 32258, "decode_tps": 19.7, "finish": "stop", "content_chars": 540, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452392.9901173, "vram_mib": 11274, "gen_n": 221, "prompt_n": 32266, "decode_tps": 20.1, "finish": "stop", "content_chars": 682, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k", "t": 1795452400.8345985, "vram_mib": 11274, "gen_n": 134, "prompt_n": 32258, "decode_tps": 18.7, "finish": "stop", "content_chars": 503, "loop": 0.0}
+{"label": "u02-unc-deep", "case": "code-32k-med", "t": 1795452400.846675, "vram_mib": 11274, "decode_tps": 19.4, "min": 18.6, "max": 20.1, "max_loop": 0.0}
+{"label": "u02-unc-deep", "case": "needle-32k", "t": 1795452460.6519125, "vram_mib": 11274, "prompt_n": 31738, "found": "3/3", "prefill_tps": 544.3, "decode_tps": 18.0, "answer": "MDRJVXOT | M6XYML54 | ARYNKJOE", "expected": ["MDRJVXOT", "M6XYML54", "ARYNKJOE"]}
+{"label": "u02-unc-deep", "case": "needle-65k", "t": 1795452604.5142558, "vram_mib": 11276, "prompt_n": 61937, "found": "3/3", "prefill_tps": 436.2, "decode_tps": 17.0, "answer": "H4RPD4XC | 6EY9HGUY | RDGLXWD4", "expected": ["6EY9HGUY", "H4RPD4XC", "RDGLXWD4"]}
+{"label": "u02-unc-deep", "case": "host-end", "t": 1795452604, "loadavg": "1.16 1.63 1.82", "compilers": 0, "vram_mib": 11276}
+{"label": "u02-unc-deep", "case": "mem-deep", "t": 1795452604, "cgroup_peak_mib": 24883, "rss_hwm_mib": 24631, "vram_mib": 11276}
+{"label": "m01-stock-fit-r", "case": "env", "t": 1795452606, "env": {"MX_KV": "f16", "MX_UBATCH": "512", "MX_LOAD_MODE": "", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "fit", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m01-stock-fit-r", "case": "host-start", "t": 1795452611, "loadavg": "1.23 1.63 1.82", "compilers": 0, "vram_mib": 10876}
+{"label": "m01-stock-fit-r", "case": "lora-adapters", "t": 1795452611, "adapters": []}
+{"label": "m01-stock-fit-r", "case": "pp-8k", "t": 1795452640.8864512, "vram_mib": 10914, "prompt_n": 8006, "prefill_tps": 363.8, "ttft_s": 22.01}
+{"label": "m01-stock-fit-r", "case": "pp-8k", "t": 1795452663.3331838, "vram_mib": 10904, "prompt_n": 8107, "prefill_tps": 363.9, "ttft_s": 22.28}
+{"label": "m01-stock-fit-r", "case": "pp-8k-med", "t": 1795452663.3455129, "vram_mib": 10904, "prefill_tps": 363.9}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452671.9739826, "vram_mib": 10904, "gen_n": 276, "prompt_n": 62, "decode_tps": 35.9, "finish": "stop", "content_chars": 851, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452676.9282713, "vram_mib": 10904, "gen_n": 148, "prompt_n": 66, "decode_tps": 35.8, "finish": "stop", "content_chars": 480, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452684.223408, "vram_mib": 10904, "gen_n": 234, "prompt_n": 57, "decode_tps": 36.0, "finish": "stop", "content_chars": 850, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452693.4104853, "vram_mib": 10904, "gen_n": 298, "prompt_n": 67, "decode_tps": 35.8, "finish": "stop", "content_chars": 835, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452698.623918, "vram_mib": 10904, "gen_n": 155, "prompt_n": 75, "decode_tps": 35.9, "finish": "stop", "content_chars": 527, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k", "t": 1795452703.4903128, "vram_mib": 10904, "gen_n": 145, "prompt_n": 67, "decode_tps": 36.1, "finish": "stop", "content_chars": 583, "loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "code-0k-med", "t": 1795452703.5026999, "vram_mib": 10904, "decode_tps": 35.9, "min": 35.8, "max": 36.1, "max_loop": 0.0}
+{"label": "m01-stock-fit-r", "case": "host-end", "t": 1795452703, "loadavg": "2.78 2.00 1.93", "compilers": 0, "vram_mib": 10904}
+{"label": "m01-stock-fit-r", "case": "mem-speed", "t": 1795452703, "cgroup_peak_mib": 24883, "rss_hwm_mib": 21740, "vram_mib": 10904}
+{"label": "m01-stock-fit-deep", "case": "env", "t": 1795452704, "env": {"MX_KV": "f16", "MX_UBATCH": "512", "MX_LOAD_MODE": "", "MX_NO_GPU_RUN": "1", "MX_PLACEMENT": "fit", "MX_PORT": "8104", "GPU_RUN_MEM": "44G"}, "args": []}
+{"label": "m01-stock-fit-deep", "case": "host-start", "t": 1795452708, "loadavg": "2.56 1.97 1.92", "compilers": 0, "vram_mib": 10866}
+{"label": "m01-stock-fit-deep", "case": "lora-adapters", "t": 1795452708, "adapters": []}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452822.991859, "vram_mib": 10892, "gen_n": 266, "prompt_n": 32253, "decode_tps": 27.4, "finish": "stop", "content_chars": 699, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452828.0521739, "vram_mib": 10892, "gen_n": 112, "prompt_n": 32257, "decode_tps": 27.4, "finish": "stop", "content_chars": 368, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452839.648672, "vram_mib": 10892, "gen_n": 296, "prompt_n": 32248, "decode_tps": 27.5, "finish": "stop", "content_chars": 1094, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452844.8663445, "vram_mib": 10892, "gen_n": 118, "prompt_n": 32258, "decode_tps": 27.5, "finish": "stop", "content_chars": 279, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452854.9769697, "vram_mib": 10894, "gen_n": 250, "prompt_n": 32266, "decode_tps": 27.4, "finish": "stop", "content_chars": 832, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k", "t": 1795452859.8306806, "vram_mib": 10894, "gen_n": 108, "prompt_n": 32258, "decode_tps": 27.4, "finish": "stop", "content_chars": 448, "loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "code-32k-med", "t": 1795452859.8428452, "vram_mib": 10894, "decode_tps": 27.4, "min": 27.4, "max": 27.5, "max_loop": 0.0}
+{"label": "m01-stock-fit-deep", "case": "needle-32k", "t": 1795452956.314534, "vram_mib": 10894, "prompt_n": 31743, "found": "3/3", "prefill_tps": 333.4, "decode_tps": 27.2, "answer": "32KAJAXI | LCJ6DC4N | 7A6L5GGK", "expected": ["32KAJAXI", "LCJ6DC4N", "7A6L5GGK"]}
+{"label": "m01-stock-fit-deep", "case": "host-end", "t": 1795452956, "loadavg": "1.71 2.07 1.98", "compilers": 0, "vram_mib": 10894}
+{"label": "m01-stock-fit-deep", "case": "mem-deep", "t": 1795452956, "cgroup_peak_mib": 24883, "rss_hwm_mib": 23086, "vram_mib": 10894}

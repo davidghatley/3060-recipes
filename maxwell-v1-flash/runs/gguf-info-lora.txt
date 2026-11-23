@@ -1,0 +1,298 @@
+GGUF.version = 3
+GGUF.tensor_count = 266
+GGUF.kv_count = 17
+general.architecture = 'maxwell-moe'
+general.type = 'adapter'
+adapter.type = 'lora'
+adapter.lora_alpha = 1.0
+general.name = 'r27-all-enru-perlayer'
+atomic.abliterate.base = 'Maxwell-V1-Flash-Uncensored-BF16.gguf'
+atomic.abliterate.directions = 'directions.npz'
+atomic.abliterate.directions_path = '/work/Maxwell-V1-Flash-Uncensored/ablit/dirs/directions.npz'
+atomic.abliterate.directions_sha256 = '7f232e957ecbcd06eef9f609fd97bcf2c4d2064f94c840deae2c65e86c06c869'
+atomic.abliterate.sets = '["enru"]'
+atomic.abliterate.rank = '1'
+atomic.abliterate.row = '27'
+atomic.abliterate.per_layer = 'true'
+atomic.abliterate.writers = 'all'
+atomic.abliterate.layers = 'all'
+atomic.abliterate.sites = '133'
+atomic.abliterate.layer_weights = 'all 1'
+T blk.0.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.0.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.0.ffn_down.weight.lora_a F32 [np.uint64(6144), np.uint64(1)] 24576
+T blk.0.ffn_down.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.1.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.1.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.1.ffn_down.weight.lora_a F32 [np.uint64(6144), np.uint64(1)] 24576
+T blk.1.ffn_down.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.2.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.2.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.2.ffn_down.weight.lora_a F32 [np.uint64(6144), np.uint64(1)] 24576
+T blk.2.ffn_down.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.3.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.3.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.3.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.3.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.3.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.3.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.4.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.4.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.4.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.4.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.4.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.4.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.5.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.5.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.5.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.5.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.5.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.5.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.6.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.6.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.6.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.6.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.6.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.6.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.7.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.7.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.7.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.7.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.7.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.7.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.8.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.8.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.8.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.8.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.8.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.8.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.9.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.9.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.9.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.9.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.9.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.9.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.10.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.10.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.10.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.10.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.10.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.10.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.11.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.11.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.11.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.11.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.11.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.11.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.12.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.12.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.12.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.12.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.12.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.12.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.13.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.13.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.13.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.13.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.13.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.13.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.14.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.14.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.14.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.14.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.14.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.14.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.15.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.15.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.15.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.15.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.15.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.15.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.16.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.16.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.16.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.16.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.16.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.16.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.17.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.17.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.17.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.17.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.17.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.17.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.18.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.18.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.18.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.18.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.18.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.18.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.19.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.19.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.19.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.19.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.19.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.19.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.20.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.20.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.20.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.20.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.20.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.20.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.21.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.21.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.21.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.21.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.21.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.21.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.22.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.22.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.22.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.22.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.22.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.22.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.23.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.23.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.23.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.23.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.23.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.23.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.24.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.24.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.24.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.24.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.24.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.24.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.25.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.25.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.25.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.25.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.25.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.25.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.26.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.26.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.26.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.26.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.26.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.26.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.27.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.27.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.27.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.27.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.27.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.27.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.28.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.28.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.28.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.28.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.28.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.28.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.29.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.29.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.29.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.29.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.29.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.29.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.30.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.30.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.30.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.30.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.30.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.30.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.31.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.31.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.31.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.31.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.31.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.31.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.32.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.32.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.32.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.32.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.32.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.32.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.33.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.33.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.33.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.33.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.33.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.33.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.34.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.34.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.34.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.34.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.34.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.34.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.35.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.35.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.35.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.35.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.35.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.35.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.36.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.36.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.36.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.36.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.36.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.36.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.37.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.37.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.37.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.37.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.37.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.37.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.38.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.38.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.38.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.38.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.38.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.38.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.39.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.39.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.39.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.39.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.39.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.39.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.40.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.40.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.40.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.40.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.40.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.40.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.41.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.41.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.41.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.41.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.41.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.41.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.42.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.42.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.42.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.42.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.42.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.42.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.43.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.43.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.43.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.43.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.43.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.43.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.44.attn_output.weight.lora_a F32 [np.uint64(4096), np.uint64(1)] 16384
+T blk.44.attn_output.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T blk.44.ffn_down_exps.weight.lora_a F32 [np.uint64(512), np.uint64(1), np.uint64(256)] 524288
+T blk.44.ffn_down_exps.weight.lora_b F32 [np.uint64(1), np.uint64(2048), np.uint64(256)] 2097152
+T blk.44.ffn_down_shexp.weight.lora_a F32 [np.uint64(1024), np.uint64(1)] 4096
+T blk.44.ffn_down_shexp.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+T token_embd.weight.lora_a F32 [np.uint64(1), np.uint64(200704)] 802816
+T token_embd.weight.lora_b F32 [np.uint64(1), np.uint64(2048)] 8192
+== 266 tensors; bytes by type: F32 0.10 GiB
+all experts 0.000 GiB; non-expert 0.105 GiB
+   blk.N.ffn_down_exps.weight.lora_b            84.0 MiB
+   blk.N.ffn_down_exps.weight.lora_a            21.0 MiB
+   token_embd.weight.lora_a                      0.8 MiB
+   blk.N.attn_output.weight.lora_a               0.7 MiB
+   blk.N.attn_output.weight.lora_b               0.4 MiB
+   blk.N.ffn_down_shexp.weight.lora_b            0.3 MiB
+   blk.N.ffn_down_shexp.weight.lora_a            0.2 MiB
+   blk.N.ffn_down.weight.lora_a                  0.1 MiB
+   blk.N.ffn_down.weight.lora_b                  0.0 MiB
+   token_embd.weight.lora_b                      0.0 MiB

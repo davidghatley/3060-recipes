@@ -1,0 +1,15 @@
+  general.architecture = maxwell-moe
+  general.type = adapter
+  adapter.type = lora
+  adapter.lora_alpha = 1.0
+  general.name = r27-all-enru-perlayer
+attn_output                90 tensors       1.1 MiB  F32  layers 45  lora_a shape (4096, 1)
+ffn_down                    6 tensors       0.1 MiB  F32  layers 3  lora_a shape (6144, 1)
+ffn_down_exps              84 tensors     105.0 MiB  F32  layers 42  lora_a shape (512, 1, 256)
+ffn_down_shexp             84 tensors       0.5 MiB  F32  layers 42  lora_a shape (1024, 1)
+token_embd                  2 tensors       0.8 MiB  F32  layers n/a  lora_a shape (1, 200704)
+total 107.4 MiB in 266 tensors, 133 edited weights
+edited weights missing from base: 0 []
+  blk.0.attn_output.weight: base [4096, 2048]  lora_a [4096, 1]  lora_b [1, 2048]
+  blk.0.ffn_down.weight: base [6144, 2048]  lora_a [6144, 1]  lora_b [1, 2048]
+  blk.1.attn_output.weight: base [4096, 2048]  lora_a [4096, 1]  lora_b [1, 2048]
