@@ -169,7 +169,7 @@ def page(path, title, desc, body, md, D, nav=None, jsonld=None, updated=None):
 <link rel="icon" href="{BASE}assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="{BASE}assets/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="{BASE}assets/apple-touch-icon.png">
-<!-- sauce-lint surface: docs -->
+<!-- sauce-lint surface: docs --><!-- sauce-lint allow font-face: Hopscotch (titles) and Tick 35 (word labels, 16 px) are foundry faces chosen by David for this site -->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap">
 <link rel="stylesheet" href="{BASE}assets/tokens.css">

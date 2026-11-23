@@ -326,7 +326,16 @@ def steps(items, v=None):
     return '<ol class="steps">' + "".join(f'<li><span class="ss-px ss-px--s steps__n">{i}</span><div><h3>{e(t)}</h3>{h}</div></li>' for i, (t, h) in enumerate(items, 1)) + "</ol>"
 
 
-def support(v=None):
+SUPPORT_ALTS = [
+    ("elevated", "B1 · Ledger", "Statement and contact buttons left; a table of what would help and what it unlocks right."),
+    ("bench", "B2 · Bench sheet", "A plate of the bench as it stands, then a today-versus-with-help table: the ask is drawn as the next state of the machine."),
+    ("doors", "B3 · Two doors", "Two equal columns, hire and sponsor, each with its own list and its own button, so each reader takes one path."),
+    ("proof", "B4 · Proof first", "The body of work as Stem 7 figures, then one sentence of ask and the buttons. Evidence before the request."),
+    ("letter", "B5 · Signed note", "A short first-person note at reading width, signed with the lockup. The quietest option."),
+]
+
+
+def support(v=None, D=None):
     v = v_of("support", v)
     a = ("<p>This bench is one person's desktop. The recipes exist because model authors, quantizers and engine maintainers publish their work in the open, "
          "and the results go back the same way: measured, sourced and free to reuse.</p>"
@@ -335,11 +344,46 @@ def support(v=None):
              ("Compute credits", "imatrix and KLD references for quants that are too large to make here"),
              ("Early access to models and engine builds", "a measured 12 GB recipe ready when the release lands"),
              ("A conversation", "if your team ships models or inference software and cares how they run on the cards people actually own")]
-    contact = (f'<a class="ss-button ss-button--primary" href="https://github.com/davidghatley">GitHub · davidghatley</a> '
-               f'<a class="ss-button" href="https://davidghatley.github.io/">Portfolio</a> '
-               f'<a class="ss-button" href="{REPO}/discussions">Open a discussion</a>')
+    gh_btn = '<a class="ss-button ss-button--primary" href="https://github.com/davidghatley">GitHub · davidghatley</a>'
+    pf_btn = '<a class="ss-button" href="https://davidghatley.github.io/">Portfolio</a>'
+    ds_btn = f'<a class="ss-button" href="{REPO}/discussions">Open a discussion</a>'
+    contact = f"{gh_btn} {pf_btn} {ds_btn}"
     if v == "exact":
         return f'<div class="ss-prose">{a}<ul>' + "".join(f"<li><strong>{e(t)}</strong>: {e(d)}</li>" for t, d in helps) + f'</ul></div><p class="sup__btns">{contact}</p>'
+    if v == "bench":
+        now = [("One RTX 3060, 12 GB", "16 and 24 GB cards, and placement across two GPUs"),
+               ("Quants made only if they fit in 62 GB of RAM", "imatrix and KLD references for the large ones, from compute credits"),
+               ("Recipes start when weights go public", "a measured 12 GB recipe on release day, from early access"),
+               ("Results published here", "the same results, plus a line to your team when a model or engine breaks on consumer cards")]
+        rows = "".join(f"<tr><td>{e(a_)}</td><td><b>{e(b_)}</b></td></tr>" for a_, b_ in now)
+        return (f'<figure class="ss-plate sup-bench"><header class="ss-plate__head ss-label"><span><b>PLATE 2</b> · THE BENCH · OPEN TO SPONSORSHIP</span><span>ROLES TOO</span></header>'
+                + figures([("GPU", "12", "GB VRAM"), ("RAM", "62", "GB"), ("Cards", "1", "RTX 3060"), ("Recipes", str(len(D["recipes"])) if D else "5", "measured")])
+                + f'<div class="ss-table-wrap"><table class="ss-table"><thead><tr><th>Today</th><th>With help</th></tr></thead><tbody>{rows}</tbody></table></div>'
+                f'<p class="sup__btns">{contact}</p>'
+                '<figcaption class="ss-plate__cap">Also open to roles in inference, model optimisation and developer tooling.</figcaption></figure>')
+    if v == "doors":
+        hire = ["Inference and serving performance", "Model optimisation and quantization", "Developer tooling for people who run models"]
+        spon = [t for t, _ in helps[:3]]
+        col = lambda h, sub, items, btns: (f'<div class="door"><h3>{e(h)}</h3><p>{e(sub)}</p><ul class="door__list">' + "".join(f"<li>{e(x)}</li>" for x in items)
+                                           + f'</ul><p class="sup__btns">{btns}</p></div>')
+        return ('<div class="doors">'
+                + col("Hire me", "Open to roles. The recipes and findings on this site are the work sample.", hire, f"{gh_btn} {pf_btn}")
+                + col("Sponsor the bench", "Every recipe is measured on one 12 GB card. More hardware means more people covered.", spon, ds_btn.replace('class="ss-button"', 'class="ss-button ss-button--primary"'))
+                + "</div>")
+    if v == "proof":
+        n = (lambda k: str(len(D[k])) if D else "0")
+        figs = figures([("Recipes", n("recipes"), "measured"), ("Findings", n("findings"), "written up"), ("Skills", n("skills"), "MIT"), ("Thanked", n("credits"), "people and projects")])
+        return (f'<div class="proof">{figs}<p class="proof__ask">All of it is open. I am looking for a role in inference, model optimisation or developer tooling, '
+                f'and for hardware or compute that would take these recipes past one 12 GB card.</p><p class="sup__btns">{contact}</p></div>')
+    if v == "letter":
+        lock = (f'<div class="ss-lockup">{cells(MARK, "ss-lockup__mark")}<span class="ss-lockup__lead"></span><span><span class="ss-lockup__name">David Hatley</span>'
+                '<span class="ss-lockup__line">design · AI/ML · generative tools</span></span></div>')
+        return ('<div class="letter"><div class="ss-prose">'
+                "<p>Everything here runs on one desktop with a 12 GB card, the card a lot of people already own. "
+                "The recipes exist because model authors, quantizers and engine maintainers publish in the open, so the results go back the same way.</p>"
+                "<p>If your team ships models or inference software, I would like to hear from you: about a role in inference, model optimisation or developer tooling, "
+                "or about a second card, compute credits or early builds that would let these recipes cover more hardware.</p>"
+                f'</div>{lock}<p class="sup__btns">{contact}</p></div>')
     rows = "".join(f"<tr><td><b>{e(t)}</b></td><td>{e(d)}</td></tr>" for t, d in helps)
     return (f'<div class="sup"><div class="sup__text"><div class="ss-prose">{a}</div><p class="sup__btns">{contact}</p></div>'
             f'<div class="ss-table-wrap"><table class="ss-table"><thead><tr><th>What would help</th><th>What it unlocks</th></tr></thead><tbody>{rows}</tbody></table></div></div>')
@@ -562,7 +606,7 @@ def about(D):
         ("Every number has a source line", f'<p>Raw runs are in the repo. Each figure on this site links to the line in <code>RESULTS.md</code> it was read from, and <a href="{BASE}contribute/">anyone can report</a> what the same recipe does on their card.</p>'),
     ])
     b += f'<div class="ss-prose"><p>The tuning loop follows the inference-optimisation skill by 0xSero and Sybil Solutions. The full list of people and projects is on the <a href="{BASE}thanks/">thanks page</a>.</p></div>'
-    b += chapter("Support this work", None, "Roles and sponsorship").replace('id="support-this-work"', 'id="support"') + support()
+    b += chapter("Support this work", None, "Roles and sponsorship").replace('id="support-this-work"', 'id="support"') + support(None, D)
     md = ["# About", "", "One desktop: NVIDIA RTX 3060 12 GB, 62 GB RAM, Intel i5-12500, NVMe storage.", "", "## Method", "",
           "1. Ceiling first: bytes read per token divided by measured memory bandwidth.", "2. One change per run, with controls; keep only what beats noise.",
           "3. A load is not a run: long prompts at the full window, needles at half and full depth, a code eval.", "4. Every number links to its source line in the repo.",
@@ -646,23 +690,24 @@ def sheet(D):
         ("credit", "Credit entry", "A four-column table row: reads as a ledger, and long sentences wrap badly.", "Name as a heading with what they made, then exactly what it was used for, then links.", lambda v: ('<div class="ss-table-wrap"><table class="ss-table"><tbody>' + credit_entry(c, v) + "</tbody></table></div>") if v == "exact" else credit_entry(c, v)),
         ("skill", "Skill card", "Table row with a link.", "Name, file count and licence on one line, one-sentence purpose, install command ready to copy.", (lambda v: ('<div class="ss-table-wrap"><table class="ss-table"><tbody>' + skill_card(s, v) + "</tbody></table></div>") if v == "exact" else skill_card(s, v)) if s else (lambda v: "")),
         ("steps", "Steps", "Ordered list in prose.", "Stem 7 numerals in cobalt, a heading per step, room for a button or command under each.", lambda v: steps(demo_steps, v)),
-        ("support", "Support block", "Prose and a bullet list.", "Statement and contact buttons left; a table of what would help and what it unlocks right.", lambda v: support(v)),
+        ("support", "Support block", "Prose and a bullet list.", "Statement and contact buttons left; a table of what would help and what it unlocks right.", lambda v: support(v, D)),
         ("footer", "Footer", "Lockup and a date.", "Lockup, then the machine-readable versions of the page and the project links, then the licence line.", lambda v: footer("index.md", D, v)),
     ]
     out = ""
     for key, name, crit, elev, fn in comps:
         out += (f'<header class="ss-chapter"><span class="ss-chapter__no">&rarr;</span><span class="ss-chapter__label">{key} · using: {CHOICE[key]}</span><h2>{name}</h2></header>'
                 f'<div class="variant"><p class="ss-label"><b>A · Exact</b> &nbsp; {e(crit)}</p><div class="variant__box">{fn("exact")}</div></div>'
-                f'<div class="variant"><p class="ss-label"><b>B · Elevated</b> &nbsp; {e(elev)}</p><div class="variant__box">{fn("elevated")}</div></div>')
+                + ("".join(f'<div class="variant"><p class="ss-label"><b>{e(nm)}</b> &nbsp; {e(d_)}</p><div class="variant__box">{support(k, D)}</div></div>' for k, nm, d_ in SUPPORT_ALTS)
+                   if key == "support" else f'<div class="variant"><p class="ss-label"><b>B · Elevated</b> &nbsp; {e(elev)}</p><div class="variant__box">{fn("elevated")}</div></div>'))
     notes = ('<header class="ss-chapter"><span class="ss-chapter__no">&rarr;</span><span class="ss-chapter__label">notes · unchanged</span><h2>Notes</h2></header>'
              '<p class="ss-label">The house notes are used as they are. Rule (vermilion) appears once per page; trap is ink.</p>'
              '<div class="ss-note ss-note--rule"><span class="ss-note__tag">Own a 12 GB 3060?</span><div class="ss-note__body">Run a recipe and report your numbers.</div></div>'
              '<div class="ss-note"><span class="ss-note__tag">Trap</span><div class="ss-note__body">A layout that leaves under 0.4 GB free after load dies on its first request.</div></div>')
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Component Sheet</title><meta name="robots" content="noindex">
-<!-- sauce-lint surface: docs --><!-- sauce-lint allow vermilion-focus: a review sheet shows the same component twice -->
+<!-- sauce-lint surface: docs --><!-- sauce-lint allow font-face: Hopscotch (titles) and Tick 35 (word labels, 16 px) are foundry faces chosen by David for this site --><!-- sauce-lint allow vermilion-focus: a review sheet shows the same component twice -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap">
 <link rel="stylesheet" href="{BASE}assets/tokens.css"><link rel="stylesheet" href="{BASE}assets/components.css"><link rel="stylesheet" href="{BASE}assets/site.css"></head>
 <body class="ss-body"><div class="ss-page"><header class="ss-runhead"><span><b>Component sheet</b> · 3060 Recipes</span><span>{D["today"]}</span></header>
 <h1 class="ss-mast ss-mast--m"><span class="ss-mast__x">Components</span><span class="ss-mast__c">Exact and elevated</span></h1>
-<p class="ss-lead">Each component twice: A is the plain house component, B is the elevated version the pages use now. Say "use A for chart" and the generator switches.</p>
+<p class="ss-lead">Each component twice: A is the plain house component, B is the elevated version every page now uses. The support block has five elevated versions, B1 to B5; B1 is live until one is picked.</p>
 {out}{notes}</div><script src="{BASE}assets/site.js" defer></script></body></html>"""
