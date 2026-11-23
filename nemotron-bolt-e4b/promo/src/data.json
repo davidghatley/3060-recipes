@@ -1,0 +1,125 @@
+{
+ "status": "measured",
+ "problems": [],
+ "model": {
+  "name": "Nemotron-3.5-Bolt-E4B",
+  "org": "NVIDIA",
+  "base": "Gemma-4-E4B-it",
+  "_source": "RESULTS.md: 'NVIDIA's post-train of Gemma-4-E4B-it. 42 dense layers (35 with a 512-token sliding window, 7 global) ... 64k window'",
+  "layers": 42
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "short": "225a5345b",
+  "patch": "none (stock master)"
+ },
+ "weights": {
+  "file": "Q4_K_M",
+  "gb": 6.18,
+  "by": "NVIDIA",
+  "drafter": "DFlash BF16",
+  "drafter_mb": 737
+ },
+ "ctx": 65536,
+ "ceiling": {
+  "_source": "RESULTS.md 'Baseline vs tuned vs ceiling' (bytes per token over measured 342 GB/s, THEORY.md)",
+  "decode_plain": 109,
+  "decode_60k_plain": 70
+ },
+ "stock": {
+  "decode_think": 75.94,
+  "decode_off": 76.28,
+  "decode_60k": 54.15,
+  "prefill_8k": 4889.5,
+  "prefill_32k": 3900.8,
+  "prefill_60k": 3117.1,
+  "ttft_61k": 19.8,
+  "needles_61k": [
+   "61k",
+   "3/3"
+  ],
+  "vram_mib": 5408
+ },
+ "tuned": {
+  "decode_think": 190.38,
+  "accept_think": 0.411,
+  "decode_off": 216.65,
+  "accept_off": 0.482,
+  "decode_60k": 157.82,
+  "prefill_8k": 3031.1,
+  "prefill_32k": 2471.6,
+  "prefill_60k": 2006.1,
+  "ttft_61k": 30.9,
+  "needles_32k": [
+   "32k",
+   "3/3"
+  ],
+  "needles_61k": [
+   "61k",
+   "3/3"
+  ],
+  "codeeval_off": [
+   7,
+   8
+  ],
+  "codeeval_off_stock": [
+   7,
+   8
+  ],
+  "vram_mib": 8598
+ },
+ "nospec": {
+  "decode_off": 77.61,
+  "decode_think": 77.45,
+  "decode_60k": 54.59,
+  "prefill_8k": 5060.4,
+  "prefill_32k": 4209.9,
+  "prefill_60k": 3450.5,
+  "ttft_61k": 18.0,
+  "needles_61k": [
+   "61k",
+   "3/3"
+  ],
+  "vram_mib": 5546
+ },
+ "multi": {
+  "c4": 270.7,
+  "c4_64k_nospec": 164.6,
+  "soak": [
+   "3/3",
+   "3/3",
+   "3/3",
+   "3/3"
+  ],
+  "soak_ctx": "30k",
+  "soak_all_clean": true,
+  "oom_64k_dflash": true,
+  "vram_mib": 8688
+ },
+ "levers": {
+  "df_ctl_think": 76.155,
+  "df_think": 182.72,
+  "kv_ctl_32k": 62.185,
+  "q8_32k": 48.3,
+  "ub_ctl_pp8k": 4898.799999999999,
+  "ub_ctl_pp32k": 3940.9,
+  "ub_pp8k": 5059.6,
+  "ub_pp32k": 4209.5,
+  "draft_n": 7
+ },
+ "derived": {
+  "speedup_think": 2.5069791941006057,
+  "speedup_off": 2.8401940220241215,
+  "speedup_60k": 2.9144967682363805,
+  "prefill_ratio_8k": 0.6199202372430719,
+  "prefill_ratio_32k": 0.6336136177194421,
+  "prefill_ratio_60k": 0.6435789676301691,
+  "nospec_vs_default_pp8k": 1.669492923361156,
+  "df_lever_think": 2.399317182062898,
+  "q8_slower_at_32k_pct": 22.32853582053551,
+  "ub1024_pp8k_pct": 3.282436515064946,
+  "ub1024_pp32k_pct": 6.815701997005763,
+  "plain_pct_of_ceiling": 71.20183486238531,
+  "tokens_per_step_think": 3.877
+ }
+}
