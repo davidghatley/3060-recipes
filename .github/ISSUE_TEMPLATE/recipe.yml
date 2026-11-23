@@ -1,0 +1,32 @@
+name: Submit a recipe (no pull request)
+description: A working setup for a model that is not here yet. A maintainer packages it and credits you.
+title: "recipe: <model> on a 3060"
+labels: [recipe-submission]
+body:
+  - type: input
+    id: model
+    attributes: {label: Model, description: Hugging Face repo, placeholder: "owner/name"}
+    validations: {required: true}
+  - type: input
+    id: file
+    attributes: {label: Weights file, description: "Repo, exact file and revision", placeholder: "owner/name-GGUF, name-Q4_K_M.gguf @ abc1234"}
+    validations: {required: true}
+  - type: input
+    id: engine
+    attributes: {label: Engine build and patches, placeholder: "llama.cpp b12242, no patches"}
+    validations: {required: true}
+  - type: textarea
+    id: command
+    attributes: {label: Exact serve command, render: shell}
+    validations: {required: true}
+  - type: input
+    id: system
+    attributes: {label: Hardware, placeholder: "RTX 3060 12 GB, Ryzen 5 5600, 32 GB DDR4, NVMe"}
+    validations: {required: true}
+  - type: textarea
+    id: numbers
+    attributes: {label: Numbers, description: "Decode and prefill with conditions; stock flags too if you have them; VRAM and RAM peaks; any quality check"}
+    validations: {required: true}
+  - type: textarea
+    id: credits
+    attributes: {label: Credits, description: Whose model, file and patches this uses}

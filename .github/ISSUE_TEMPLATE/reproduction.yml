@@ -1,0 +1,37 @@
+name: Reproduction report
+description: Your numbers for an existing recipe, from your own 3060. They appear on the recipe page.
+title: "repro: <recipe-id> on <your CPU / RAM>"
+labels: [reproduction]
+body:
+  - type: input
+    id: recipe
+    attributes: {label: Recipe id, description: "For example flint or inkling-2-mini", placeholder: flint}
+    validations: {required: true}
+  - type: input
+    id: gpu
+    attributes: {label: GPU and driver, placeholder: "RTX 3060 12 GB, driver 580.xx, CUDA 12.8"}
+    validations: {required: true}
+  - type: input
+    id: system
+    attributes: {label: CPU, RAM and disk, placeholder: "Ryzen 7 5700X, 64 GB DDR4-3200, NVMe"}
+    validations: {required: true}
+  - type: input
+    id: engine
+    attributes: {label: Engine build, description: Exact tag, build number or commit, placeholder: "llama.cpp b12242"}
+    validations: {required: true}
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Numbers
+      description: Decode and prefill tok/s with the conditions (context depth, prompt size). Medians of 3+ runs if you can.
+      placeholder: |
+        decode, empty context: 57.1 tok/s
+        decode at 32k: 45.9 tok/s
+        prefill, 11k prompt: 1650 tok/s
+    validations: {required: true}
+  - type: textarea
+    id: notes
+    attributes: {label: Anything different from the recipe, description: Flags changed, other software on the GPU, problems hit}
+  - type: input
+    id: credit
+    attributes: {label: How to credit you, description: "Defaults to your GitHub login"}

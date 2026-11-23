@@ -1,0 +1,13 @@
+name: Correction
+description: A wrong number, a broken link, a missing or wrong credit.
+title: "correction: "
+labels: [correction]
+body:
+  - type: input
+    id: where
+    attributes: {label: Page or file, placeholder: "recipes/flint, or flint/RESULTS.md:15"}
+    validations: {required: true}
+  - type: textarea
+    id: what
+    attributes: {label: What is wrong and what it should say}
+    validations: {required: true}
