@@ -276,4 +276,16 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
   Q8_0 0/15, Q4_K_M 2/13. Fisher 5/19 vs 0/35: p = 0.004 (pool mixes prompt sets and settings). The slips look like
   Q4_K_M's. Verdict: MTP stays opt-in on quality, not only on caution. Next: `mtp_repro.py force` at each slip token
   (was it plausible to the target?), and MTP on Q8_0 (batched verify ~1.04x one token) to test the verify-path idea.
-
+- 17:30-19:32 Test 1, "could plain decoding have written the MTP pages?" (`tools/plainscore.py`, driver
+  `tools/plainscore.sh`, out `runs/plainscore/`). First a correction: of the 5 MTP syntax-error pages only 238 s1
+  (`let shelf isOpen`) is a one-token slip; 048 s2, 049 and 238 s2 are names declared twice in one scope, 145 passes a
+  packed hex colour to `rgba()`. Method: re-score every answer token of the 28 finished rc pages on the shipped no-spec
+  server by extending the cached prefix one token at a time (the one-token decode path), and count tokens outside the
+  top-k 20 / top-p 0.95 / min-p 0.05 set the pages were sampled with. MTP 2/116,508 tokens, none 2/103,202; all 4 are
+  rank 2-11 just under the min-p cut (re-tokenization noise). The 3 rc MTP syntax-error pages: 0, slip tokens all in
+  the allowed set. 1 position unjudged (the server returns no probabilities when its pick ends the answer).
+  Verdict: the batched-verify idea is not supported. Test 2 (MTP on Q8_0) existed to probe it, so it is dropped.
+  Default stays QC_SPEC=none: the 5/19 vs 0/35 excess is unexplained (controlled part 3/16 vs 0/16, p = 0.23). To
+  settle it: a render comparison sized for syntax errors, e.g. 20 prompts x 2 seeds per arm (~4 h GPU).
+  Harness notes: the first driver's page counter had a quoting bug (fixed, now `plainscore.py todo`), and session 3
+  crashed on the end-of-answer case (fixed; the run was stopped and resumed, no page lost).
