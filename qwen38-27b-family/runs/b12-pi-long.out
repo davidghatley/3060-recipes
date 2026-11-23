@@ -1,0 +1,34 @@
+gpu_run: waiting for the GPU lock (3254692 01:54:16 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/d01-merged-deep.sh )
+b12-pi-long ready after 3 s (includes any GPU-queue wait); vram=11802 MiB
+b12-pi-long                pp-8k        prompt_n=8034 prefill_tps=403.2 ttft_s=19.93
+b12-pi-long                pp-8k        prompt_n=8040 prefill_tps=403.2 ttft_s=19.94
+b12-pi-long                pp-8k-med    prefill_tps=403.2
+b12-pi-long                pp-32k       prompt_n=32293 prefill_tps=363.1 ttft_s=88.93
+b12-pi-long                pp-32k       prompt_n=31847 prefill_tps=362.3 ttft_s=87.9
+b12-pi-long                pp-32k-med   prefill_tps=362.7
+b12-pi-long                pp-120k      prompt_n=121625 prefill_tps=276.6 ttft_s=439.71
+b12-pi-long                pp-120k      prompt_n=120730 prefill_tps=278.6 ttft_s=433.3
+b12-pi-long                pp-120k-med  prefill_tps=277.6
+b12-pi-long                code-0k      gen_n=211 prompt_n=61 decode_tps=7.43 finish=stop content_chars=657 z=0.447
+b12-pi-long                code-0k      gen_n=151 prompt_n=66 decode_tps=7.52 finish=stop content_chars=513 z=0.478
+b12-pi-long                code-0k      gen_n=172 prompt_n=58 decode_tps=7.58 finish=stop content_chars=661 z=0.425
+b12-pi-long                code-0k      gen_n=68 prompt_n=69 decode_tps=7.56 finish=stop content_chars=164 z=None
+b12-pi-long                code-0k      gen_n=171 prompt_n=72 decode_tps=7.07 finish=stop content_chars=650 z=0.498
+b12-pi-long                code-0k      gen_n=129 prompt_n=68 decode_tps=6.76 finish=stop content_chars=567 z=0.559
+b12-pi-long                code-0k-med  decode_tps=7.48 min=6.76 max=7.58
+b12-pi-long                code-120k    gen_n=256 prompt_n=120706 decode_tps=5.61 finish=length content_chars=865 z=0.452
+b12-pi-long                code-120k    gen_n=142 prompt_n=120711 decode_tps=5.62 finish=stop content_chars=473 z=None
+b12-pi-long                code-120k    gen_n=175 prompt_n=120703 decode_tps=5.63 finish=stop content_chars=668 z=0.424
+b12-pi-long                code-120k    gen_n=66 prompt_n=120714 decode_tps=5.63 finish=stop content_chars=155 z=None
+b12-pi-long                code-120k    gen_n=146 prompt_n=120717 decode_tps=5.63 finish=stop content_chars=510 z=0.496
+b12-pi-long                code-120k    gen_n=146 prompt_n=120713 decode_tps=5.62 finish=stop content_chars=593 z=0.58
+b12-pi-long                code-120k-med decode_tps=5.63 min=5.61 max=5.63
+b12-pi-long                needle-65k   prompt_n=65876 found=3/3 prefill_tps=333.8 ttft_s=197.4 decode_tps=6.49 answer=6NZZ58ZK | CVMBFD30 | K8OO43C5
+b12-pi-long                needle-123k  prompt_n=124477 found=3/3 prefill_tps=278.8 ttft_s=446.5 decode_tps=5.61 answer=IBJIKYH0 | 3KNZO0HM | 6N4VRN1M
+llama_kv_cache:      CUDA0 KV buffer size =  2304.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+load_tensors:        CUDA0 model buffer size =  7598.63 MiB
+sched_reserve:      CUDA0 compute buffer size =   651.54 MiB
+MEM b12-pi-long VmHWM:	14142356 kB VmRSS:	12100312 kB  cgroup_peak=10111430656
+b12-pi-long done; vram=11796 MiB
+DONE

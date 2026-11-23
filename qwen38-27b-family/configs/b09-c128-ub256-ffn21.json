@@ -1,0 +1,7 @@
+{
+ "id": "b09-c128-ub256-ffn21",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf --alias qwen38-pi --no-mmproj -ngl 99 -ot blk\\\\.\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\|8\\|9\\|10\\|11\\|12\\|13\\|14\\|15\\|16\\|17\\|18\\|19\\|20\\)\\\\.ffn_\\(up\\|gate\\|down\\)=CPU --fit off -c 131072 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.8 --top-p 1.0 --top-k 0 --min-p 0 --host 127.0.0.1 --port 8101 -lv 4",
+ "results": [],
+ "server_log": "runs/server-b09-c128-ub256-ffn21.log"
+}

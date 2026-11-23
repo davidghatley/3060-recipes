@@ -1,0 +1,52 @@
+{
+ "id": "b11-pi-default",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf --alias qwen38-pi --no-mmproj -ngl 99 -ot blk\\\\.\\(0\\|1\\|2\\)\\\\.ffn_\\(up\\|gate\\|down\\)=CPU --fit off -c 32768 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.8 --top-p 1.0 --top-k 0 --min-p 0 --host 127.0.0.1 --port 8101 -lv 4",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 11894,
+   "prefill_tps": 543.4
+  },
+  {
+   "case": "pp-30k-med",
+   "vram_mib": 11896,
+   "prefill_tps": 487.0
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11896,
+   "decode_tps": 16.62,
+   "min": 16.34,
+   "max": 16.87
+  },
+  {
+   "case": "code-30k-med",
+   "vram_mib": 11896,
+   "decode_tps": 13.76,
+   "min": 13.69,
+   "max": 13.87
+  },
+  {
+   "case": "needle-16k",
+   "vram_mib": 11896,
+   "prompt_n": 16264,
+   "found": "3/3",
+   "prefill_tps": 520.6,
+   "ttft_s": 31.2,
+   "decode_tps": 15.01,
+   "answer": "6F3Y2T3T | 05UZY9JQ | FZL2APCR"
+  },
+  {
+   "case": "needle-30k",
+   "vram_mib": 11876,
+   "prompt_n": 30473,
+   "found": "3/3",
+   "prefill_tps": 484.7,
+   "ttft_s": 62.9,
+   "decode_tps": 13.81,
+   "answer": "74S47FHX | O6LFOEDU | YLST28Z3"
+  }
+ ],
+ "server_log": "runs/server-b11-pi-default.log"
+}

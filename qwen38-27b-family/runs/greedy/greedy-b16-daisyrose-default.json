@@ -1,0 +1,69 @@
+{
+ "label": "b16-daisyrose-default",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n: int) -> int:\n    \"\"\"\n    Return the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence is defined as:\n        F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2) for n >= 2\n\n    Args:\n        n: A non-negative integer representing the position in the Fibonacci sequence.\n\n    Returns:\n        The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is negative.\n\n    Examples:\n        >>> fibonacci(0)\n        0\n        >>> fibonacci(1)\n        1\n        >>> fibonacci(5)\n        5\n        >>> fibonacci(10)\n        55\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+   "n": 261,
+   "decode_tps": 14.35,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "When you encounter a `Permission denied` error while executing a script like `./build.sh`, it is almost always related to file permissions or system security policies. Here are the three most likely causes and their corresponding fixes:\n\n### 1. The Script Lacks Execute Permission\n**Cause:** The file `build.sh` does not have the execute bit set for the user running the command. By default, many files are created with read/write permissions only (`rw-`), not execute (`r-x`).\n\n**Fix:**\nAdd execute permission to the script using `chmod`:\n```bash\nchmod +x build.sh\n```\n*Note: If you need to restrict this to only the owner, use `chmod u+x build.sh`.*\n\n---\n\n### 2. The Script Has a Wrong or Missing Shebang Line\n**Cause:** The first line of `build.sh` (the shebang) is missing, incorrect, or points to an interpreter that doesn\u2019t exist or isn\u2019t executable. For example, if the script starts with `#!/bin/bash` but `/bin/bash` is not present or not executable, the system may fail to execute it properly, sometimes resulting in a permission-like error. Alternatively, if the shebang is missing entirely, the shell may try to interpret it as a binary executable, which can fail.\n\n**Fix:**\nEnsure the first line of `build.sh` correctly specifies an available interpreter:\n```bash\n#!/bin/bash",
+   "n": 300,
+   "decode_tps": 14.37,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a linear attention mechanism that enhances standard DeltaNet by incorporating a gating mechanism to control the flow of information. It utilizes a delta rule to update its internal state, allowing it to selectively overwrite specific memory slots rather than simply appending new data. The gating component acts as a dynamic filter, determining how much of the new input should influence the state update versus how much of the previous state should be retained. This combination enables the model to achieve efficient, constant-memory sequence modeling while maintaining high accuracy in long-context tasks.",
+   "n": 109,
+   "decode_tps": 14.42,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "To fix the `IndexError` in `tests/test_parser.py::test_empty` caused by an empty string, I would make the following tool calls step-by-step:\n\n### Step 1: Run the failing test to confirm the error\n**Tool:** `run_command`\n**Command:** `pytest tests/test_parser.py::test_empty -v`\n**Purpose:** Confirm the exact error message and traceback to ensure it is indeed an `IndexError` related to an empty string.\n\n### Step 2: Inspect the test file\n**Tool:** `read_file`\n**Path:** `tests/test_parser.py`\n**Purpose:** Understand what the `test_empty` test expects. Specifically, look at the input (empty string) and the expected output. This helps determine whether the parser should return an empty result, raise a specific exception, or handle the empty case gracefully.\n\n### Step 3: Locate the parser implementation\n**Tool:** `search_files` or `list_directory`\n**Query:** Look for files like `parser.py`, `parse.py`, or similar in the project root or `src/` directory.\n**Purpose:** Identify the source file containing the parsing logic that is failing.\n\n### Step 4: Read the parser implementation\n**Tool:** `read_file`\n**Path:** [Identified parser file, e.g., `src/parser.py`]\n**Purpose:** Examine the code that processes the input string. Look",
+   "n": 300,
+   "decode_tps": 14.35,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files '*.py' | grep -v -E '(^tests/|/tests/|_test\\.py$|test_.*\\.py$)' | xargs wc -l | tail -1\n```",
+   "n": 50,
+   "decode_tps": 14.42,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order of operations (often remembered by the acronym **PEMDAS** or **BODMAS**):\n\n1.  **P/B**: Parentheses/Brackets\n2.  **E/O**: Exponents/Orders\n3.  **MD/DM**: Multiplication and Division (from left to right)\n4.  **AS**: Addition and Subtraction (from left to right)\n\n### Step 1: Perform Multiplication and Division\nAccording to the order of operations, we handle multiplication and division before addition. We perform these from left to right.\n\n**First, the multiplication:**\n$$17 \\times 23$$\n\nCalculation:\n$$17 \\times 20 = 340$$\n$$17 \\times 3 = 51$$\n$$340 + 51 = 391$$\n\nSo, $17 \\times 23 = 391$.\n\n**Next, the division:**\n$$144 / 12$$\n\nCalculation:\n$$12 \\times 10 = 120$$\n$$144 - 120 = 24$$\n$$12 \\times 2 = 24$$\nSo, $10 + 2 = ",
+   "n": 300,
+   "decode_tps": 14.35,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.every((item) => typeof item === \"string\");\n}\n```",
+   "n": 41,
+   "decode_tps": 14.21,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "Here is a summary of the CAP theorem tailored for a junior engineer:\n\n*   **The Core Dilemma**: The theorem states that in a distributed system, you cannot simultaneously guarantee all three of the following properties: **Consistency**, **Availability**, and **Partition Tolerance**. You must choose two out of the three.\n*   **Partition Tolerance is Non-Negotiable**: In any distributed system (where components are on different machines or networks), network failures (partitions) will eventually happen. Therefore, you must always design for **Partition Tolerance (P)**. This leaves you with a binary choice: prioritize Consistency or Availability during a failure.\n*   **Consistency (C)**: This means that all nodes in the system return the same data at the same time. If you choose Consistency, the system may refuse to serve requests (returning an error) until it can guarantee that the data is up-to-date across all nodes.\n*   **Availability (A)**: This means that every request receives a response from the system, even if the data might be stale or outdated. If you choose Availability, the system will keep working and serving data, but it might serve slightly old information during a network partition.\n*   **Practical Trade-off**: You are not choosing between C and A for the *entire* system forever; you are choosing how the system behaves **only when a network partition occurs**. In normal operation (no failures),",
+   "n": 300,
+   "decode_tps": 14.4,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

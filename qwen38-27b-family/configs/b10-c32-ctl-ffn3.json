@@ -1,0 +1,20 @@
+{
+ "id": "b10-c32-ctl-ffn3",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf --alias qwen38-pi --no-mmproj -ngl 99 -ot blk\\\\.\\(0\\|1\\|2\\)\\\\.ffn_\\(up\\|gate\\|down\\)=CPU --fit off -c 32768 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.8 --top-p 1.0 --top-k 0 --min-p 0 --host 127.0.0.1 --port 8101 -lv 4",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 11894,
+   "prefill_tps": 548.6
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11894,
+   "decode_tps": 16.45,
+   "min": 16.24,
+   "max": 16.62
+  }
+ ],
+ "server_log": "runs/server-b10-c32-ctl-ffn3.log"
+}

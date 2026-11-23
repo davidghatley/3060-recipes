@@ -1,0 +1,68 @@
+gpu_run: waiting for the GPU lock (2444929 23:22:44 env Q38_NO_GPU_RUN=1 PORT=8101 prlimit --core=0 bash runs/b05-spec.sh )
+b06-ctl-ffn4 ready after 10 s (includes any GPU-queue wait); vram=11869 MiB
+b06-ctl-ffn4               code-0k-med  decode_tps=15.82 min=15.4 max=15.92
+load_tensors:        CUDA0 model buffer size =  9746.21 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+b06-mtp1-ffn7: server exited during load:
+b06-mtp1-ffn8: server exited during load:
+b06-mtp1-ffn9: server exited during load:
+b06-mtp1-ffn10 ready after 2 s (includes any GPU-queue wait); vram=11903 MiB
+b06-mtp1-ffn10             code-0k-med  decode_tps=15.36 min=14.05 max=15.75 accept=0.977
+load_tensors:        CUDA0 model buffer size =  9388.42 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   299.25 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   128.00 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+b06-mtp2-ffn11 ready after 2 s (includes any GPU-queue wait); vram=11935 MiB
+b06-mtp2-ffn12 ready after 2 s (includes any GPU-queue wait); vram=11899 MiB
+b06-mtp2-ffn12             code-0k-med  decode_tps=14.68 min=13.66 max=15.23 accept=0.943
+load_tensors:        CUDA0 model buffer size =  9193.19 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   448.88 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   128.00 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+b06-ctl2-ffn4 ready after 2 s (includes any GPU-queue wait); vram=11859 MiB
+b06-ctl2-ffn4              code-0k-med  decode_tps=15.81 min=15.5 max=15.93
+load_tensors:        CUDA0 model buffer size =  9746.21 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+b06-mtp3-ffn13 ready after 2 s (includes any GPU-queue wait); vram=11919 MiB
+b06-mtp3-ffn14 ready after 2 s (includes any GPU-queue wait); vram=11853 MiB
+b06-mtp3-ffn14             code-0k-med  decode_tps=12.95 min=11.18 max=13.52 accept=0.871
+load_tensors:        CUDA0 model buffer size =  8997.95 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   598.50 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   128.00 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   130.02 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+b06-dflash3-cpu-ffn9: server exited during load:
+b06-dflash3-cpu-ffn10: server exited during load:
+b06-dflash3-cpu-ffn11: server exited during load:
+b06-dflash3-cpu-ffn12: server exited during load:
+b06-dflash3-cpu-ffn13: server exited during load:
+b06-dflash3-cpu-ffn14 ready after 2 s (includes any GPU-queue wait); vram=11917 MiB
+b06-dflash3-gpu-ffn18: server exited during load:
+b06-dflash3-gpu-ffn19: server exited during load:
+b06-dflash3-gpu-ffn20: server exited during load:
+b06-dflash3-gpu-ffn21: server exited during load:
+b06-dflash3-gpu-ffn22: server exited during load:
+b06-dflash3-gpu-ffn23: server exited during load:
+b06-dflash3-gpu-ffn24: server exited during load:
+b06-ctl3-ffn4 ready after 2 s (includes any GPU-queue wait); vram=11879 MiB
+b06-ctl3-ffn4              code-0k-med  decode_tps=15.51 min=15.29 max=15.77
+load_tensors:        CUDA0 model buffer size =  9746.21 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   268.54 MiB
+DONE

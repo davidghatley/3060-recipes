@@ -1,0 +1,15 @@
+{
+ "id": "b17-heretic-fit-fast-ffn4",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/davidau-heretic/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf --alias qwen38-heretic --no-mmproj -ngl 99 -ot blk\\\\.\\(0\\|1\\|2\\|3\\)\\\\.ffn_\\(up\\|gate\\|down\\)=CPU --fit off -c 16384 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.7 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --host 127.0.0.1 --port 8101",
+ "results": [
+  {
+   "case": "code-15k-med",
+   "vram_mib": 11921,
+   "decode_tps": 13.73,
+   "min": 13.73,
+   "max": 13.73
+  }
+ ],
+ "server_log": "runs/server-b17-heretic-fit-fast-ffn4.log"
+}

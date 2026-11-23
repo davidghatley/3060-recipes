@@ -1,0 +1,85 @@
+gpu_run: waiting for the GPU lock (2994505 00:54:34 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/k03-ad.sh )
+b10-c32-ctl-ffn3 ready after 8 s (includes any GPU-queue wait); vram=11886 MiB
+b10-c32-ctl-ffn3           pp-8k        prompt_n=8034 prefill_tps=549.6 ttft_s=14.62
+b10-c32-ctl-ffn3           pp-8k        prompt_n=8041 prefill_tps=547.7 ttft_s=14.68
+b10-c32-ctl-ffn3           pp-8k-med    prefill_tps=548.6
+b10-c32-ctl-ffn3           code-0k-med  decode_tps=16.45 min=16.24 max=16.62
+load_tensors:        CUDA0 model buffer size =  9843.83 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   219.54 MiB
+b10-c32-mtp1-ffn6: server exited during load:
+b10-c32-mtp1-ffn7: server exited during load:
+b10-c32-mtp1-ffn8: server exited during load:
+b10-c32-mtp1-ffn9 ready after 2 s (includes any GPU-queue wait); vram=11898 MiB
+b10-c32-mtp1-ffn9          pp-8k        prompt_n=8036 prefill_tps=485.8 ttft_s=16.54
+b10-c32-mtp1-ffn9          pp-8k        prompt_n=8042 prefill_tps=484.0 ttft_s=16.61
+b10-c32-mtp1-ffn9          pp-8k-med    prefill_tps=484.9
+b10-c32-mtp1-ffn9          code-0k-med  decode_tps=16.03 min=15.49 max=16.52 accept=0.913
+load_tensors:        CUDA0 model buffer size =  9486.04 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   299.25 MiB
+sched_reserve:      CUDA0 compute buffer size =   219.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   128.00 MiB
+sched_reserve:      CUDA0 compute buffer size =    65.01 MiB
+sched_reserve:      CUDA0 compute buffer size =    65.01 MiB
+sched_reserve:      CUDA0 compute buffer size =   219.54 MiB
+b10-c32-ctl2-ffn3 ready after 2 s (includes any GPU-queue wait); vram=11886 MiB
+b10-c32-ctl2-ffn3          pp-8k        prompt_n=8037 prefill_tps=545.6 ttft_s=14.73
+b10-c32-ctl2-ffn3          pp-8k        prompt_n=8043 prefill_tps=543.4 ttft_s=14.8
+b10-c32-ctl2-ffn3          pp-8k-med    prefill_tps=544.5
+b10-c32-ctl2-ffn3          code-0k-med  decode_tps=16.66 min=16.52 max=16.81
+load_tensors:        CUDA0 model buffer size =  9843.83 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   219.54 MiB
+b10-c16-ctl-ffn0 ready after 2 s (includes any GPU-queue wait); vram=11796 MiB
+b10-c16-ctl-ffn0           pp-8k        prompt_n=8036 prefill_tps=570.0 ttft_s=14.1
+b10-c16-ctl-ffn0           pp-8k        prompt_n=8041 prefill_tps=569.6 ttft_s=14.12
+b10-c16-ctl-ffn0           pp-8k-med    prefill_tps=569.8
+b10-c16-ctl-ffn0           code-0k-med  decode_tps=19.7 min=19.69 max=19.71
+load_tensors:        CUDA0 model buffer size = 10136.68 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   288.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   122.01 MiB
+b10-c16-mtp1-ffn3: server exited during load:
+b10-c16-mtp1-ffn4: server exited during load:
+b10-c16-mtp1-ffn5 ready after 2 s (includes any GPU-queue wait); vram=11902 MiB
+b10-c16-mtp1-ffn6 ready after 2 s (includes any GPU-queue wait); vram=11764 MiB
+b10-c16-mtp1-ffn6          pp-8k        prompt_n=8035 prefill_tps=506.0 ttft_s=15.88
+b10-c16-mtp1-ffn6          pp-8k        prompt_n=8042 prefill_tps=504.4 ttft_s=15.94
+b10-c16-mtp1-ffn6          pp-8k-med    prefill_tps=505.2
+b10-c16-mtp1-ffn6          code-0k-med  decode_tps=19.64 min=18.11 max=19.87 accept=0.977
+load_tensors:        CUDA0 model buffer size =  9778.89 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   288.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   299.25 MiB
+sched_reserve:      CUDA0 compute buffer size =   144.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =    64.00 MiB
+sched_reserve:      CUDA0 compute buffer size =    74.01 MiB
+sched_reserve:      CUDA0 compute buffer size =    74.01 MiB
+sched_reserve:      CUDA0 compute buffer size =   144.54 MiB
+b10-c16-mtp2-ffn5: server exited during load:
+b10-c16-mtp2-ffn6 ready after 2 s (includes any GPU-queue wait); vram=11912 MiB
+b10-c16-mtp2-ffn7 ready after 2 s (includes any GPU-queue wait); vram=11826 MiB
+b10-c16-mtp2-ffn7          pp-8k        prompt_n=8034 prefill_tps=499.0 ttft_s=16.1
+b10-c16-mtp2-ffn7          pp-8k        prompt_n=8043 prefill_tps=498.2 ttft_s=16.14
+b10-c16-mtp2-ffn7          pp-8k-med    prefill_tps=498.6
+b10-c16-mtp2-ffn7          code-0k-med  decode_tps=20.06 min=16.77 max=20.64 accept=0.927
+load_tensors:        CUDA0 model buffer size =  9681.27 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   288.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   448.88 MiB
+sched_reserve:      CUDA0 compute buffer size =   144.54 MiB
+llama_kv_cache:      CUDA0 KV buffer size =    64.00 MiB
+sched_reserve:      CUDA0 compute buffer size =    74.01 MiB
+sched_reserve:      CUDA0 compute buffer size =    74.01 MiB
+sched_reserve:      CUDA0 compute buffer size =   144.54 MiB
+b10-c16-ctl2-ffn0 ready after 2 s (includes any GPU-queue wait); vram=11796 MiB
+b10-c16-ctl2-ffn0          pp-8k        prompt_n=8035 prefill_tps=570.8 ttft_s=14.08
+b10-c16-ctl2-ffn0          pp-8k        prompt_n=8043 prefill_tps=569.5 ttft_s=14.12
+b10-c16-ctl2-ffn0          pp-8k-med    prefill_tps=570.1
+b10-c16-ctl2-ffn0          code-0k-med  decode_tps=19.71 min=19.7 max=19.73
+load_tensors:        CUDA0 model buffer size = 10136.68 MiB
+llama_kv_cache:      CUDA0 KV buffer size =   288.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+sched_reserve:      CUDA0 compute buffer size =   122.01 MiB
+DONE

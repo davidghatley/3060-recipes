@@ -1,0 +1,69 @@
+{
+ "label": "b13-nospec",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n: int) -> int:\n    \"\"\"\n    Return the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence is defined as:\n        F(0) = 0\n        F(1) = 1\n        F(n) = F(n-1) + F(n-2) for n >= 2\n\n    Args:\n        n: A non-negative integer representing the position in the Fibonacci sequence.\n\n    Returns:\n        The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is negative.\n\n    Examples:\n        >>> fibonacci(0)\n        0\n        >>> fibonacci(1)\n        1\n        >>> fibonacci(5)\n        5\n        >>> fibonacci(10)\n        55\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n\n    prev, curr = 0, 1\n    for _ in range(2, n + 1):\n        prev, curr = curr, prev + curr\n    return curr\n```",
+   "n": 263,
+   "decode_tps": 20.41,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes for a `Permission denied` error when running `./build.sh`, along with the specific fix for each:\n\n### 1. The Script Lacks Execute Permissions\n**Cause:** The file `build.sh` does not have the execute bit (`x`) set for the user running the command. This is the most common reason, especially if the script was recently created, copied, or pulled from a repository without preserving permissions.\n\n**Fix:**\nGrant execute permissions to the file.\n```bash\nchmod +x build.sh\n```\n*Or, to be more specific:*\n```bash\nchmod u+x build.sh\n```\n\n### 2. The Directory Containing the Script Is Not Executable\n**Cause:** Even if `build.sh` has execute permissions, the **directory** containing it must have execute permissions (`x`) for the user to traverse into it and access the file. If the directory lacks `x` permission, the shell cannot access the script, resulting in `Permission denied`.\n\n**Fix:**\nEnsure the current directory (or the directory containing `build.sh`) has execute permissions.\n```bash\nchmod +x .\n```\n*Note: If you are in a subdirectory, navigate to the parent directory containing `build.sh` and run `chmod +x .` there.*\n\n### 3. The Script Is Being Run from a Read-Only or Restricted Filesystem\n**Cause:** The script resides on a filesystem mounted as read-only (e.g., `/usr/bin`, `/usr/sbin`, or a mounted ISO/CD-ROM), or the user lacks write/execute permissions due to restrictive filesystem settings (e.g., `noexec` mount option).\n\n**Fix:**\n- **If the script is in a system directory:** Do not modify system directories. Instead, copy the script to a writable location (e.g., `~/scripts/`) and run it from there.\n- **If the filesystem is mounted with `noexec`:** Remount the filesystem without the `noexec` option (requires root privileges):\n  ```bash\n  sudo mount -o remount,exec /path/to/mountpoint\n  ```\n- **If the user lacks permissions:** Run the command with `sudo` if appropriate (though this is generally discouraged for build scripts due to security risks):\n  ```bash\n  sudo ./build.sh\n  ```\n\n---\n\n### Quick Diagnostic Command\nTo verify permissions, run:\n```bash\nls -l build.sh\n```\nLook for `x` in the permission string (e.g., `-rwxr-xr-x`). If missing, apply Fix #1. Also check the directory permissions with:\n```bash\nls -ld .\n```\nEnsure the directory has `x` permissions for your user.",
+   "n": 583,
+   "decode_tps": 20.24,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a linear attention mechanism that enhances the standard DeltaNet architecture by incorporating a gating mechanism to control information flow. This gating allows the model to dynamically decide how much of the new input should overwrite or update the existing memory state, thereby improving its ability to handle long-range dependencies. By combining the efficient linear complexity of DeltaNet with the selective memory updates of gating, it achieves superior performance in tasks requiring precise recall and context management. This architecture is particularly notable for its ability to maintain high accuracy in long-context scenarios while remaining computationally efficient compared to traditional quadratic attention mechanisms.",
+   "n": 120,
+   "decode_tps": 20.21,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "I'll start by exploring the repository structure to understand the codebase and find the relevant files.\n\n<tool_call>\n<function=list_files>\n<parameter=path>\n.\n</parameter>\n</function>\n</tool_call>\n<tool_call>\n<function=read_file>\n<parameter=path>\ntests/test_parser.py\n</parameter>\n<parameter=offset>\n1\n</parameter>\n<parameter=limit>\n200\n</parameter>\n</function>\n</tool_call>",
+   "n": 99,
+   "decode_tps": 20.21,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files '*.py' | grep -v '/tests/' | grep -v '_test\\.py$' | xargs wc -l | tail -1\n```\n\n**Explanation:**\n- `git ls-files '*.py'` \u2014 lists all tracked Python files in the repo.\n- `grep -v '/tests/'` \u2014 excludes any file in a `tests/` directory.\n- `grep -v '_test\\.py$'` \u2014 excludes files ending in `_test.py` (common test naming convention).\n- `xargs wc -l` \u2014 counts lines in each file.\n- `tail -1` \u2014 outputs only the total line count (the last line of `wc -l` output).\n\n> **Note:** If your repo uses different test conventions (e.g., `test_*.py`, `*_tests.py`, or a `test/` directory), adjust the `grep` patterns accordingly. For example, to also exclude `test_*.py`:\n> ```bash\n> git ls-files '*.py' | grep -v '/tests/' | grep -v '/test/' | grep -v '_test\\.py$' | grep -v '^test_' | xargs wc -l | tail -1\n> ```",
+   "n": 266,
+   "decode_tps": 20.15,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order of operations (PEMDAS/BODMAS):\n1.  **Multiplication and Division** (from left to right)\n2.  **Addition and Subtraction** (from left to right)\n\nHere are the step-by-step calculations:\n\n**Step 1: Perform the multiplication.**\n$$17 \\times 23 = 391$$\n\n**Step 2: Perform the division.**\n$$144 / 12 = 12$$\n\n**Step 3: Perform the addition.**\nNow, substitute the results back into the expression:\n$$391 + 12 = 403$$\n\n**Final Answer:**\n403",
+   "n": 175,
+   "decode_tps": 20.13,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.every((item) => typeof item === 'string');\n}\n```",
+   "n": 41,
+   "decode_tps": 20.09,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "Here is a summary of the CAP theorem for a junior engineer:\n\n*   **The Core Constraint**: You cannot simultaneously have all three of these properties in a distributed system: **C**onsistency, **A**vailability, and **P**artition tolerance. You must choose two.\n*   **Partition Tolerance is Non-Negotiable**: In any real-world distributed system, network failures (partitions) will happen. Therefore, you must always accept Partition Tolerance, which means you are left choosing between Consistency and Availability.\n*   **Consistency vs. Availability**: If you choose **Consistency**, the system will refuse to serve data until it can guarantee that all nodes agree on the state (it may go down). If you choose **Availability**, the system will continue to serve data, but it might be stale or inconsistent across nodes.\n*   **It\u2019s a Trade-off, Not a Bug**: This isn\u2019t a flaw in your code; it\u2019s a fundamental law of distributed computing. You are making a deliberate architectural decision about what your users can tolerate: waiting for accurate data or getting a quick (but potentially outdated) answer.\n*   **Modern Systems Offer Nuance**: Most modern databases (like Cassandra, DynamoDB, or MongoDB) allow you to tune this trade-off per query or per table, rather than forcing a single global choice for the entire system.",
+   "n": 286,
+   "decode_tps": 20.11,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

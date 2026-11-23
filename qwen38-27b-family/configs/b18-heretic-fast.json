@@ -1,0 +1,52 @@
+{
+ "id": "b18-heretic-fast",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/davidau-heretic/Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-IQ2_M.gguf --alias qwen38-heretic --no-mmproj -ngl 99 -ot blk\\\\.\\(0\\|1\\|2\\|3\\|4\\)\\\\.ffn_\\(up\\|gate\\|down\\)=CPU --fit off -c 16384 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.7 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --host 127.0.0.1 --port 8101",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 11829,
+   "prefill_tps": 466.7
+  },
+  {
+   "case": "pp-15k-med",
+   "vram_mib": 11829,
+   "prefill_tps": 454.1
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11819,
+   "decode_tps": 14.23,
+   "min": 14.13,
+   "max": 14.3
+  },
+  {
+   "case": "code-15k-med",
+   "vram_mib": 11856,
+   "decode_tps": 13.04,
+   "min": 12.94,
+   "max": 13.12
+  },
+  {
+   "case": "needle-8k",
+   "vram_mib": 11866,
+   "prompt_n": 7810,
+   "found": "3/3",
+   "prefill_tps": 467.5,
+   "ttft_s": 16.7,
+   "decode_tps": 13.63,
+   "answer": "1ZGPLO6I | 3FL2A6Z4 | RI64HMJ6"
+  },
+  {
+   "case": "needle-14k",
+   "vram_mib": 11856,
+   "prompt_n": 14649,
+   "found": "3/3",
+   "prefill_tps": 454.3,
+   "ttft_s": 32.2,
+   "decode_tps": 13.04,
+   "answer": "TAHYR9G4 | KUWWF69T | MFQ6EWR8"
+  }
+ ],
+ "server_log": "runs/server-b18-heretic-fast.log"
+}

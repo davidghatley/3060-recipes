@@ -1,0 +1,16 @@
+model /mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf
+memory.used [MiB], memory.total [MiB]
+986 MiB, 12288 MiB
+curl: /mnt/scratch/envs/llama-build-cuda/lib/libcurl.so.4: no version information available (required by curl)
+b01-baseline-stock ready after 4 s (includes any GPU-queue wait); vram=10843 MiB
+b01-baseline-stock         pp-8k        prompt_n=8033 prefill_tps=475.3 ttft_s=16.9
+b01-baseline-stock         pp-8k        prompt_n=8044 prefill_tps=473.9 ttft_s=16.98
+b01-baseline-stock         pp-8k-med    prefill_tps=474.6
+b01-baseline-stock         code-0k      gen_n=202 prompt_n=61 decode_tps=7.97 finish=stop content_chars=634 z=0.45
+b01-baseline-stock         code-0k      gen_n=197 prompt_n=66 decode_tps=7.12 finish=stop content_chars=651 z=0.449
+b01-baseline-stock         code-0k      gen_n=178 prompt_n=58 decode_tps=7.87 finish=stop content_chars=701 z=0.388
+b01-baseline-stock         code-0k      gen_n=182 prompt_n=69 decode_tps=7.96 finish=stop content_chars=500 z=None
+b01-baseline-stock         code-0k      gen_n=148 prompt_n=72 decode_tps=7.92 finish=stop content_chars=530 z=0.485
+b01-baseline-stock         code-0k      gen_n=135 prompt_n=68 decode_tps=7.93 finish=stop content_chars=530 z=0.587
+b01-baseline-stock         code-0k-med  decode_tps=7.93 min=7.12 max=7.97
+b01-baseline-stock done; vram=10895 MiB

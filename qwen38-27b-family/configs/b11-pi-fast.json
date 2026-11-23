@@ -1,0 +1,52 @@
+{
+ "id": "b11-pi-fast",
+ "build": "llama.cpp master-225a5345b",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf --alias qwen38-pi --no-mmproj -ngl 99 --fit off -c 16384 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.8 --top-p 1.0 --top-k 0 --min-p 0 --host 127.0.0.1 --port 8101 -lv 4",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 11832,
+   "prefill_tps": 569.6
+  },
+  {
+   "case": "pp-15k-med",
+   "vram_mib": 11832,
+   "prefill_tps": 548.8
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11832,
+   "decode_tps": 19.72,
+   "min": 19.7,
+   "max": 19.73
+  },
+  {
+   "case": "code-15k-med",
+   "vram_mib": 11832,
+   "decode_tps": 17.57,
+   "min": 17.55,
+   "max": 17.57
+  },
+  {
+   "case": "needle-8k",
+   "vram_mib": 11802,
+   "prompt_n": 8073,
+   "found": "3/3",
+   "prefill_tps": 565.0,
+   "ttft_s": 14.3,
+   "decode_tps": 18.8,
+   "answer": "IMCE08XV | XTIVR1OD | Y10UO9G0"
+  },
+  {
+   "case": "needle-14k",
+   "vram_mib": 11832,
+   "prompt_n": 14812,
+   "found": "3/3",
+   "prefill_tps": 550.2,
+   "ttft_s": 26.9,
+   "decode_tps": 17.92,
+   "answer": "TZYR5CKA | RC89Z4S8 | 6XES45CM"
+  }
+ ],
+ "server_log": "runs/server-b11-pi-fast.log"
+}
