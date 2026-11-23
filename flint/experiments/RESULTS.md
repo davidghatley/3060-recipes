@@ -40,7 +40,7 @@ Reference: the shipped profile (128k, -ncmoe 43, f16 KV, ub 4096) measured
 
 ## Experiment 7: UD-Q3_K_XL, a smaller expert quant from the original weights (2026-11-22)
 
-Exp 3's Q3_K requant was +7% faster but too lossy, partly because it requantized Q4_K_M. This tests a quant made from the original weights: unsloth/flint-GGUF `flint-UD-Q3_K_XL.gguf` at 20468edf (18.5 GB, sha256 91b8d85a…350c), in the shipped 128k profile (all experts in RAM, 2944 MiB cache, cpu-share 0.95, spec off for the measurement). Controls on both sides. Script `tools/phaseH.sh`, log `runs/phaseH.log`, code eval `runs/codeeval-H-*.json`.
+Exp 3's Q3_K requant was +7% faster but too lossy, partly because it requantized Q4_K_M. This tests a quant made from the original weights: unsloth/flint-GGUF `flint-UD-Q3_K_XL.gguf` at 20468edf (18.5 GB, sha256 91b8d85a…350c), in the shipped 128k profile (all experts in RAM, 2944 MiB cache, cpu-share 0.95, spec off for the measurement). After the run the file was moved to `/mnt/archive/models/llm/flint-ud-q3kxl/` to free space on `/mnt/models`. Controls on both sides. Script `tools/phaseH.sh`, log `runs/phaseH.log`, code eval `runs/codeeval-H-*.json`.
 The first attempt is void (`runs/void-phaseH-1/`). While its servers queued for the GPU lock, another session's server on port 8081 answered `srv.sh`'s health check. The tests ran against that server and failed, and `stop()` found nothing to stop, so each queued server started later with no owner. `srv.sh` now trusts health only from its own `llama-server` child with the `flint-local` alias, waits as long as the lock wait, and ends a still-queued launcher. Phase H runs on port 8091.
 
 | | Q4_K_M ctl1 | **UD-Q3_K_XL** | Q4_K_M ctl2 |

@@ -6,7 +6,7 @@
 # rewrite (code case), and the shared 8-task code eval at temp 0.
 # Port 8091, not 8081: another session's server on 8081 answered our health check while we queued (first run, void).
 cd "$(dirname "$0")/.."; export FLINT_PORT=${FLINT_PORT:-8091} FLINT_GPU_WAIT=3600 FLINT_CONTEXT=131072 FLINT_CPU_MOE=49
-Q3=/mnt/models/llm/flint/ud-q3kxl/flint-UD-Q3_K_XL.gguf
+Q3=/mnt/archive/models/llm/flint-ud-q3kxl/flint-UD-Q3_K_XL.gguf  # archived after exp 7 (rejected): copy it to an NVMe before a rerun
 CACHE=${CACHE:-2944}
 REPO=$(cd ../.. && pwd)
 export EXTRA="python3 -I $REPO/scripts/codeeval.py --url http://127.0.0.1:${FLINT_PORT} --out $PWD/runs --max 4096 --label \"\$1\""
