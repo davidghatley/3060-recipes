@@ -18,7 +18,13 @@ grep -v '^\s*#' "$man" | grep -v '^\s*$' | while IFS=$'\t' read -r repo rev path
     echo "WAIT space for $dest (need $(( (size-have)/1000000000 )) GB + 6, free $(( free/1000000000 )) GB) $(date +%T)"; sleep 120
   done
   echo "GET $repo@${rev:0:9} $path ($(( size/1000000 )) MB) $(date +%T)"
-  curl -fL --retry 8 --retry-delay 10 -C - -A "$UA" -sS -o "$dest.part" "$url"
+  # HF's CDN resets long HTTP/2 streams now and then (curl 92): resume in a loop instead of dying
+  ok=0
+  for try in $(seq 40); do
+    if curl -fL --http1.1 --retry 5 --retry-delay 10 -C - -A "$UA" -sS -o "$dest.part" "$url"; then ok=1; break; fi
+    echo "RETRY $try $dest at $(( $(stat -c %s "$dest.part" 2>/dev/null || echo 0)/1000000 )) MB $(date +%T)"; sleep 15
+  done
+  [ "$ok" = 1 ] || { echo "FAILED $dest after 40 tries (left as .part)"; continue; }
   got=$(sha256sum "$dest.part" | cut -d' ' -f1)
   if [ -n "$sha" ] && [ "$got" != "$sha" ]; then echo "SHA MISMATCH $dest: got $got want $sha (left as .part)"; continue; fi
   mv "$dest.part" "$dest"; echo "OK $dest sha256=$got $(date +%T)"
