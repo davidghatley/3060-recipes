@@ -27,5 +27,6 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
 - `sensenova-loop-9b/`: SenseNova-Loop-9B (official Q5_K_M with MTP head, satellitedown abliterated Q6_K) on llama.cpp `pr32588-0ba8e4adf`; 128k q8_0 KV with MTP n=2 (default variant only), `SNL_PROFILE=long` 256k q4_0 no MTP, mmproj on both. Nothing above 256k fits (flash-attention compute buffer)
 - `maxwell-v1-flash/`: Maxwell-V1-Flash 35B-A3B MoE (AtomicChat AD-Q4_K-IQ4_XS, 64k) on llama.cpp `maxwell-4f969ad24` (d3c3e242c + AtomicChat port patch); all routed experts in RAM with a 1900 MiB MoE cache, `--load-mode none`, f16 KV, ub 1024, `GPU_RUN_MEM=44G`. Uncensored LoRA at runtime halves speed
 - `nemotron-bolt-e4b/`: NVIDIA Nemotron-3.5-Bolt-E4B (Q4_K_M, 64k) all in VRAM on master 225a5345b with NVIDIA's DFlash drafter (n=7, `-bs`); `nospec` profile for long prompts, `multi` for 4 × 32k slots. Drafter carries an NVIDIA evaluation licence
+- `qwen35-9b-heretic/`: DavidAU Qwen3.5-9B Defiant Fable Heretic (uncensored, MTP-Q6_K) all in VRAM on master 225a5345b; own MTP head n=2 with f16 K/V at 64k. `fast` profile uses a local copy with the BF16 output head requantized to Q8_0 (KLD 0.0001), `long` 192k q4_0
 - `scripts/`: shared helpers (benchmark client etc.)
 - `notes/`, `docs/`: research notes
