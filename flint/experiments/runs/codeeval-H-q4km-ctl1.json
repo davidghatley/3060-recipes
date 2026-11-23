@@ -1,0 +1,81 @@
+{
+ "label": "H-q4km-ctl1",
+ "passed": 7,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 235,
+   "decode_tps": 55.82,
+   "wall_s": 4.7
+  },
+  {
+   "task": "roman",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 396,
+   "decode_tps": 58.97,
+   "wall_s": 6.9
+  },
+  {
+   "task": "lru",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 368,
+   "decode_tps": 57.91,
+   "wall_s": 6.8
+  },
+  {
+   "task": "topo",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 1479,
+   "decode_tps": 58.62,
+   "wall_s": 25.7
+  },
+  {
+   "task": "rle",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 719,
+   "decode_tps": 58.72,
+   "wall_s": 12.8
+  },
+  {
+   "task": "parse_duration",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 1376,
+   "decode_tps": 59.65,
+   "wall_s": 23.6
+  },
+  {
+   "task": "bisect",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 243,
+   "decode_tps": 57.76,
+   "wall_s": 4.7
+  },
+  {
+   "task": "matrix_spiral",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 485,
+   "decode_tps": 59.76,
+   "wall_s": 8.3
+  }
+ ]
+}

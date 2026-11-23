@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bamboo Framed Box Kite</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, #8fc7dc 0%, #d7e6ea 58%, #f1dfb5 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: #263b3d;
+    }
+
+    .title {
+      position: absolute;
+      top: 28px;
+      left: 30px;
+      max-width: 360px;
+      padding: 16px 19px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.32);
+      box-shadow: 0 12px 35px rgba(43, 68, 70, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 9px 0 0;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      opacity: 0.72;
+    }
+
+    .controls {
+      position: absolute;
+      right: 24px;
+      bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .hint {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: rgba(38, 59, 61, 0.72);
+      font-size: 0.72rem;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    button {
+      pointer-events: auto;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.58);
+      color: #263b3d;
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 650;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        max-width: none;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="title">
+      <p class="eyebrow">Traditional craft</p>
+      <h1>Bamboo Box Kite</h1>
+      <p class="subtitle">
+        Four triangular paper faces, a woven bamboo frame, and a converging flight line.
+      </p>
+    </div>
+
+    <div class="controls">
+      <span class="hint">Drag to orbit · Scroll to zoom</span>
+      <button id="reset" type="button">Reset view</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xd4e4e7, 18, 58);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    document.body.prepend(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      120
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 2.35, 0);
+    const desired = {
+      theta: 0.68,
+      phi: 1.12,
+      radius: 10.8
+    };
+    const current = {
+      theta: desired.theta,
+      phi: desired.phi,
+      radius: desired.radius
+    };
+
+    function updateCamera() {
+      current.theta += (desired.theta - current.theta) * 0.09;
+      current.phi += (desired.phi - current.phi) * 0.09;
+      current.radius += (desired.radius - current.radius) * 0.09;
+
+      const sinPhi = Math.sin(current.phi);
+
+      camera.position.set(
+        cameraTarget.x + current.radius * sinPhi * Math.sin(current.theta),
+        cameraTarget.y + current.radius * Math.cos(current.phi),
+        cameraTarget.z + current.radius * sinPhi * Math.cos(current.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xe9f7ff, 0x71804a, 2.1));
+
+    const sun = new THREE.DirectionalLight(0xfff1cf, 3.2);
+    sun.position.set(-7, 12, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 30;
+    sun.shadow.bias = -0.0004;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9fc9e5, 0.8);
+    fill.position.set(8, 5, -9);
+    scene.add(fill);
+
+    // Materials
+    const bambooMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc99a48,
+      roughness: 0.62,
+      metalness: 0.02
+    });
+
+    const bambooLightMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe0b662,
+      roughness: 0.68
+    });
+
+    const knotMaterial = new THREE.MeshStandardMaterial({
+      color: 0x694626,
+      roughness: 0.75
+    });
+
+    const stringMaterial = new THREE.MeshStandardMaterial({
+      color: 0x55493a,
+      roughness: 0.9
+    });
+
+    const paperMaterials = [
+      new THREE.MeshStandardMaterial({
+        color: 0xf2dfb5,
+        roughness: 0.92,
+        side: THREE.DoubleSide
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xe9c8a8,
+        roughness: 0.94,
+        side: THREE.DoubleSide
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xc7d9d4,
+        roughness: 0.92,
+        side: THREE.DoubleSide
+      }),
+      new THREE.MeshStandardMaterial({
+        color: 0xd8b887,
+        roughness: 0.94,
+        side: THREE.DoubleSide
+      })
+    ];
+
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+    const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+    function makeRod(a, b, radius, material, parent = scene) {
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        10,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addBambooBand(mesh, t) {
+      const point = mesh.localToWorld(
+        new THREE.Vector3().lerpVectors(
+          mesh.getWorldPosition(new THREE.Vector3()),
+          0
+        )
+      );
+
+      // The rod's local endpoints are known in the parent's coordinate system.
+      const a = mesh.parent.localToWorld(mesh.geometry.parameters ? mesh.geometry.parameters : null);
+      const direction = new THREE.Vector3().subVectors(
+        mesh.parent.localToWorld(bClone()),
+        mesh.parent.localToWorld(a)
+      );
+
+      const band = new THREE.Mesh(
+        new THREE.TorusGeometry(radius * 1.025, 0.008, 5, 12),
+        knotMaterial
+      );
+
+      band.position.copy(point);
+      band.quaternion.setFromUnitVectors(Z_AXIS, direction.clone().normalize());
+      mesh.parent.add(band);
+    }
+
+    function bClone() {
+      return new THREE.Vector3();
+    }
+
+    function addBambooBand(mesh, t) {
+      const point = mesh.localToWorld(
+        new THREE.Vector3().lerpVectors(
+          mesh.getWorldPosition(new THREE.Vector3()),
+          0
+        )
+      );
+
+      const a = mesh.parent.localToWorld(
+        new THREE.Vector3().lerpVectors(
+          mesh.getWorldPosition(new THREE.Vector3()),
+          0
+        )
+      );
+
+      const direction = new THREE.Vector3().subVectors(
+        mesh.parent.localToWorld(
+          new THREE.Vector3().lerpVectors(
+            mesh.getWorldPosition(new THREE.Vector3()),
+            1
+          )
+        ),
+        a
+      );
+
+      const band = new THREE.Mesh(
+        new THREE.TorusGeometry(radius * 1.025, 0.008, 5, 12),
+        knotMaterial
+      );
+
+      band.position.copy(point);
+      band.quaternion.setFromUnitVectors(Z_AXIS, direction.clone().normalize());
+      mesh.parent.add(band);
+    }
+  </script>
+</body>
+</html>

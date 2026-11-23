@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bamboo Box Kite</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b9dce8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 45%, rgba(35, 65, 70, 0.12) 100%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent 30%);
+    }
+
+    .title {
+      position: fixed;
+      top: clamp(22px, 4vw, 48px);
+      left: clamp(22px, 4vw, 52px);
+      color: #24464a;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 500;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+
+    .title p {
+      margin: 12px 0 0;
+      font-size: clamp(12px, 1.5vw, 16px);
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.72;
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      color: #315156;
+      background: rgba(250, 252, 246, 0.68);
+      box-shadow: 0 8px 30px rgba(36, 65, 70, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .controls span {
+      opacity: 0.7;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: #f7f4e8;
+      background: #315c60;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover {
+      background: #24484b;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      color: #355a5d;
+      background: #b9dce8;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 24px;
+      transition: opacity 500ms ease, visibility 500ms ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        top: 22px;
+      }
+
+      .controls {
+        bottom: 16px;
+        max-width: calc(100vw - 32px);
+        overflow: hidden;
+      }
+
+      .controls .desktop-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scene"></div>
+  <div class="vignette"></div>
+
+  <div class="title">
+    <h1>Bamboo Box Kite</h1>
+    <p>A hand-built wind craft</p>
+  </div>
+
+  <div class="controls">
+    <span>Drag to orbit</span>
+    <span class="desktop-hint">· Scroll to zoom</span>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+
+  <div id="loading">Preparing the kite…</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+    const loading = document.getElementById("loading");
+    const resetButton = document.getElementById("reset");
+
+    // -------------------------------------------------------------------------
+    // Renderer, scene, and camera
+    // -------------------------------------------------------------------------
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9dce8);
+    scene.fog = new THREE.Fog(0xb9dce8, 15, 38);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      innerWidth / innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const hemisphere = new THREE.HemisphereLight(0xe4f6ff, 0x68734b, 2.1);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff1cf, 3.2);
+    sun.position.set(-5, 10, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -10;
+    sun.shadow.camera.right = 10;
+    sun.shadow.camera.top = 10;
+    sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 30;
+    sun.shadow.bias = -0.0004;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0xb9e5ff, 0.7);
+    fill.position.set(6, 4, -8);
+    scene.add(fill);
+
+    // -------------------------------------------------------------------------
+    // Materials and geometry helpers
+    // -------------------------------------------------------------------------
+
+    function createPaperTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 256;
+
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#f0dfb8";
+      context.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 1800; i++) {
+        const x = Math.random() * 256;
+        const y = Math.random() * 256;
+        const length = 2 + Math.random() * 12;
+        const alpha = 0.015 + Math.random() * 0.035;
+
+        context.strokeStyle = `rgba(112, 83, 42, ${alpha})`;
+        context.lineWidth = Math.random() * 0.7 + 0.2;
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(x + length, y + Math.random() * 1.5);
+        context.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 2);
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    const bambooMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc89a45,
+      roughness: 0.66,
+      metalness: 0
+    });
+
+    const bambooLightMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe0b65e,
+      roughness: 0.62,
+      metalness: 0
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0x765023,
+      roughness: 0.8
+    });
+
+    const paperMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: createPaperTexture(),
+      roughness: 0.88,
+      metalness: 0,
+      side: THREE.DoubleSide
+    });
+
+    const redMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa9382f,
+      roughness: 0.76,
+      metalness: 0,
+      side: THREE.DoubleSide
+    });
+
+    const stringMaterial = new THREE.LineBasicMaterial({
+      color: 0x342d25,
+      transparent: true,
+      opacity: 0.82
+    });
+
+    const up = new THREE.Vector3(0, 1, 0);
+
+    function addBamboo(parent, start, end, radius = 0.055, material = bambooMaterial) {
+      const startVector = new THREE.Vector3(...start);
+      const endVector = new THREE.Vector3(...end);
+      const direction = endVector.clone().sub(startVector);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        8,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(startVector).add(endVector).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(up, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function addJoint(parent, position, radius = 0.085) {
+      const joint = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 10, 8),
+        jointMaterial
+      );
+      joint.position.set(...position);
+      joint.castShadow = true;
+      parent.add(joint);
+      return joint;
+    }
+
+    function createWavyPanel(width, height, amplitude, segmentsX, segmentsY) {
+      const geometry = new THREE.PlaneGeometry(
+        width,
+        height,
+        segmentsX,
+        segmentsY
+      );
+
+      const position = geometry.attributes.position;
+
+      for (let i = 0; i < position.count; i++) {
+        const x = position.getX(i);
+        const y = position.getY(i);
+        const normalized = 1 - Math.min(1, Math.hypot(x / (width / 2), y / (height / 2)));
+        const wave =
+          Math.sin(x * 2.4 + y * 0.8) *
+          amplitude *
+          normalized;
+
+        position.setZ(i, wave);
+      }
+
+      position.needsUpdate = true;
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    // -------------------------------------------------------------------------
+    // Kite construction
+    // -------------------------------------------------------------------------
+
+    const kite = new THREE.Group();
+    kite.position.set(0, 4.25, 0);
+    scene.add(kite);
+
+    const halfWidth = 2.15;
+    const halfHeight = 1.65;
+    const frontZ = 0.24;
+    const backZ = -0.24;
+
+    // Front and back rectangular frames.
+    addBamboo(kite, [-halfWidth, halfHeight, frontZ], [halfWidth, halfHeight, frontZ]);
+    addBamboo(kite, [-halfWidth, -halfHeight, frontZ], [halfWidth, -halfHeight, frontZ]);
+    addBamboo(kite, [-halfWidth, halfHeight, frontZ], [-halfWidth, -halfHeight, frontZ]);
+    addBamboo(kite, [halfWidth, halfHeight, frontZ], [halfWidth, -halfHeight, frontZ]);
+
+    addBamboo(kite, [-halfWidth, halfHeight, backZ], [halfWidth, halfHeight, backZ]);
+    addBamboo(kite, [-halfWidth, -halfHeight, backZ], [halfWidth, -halfHeight, backZ]);
+    addBamboo(kite, [-halfWidth, halfHeight, backZ], [-halfWidth, -halfHeight, backZ]);
+    addBamboo(kite, [halfWidth, halfHeight, backZ], [halfWidth, -halfHeight, backZ]);
+
+    // Depth bars and corner braces.
+    for (const x of [-halfWidth, halfWidth]) {
+      for (const y of [-halfHeight, halfHeight]) {
+        addBamboo(
+          kite,
+          [x, y, backZ],
+          [x, y, frontZ],
+          0.065,
+          bambooLightMaterial
+        );
+      }
+
+      addBamboo(kite, [x, 0, backZ], [x, 0, frontZ], 0.055);
+    }
+
+    // Central cross braces.
+    addBamboo(kite, [-0.055, 0, frontZ + 0.025], [0.055, 0, frontZ + 0.025], 0.043);
+    addBamboo(kite, [0, 0, frontZ + 0.025], [0, 0, frontZ + 0.025], 0.043);
+    addBamboo(kite, [-0.055, 0, backZ - 0.025], [0.055, 0, backZ - 0.025], 0.043);
+    addBamboo(kite, [0, 0, backZ - 0.025], [0, 0, backZ - 0.025], 0.043);
+
+    // Diagonal corner braces.
+    addBamboo(
+      kite,
+      [-1.88, 1.38, frontZ + 0.035],
+      [1.88, -1.38, frontZ + 0.035],
+      0.033
+    );
+    addBamboo(
+      kite,
+      [1.88, 1.38, frontZ + 0.035],
+      [-1.88, -1.38, frontZ + 0.035],
+      0.033
+    );
+    addBamboo(
+      kite,
+      [-1.88, 1.38, backZ - 0.035],
+      [1.88, -1.38, backZ - 0.035],
+      0.033
+    );
+    addBamboo(
+      kite,
+      [1.88, 1.38, backZ - 0.035],
+      [-1.88, -1.38, backZ - 0.035],
+      0.033
+    );
+
+    // Silk panels on all four faces.
+    const animatedPanels = [];
+
+    function addPanel(width, height, position, rotationY, phase) {
+      const mesh = new THREE.Mesh(
+        createWavyPanel(width, height, 0.035, 18, 12),
+        paperMaterial
+      );
+
+      mesh.position.set(...position);
+      mesh.rotation.y = rotationY;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      kite.add(mesh);
+
+      animatedPanels.push({
+        mesh,
+        basePositions: new Float32Array(mesh.geometry.attributes.position.array),
+        phase
+      });
+    }
+
+    addPanel(3.82, 2.62, [0, 0, frontZ + 0.012], 0, 0.2);
+    addPanel(3.82, 2.62, [0, 0, backZ - 0.012], Math.PI, 1.7);
+    addPanel(0.28, 2.62, [halfWidth + 0.012, 0, 0], Math.PI / 2, 3.1);
+    addPanel(0.28, 2.62, [-halfWidth - 0.012, 0, 0], -Math.PI / 2, 4.4);
+
+    // Small red corner tabs.
+    const tabGeometry = new THREE.PlaneGeometry(0.16, 0.28);
+
+    for (const x of [-halfWidth, halfWidth]) {
+      for (const y of [-halfHeight, halfHeight]) {
+        const tab = new THREE.Mesh(tabGeometry, redMaterial);
+        tab.position.set(x, y, frontZ + 0.085);
+        tab.rotation.z = x < 0 ? -Math.PI / 2 : Math.PI / 2;
+        kite.add(tab);
+      }
+    }
+
+    // Tapered red tail.
+    const tailPivot = new THREE.Group();
+    tailPivot.position.y = -halfHeight;
+    kite.add(tailPivot);
+
+    const tailRows = 12;
+    const tailPositions = [];
+    const tailIndices = [];
+
+    for (let row = 0; row <= tailRows; row++) {
+      const t = row / tailRows;
+      const halfWidth = THREE.MathUtils.lerp(0.34, 0.075, t);
+      const y = -t * 2.45;
+      const z = -0.05 * t + Math.sin(t * Math.PI) * 0.1;
+
+      tailPositions.push(-halfWidth, y, z, halfWidth, y, z);
+
+      if (row < tailRows) {
+        const a = row * 2;
+        tailIndices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+    }
+
+    const tailGeometry = new THREE.BufferGeometry();
+    tailGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(tailPositions, 3)
+    );
+    tailGeometry.setIndex(tailIndices);
+    tailGeometry.computeVertexNormals();
+
+    const tail = new THREE.Mesh(tailGeometry, redMaterial);
+    tail.castShadow = true;
+    tailPivot.add(tail);
+
+    // Tail fringe.
+    const fringeMaterial = new THREE.LineBasicMaterial({
+      color: 0x3b2b20,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    for (let i = 0; i < 9; i++) {
+      const x = THREE.MathUtils.lerp(-0.25, 0.25, i / 8);
+      const length = 0.42 + Math.random() * 0.38;
+
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, -2.45, 0),
+        new THREE.Vector3(x + Math.random() * 0.025, -2.45 - length, 0)
+      ]);
+
+      tailPivot.add(new THREE.Line(geometry, fringeMaterial));
+    }
+
+    // -------------------------------------------------------------------------
+    // Kite lines and spool
+    // -------------------------------------------------------------------------
+
+    const spool = new THREE.Group();
+    spool.position.set(4.25, 0.2, 5.1);
+    scene.add(spool);
+
+    const spoolBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.28, 0.5, 20),
+      bambooLightMaterial
+    );
+    spoolBody.rotation.z = Math.PI / 2;
+    spoolBody.castShadow = true;
+    spool.add(spoolBody);
+
+    for (const x of [-0.27, 0.27]) {
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.31, 0.31, 0.045, 20),
+        bambooMaterial
+      );
+      disc.rotation.z = Math.PI / 2;
+      disc.position.x = x;
+      disc.castShadow = true;
+      spool.add(disc);
+    }
+
+    const woundLine = new THREE.Mesh(
+      new THREE.TorusGeometry(0.235, 0.043, 7, 28),
+      stringMaterial
+    );
+    woundLine.rotation.y = Math.PI / 2;
+    spool.add(woundLine);
+
+    const lineEndPoints = [
+      new THREE.Vector3(-halfWidth, halfHeight, frontZ + 0.1),
+      new THREE.Vector3(halfWidth, halfHeight, frontZ + 0.1),
+      new THREE.Vector3(-halfWidth, -halfHeight, frontZ + 0.1),
+      new THREE.Vector3(halfWidth, -halfHeight, frontZ + 0.1)
+    ];
+
+    const kiteLines = [];
+
+    for (const localPoint of lineEndPoints) {
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(),
+        new THREE.Vector3()
+      ]);
+
+      const line = new THREE.Line(geometry, stringMaterial);
+      line.frustumCulled = false;
+      scene.add(line);
+
+      kiteLines.push({
+        line,
+        localPoint,
+        end: new THREE.Vector3()
+      });
+    }
+
+    const tailLineGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(),
+      new THREE.Vector3()
+    ]);
+
+    const tailLine = new THREE.Line(tailLineGeometry, stringMaterial);
+    tailLine.frustumCulled = false;
+    scene.add(tailLine);
+
+    // -------------------------------------------------------------------------
+    // Wind streaks
+    // -------------------------------------------------------------------------
+
+    const windGroup = new THREE.Group();
+    scene.add(windGroup);
+
+    const windMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.36
+    });
+
+    for (let i = 0; i < 14; i++) {
+      const x = -3 + Math.random() * 6;
+      const y = 3.1 + Math.random() * 2.5;
+      const z = 0.4 + Math.random() * 1.4;
+
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x, y, z),
+        new THREE.Vector3(x + 0.8 + Math.random() * 0.8, y - 0.45, z + 0.15)
+      ]);
+
+      const line = new THREE.Line(geometry, windMaterial);
+      windGroup.add(line);
+    }
+
+    // -------------------------------------------------------------------------
+    // Environment: meadow, distant bamboo, clouds, and sun
+    // -------------------------------------------------------------------------
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(60, 60),
+      new THREE.MeshStandardMaterial({
+        color: 0x81905d,
+        roughness: 1
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const meadow = new THREE.Mesh(
+      new THREE.CircleGeometry(10, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x9aaa68,
+        roughness: 1,
+        transparent: true,
+        opacity: 0.72
+      })
+    );
+    meadow.rotation.x = -Math.PI / 2;
+    meadow.position.set(0.8, 0.012, 1.2);
+    meadow.receiveShadow = true;
+    scene.add(meadow);
+
+    const sunDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(1.15, 40),
+      new THREE.MeshBasicMaterial({ color: 0xffe7a6 })
+    );
+    sunDisc.position.set(-7, 8.5, -12);
+    scene.add(sunDisc);
+
+    const cloudMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 1,
+      transparent: true,
+      opacity: 0.78,
+      depthWrite: false
+    });
+
+    const clouds = [];
+
+    function createCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+
+      const pieces = [
+        [-0.8, 0, 0, 0.75, 0.38, 0.4],
+        [0, 0.12, 0, 0.9, 0.55, 0.48],
+        [0.8, 0, 0, 0.7, 0.35, 0.38],
+        [0.25, -0.15, 0.1, 0.75, 0.4, 0.42],
+        [-0.3, -0.1, 0.05, 0.65, 0.32, 0.36]
+      ];
+
+      for (const [px, py, pz, sx, sy, sz] of pieces) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 14, 10),
+          cloudMaterial
+        );
+        puff.position.set(px, py, pz);
+        puff.scale.set(sx, sy, sz);
+        cloud.add(puff);
+      }
+
+      cloud.userData.speed = 0.06 + Math.random() * 0.05;
+      clouds.push(cloud);
+      scene.add(cloud);
+    }
+
+    createCloud(-6, 7.2, -9, 1.2);
+    createCloud(5.5, 8.1, -13, 1.5);
+    createCloud(10, 6.4, -7, 0.9);
+
+    function createBambooGrove(x, z, count) {
+      for (let i = 0; i < count; i++) {
+        const height = 2.4 + Math.random() * 2.2;
+        const bx = x + (Math.random() - 0.5) * 4.8;
+        const bz = z + (Math.random() - 0.5) * 3.5;
+
+        const stalk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.045, 0.075, height, 6),
+          new THREE.MeshStandardMaterial({
+            color: 0x557b45,
+            roughness: 0.9
+          })
+        );
+        stalk.position.set(bx, height / 2, bz);
+        stalk.rotation.z = (Math.random() - 0.5) * 0.13;
+        stalk.castShadow = true;
+        scene.add(stalk);
+
+        const leaf = new THREE.Mesh(
+          new THREE.SphereGeometry(0.28, 7, 5),
+          new THREE.MeshStandardMaterial({
+            color: 0x476d3d,
+            roughness: 0.95
+          })
+        );
+        leaf.position.set(bx + 0.16, height - 0.15, bz);
+        leaf.scale.set(1.3, 2.4, 0.35);
+        leaf.rotation.z = Math.random() * 0.5;
+        scene.add(leaf);
+      }
+    }
+
+    createBambooGrove(-8, -5, 13);
+    createBambooGrove(-13, -8, 10);
+
+    // Grass tufts.
+    const grassPositions = [];
+
+    for (let i = 0; i < 42; i++) {
+      const x = -5 + Math.random() * 14;
+      const z = 2 + Math.random() * 10;
+      const height = 0.18 + Math.random() * 0.3;
+
+      for (let blade = 0; blade < 5; blade++) {
+        const bx = x + (Math.random() - 0.5) * 0.18;
+        const bz = z + (Math.random() - 0.5) * 0.18;
+
+        grassPositions.push(
+          bx, 0, bz,
+          bx + Math.random() * 0.1, height, bz + Math.random() * 0.1
+        );
+      }
+    }
+
+    const grassGeometry = new THREE.BufferGeometry();
+    grassGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(grassPositions, 3)
+    );
+
+    const grass = new THREE.LineSegments(
+      grassGeometry,
+      new THREE.LineBasicMaterial({
+        color: 0x536d3c,
+        transparent: true,
+        opacity: 0.8
+      })
+    );
+    scene.add(grass);
+
+    // -------------------------------------------------------------------------
+    // Custom orbit controls
+    // -------------------------------------------------------------------------
+
+    const controls = {
+      theta: 0.38,
+      phi: 1.24,
+      radius: 9.2,
+      target: new THREE.Vector3(0, 2.7, 0)
+    };
+
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    function updateCamera() {
+      const spherical = new THREE.Spherical(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+
+      camera.position.setFromSpherical(spherical).add(controls.target);
+      camera.lookAt(controls.target);
+    }
+
+    function resetCamera() {
+      controls.theta = 0.38;
+      controls.phi = 1.24;
+      controls.radius = 9.2;
+      controls.target.set(0, 2.7, 0);
+      updateCamera();
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+
+      previousX = event.clientX;
+      previousY = event.clientY;
+
+      controls.theta -= deltaX * 0.006;
+      controls.phi = THREE.MathUtils.clamp(
+        controls.phi - deltaY * 0.005,
+        0.38,
+        1.52
+      );
+
+      updateCamera();
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      if (event.pointerId !== undefined &&
+          renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          15
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetCamera);
+    resetButton.addEventListener("click", resetCamera);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") controls.theta += 0.08;
+      if (event.key === "ArrowRight") controls.theta -= 0.08;
+      if (event.key === "ArrowUp") controls.phi = Math.max(0.38, controls.phi - 0.06);
+      if (event.key === "ArrowDown") controls.phi = Math.min(1.52, controls.phi + 0.06);
+      if (event.key === "+" || event.key === "=") controls.radius = Math.max(5.2, controls.radius - 0.4);
+      if (event.key === "-") controls.radius = Math.min(15, controls.radius + 0.4);
+      updateCamera();
+    });
+
+    updateCamera();
+
+    // -------------------------------------------------------------------------
+    // Animation
+    // -------------------------------------------------------------------------
+
+    const clock = new THREE.Clock();
+    const lineStart = new THREE.Vector3();
+    const tailStart = new THREE.Vector3();
+    const tailEnd = new THREE.Vector3();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      // Gentle kite motion.
+      kite.position.y = 4.25 + Math.sin(elapsed * 0.72) * 0.12;
+      kite.rotation.z = Math.sin(elapsed * 0.48) * 0.025;
+      kite.rotation.x = Math.cos(elapsed * 0.37) * 0.014;
+      kite.updateMatrixWorld(true);
+
+      // Flutter the paper panels.
+      for (const panel of animatedPanels) {
+        const position = panel.mesh.geometry.attributes.position;
+
+        for (let i = 0; i < position.count; i++) {
+          const x = panel.basePositions[i * 3];
+          const y = panel.basePositions[i * 3 + 1];
+          const edge = 1 - Math.min(1, Math.hypot(x / 1.91, y / 1.31));
+
+          const wave =
+            Math.sin(elapsed * 1.35 + panel.phase + x * 2.2 + y * 0.7) *
+            0.032 *
+            edge;
+
+          position.setZ(i, wave);
+        }
+
+        position.needsUpdate = true;
+        panel.mesh.geometry.computeVertexNormals();
+      }
+
+      // Tail flutter.
+      tailPivot.rotation.y = Math.sin(elapsed * 1.25) * 0.055;
+      tailPivot.rotation.z = Math.sin(elapsed * 0.9) * 0.025;
+
+      // Update kite lines from their moving attachment points.
+      for (const item of kiteLines) {
+        kite.localToWorld(item.end.set(...item.localPoint));
+        lineStart.copy(item.end);
+        item.line.geometry.attributes.position.setXYZ(0, lineStart.x, lineStart.y, lineStart.z);
+        item.line.geometry.attributes.position.setXYZ(1, 4.25, 0.2, 5.1);
+      }
+
+      const tailLocalEnd = new THREE.Vector3(0, -3.0, 0);
+      tailPivot.localToWorld(tailStart.set(...tailLocalEnd));
+      tailPivot.localToWorld(tailEnd.set(...tailLocalEnd));
+      tailLine.geometry.attributes.position.setXYZ(0, tailStart.x, tailStart.y, tailStart.z);
+      tailLine.geometry.attributes.position.setXYZ(1, tailEnd.x, tailEnd.y, tailEnd.z);
+
+      // Wind streaks and clouds.
+      windGroup.rotation.z = Math.sin(elapsed * 0.65) * 0.08;
+      windGroup.position.x = Math.sin(elapsed * 0.28) * 0.2;
+
+      for (const cloud of clouds) {
+        cloud.position.x += cloud.userData.speed * delta;
+        if (cloud.position.x > 16) cloud.position.x = -16;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    animate();
+
+    requestAnimationFrame(() => {
+      loading.classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

@@ -34,7 +34,57 @@ Reference: the shipped profile (128k, -ncmoe 43, f16 KV, ub 4096) measured
 | 1 64k f16 | -ncmoe 37 fits, 55.1 t/s (+7%), cold 11k prefill +6%; -ncmoe 35 does not load | Ship, but the 64k cache profile beats it |
 | 2 hand-off | Hand-off is ~1.1 ms of an 18.9 ms token, not 3–4 ms. CPU experts run at 80% of DRAM bandwidth. The mainline knobs are noise. Async copy prototype: +3.0% decode. | Needs engine patch (small); see sketch |
 | 3 RAM-expert requant | Q3_K: +7% tg/pp, but top-1 agreement 78.8% and KLD 0.34. IQ4_XS: +3% pp, tg noise, KLD 0.17. | Drop. A clean requant needs a BF16/Q8_0 source download that doesn't fit on disk now. |
+| 7 UD-Q3_K_XL (2026-11-22) | unsloth's UD-Q3_K_XL, same 128k cache profile: decode −6% prose (54.8 vs 58.5), −7% code; prefill +8%. KLD 0.393 and 77.5% top-1 vs Q4_K_M, PPL +5.8%. Its experts are I-quants (IQ3_XXS/IQ3_S/IQ4_XS), slower on the CPU per byte. | **Reject.** Slower and lossier. |
+| 6 cache size, cpu-share, `-ub 8192` (2026-11-22) | 128k: 3200 / 3328 MiB and cpu-share 0.90 all within noise of 2944 / 0.95 (57.7–59.3 vs 59.2). `-ub 8192`: cold 11k prefill +1.7% at 64k and 32k, decode −3 to −6% (the bigger compute buffer takes cache VRAM). | **Keep the shipped profiles.** Reject `-ub 8192`. |
 | 4 routing skew | On code the top 25% of experts take 57–59% of selections and the top 50% take 79–81%. Two Python samples agree well (top-25% overlap 0.76, ρ 0.81); Python vs C++ less so (0.62). | Explains exp 5 |
+
+## Experiment 7: UD-Q3_K_XL, a smaller expert quant from the original weights (2026-11-22)
+
+Exp 3's Q3_K requant was +7% faster but too lossy, partly because it requantized Q4_K_M. This tests a quant made from the original weights: unsloth/flint-GGUF `flint-UD-Q3_K_XL.gguf` at 20468edf (18.5 GB, sha256 91b8d85a…350c), in the shipped 128k profile (all experts in RAM, 2944 MiB cache, cpu-share 0.95, spec off for the measurement). After the run the file was moved to `/mnt/archive/models/llm/flint-ud-q3kxl/` to free space on `/mnt/models`. Controls on both sides. Script `tools/phaseH.sh`, log `runs/phaseH.log`, code eval `runs/codeeval-H-*.json`.
+The first attempt is void (`runs/void-phaseH-1/`). While its servers queued for the GPU lock, another session's server on port 8081 answered `srv.sh`'s health check. The tests ran against that server and failed, and `stop()` found nothing to stop, so each queued server started later with no owner. `srv.sh` now trusts health only from its own `llama-server` child with the `flint-local` alias, waits as long as the lock wait, and ends a still-queued launcher. Phase H runs on port 8091.
+
+| | Q4_K_M ctl1 | **UD-Q3_K_XL** | Q4_K_M ctl2 |
+|---|---:|---:|---:|
+| Routed experts in RAM | 19.8 GiB (Q4_K) | 15.4 GiB | 19.8 GiB |
+| Decode, prose (median of 3) | 58.5 | **54.8** | 58.5 |
+| Decode, code task (median of 3) | 55.3 | **51.8** | 55.7 |
+| Warm-up requests 2–4 | 58.6–59.4 | 54.4–55.1 | 58.6–59.5 |
+| Cold 11k prefill (median) | 1711.5 (6.41 s) | **1848.9 (5.94 s)** | 1701.4 (6.45 s) |
+| MoE cache hit rate (ub ≤ 8) | 43.2% | 48.8% | 44.2% |
+| Code eval, 8 tasks at temp 0 | 7/8 (topo fails) | 8/8 | 7/8 (topo fails) |
+| Needles, 3 codes at 60k / 120k | (3/3, 3/3 in exp 5) | 3/3, 3/3 | |
+| KLD vs Q4_K_M base, top-1 (20 × 512) | | **0.393 ± 0.014, 77.5%** | |
+| Wikitext PPL (80 × 512) | 21.947 | 23.217 ± 0.653 (+5.8%) | |
+
+Findings:
+- **It is slower, not faster.** The file is not Q3_K: the routed experts are I-quants (gate/up IQ3_XXS in 24 layers, IQ3_S in 21; down IQ4_XS in 31, IQ3_S in 15). That is 22% fewer bytes than Q4_K. But with every expert in RAM, decode is bound by the CPU expert matmuls (exp 2), and the likely cause, not profiled, is that the I-quant dot products on AVX2 do more work per byte (grid lookups) than Q4_K. The higher cache hit rate (more experts fit in 2944 MiB) doesn't make up for it. Exp 3 saw the same pattern: plain Q3_K +7%, IQ4_XS no gain.
+- **Prefill is +8%.** Prefill runs the experts on the GPU (copied per micro-batch), so fewer bytes per copy helps there. That is 0.5 s off a 6.4 s TTFT, not worth −6% decode.
+- **It is lossier than the requant it was meant to beat.** KLD 0.393 and 77.5% top-1 against the Q4_K_M logits (exp 3 Q3_K requant: 0.342, 78.8%; the CPU-vs-GPU path floor is 0.076). PPL is an absolute measure and is +5.8% (Q3_K requant: +2.8%). The code eval (8/8 vs 7/8) and needles pass, but 8 tasks at one sample can't separate a quant this close: the controls' one failure is the same flaky `topo` task.
+- Verdict: **rejected.** A smaller expert quant only helps decode here if its CPU kernel is as cheap per byte as Q4_K's (Q3_K, Q2_K). That leaves a Q3_K_M/Q3_K_S made from BF16 as the only untested candidate in this direction, and exp 3 says it costs ~0.3 KLD for +7%. The MoE cache gives more speed at no quality cost.
+
+## Experiment 6: cache size, cpu-share and `-ub 8192` (2026-11-22)
+
+Same harness as experiment 5 (`tools/srv.sh`, `FLINT_SPEC=none`, `-lv 4`), script `tools/phaseG2.sh`, log `runs/phaseG2.log`.
+The first attempt (`tools/phaseG.sh`, `runs/phaseG.log`) is void. Other sessions held the GPU lock, so six servers gave up after `serve.sh`'s 120 s wait, and its first control decoded 18.7 t/s while another job was running. `serve.sh` now takes `FLINT_GPU_WAIT` (default 120, unchanged), and `srv.sh` flags runs that end with another compute process on the GPU.
+In G2, control 1's prose test was lost: `srv.sh` was edited while it ran (the bash re-read trap again). Its warm-up requests 2–4 ran at 58.1 / 59.3 / 58.2.
+
+| config (ctx, ub, cache MiB, cpu-share) | VRAM MiB | prose t/s | cold 11k prefill t/s (TTFT) | hit rate (ub≤8) |
+|---|---:|---:|---:|---:|
+| 128k, 4096, 2944, 0.95 (ctl1, warm-up only) | 11288 | (58.1–59.3) | | 47.6% |
+| 128k, 4096, 3200, 0.95 | 11592 | 59.3 | | 45.7% |
+| 128k, 4096, 3328, 0.95 | 11730 | 57.7 | | 49.2% |
+| 128k, 4096, 2944, 0.90 | 11316 | 58.8 | | 47.6% |
+| 128k, 4096, 2944, 0.95 (ctl2) | 11346 | **59.2** | | 46.0% |
+| 64k, 4096, 5248, 0.95 (shipped 64k) | 11402 | **63.3** | **1746.6 (6.29 s)** | 58.8% |
+| 64k, 8192, 3200, 0.95 | 11024 | 59.3 | 1776.0 (6.18 s) | 45.4% |
+| 32k, 4096, 6144, 0.95 | 11146 | **64.8** | 1768.3 (6.21 s) | 63.0% |
+| 32k, 8192, 5120, 0.95 | 11534 | 62.8 | 1798.9 (6.10 s) | 56.7% |
+
+Findings:
+- **The 128k cache is at its knee.** Past 2944 MiB the hit rate stops climbing (45.7–49.2% in all four runs), and decode stays at 57.7–59.3. 3328 MiB leaves ~550 MiB of VRAM, less than the 121k-token request needed in experiment 5. cpu-share 0.90 equals 0.95 again.
+- **`-ub 8192` buys almost no prefill on an 11k prompt.** It saves 0.1 s of a 6.2 s TTFT (+1.7%). Its compute buffer costs ~1 GB of cache at the same VRAM, which costs 3–6% decode. That rules it out for opencode-style use, where TTFT is dominated by an 11k system prompt.
+- This contradicts the transfer model in `../THEORY.md`. That model predicts 3 → 2 expert copies (−1.4 s) for an 11k prompt, but the measured saving is 0.1 s. So at ub 4096 the per-chunk expert copy is no longer what limits server prefill at this length. Either compute dominates or the copies overlap. This wasn't profiled. Experiment 2's +16% at pp16384 (llama-bench, no cache) still stands for longer prompts.
+- A 32k context with a 6144 MiB cache decodes 64.8 t/s, only +2% over the 64k profile. Not shipped as a profile.
 
 ## Experiment 5: MoE expert cache (`--moe-cache-mib`, `--moe-cache-cpu-share`)
 

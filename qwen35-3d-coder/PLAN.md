@@ -229,3 +229,63 @@ Timestamped, newest last. Every run's raw output is under `runs/`. Ledger of ser
   Each run prints zlib, a LOOP flag and tok/s. (The `--seeds`/`--min-p` options were added just before the pause and
   haven't run yet: smoke-test with `--max 64` first.) If the loop rates match, MTP goes back to the default after the
   8-prompt render comparison and spec4 controls. If MTP loops clearly more, test master next.
+
+## 2026-11-21/22: session D, the loop-rate test
+
+- `tools/looprate.sh`: MTP n=2 vs no speculation, same Q5_K_M via `serve.sh` (64k, one slot), T 0.6, top-p 0.95,
+  top-k 20, server min-p 0.05, the 4 prompts that looped before (048/238/334/335) x seeds 1-4, 16k-token cap
+  (loops start ~9k). Batches a (238/335) and b (048/334), each arm its own server session
+  (`runs/mtprepro/D-looprate/`). mtp-b missed the GPU lock twice (another session held it 30+ min) and ran at 04:35
+  (`D-looprate-mtpb.log`); the other three batches ran 00:49-03:02.
+
+  | arm | 238 | 335 | 048 | 334 | loops | decode (mean, range) |
+  |---|---|---|---|---|---:|---|
+  | MTP n=2 | 0/4 | 0/4 | 0/4 | 0/4 | **0/16** | 100.2 tok/s (90.6-106.5) |
+  | none | 0/4 | 0/4 | 1/4 (s3) | 1/4 (s1) | **2/16** | 76.2 tok/s (76.0-77.1) |
+
+  LOOP = zlib ratio < 0.12 on the answer (the two loops: 0.023 and 0.031, both hit the cap inside `<think>`).
+  Fisher 0/16 vs 2/16: p = 0.48. Pooled with sessions B and C (same prompts): MTP 1/22 vs none 2/19, p = 0.59.
+  Pooled with the first qualify split (5/9 vs 0/8) as well: 6/31 vs 2/27, p = 0.26.
+  Verdict: no evidence that MTP loops more. No-spec decode loops on these prompts too. Together with sessions A/B
+  (target state matches a clean prefill, verifier calibrated), the "rollback bug" is not supported: the first
+  5/9 vs 0/8 split was most likely per-prompt loop variance at one sample each. No engine patch, and the master
+  build test is not needed for this question.
+- Not yet shown: that MTP pages work as often as no-spec pages. The first split (1/8 vs 6/8 working) also had
+  token-level slips in finished MTP pages. Next: the 8-prompt render comparison with 2 seeds per arm, then the
+  spec4 speed controls. serve.sh keeps QC_SPEC=none until that passes; MTP stays a reliable opt-in.
+- Harness fix (commit 3896e68): `with_server.sh` found its server by port and gave up on health after 30 min while
+  gpu_run was still queued for the lock, which left a queued launcher that would have started an orphan server.
+  It now finds the server as its own child, waits QC_GPU_WAIT + 900 s, and ends the launcher tree on exit or signal.
+
+## 2026-11-22: session E, the render comparison
+
+- 07:48-11:14 `tools/rendercmp.sh`: the first split's 8 prompts, MTP n=2 vs none, seeds 1 and 2, serve.sh as shipped
+  (64k, one slot, card sampling, server min-p 0.05), 24k cap, sessions capped at 27 min (none seed 2 needed two).
+  Rendered on the CPU and scored with `tools/render.mjs` + `tools/score.py` (`runs/eval-rc-{mtp,none}-s{1,2}/`).
+  Pass: MTP 6 + 4 = 10/16, none 3 + 6 = 9/16 (Fisher p = 1.0). Cap/loops: MTP 1 (335 s1), none 3 (145 s1, 145 s2,
+  335 s1). Throws: MTP 5 (3 syntax errors: 238 s1 `Unexpected identifier`, 048 s2 and 238 s2 duplicate declarations),
+  none 4 (all runtime ReferenceError/TypeError). Decode median 105.7 vs 75.0 tok/s (1.41x); generation wall 39 vs 65
+  min for the same 16 answers. Pooled with the first split: 11/24 vs 15/24, p = 0.39.
+- Verdict: MTP is a reliable opt-in (same pass rate, no more loops, 1.41x). Default unchanged (QC_SPEC=none): the
+  bar for a default change is strong evidence, and the syntax-error lead (3/16 vs 0/16, p = 0.23) is untested.
+- Next, if the default should move: a larger render comparison aimed at the syntax-error lead (e.g. 20 prompts x 2
+  seeds per arm, counting SyntaxError pages separately), or a node --check pass over every generated page so the
+  syntax-slip rate can be counted cheaply across all existing runs.
+- 13:30 Syntax-slip count over every scored run (first error per page in `runs/**/score.json`, CPU only): MTP 5/19
+  finished pages (qualify-mtp 2/4, rc 3/15) vs Q5_K_M no-spec 0/35 (qualify-nospec 0/8, rc 0/13, eval-q5km-own 0/14),
+  Q8_0 0/15, Q4_K_M 2/13. Fisher 5/19 vs 0/35: p = 0.004 (pool mixes prompt sets and settings). The slips look like
+  Q4_K_M's. Verdict: MTP stays opt-in on quality, not only on caution. Next: `mtp_repro.py force` at each slip token
+  (was it plausible to the target?), and MTP on Q8_0 (batched verify ~1.04x one token) to test the verify-path idea.
+- 17:30-19:32 Test 1, "could plain decoding have written the MTP pages?" (`tools/plainscore.py`, driver
+  `tools/plainscore.sh`, out `runs/plainscore/`). First a correction: of the 5 MTP syntax-error pages only 238 s1
+  (`let shelf isOpen`) is a one-token slip; 048 s2, 049 and 238 s2 are names declared twice in one scope, 145 passes a
+  packed hex colour to `rgba()`. Method: re-score every answer token of the 28 finished rc pages on the shipped no-spec
+  server by extending the cached prefix one token at a time (the one-token decode path), and count tokens outside the
+  top-k 20 / top-p 0.95 / min-p 0.05 set the pages were sampled with. MTP 2/116,508 tokens, none 2/103,202; all 4 are
+  rank 2-11 just under the min-p cut (re-tokenization noise). The 3 rc MTP syntax-error pages: 0, slip tokens all in
+  the allowed set. 1 position unjudged (the server returns no probabilities when its pick ends the answer).
+  Verdict: the batched-verify idea is not supported. Test 2 (MTP on Q8_0) existed to probe it, so it is dropped.
+  Default stays QC_SPEC=none: the 5/19 vs 0/35 excess is unexplained (controlled part 3/16 vs 0/16, p = 0.23). To
+  settle it: a render comparison sized for syntax errors, e.g. 20 prompts x 2 seeds per arm (~4 h GPU).
+  Harness notes: the first driver's page counter had a quoting bug (fixed, now `plainscore.py todo`), and session 3
+  crashed on the end-of-answer case (fixed; the run was stopped and resumed, no page lost).

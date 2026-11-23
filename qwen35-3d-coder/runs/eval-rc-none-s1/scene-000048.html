@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bamboo Box Kite</title>
+
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #b9dce8;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    #scene canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #scene canvas.grabbing {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 45%, rgba(24, 54, 58, 0.12) 100%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent 28%);
+    }
+
+    .title-card {
+      position: fixed;
+      top: clamp(20px, 4vw, 48px);
+      left: clamp(20px, 4vw, 52px);
+      max-width: 340px;
+      padding: 18px 20px;
+      color: #24433e;
+      background: rgba(247, 244, 226, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 16px;
+      box-shadow: 0 14px 40px rgba(35, 68, 62, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #a56b36;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.19em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.65rem, 3vw, 2.35rem);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: #58706b;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      right: clamp(16px, 3vw, 36px);
+      bottom: clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #365b55;
+      background: rgba(247, 244, 226, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(35, 68, 62, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-size: 0.75rem;
+      user-select: none;
+    }
+
+    button {
+      padding: 8px 12px;
+      color: #f7f3df;
+      background: #315c54;
+      border: 0;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    button:hover {
+      background: #244a43;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .title-card {
+        max-width: calc(100vw - 40px);
+        padding: 14px 16px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="scene" aria-label="Interactive 3D bamboo box kite scene"></main>
+  <div class="vignette"></div>
+
+  <section class="title-card">
+    <div class="eyebrow">Wind Study · No. 01</div>
+    <h1>Bamboo Box Kite</h1>
+    <p class="subtitle">
+      A hand-framed silk kite, woven with bamboo ribs, corner cords,
+      and a tapered bamboo tail.
+    </p>
+  </section>
+
+  <div class="controls">
+    <span>Drag to orbit · Scroll to zoom</span>
+    <button id="reset-view" type="button">Reset view</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const container = document.getElementById("scene");
+    const resetButton = document.getElementById("reset-view");
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.setAttribute(
+      "aria-label",
+      "A bamboo-framed box kite flying in a sunny garden"
+    );
+    container.appendChild(renderer.domElement);
+
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb9dce8);
+    scene.fog = new THREE.Fog(0xb9dce8, 13, 34);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      80
+    );
+
+    const clock = new THREE.Clock();
+    const UP = new THREE.Vector3(0, 1, 0);
+
+    // Lighting
+    const hemisphere = new THREE.HemisphereLight(0xeaf8ff, 0x687652, 2.15);
+    scene.add(hemisphere);
+
+    const sunLight = new THREE.DirectionalLight(0xfff1cc, 3.25);
+    sunLight.position.set(-6, 10, 7);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -8;
+    sunLight.shadow.camera.right = 8;
+    sunLight.shadow.camera.top = 8;
+    sunLight.shadow.camera.bottom = -8;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 30;
+    sunLight.shadow.bias = -0.0004;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0xb8e4ff, 0.8);
+    fillLight.position.set(7, 4, -6);
+    scene.add(fillLight);
+
+    // Materials
+    const bambooMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc7974d,
+      roughness: 0.57,
+      metalness: 0
+    });
+
+    const bambooLightMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe0b36a,
+      roughness: 0.52,
+      metalness: 0
+    });
+
+    const bambooDarkMaterial = new THREE.MeshStandardMaterial({
+      color: 0x95682f,
+      roughness: 0.64,
+      metalness: 0
+    });
+
+    const stringMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf4ead2,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const redMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb94735,
+      roughness: 0.72,
+      metalness: 0
+    });
+
+    const paperMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xf4e7c7,
+      roughness: 0.93,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.84,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      clearcoat: 0.08,
+      clearcoatRoughness: 0.8
+    });
+
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8fba82,
+      roughness: 1,
+      metalness: 0
+    });
+
+    const pathMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc7bea0,
+      roughness: 1,
+      metalness: 0
+    });
+
+    // Utility: creates a cylinder aligned between two points.
+    function addRod(parent, start, end, radius, material, segments = 10) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      if (length < 0.0001) return null;
+
+      const geometry = new THREE.CylinderGeometry(
+        radius,
+        radius,
+        length,
+        segments,
+        1,
+        false
+      );
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+
+      return mesh;
+    }
+
+    function placeRod(mesh, start, end) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = Math.max(direction.length(), 0.0001);
+
+      mesh.position.copy(start).add(end).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(UP, direction.normalize());
+      mesh.scale.set(1, length, 1);
+    }
+
+    // Ground and garden path
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(70, 70),
+      groundMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.025;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const gardenPath = new THREE.Mesh(
+      new THREE.CircleGeometry(3.25, 64),
+      pathMaterial
+    );
+    gardenPath.rotation.x = -Math.PI / 2;
+    gardenPath.position.set(2.1, 0.002, 2.25);
+    gardenPath.receiveShadow = true;
+    scene.add(gardenPath);
+
+    // Small stones
+    const stoneGeometry = new THREE.DodecahedronGeometry(0.18, 0);
+    const stoneMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9b9a88,
+      roughness: 1
+    });
+
+    for (let i = 0; i < 13; i++) {
+      const stone = new THREE.Mesh(stoneGeometry, stoneMaterial);
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 3.5 + Math.random() * 4;
+
+      stone.position.set(
+        2.1 + Math.cos(angle) * radius,
+        0.05,
+        2.25 + Math.sin(angle) * radius
+      );
+      stone.scale.set(
+        0.7 + Math.random() * 0.8,
+        0.45 + Math.random() * 0.35,
+        0.7 + Math.random() * 0.8
+      );
+      stone.rotation.set(
+        Math.random() * 0.5,
+        Math.random() * Math.PI,
+        Math.random() * 0.5
+      );
+      stone.castShadow = true;
+      stone.receiveShadow = true;
+      scene.add(stone);
+    }
+
+    // Bamboo grove
+    const bambooPlants = [];
+    const leafGeometry = new THREE.SphereGeometry(1, 7, 4);
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0x527d49,
+      roughness: 0.88,
+      side: THREE.DoubleSide
+    });
+
+    function createBambooPlant(x, z, scale) {
+      const plant = new THREE.Group();
+      plant.position.set(x, 0, z);
+      plant.rotation.y = Math.random() * Math.PI;
+      scene.add(plant);
+
+      const stalkCount = 3 + Math.floor(Math.random() * 3);
+
+      for (let i = 0; i < stalkCount; i++) {
+        const angle = (i / stalkCount) * Math.PI * 2 + Math.random() * 0.3;
+        const height = (1.5 + Math.random() * 1.2) * scale;
+        const spread = 0.12 * scale;
+
+        const points = [
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(
+            Math.sin(angle) * spread,
+            height * 0.32,
+            Math.cos(angle) * spread
+          ),
+          new THREE.Vector3(
+            Math.sin(angle) * spread * 1.4,
+            height * 0.7,
+            Math.cos(angle) * spread * 1.4
+          ),
+          new THREE.Vector3(
+            Math.sin(angle) * spread * 1.8,
+            height,
+            Math.cos(angle) * spread * 1.8
+          )
+        ];
+
+        const curve = new THREE.CatmullRomCurve3(points);
+        const stalk = new THREE.Mesh(
+          new THREE.TubeGeometry(curve, 9, 0.045 * scale, 6, false),
+          bambooMaterial
+        );
+        stalk.castShadow = true;
+        stalk.receiveShadow = true;
+        plant.add(stalk);
+
+        for (let j = 0; j < 3; j++) {
+          const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+          const side = j % 2 === 0 ? -1 : 1;
+
+          leaf.position.set(
+            Math.sin(angle) * 0.08 * scale,
+            (0.55 + j * 0.34) * scale,
+            Math.cos(angle) * 0.08 * scale
+          );
+          leaf.scale.set(0.045 * scale, 0.24 * scale, 0.022 * scale);
+          leaf.rotation.set(
+            Math.sin(angle) * 0.5,
+            angle,
+            side * (0.65 + Math.random() * 0.45)
+          );
+          leaf.castShadow = true;
+
+          bambooPlants.push({
+            mesh: leaf,
+            baseRotation: leaf.rotation.z,
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      }
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const x = -14 + Math.random() * 28;
+      const z = -8 - Math.random() * 15;
+      createBambooPlant(x, z, 0.75 + Math.random() * 0.65);
+    }
+
+    // Soft clouds
+    const cloudGeometry = new THREE.SphereGeometry(1, 14, 10);
+    const cloudMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false
+    });
+
+    const clouds = [];
+
+    function createCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+      scene.add(cloud);
+
+      const pieces = [
+        [-1.1, 0, 0, 0.85],
+        [-0.35, 0.25, 0, 1.05],
+        [0.55, 0.12, 0, 0.9],
+        [1.2, -0.05, 0, 0.65],
+        [0, -0.2, 0.1, 1.15]
+      ];
+
+      for (const [px, py, pz, scalePiece] of pieces) {
+        const piece = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        piece.position.set(px, py, pz);
+        piece.scale.set(scalePiece * 1.3, scalePiece * 0.65, scalePiece);
+        cloud.add(piece);
+      }
+
+      clouds.push({
+        group: cloud,
+        baseX: x,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    createCloud(-6, 10.5, -16, 1.25);
+    createCloud(5.5, 11.8, -20, 1.55);
+    createCloud(0.5, 13.2, -25, 1.1);
+
+    // Sun disc
+    const sun = new THREE.Mesh(
+      new THREE.CircleGeometry(1.15, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfff0bd })
+    );
+    sun.position.set(-8, 10, -25);
+    sun.lookAt(0, 2, 0);
+    scene.add(sun);
+
+    // Kite
+    const kite = new THREE.Group();
+    kite.position.set(0, 4.65, 0);
+    scene.add(kite);
+
+    const halfWidth = 1.55;
+    const halfHeight = 1.15;
+    const depth = 0.52;
+
+    const corners = {
+      frontLeft: new THREE.Vector3(-halfWidth, -halfHeight, depth / 2),
+      frontRight: new THREE.Vector3(halfWidth, -halfHeight, depth / 2),
+      frontTop: new THREE.Vector3(halfWidth, halfHeight, depth / 2),
+      frontBottom: new THREE.Vector3(-halfWidth, halfHeight, depth / 2),
+      backLeft: new THREE.Vector3(-halfWidth, -halfHeight, -depth / 2),
+      backRight: new THREE.Vector3(halfWidth, -halfHeight, -depth / 2),
+      backTop: new THREE.Vector3(halfWidth, halfHeight, -depth / 2),
+      backBottom: new THREE.Vector3(-halfWidth, halfHeight, -depth / 2)
+    };
+
+    // Main bamboo cage
+    const frontZ = depth / 2;
+    const backZ = -depth / 2;
+
+    // Front and back square frames
+    addRod(kite, corners.frontLeft, corners.frontRight, 0.047, bambooMaterial);
+    addRod(kite, corners.frontRight, corners.frontTop, 0.047, bambooMaterial);
+    addRod(kite, corners.frontTop, corners.frontBottom, 0.047, bambooMaterial);
+    addRod(kite, corners.frontBottom, corners.frontLeft, 0.047, bambooMaterial);
+
+    addRod(kite, corners.backLeft, corners.backRight, 0.047, bambooMaterial);
+    addRod(kite, corners.backRight, corners.backTop, 0.047, bambooMaterial);
+    addRod(kite, corners.backTop, corners.backBottom, 0.047, bambooMaterial);
+    addRod(kite, corners.backBottom, corners.backLeft, 0.047, bambooMaterial);
+
+    // Depth bars
+    addRod(kite, corners.frontLeft, corners.backLeft, 0.047, bambooMaterial);
+    addRod(kite, corners.frontRight, corners.backRight, 0.047, bambooMaterial);
+    addRod(kite, corners.frontTop, corners.backTop, 0.047, bambooMaterial);
+    addRod(kite, corners.frontBottom, corners.backBottom, 0.047, bambooMaterial);
+
+    // X-braces on the front and back
+    addRod(kite, corners.frontLeft, corners.frontTop, 0.034, bambooLightMaterial);
+    addRod(kite, corners.frontRight, corners.frontBottom, 0.034, bambooLightMaterial);
+    addRod(kite, corners.backLeft, corners.backTop, 0.034, bambooLightMaterial);
+    addRod(kite, corners.backRight, corners.backBottom, 0.034, bambooLightMaterial);
+
+    // X-braces on the side faces
+    addRod(kite, corners.frontTop, corners.backBottom, 0.032, bambooLightMaterial);
+    addRod(kite, corners.frontBottom, corners.backTop, 0.032, bambooLightMaterial);
+    addRod(kite, corners.frontLeft, corners.backRight, 0.032, bambooLightMaterial);
+    addRod(kite, corners.frontRight, corners.backLeft, 0.032, bambooLightMaterial);
+
+    // Center bars and depth crossbars
+    addRod(kite, new THREE.Vector3(0, 0, frontZ + 0.055), new THREE.Vector3(0, 0, frontZ + 0.055), 0.028, bambooLightMaterial);
+    addRod(kite, new THREE.Vector3(0, 0, backZ - 0.055), new THREE.Vector3(0, 0, backZ - 0.055), 0.028, bambooLightMaterial);
+    addRod(kite, new THREE.Vector3(0, 0, backZ - 0.055), new THREE.Vector3(0, 0, frontZ + 0.055), 0.028, bambooLightMaterial);
+    addRod(kite, new THREE.Vector3(0, halfHeight, backZ - 0.04), new THREE.Vector3(0, halfHeight, frontZ + 0.04), 0.027, bambooLightMaterial);
+    addRod(kite, new THREE.Vector3(0, -halfHeight, backZ - 0.04), new THREE.Vector3(0, -halfHeight, frontZ + 0.04), 0.027, bambooLightMaterial);
+
+    // Joint bindings
+    const jointGeometry = new THREE.SphereGeometry(0.072, 10, 8);
+    for (const corner of Object.values(corners)) {
+      const joint = new THREE.Mesh(jointGeometry, bambooDarkMaterial);
+      joint.position.copy(corner);
+      joint.castShadow = true;
+      kite.add(joint);
+    }
+
+    // Translucent silk panels
+    const panels = [];
+
+    function addPanel(width, height, position, rotationY, phase, sign, renderOrder) {
+      const geometry = new THREE.PlaneGeometry(width, height, 10, 8);
+      const mesh = new THREE.Mesh(geometry, paperMaterial);
+      mesh.position.copy(position);
+      mesh.rotation.y = rotationY;
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.renderOrder = renderOrder;
+      kite.add(mesh);
+
+      panels.push({
+        mesh,
+        base: new Float32Array(geometry.attributes.position.array),
+        phase,
+        sign
+      });
+    }
+
+    addPanel(
+      halfWidth * 2 - 0.18,
+      halfHeight * 2 - 0.18,
+      new THREE.Vector3(0, 0, frontZ + 0.035),
+      0,
+      0,
+      1,
+      2
+    );
+
+    addPanel(
+      halfWidth * 2 - 0.18,
+      halfHeight * 2 - 0.18,
+      new THREE.Vector3(0, 0, -frontZ - 0.035),
+      Math.PI,
+      Math.PI,
+      -1,
+      3
+    );
+
+    addPanel(
+      depth - 0.12,
+      halfHeight * 2 - 0.18,
+      new THREE.Vector3(halfWidth + 0.025, 0, 0),
+      Math.PI / 2,
+      1.2,
+      1,
+      4
+    );
+
+    addPanel(
+      depth - 0.12,
+      halfHeight * 2 - 0.18,
+      new THREE.Vector3(-halfWidth - 0.025, 0, 0),
+      -Math.PI / 2,
+      2.1,
+      -1,
+      5
+    );
+
+    // Fine string grid over the front panel
+    const gridZ = frontZ + 0.085;
+    const gridX = halfWidth * 0.5 - 0.31;
+    const gridY = halfHeight * 0.5 - 0.24;
+
+    for (const x of [-gridX, gridX]) {
+      addRod(
+        kite,
+        new THREE.Vector3(x, -halfHeight + 0.08, gridZ),
+        new THREE.Vector3(x, halfHeight - 0.08, gridZ),
+        0.007,
+        stringMaterial,
+        5
+      );
+    }
+
+    for (const y of [-gridY, gridY]) {
+      addRod(
+        kite,
+        new THREE.Vector3(-halfWidth + 0.08, y, gridZ),
+        new THREE.Vector3(halfWidth - 0.08, y, gridZ),
+        0.007,
+        stringMaterial,
+        5
+      );
+    }
+
+    addRod(
+      kite,
+      new THREE.Vector3(-halfWidth + 0.27, -halfHeight + 0.27, gridZ),
+      new THREE.Vector3(halfWidth - 0.27, halfHeight - 0.27, gridZ),
+      0.006,
+      stringMaterial,
+      5
+    );
+
+    // Tail assembly
+    const tail = new THREE.Group();
+    tail.position.set(0, -halfHeight, 0);
+    kite.add(tail);
+
+    addRod(tail, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -2.25, 0), 0.052, bambooMaterial);
+    addRod(tail, new THREE.Vector3(-0.34, 0, 0), new THREE.Vector3(-0.34, -2.1, 0), 0.038, bambooLightMaterial);
+    addRod(tail, new THREE.Vector3(0.34, 0, 0), new THREE.Vector3(0.34, -2.1, 0), 0.038, bambooLightMaterial);
+
+    for (const y of [-0.55, -1.1, -1.65]) {
+      addRod(
+        tail,
+        new THREE.Vector3(-0.34, y, 0),
+        new THREE.Vector3(0.34, y, 0),
+        0.031,
+        bambooLightMaterial
+      );
+    }
+
+    const tailTip = new THREE.Mesh(
+      new THREE.SphereGeometry(0.11, 12, 8),
+      redMaterial
+    );
+    tailTip.position.set(0, -2.34, 0);
+    tailTip.castShadow = true;
+    tail.add(tailTip);
+
+    // Dynamic support cords
+    const cordGeometry = new THREE.CylinderGeometry(0.006, 0.006, 1, 5);
+    const cornerCords = [];
+
+    for (const corner of Object.values(corners)) {
+      const cord = new THREE.Mesh(cordGeometry, stringMaterial);
+      cord.castShadow = false;
+      scene.add(cord);
+      cornerCords.push({ mesh: cord, start: corner.clone() });
+    }
+
+    // Ground spool
+    const spool = new THREE.Group();
+    spool.position.set(4.25, 0.2, 2.5);
+    spool.rotation.y = -0.15;
+    scene.add(spool);
+
+    addRod(
+      spool,
+      new THREE.Vector3(-0.3, 0, 0),
+      new THREE.Vector3(0.3, 0, 0),
+      0.22,
+      bambooDarkMaterial,
+      20
+    );
+
+    for (let i = 0; i < 11; i++) {
+      const winding = new THREE.Mesh(
+        new THREE.TorusGeometry(0.225, 0.016, 6, 28),
+        stringMaterial
+      );
+      winding.rotation.y = Math.PI / 2;
+      winding.position.x = -0.2 + i * 0.04;
+      spool.add(winding);
+    }
+
+    addRod(
+      spool,
+      new THREE.Vector3(-0.34, 0.04, 0),
+      new THREE.Vector3(-0.34, 0.42, 0),
+      0.035,
+      bambooLightMaterial
+    );
+    addRod(
+      spool,
+      new THREE.Vector3(0.34, 0.04, 0),
+      new THREE.Vector3(0.34, 0.42, 0),
+      0.035,
+      bambooLightMaterial
+    );
+    addRod(
+      spool,
+      new THREE.Vector3(0.3, 0, 0),
+      new THREE.Vector3(0.52, 0.05, 0),
+      0.045,
+      bambooMaterial
+    );
+
+    const spoolAttach = new THREE.Vector3(0.52, 0.05, 0);
+
+    // Dynamic strings from the kite to the spool
+    const dynamicStrings = [];
+
+    function createDynamicString() {
+      const mesh = new THREE.Mesh(cordGeometry, stringMaterial);
+      mesh.castShadow = false;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    for (const cord of cornerCords) {
+      dynamicStrings.push({
+        mesh: cord.mesh,
+        start: cord.start.clone(),
+        end: new THREE.Vector3()
+      });
+    }
+
+    const tailString = createDynamicString();
+    const centerString = createDynamicString();
+
+    // Custom camera controls
+    const defaultView = {
+      theta: 0.32,
+      phi: 1.22,
+      radius: 8.4
+    };
+
+    const desired = { ...defaultView };
+    const current = { ...defaultView };
+    const cameraTarget = new THREE.Vector3(0, 2.15, 0);
+
+    function updateCamera() {
+      const sinPhi = Math.sin(current.phi);
+
+      camera.position.set(
+        cameraTarget.x + current.radius * sinPhi * Math.sin(current.theta),
+        cameraTarget.y + current.radius * Math.cos(current.phi),
+        cameraTarget.z + current.radius * sinPhi * Math.cos(current.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    function resetView() {
+      desired.theta = defaultView.theta;
+      desired.phi = defaultView.phi;
+      desired.radius = defaultView.radius;
+    }
+
+    let dragging = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+
+      dragging = true;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+      renderer.domElement.classList.add("grabbing");
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - pointerX;
+      const deltaY = event.clientY - pointerY;
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+
+      desired.theta -= deltaX * 0.006;
+      desired.phi = THREE.MathUtils.clamp(
+        desired.phi - deltaY * 0.005,
+        0.42,
+        1.48
+      );
+    });
+
+    function endDrag(event) {
+      dragging = false;
+      renderer.domElement.classList.remove("grabbing");
+
+      if (event.pointerId !== undefined &&
+          renderer.domElement.hasPointerCapture(event.pointerId)) {
+        renderer.domElement.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", endDrag);
+    renderer.domElement.addEventListener("pointercancel", endDrag);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        desired.radius = THREE.MathUtils.clamp(
+          desired.radius * Math.exp(event.deltaY * 0.001),
+          4.4,
+          15
+        );
+      },
+      { passive: false }
+    );
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+    resetButton.addEventListener("click", resetView);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") desired.theta += 0.1;
+      if (event.key === "ArrowRight") desired.theta -= 0.1;
+      if (event.key === "ArrowUp") {
+        desired.phi = Math.max(0.42, desired.phi - 0.08);
+      }
+      if (event.key === "ArrowDown") {
+        desired.phi = Math.min(1.48, desired.phi + 0.08);
+      }
+      if (event.key === "+" || event.key === "=") {
+        desired.radius = Math.max(4.4, desired.radius - 0.5);
+      }
+      if (event.key === "-") {
+        desired.radius = Math.min(15, desired.radius + 0.5);
+      }
+    });
+
+    // Panel flutter
+    function updatePanels(time) {
+      for (const panel of panels) {
+        const position = panel.mesh.geometry.attributes.position;
+        const array = position.array;
+
+        for (let i = 0; i < array.length; i += 3) {
+          const x = panel.base[i];
+          const y = panel.base[i + 1];
+          const z = panel.base[i + 2];
+
+          array[i + 2] =
+            z +
+            panel.sign *
+              Math.sin(time * 1.25 + x * 2.2 + y * 1.7 + panel.phase) *
+              0.035;
+        }
+
+        position.needsUpdate = true;
+        panel.mesh.geometry.computeVertexNormals();
+      }
+    }
+
+    // Animation
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const time = clock.elapsedTime;
+
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        // Gentle flight motion
+        kite.position.y = 4.65 + Math.sin(time * 0.72) * 0.11;
+        kite.rotation.y = Math.sin(time * 0.34) * 0.075;
+        kite.rotation.z = Math.sin(time * 0.46) * 0.025;
+
+        tail.rotation.z = Math.sin(time * 1.08) * 0.055;
+        tail.rotation.y = Math.sin(time * 0.68) * 0.025;
+
+        updatePanels(time);
+
+        // Cloud drift
+        for (const cloud of clouds) {
+          cloud.group.position.x =
+            cloud.baseX + Math.sin(time * 0.075 + cloud.phase) * 1.5;
+        }
+
+        // Bamboo leaf movement
+        for (const leaf of bambooPlants) {
+          leaf.mesh.rotation.z =
+            leaf.baseRotation +
+            Math.sin(time * 0.8 + leaf.phase) * 0.075;
+        }
+
+        // Orient the sun toward the initial camera position.
+        sun.lookAt(0, 2, 0);
+
+        // Update world transforms before resolving the kite strings.
+        kite.updateMatrixWorld(true);
+
+        // Corner cords converge at the tail knot.
+        const tailAttachment = tail.localToWorld(
+          new THREE.Vector3(0, -0.18, 0)
+        );
+
+        for (const cord of cornerCords) {
+          cord.end.copy(tailAttachment);
+          placeRod(cord.mesh, cord.start, cord.end);
+        }
+
+        // Main tail line.
+        const tailKnot = tail.localToWorld(new THREE.Vector3(0, -2.4, 0));
+        placeRod(tailString, tailKnot, spoolAttach);
+
+        // Central support line.
+        const centerStart = kite.localToWorld(
+          new THREE.Vector3(0, 0, frontZ + 0.09)
+        );
+        placeRod(centerString, centerStart, spoolAttach);
+
+        // Smooth custom camera movement.
+        const damping = 1 - Math.exp(-10 * delta);
+
+        current.theta += (desired.theta - current.theta) * damping;
+        current.phi += (desired.phi - current.phi) * damping;
+        current.radius += (desired.radius - current.radius) * damping;
+
+        updateCamera();
+        renderer.render(scene, camera);
+      } else {
+        current.theta += (desired.theta - current.theta) * 0.1;
+        current.phi += (desired.phi - current.phi) * 0.1;
+        current.radius += (desired.radius - current.radius) * 0.1;
+        updateCamera();
+        renderer.render(scene, camera);
+      }
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    updateCamera();
+    animate();
+  </script>
+</body>
+</html>

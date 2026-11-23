@@ -14,12 +14,13 @@ Each recipe lives in its own folder with a README, its scripts and a RESULTS.md 
   Engines that mmap experts (Strata, llama.cpp with `-ot exps=CPU`) need `GPU_RUN_MEM=44G`.
   The DeepSeek runs peaked at 31–35 GB, so 20 GB would bind. The effect of a low cap was not measured.
 - `/mnt/models` is on the fast Micron NVMe. `/mnt/scratch` is a slower SK hynix BC501, so don't stream weights from it.
+- Since 2026-11-19 `/mnt/models/llm/deepseek-v41-flash` is a symlink to `/mnt/archive` (a Seagate 7200 rpm HDD). DeepSeek on Strata decodes at ~0.46 tok/s from there, not ~5. Check `readlink -f` before benchmarking anything under `/mnt/models`.
 - Run Python that reads downloaded files with `python -I`, from scripts kept outside the download dir.
 
 ## Layout
 - `deepseek-v41-strata/`: DeepSeek-V4.1-Flash 763B MoE (ISTA GSQ-RCO IQ2_XXS) on the Strata engine
 - `flint/`: Flint 40B-A2.5B MoE (Q4_K_M, 128k) on llama.cpp, experts in RAM with the MoE cache keeping hot ones in VRAM; `promo/` holds the Remotion video
-- `qwen35-3d-coder/`: Qwen3.5-4B-3D-Coder (three.js scene writer) in VRAM, Q5_K_M on llama.cpp (restored MTP head is opt-in: it breaks long answers on b12242)
+- `qwen35-3d-coder/`: Qwen3.5-4B-3D-Coder (three.js scene writer) in VRAM, Q5_K_M on llama.cpp (restored MTP head is opt-in, 1.41x: no rollback bug and same pass rate, but 5/19 MTP pages fail on syntax errors vs 0/35 without, cause unknown: its tokens are ones plain decoding could pick)
 - `inkling-2-mini/`: Inkling-2-Mini 26.4B looped MoE (IQ4_NL, 64k) on llama.cpp master 225a5345b + two F16-mask patches (branch `r2-inkfix` in `/mnt/scratch/llama.cpp/src-r2`), loop-core experts on GPU, rest in RAM. Stock master gives NaN prompts when a core layer's experts are in RAM with op offload on
 - `kintsugi-27b/`: Kintsugi-27B (Qwen3.8-27B dense, EXL3 trellis 2.47 bpw GGUF, 262k window) on the author's llama.cpp fork bundle v1.1.1; tiered K/V cache (VRAM cells + rest in RAM), DFlash2 drafter. `serve.sh` holds the GPU lock while serving (the bundle's launcher detaches)
 - `scripts/`: shared helpers (benchmark client etc.)

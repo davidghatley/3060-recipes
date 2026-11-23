@@ -24,11 +24,18 @@ c["log"] = log
 json.dump(c, open(out, "w"), indent=1)
 EOF
 
+# Another server already on the port would answer our readiness checks and take the benchmark.
+curl -sf -m 3 http://127.0.0.1:$PORT/v1/models >/dev/null && { echo "port $PORT is already in use; not starting $LABEL"; exit 1; }
 echo "[$(date +%T)] start $LABEL: $*" | tee "$LOG"
 cd "$STRATA"
 "$STRATA/python/bin/python3.12" "$STRATA/serve/server.py" --engine strata --config "$CFG" --port $PORT >>"$LOG" 2>&1 &
 SRV=$!
-trap 'kill $SRV 2>/dev/null; wait $SRV 2>/dev/null || true' EXIT
+# Stop the front end and any engine process it started, so nothing outlives the gpu_run session.
+stop() { local kids; kids=$(pgrep -P $SRV || true); kill $SRV $kids 2>/dev/null; wait $SRV 2>/dev/null || true
+  [ -z "$kids" ] && return 0
+  local k alive; for _ in $(seq 30); do alive=0; for k in $kids; do kill -0 "$k" 2>/dev/null && alive=1; done
+    [ $alive = 0 ] && return 0; sleep 1; done; kill -9 $kids 2>/dev/null || true; }
+trap stop EXIT
 
 t0=$(date +%s)
 until curl -sf -m 5 http://127.0.0.1:$PORT/v1/models >/dev/null; do
@@ -40,5 +47,8 @@ curl -s -m 3600 http://127.0.0.1:$PORT/v1/chat/completions -H 'Content-Type: app
   -d '{"model":"x","messages":[{"role":"user","content":"Say OK."}],"max_tokens":8,"reasoning_effort":"low"}' >"$OUT/$LABEL.warmup.json"
 echo "[$(date +%T)] ready after $(( $(date +%s) - t0 )) s; vram $(nvidia-smi --query-gpu=memory.used --format=csv,noheader); rss $(ps -o rss= --ppid $SRV --pid $SRV | awk '{s+=$1} END {printf "%.1f GiB", s/1048576}')" | tee -a "$LOG"
 
-python3 -I "$REPO/scripts/bench.py" --url http://127.0.0.1:$PORT --label "$LABEL" --out "$OUT" ${BENCH_ARGS:-} | tee "$OUT/$LABEL.bench.txt"
+# Sample the disk that really holds the pack (the path can be a symlink to another drive).
+PACK=$(python3 -I -c 'import json,sys; a=json.load(open(sys.argv[1]))["args"]; print(a[a.index("--pack")+1])' "$CFG")
+echo "[$(date +%T)] pack on $(df --output=source "$(readlink -f "$PACK")" | tail -1) ($(readlink -f "$PACK"))" | tee -a "$LOG"
+python3 -I "$REPO/scripts/bench.py" --url http://127.0.0.1:$PORT --label "$LABEL" --out "$OUT" --disk-path "$(readlink -f "$PACK")" ${BENCH_ARGS:-} | tee "$OUT/$LABEL.bench.txt"
 echo "[$(date +%T)] done $LABEL" | tee -a "$LOG"

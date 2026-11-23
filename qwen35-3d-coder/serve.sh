@@ -2,8 +2,8 @@
 # Qwen3.5-4B-3D-Coder on llama-server, tuned for single-user decode on the RTX 3060. Evidence: PLAN.md, RESULTS.md.
 # Weights: our Q5_K_M with the MTP head restored (tools/download.sh + tools/build_quants.sh).
 # Q4_K_M is faster but its pages throw errors twice as often in the render eval (RESULTS.md).
-# Speculation is off by default: MTP is 31% faster but breaks long answers on this llama.cpp build (RESULTS.md,
-# "MTP breaks long answers"). Opt in with QC_SPEC=draft-mtp.
+# Speculation is off by default: MTP is 1.41x faster on real answers and its pages pass as often, but more of its
+# finished pages fail on syntax errors (RESULTS.md, "Does MTP break long answers?"). Opt in with QC_SPEC=draft-mtp.
 set -euo pipefail
 BIN=${QC_BIN:-/mnt/scratch/llama.cpp/b12242/bin/llama-b12242}
 MODEL=${QC_MODEL:-/mnt/models/llm/qwen3.5-4b-3d-coder/own/Qwen3.5-4B-3D-Coder-MTP-Q5_K_M.gguf}

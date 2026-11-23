@@ -20,7 +20,7 @@ esac
 CACHE=${FLINT_MOE_CACHE_MIB:-$d_cache}
 CACHE_ARGS=()
 [ "$CACHE" != 0 ] && CACHE_ARGS=(--moe-cache-mib "$CACHE" --moe-cache-cpu-share "${FLINT_MOE_CACHE_SHARE:-0.95}")
-exec "$HOME/anime-pipeline/tools/gpu_run" --need 10500 --wait 120 \
+exec "$HOME/anime-pipeline/tools/gpu_run" --need 10500 --wait "${FLINT_GPU_WAIT:-120}" \
   "$BIN/llama-server" -m "$MODEL" --alias flint-local \
   -ngl 99 -ncmoe "${FLINT_CPU_MOE:-$d_cpu_moe}" "${CACHE_ARGS[@]}" --fit off --spec-type "${FLINT_SPEC:-$d_spec}" \
   -c "${FLINT_CONTEXT:-$d_ctx}" -np 1 -t "${FLINT_THREADS:-6}" \

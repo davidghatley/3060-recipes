@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adjustable Ground-Mounted Photovoltaic System</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #cbd7df;
+    }
+
+    #scene {
+      position: fixed;
+      inset: 0;
+    }
+
+    .title-card {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 5;
+      max-width: min(390px, calc(100vw - 48px));
+      padding: 17px 19px;
+      color: #eef5f7;
+      background: rgba(20, 31, 38, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(20, 31, 38, 0.2);
+      backdrop-filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin-bottom: 5px;
+      color: #8fd2a4;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(19px, 3vw, 26px);
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: rgba(238, 245, 247, 0.67);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .control-card {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 6;
+      width: 285px;
+      padding: 17px;
+      color: #edf3f5;
+      background: rgba(20, 31, 38, 0.84);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(20, 31, 38, 0.22);
+      backdrop-filter: blur(12px);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .control-row label {
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    output {
+      color: #8fd2a4;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      margin: 4px 0 17px;
+      appearance: none;
+      border-radius: 999px;
+      outline: none;
+      background: linear-gradient(90deg, #78d6a4 0 50%, #34424a 50%);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 17px;
+      height: 17px;
+      appearance: none;
+      border: 3px solid #202c33;
+      border-radius: 50%;
+      background: #8fd2a4;
+      box-shadow: 0 0 0 1px rgba(143, 210, 164, 0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border: 3px solid #202c33;
+      border-radius: 50%;
+      background: #8fd2a4;
+      box-shadow: 0 0 0 1px rgba(143, 210, 164, 0.4);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 36px;
+      padding: 8px 10px;
+      color: #edf3f5;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      color: #182126;
+      background: #8fd2a4;
+      border-color: #8fd2a4;
+    }
+
+    .hint {
+      position: fixed;
+      left: 24px;
+      bottom: 24px;
+      z-index: 5;
+      padding: 9px 12px;
+      color: rgba(24, 33, 38, 0.78);
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(245, 249, 250, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 9px;
+      box-shadow: 0 5px 20px rgba(30, 45, 52, 0.1);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .title-card {
+        top: 14px;
+        left: 14px;
+        padding: 13px 15px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .control-card {
+        right: 14px;
+        bottom: 14px;
+        width: min(285px, calc(100vw - 28px));
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+
+  <section class="title-card">
+    <div class="eyebrow">Ground-mounted PV system</div>
+    <h1>Adjustable twin-rail photovoltaic module</h1>
+    <p class="subtitle">
+      A single tilted module with two support rails, four adjustable steel struts,
+      and a pair of concrete footings.
+    </p>
+  </section>
+
+  <section class="control-card" aria-label="Model controls">
+    <div class="control-row">
+      <label for="tilt">Module tilt</label>
+      <output id="tiltValue" for="tilt">30°</output>
+    </div>
+    <input
+      id="tilt"
+      type="range"
+      min="12"
+      max="52"
+      value="30"
+      step="1"
+      aria-label="Photovoltaic module tilt angle"
+    >
+
+    <div class="buttons">
+      <button id="frontView" type="button">Front view</button>
+      <button id="backView" type="button">Back view</button>
+      <button id="reset" class="primary" type="button">Reset all</button>
+    </div>
+  </section>
+
+  <div class="hint">Drag to orbit · Wheel to zoom · Right-drag to pan · Double-click to reset</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const sceneHost = document.getElementById("scene");
+    const tiltInput = document.getElementById("tilt");
+    const tiltOutput = document.getElementById("tiltValue");
+    const frontViewButton = document.getElementById("frontView");
+    const backViewButton = document.getElementById("backView");
+    const resetButton = document.getElementById("reset");
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.domElement.setAttribute("aria-label", "Interactive 3D photovoltaic module");
+    sceneHost.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xcbd7df);
+    scene.fog = new THREE.Fog(0xcbd7df, 18, 42);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      100
+    );
+
+    const controls = {
+      target: new THREE.Vector3(0, 2.45, 0),
+      radius: 10.5,
+      theta: 0.68,
+      phi: 1.30
+    };
+
+    function applyCamera() {
+      const spherical = new THREE.Spherical(
+        controls.radius,
+        controls.phi,
+        controls.theta
+      );
+      const offset = new THREE.Vector3().setFromSpherical(spherical);
+      camera.position.copy(controls.target).add(offset);
+      camera.lookAt(controls.target);
+    }
+
+    applyCamera();
+
+    // Lighting
+    const hemisphere = new THREE.HemisphereLight(0xeaf6ff, 0x6a6257, 2.15);
+    scene.add(hemisphere);
+
+    const sun = new THREE.DirectionalLight(0xfff4dc, 3.1);
+    sun.position.set(-6, 11, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 30;
+    sun.shadow.bias = -0.00035;
+    sun.shadow.normalBias = 0.025;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0xc7e3ff, 0.8);
+    fillLight.position.set(7, 5, -6);
+    scene.add(fillLight);
+
+    // Ground and subtle survey grid
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      new THREE.MeshStandardMaterial({
+        color: 0x8e9897,
+        roughness: 0.97,
+        metalness: 0
+      })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.015;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const grid = new THREE.GridHelper(30, 30, 0x596465, 0x899291);
+    grid.position.y = 0.002;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.18;
+    scene.add(grid);
+
+    // Materials
+    const frameMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb9c2c7,
+      metalness: 0.88,
+      roughness: 0.24
+    });
+
+    const railMaterial = new THREE.MeshStandardMaterial({
+      color: 0x59646a,
+      metalness: 0.8,
+      roughness: 0.31
+    });
+
+    const strutMaterial = new THREE.MeshStandardMaterial({
+      color: 0x303a40,
+      metalness: 0.76,
+      roughness: 0.34
+    });
+
+    const collarMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe1a32e,
+      metalness: 0.58,
+      roughness: 0.36
+    });
+
+    const concreteMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa6a298,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const steelMaterial = new THREE.MeshStandardMaterial({
+      color: 0x707a7e,
+      metalness: 0.78,
+      roughness: 0.4
+    });
+
+    const boltMaterial = new THREE.MeshStandardMaterial({
+      color: 0xb8c0c3,
+      metalness: 0.9,
+      roughness: 0.25
+    });
+
+    const junctionBoxMaterial = new THREE.MeshStandardMaterial({
+      color: 0x263238,
+      metalness: 0.62,
+      roughness: 0.42
+    });
+
+    const junctionLidMaterial = new THREE.MeshStandardMaterial({
+      color: 0x344249,
+      metalness: 0.7,
+      roughness: 0.35
+    });
+
+    // Generate a self-contained photovoltaic cell texture.
+    function createPanelTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+
+      const background = context.createLinearGradient(0, 0, 0, 512);
+      background.addColorStop(0, "#07182c");
+      background.addColorStop(1, "#030b17");
+      context.fillStyle = background;
+      context.fillRect(0, 0, 1024, 512);
+
+      const columns = 8;
+      const rows = 4;
+      const cellWidth = 1024 / columns;
+      const cellHeight = 512 / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const x = column * cellWidth;
+          const y = row * cellHeight;
+          const gradient = context.createLinearGradient(
+            x + 2,
+            y + 2,
+            x + cellWidth - 2,
+            y + cellHeight - 2
+          );
+          gradient.addColorStop(0, "#0b2b4b");
+          gradient.addColorStop(0.5, "#07182d");
+          gradient.addColorStop(1, "#05111f");
+          context.fillStyle = gradient;
+          context.fillRect(x + 2, y + 2, cellWidth - 4, cellHeight - 4);
+
+          context.strokeStyle = "rgba(135, 190, 220, 0.42)";
+          context.lineWidth = 2;
+          context.strokeRect(x + 2, y + 2, cellWidth - 4, cellHeight - 4);
+
+          // Fine busbars give the cells a photovoltaic appearance.
+          context.strokeStyle = "rgba(155, 205, 235, 0.23)";
+          context.lineWidth = 1;
+          for (let busbar = 1; busbar <= 5; busbar++) {
+            const busbarX = x + 8 + (cellWidth - 16) * busbar / 5;
+            context.beginPath();
+            context.moveTo(busbarX, y + 4);
+            context.lineTo(busbarX, y + cellHeight - 4);
+            context.stroke();
+          }
+        }
+      }
+
+      let seed = 731;
+      function random() {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      }
+
+      for (let i = 0; i < 1500; i++) {
+        const x = random() * 1024;
+        const y = random() * 512;
+        const alpha = 0.015 + random() * 0.035;
+        context.fillStyle = `rgba(210, 235, 255, ${alpha})`;
+        context.fillRect(x, y, 1 + random() * 2, 1 + random() * 2);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(
+        8,
+        renderer.capabilities.getMaxAnisotropy()
+      );
+      return texture;
+    }
+
+    const panelTexture = createPanelTexture();
+
+    const panelMaterial = new THREE.MeshStandardMaterial({
+      map: panelTexture,
+      color: 0xffffff,
+      metalness: 0.22,
+      roughness: 0.3
+    });
+
+    // Main module group. Rotation about X tilts the panel and its two rails.
+    const moduleGroup = new THREE.Group();
+    moduleGroup.position.set(0, 3.65, 0);
+    moduleGroup.rotation.x = THREE.MathUtils.degToRad(30);
+    scene.add(moduleGroup);
+
+    function addBox(parent, size, position, material, castShadow = true) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0], size[1], size[2]),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // Photovoltaic panel and thin silver perimeter frame.
+    addBox(
+      moduleGroup,
+      [5.2, 3.0, 0.12],
+      [0, 0, -0.025],
+      new THREE.MeshStandardMaterial({
+        color: 0x071423,
+        metalness: 0.2,
+        roughness: 0.34
+      })
+    );
+
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.08, 2.88),
+      panelMaterial
+    );
+    panel.position.z = 0.069;
+    panel.receiveShadow = true;
+    moduleGroup.add(panel);
+
+    addBox(moduleGroup, [5.38, 0.10, 0.13], [0, 1.51, 0], frameMaterial);
+    addBox(moduleGroup, [5.38, 0.10, 0.13], [0, -1.51, 0], frameMaterial);
+    addBox(moduleGroup, [0.10, 3.02, 0.13], [-2.68, 0, 0], frameMaterial);
+    addBox(moduleGroup, [0.10, 3.02, 0.13], [2.68, 0, 0], frameMaterial);
+
+    // Junction box, lid, lid seam, screws, and mounting clamps.
+    addBox(
+      moduleGroup,
+      [0.82, 0.50, 0.18],
+      [0, -0.78, -0.18],
+      junctionBoxMaterial
+    );
+    addBox(
+      moduleGroup,
+      [0.86, 0.54, 0.04],
+      [0, -0.78, -0.30],
+      junctionLidMaterial
+    );
+    addBox(
+      moduleGroup,
+      [0.035, 0.51, 0.025],
+      [0, -0.78, -0.33],
+      steelMaterial
+    );
+
+    const screwGeometry = new THREE.CylinderGeometry(0.035, 0.035, 0.025, 12);
+    for (const x of [-0.32, 0.32]) {
+      for (const y of [-0.98, -0.58]) {
+        const screw = new THREE.Mesh(screwGeometry, boltMaterial);
+        screw.rotation.x = Math.PI / 2;
+        screw.position.set(x, y, -0.337);
+        screw.castShadow = true;
+        moduleGroup.add(screw);
+      }
+    }
+
+    for (const z of [-1.34, 1.34]) {
+      for (const x of [-2.43, 2.43]) {
+        addBox(
+          moduleGroup,
+          [0.22, 0.27, 0.25],
+          [x, -1.47, z],
+          railMaterial
+        );
+      }
+    }
+
+    // Exactly two rails, running across the width of the module.
+    for (const z of [-1.34, 1.34]) {
+      addBox(
+        moduleGroup,
+        [5.46, 0.13, 0.16],
+        [0, -1.58, z],
+        railMaterial
+      );
+    }
+
+    // Exactly two concrete footings; each supports two adjustable struts.
+    const footingPositions = [-3.12, 3.12];
+    for (const x of footingPositions) {
+      addBox(
+        scene,
+        [0.86, 0.32, 0.86],
+        [x, 0.16, 0],
+        concreteMaterial
+      );
+      addBox(
+        scene,
+        [0.42, 0.05, 0.42],
+        [x, 0.34, 0],
+        steelMaterial
+      );
+
+      for (const offsetX of [-0.14, 0.14]) {
+        for (const offsetZ of [-0.14, 0.14]) {
+          const bolt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.055, 0.055, 0.045, 12),
+            boltMaterial
+          );
+          bolt.position.set(x + offsetX, 0.385, offsetZ);
+          bolt.castShadow = true;
+          scene.add(bolt);
+        }
+      }
+    }
+
+    // Four adjustable struts: two at each end, connecting the two rails.
+    const struts = [];
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const worldUp = new THREE.Vector3(0, 1, 0);
+
+    for (const side of [-1, 1]) {
+      for (const front of [-1, 1]) {
+        const topAnchor = new THREE.Object3D();
+        topAnchor.position.set(side * 2.78, -1.58, front * 1.34);
+        moduleGroup.add(topAnchor);
+
+        const strut = {
+          topAnchor,
+          topPoint: new THREE.Vector3(),
+          bottom: new THREE.Vector3(side * 3.12, 0.36, 0),
+          direction: new THREE.Vector3(),
+          length: 1,
+          cylinder: new THREE.Mesh(
+            new THREE.CylinderGeometry(0.065, 0.075, 1, 16),
+            strutMaterial
+          ),
+          collar: new THREE.Mesh(
+            new THREE.CylinderGeometry(0.105, 0.105, 0.28, 16),
+            collarMaterial
+          ),
+          lockNut: new THREE.Mesh(
+            new THREE.CylinderGeometry(0.125, 0.125, 0.12, 16),
+            steelMaterial
+          ),
+          base: new THREE.Mesh(
+            new THREE.BoxGeometry(0.30, 0.055, 0.30),
+            steelMaterial
+          ),
+          topCap: new THREE.Mesh(
+            new THREE.SphereGeometry(0.085, 14, 10),
+            boltMaterial
+          )
+        };
+
+        for (const part of Object.values(strut)) {
+          part.castShadow = true;
+          part.receiveShadow = true;
+          scene.add(part);
+        }
+
+        struts.push(strut);
+      }
+    }
+
+    function updateStruts() {
+      moduleGroup.updateMatrixWorld(true);
+
+      for (const strut of struts) {
+        strut.topPoint.copy(strut.topAnchor.getWorldPosition(new THREE.Vector3()));
+        const direction = new THREE.Vector3().subVectors(strut.bottom, strut.topPoint);
+        const length = direction.length();
+
+        strut.direction.copy(direction).normalize();
+        strut.length = length;
+
+        strut.cylinder.position
+          .copy(strut.topPoint)
+          .addScaledVector(strut.direction, 0.5);
+        strut.cylinder.quaternion.setFromUnitVectors(yAxis, strut.direction);
+        strut.cylinder.scale.set(1, length, 1);
+
+        strut.collar.position
+          .copy(strut.topPoint)
+          .addScaledVector(strut.direction, 0.58 * length);
+        strut.collar.quaternion.copy(strut.cylinder.quaternion);
+
+        strut.lockNut.position
+          .copy(strut.topPoint)
+          .addScaledVector(strut.direction, 0.70 * length);
+        strut.lockNut.quaternion.copy(strut.cylinder.quaternion);
+
+        strut.base.position.set(
+          strut.bottom.x,
+          strut.bottom.y + 0.025,
+          strut.bottom.z
+        );
+
+        strut.topCap.position.copy(strut.topPoint);
+      }
+    }
+
+    // Camera interaction implemented directly without external controls.
+    const canvas = renderer.domElement;
+    let dragging = false;
+    let dragButton = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let cameraGoal = null;
+    let cameraGoalStart = 0;
+
+    function syncSpherical() {
+      const offset = camera.position.clone().sub(controls.target);
+      controls.radius = offset.length();
+      controls.theta = Math.atan2(offset.x, offset.z);
+      controls.phi = Math.acos(THREE.MathUtils.clamp(offset.y / controls.radius, -1, 1));
+    }
+
+    function resetView() {
+      controls.target.set(0, 2.45, 0);
+      controls.radius = 10.5;
+      controls.theta = 0.68;
+      controls.phi = 1.30;
+      syncSpherical();
+      cameraGoal = null;
+      applyCamera();
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 && event.button !== 2) return;
+      event.preventDefault();
+      dragging = true;
+      dragButton = event.button;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      cameraGoal = null;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      event.preventDefault();
+
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      if (dragButton === 2 || event.shiftKey) {
+        const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+        const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+        const panScale = controls.radius * 0.00125;
+
+        controls.target
+          .addScaledVector(right, -dx * panScale)
+          .addScaledVector(up, dy * panScale);
+
+        controls.target.x = THREE.MathUtils.clamp(controls.target.x, -4, 4);
+        controls.target.y = THREE.MathUtils.clamp(controls.target.y, 0.8, 4.2);
+        controls.target.z = THREE.MathUtils.clamp(controls.target.z, -3, 3);
+      } else {
+        controls.theta -= dx * 0.006;
+        controls.phi = THREE.MathUtils.clamp(
+          controls.phi - dy * 0.005,
+          0.24,
+          Math.PI * 0.49
+        );
+      }
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", stopDragging);
+    canvas.addEventListener("pointercancel", stopDragging);
+    canvas.addEventListener("lostpointercapture", () => {
+      dragging = false;
+    });
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        cameraGoal = null;
+        controls.radius = THREE.MathUtils.clamp(
+          controls.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          20
+        );
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetView);
+
+    frontViewButton.addEventListener("click", () => {
+      const offset = camera.position.clone().sub(controls.target);
+      const spherical = new THREE.Spherical().setFromVector3(offset);
+
+      cameraGoal = {
+        start: performance.now(),
+        position: camera.position.clone(),
+        target: controls.target.clone()
+      };
+    });
+
+    backViewButton.addEventListener("click", () => {
+      const offset = new THREE.Vector3(-6.6, 2.6, -7.7);
+      const target = new THREE.Vector3(0, 2.45, 0);
+
+      cameraGoal = {
+        start: performance.now(),
+        position: camera.position.clone().add(offset),
+        target: target
+      };
+    });
+
+    resetButton.addEventListener("click", () => {
+      tiltInput.value = "30";
+      tiltOutput.textContent = "30°";
+      resetView();
+    });
+
+    tiltInput.addEventListener("input", () => {
+      const degrees = Number(tiltInput.value);
+      tiltOutput.textContent = `${degrees}°`;
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    const clock = new THREE.Clock();
+    let currentTilt = THREE.MathUtils.degToRad(30);
+    let targetTilt = THREE.MathUtils.degToRad(30);
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const tiltEase = 1 - Math.exp(-delta * 7);
+      currentTilt = THREE.MathUtils.lerp(currentTilt, targetTilt, tiltEase);
+      moduleGroup.rotation.x = currentTilt;
+      updateStruts();
+
+      if (cameraGoal) {
+        const progress = THREE.MathUtils.clamp(
+          (performance.now() - cameraGoal.start) / 750,
+          0,
+          1
+        );
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        camera.position.lerpVectors(
+          cameraGoal.position,
+          camera.position,
+          eased
+        );
+        controls.target.lerpVectors(
+          cameraGoal.target,
+          controls.target,
+          eased
+        );
+
+        if (progress >= 1) {
+          syncSpherical();
+          cameraGoal = null;
+        }
+      } else {
+        applyCamera();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    renderer.setAnimationLoop(animate);
+  </script>
+</body>
+</html>

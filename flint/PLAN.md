@@ -42,6 +42,7 @@ What limits further gains:
 - Decode: ~75% of the ~69 tok/s ceiling. RAM bandwidth is saturated at 6 threads.
 
 Remaining levers, ranked:
-1. Trade context for speed: at 64k context the freed ~1.6 GB fits `-ub 8192` (+16% prefill at 16k prompts) or 4 more expert layers (+4% decode). A per-session choice, not a default.
+1. ~~Trade context for prefill with `-ub 8192`~~: measured 2026-11-22 (`experiments/RESULTS.md` exp 6). It gives +1.7% prefill on the 11k opencode prompt at 64k and 32k, and −3 to −6% decode, because its compute buffer takes cache VRAM. Rejected. Larger caches at 128k (3200 / 3328 MiB) and cpu-share 0.90 are also within noise of the shipped 2944 / 0.95.
 2. Tune ngram-map-k sizes (`--spec-ngram-map-k-size-n/-m`, `--spec-ngram-map-k-min-hits`) on real opencode traces.
-3. A smaller expert quant (Q3_K / IQ3) would cut bytes in both RAM and PCIe paths, but it is lossy and needs a quality check.
+3. ~~A smaller expert quant (Q3_K / IQ3)~~: measured 2026-11-22 (exp 3, exp 7). A Q4_K_M → Q3_K requant was +7% but KLD 0.34. unsloth's UD-Q3_K_XL is −6% decode (54.8 vs 58.5), +8% prefill, KLD 0.39, PPL +5.8%: its experts are I-quants, which cost more CPU per byte than Q4_K. Rejected. Only a plain K-quant Q3 from BF16 is untested, and it would trade ~0.3 KLD for ~+7%.
+4. Engine work: the async-copy prototype (+3% decode, exp 2) and building the shared expert before the routed MoE so it overlaps the CPU split (≤ ~5%).

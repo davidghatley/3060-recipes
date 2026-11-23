@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brittle Star on a Barrel Sponge</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #061818;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 45%, transparent 35%, rgba(0, 8, 10, 0.42) 100%),
+        linear-gradient(180deg, rgba(0, 12, 14, 0.2), transparent 30%);
+    }
+
+    .caption {
+      position: fixed;
+      top: 28px;
+      left: 30px;
+      color: rgba(229, 244, 235, 0.9);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .caption h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 36px);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    .caption p {
+      margin: 7px 0 0;
+      color: rgba(180, 216, 207, 0.58);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      color: rgba(204, 232, 224, 0.48);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #reset {
+      position: fixed;
+      right: 24px;
+      top: 24px;
+      padding: 9px 13px;
+      border: 1px solid rgba(190, 231, 220, 0.2);
+      border-radius: 999px;
+      color: rgba(220, 241, 233, 0.7);
+      background: rgba(5, 24, 24, 0.45);
+      backdrop-filter: blur(8px);
+      font: inherit;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    #reset:hover {
+      color: white;
+      border-color: rgba(190, 231, 220, 0.45);
+      background: rgba(15, 48, 46, 0.65);
+    }
+
+    @media (max-width: 600px) {
+      .caption {
+        top: 20px;
+        left: 20px;
+      }
+
+      #reset {
+        top: 18px;
+        right: 18px;
+      }
+
+      .hint {
+        right: 50%;
+        bottom: 16px;
+        transform: translateX(50%);
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stage"></div>
+  <div class="vignette"></div>
+
+  <div class="caption">
+    <h1>Brittle star</h1>
+    <p>Draping over a barrel sponge</p>
+  </div>
+
+  <button id="reset" type="button">Reset view</button>
+  <div class="hint">Drag to orbit · Scroll or pinch to zoom</div>
+
+  <script type="module">
+    import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    const stage = document.getElementById("stage");
+    const resetButton = document.getElementById("reset");
+
+    // ------------------------------------------------------------
+    // Renderer, scene, and camera
+    // ------------------------------------------------------------
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    stage.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x061818);
+    scene.fog = new THREE.FogExp2(0x061818, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      60
+    );
+
+    const cameraTarget = new THREE.Vector3(0, 0.55, 0);
+
+    const orbit = {
+      theta: 0.68,
+      phi: 1.12,
+      radius: 9.2
+    };
+
+    function updateCamera() {
+      const sinPhi = Math.sin(orbit.phi);
+
+      camera.position.set(
+        cameraTarget.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+        cameraTarget.y + orbit.radius * Math.cos(orbit.phi),
+        cameraTarget.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+      );
+
+      camera.lookAt(cameraTarget);
+    }
+
+    updateCamera();
+
+    // ------------------------------------------------------------
+    // Lighting
+    // ------------------------------------------------------------
+
+    scene.add(new THREE.HemisphereLight(0x9edbd0, 0x17201d, 1.8));
+
+    const keyLight = new THREE.DirectionalLight(0xffedca, 3.4);
+    keyLight.position.set(4.5, 8, 5.5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -7;
+    keyLight.shadow.camera.right = 7;
+    keyLight.shadow.camera.top = 7;
+    keyLight.shadow.camera.bottom = -7;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 22;
+    keyLight.shadow.bias = -0.00035;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.PointLight(0x38b9b0, 24, 16, 2);
+    rimLight.position.set(-4, 2.5, -3.5);
+    scene.add(rimLight);
+
+    const warmFill = new THREE.PointLight(0xe7a35e, 13, 12, 2);
+    warmFill.position.set(3, 1, 4);
+    scene.add(warmFill);
+
+    // ------------------------------------------------------------
+    // Seabed
+    // ------------------------------------------------------------
+
+    const seabed = new THREE.Mesh(
+      new THREE.CircleGeometry(24, 96),
+      new THREE.MeshStandardMaterial({
+        color: 0x17302a,
+        roughness: 1,
+        metalness: 0
+      })
+    );
+
+    seabed.rotation.x = -Math.PI / 2;
+    seabed.position.y = -1.04;
+    seabed.receiveShadow = true;
+    scene.add(seabed);
+
+    // ------------------------------------------------------------
+    // Procedural sponge textures
+    // ------------------------------------------------------------
+
+    function seededRandom(seed) {
+      return function () {
+        seed |= 0;
+        seed = (seed + 0x6d2b79f5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function createSpongeTextures() {
+      const size = 1024;
+      const colorCanvas = document.createElement("canvas");
+      const bumpCanvas = document.createElement("canvas");
+
+      colorCanvas.width = colorCanvas.height = size;
+      bumpCanvas.width = bumpCanvas.height = size;
+
+      const colorContext = colorCanvas.getContext("2d");
+      const bumpContext = bumpCanvas.getContext("2d");
+      const random = seededRandom(8172);
+
+      const baseGradient = colorContext.createLinearGradient(0, 0, size, size);
+      baseGradient.addColorStop(0, "#d19a58");
+      baseGradient.addColorStop(0.5, "#bc793e");
+      baseGradient.addColorStop(1, "#a96335");
+
+      colorContext.fillStyle = baseGradient;
+      colorContext.fillRect(0, 0, size, size);
+
+      bumpContext.fillStyle = "#777777";
+      bumpContext.fillRect(0, 0, size, size);
+
+      // Vertical growth streaks.
+      for (let i = 0; i < 1500; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const width = 1 + random() * 8;
+        const lightShade = random() > 0.5;
+
+        colorContext.fillStyle = lightShade
+          ? `rgba(255, 220, 166, ${0.025 + random() * 0.07})`
+          : `rgba(74, 37, 15, ${0.025 + random() * 0.08})`;
+
+        colorContext.fillRect(x, y, width, 35 + random() * 180);
+
+        const bump = lightShade ? 105 : 82;
+        bumpContext.fillStyle = `rgb(${bump}, ${bump}, ${bump})`;
+        bumpContext.fillRect(x, y, width, 35 + random() * 180);
+      }
+
+      // Pits and pores in the sponge tissue.
+      for (let i = 0; i < 330; i++) {
+        const x = random() * size;
+        const y = random() * size;
+        const radius = 2 + random() * 10;
+
+        const colorGradient = colorContext.createRadialGradient(
+          x, y, 0,
+          x, y, radius
+        );
+
+        colorGradient.addColorStop(
+          0,
+          `rgba(55, 27, 12, ${0.45 + random() * 0.35})`
+        );
+        colorGradient.addColorStop(
+          0.55,
+          `rgba(112, 61, 27, ${0.18 + random() * 0.25})`
+        );
+        colorGradient.addColorStop(
+          1,
+          "rgba(205, 130, 67, 0)"
+        );
+
+        colorContext.fillStyle = colorGradient;
+        colorContext.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+
+        const bumpGradient = bumpContext.createRadialGradient(
+          x, y, 0,
+          x, y, radius
+        );
+
+        bumpGradient.addColorStop(0, "rgb(30, 30, 30)");
+        bumpGradient.addColorStop(0.55, "rgb(72, 72, 72)");
+        bumpGradient.addColorStop(1, "rgb(125, 125, 125)");
+
+        bumpContext.fillStyle = bumpGradient;
+        bumpContext.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+
+      const colorTexture = new THREE.CanvasTexture(colorCanvas);
+      colorTexture.colorSpace = THREE.SRGBColorSpace;
+      colorTexture.wrapS = colorTexture.wrapT = THREE.RepeatWrapping;
+      colorTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+      bumpTexture.wrapS = bumpTexture.wrapT = THREE.RepeatWrapping;
+      bumpTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      return { colorTexture, bumpTexture };
+    }
+
+    const { colorTexture, bumpTexture } = createSpongeTextures();
+
+    // ------------------------------------------------------------
+    // Barrel sponge
+    // ------------------------------------------------------------
+
+    const spongeGeometry = new THREE.CylinderGeometry(
+      2.25,
+      1.72,
+      2.15,
+      72,
+      12,
+      false
+    );
+
+    const spongePositions = spongeGeometry.attributes.position;
+
+    for (let i = 0; i < spongePositions.count; i++) {
+      const x = spongePositions.getX(i);
+      const y = spongePositions.getY(i);
+      const z = spongePositions.getZ(i);
+      const radius = Math.hypot(x, z);
+
+      if (radius > 0.01) {
+        const angle = Math.atan2(z, x);
+
+        const organicScale =
+          1 +
+          0.025 * Math.sin(angle * 3 + 0.4) +
+          0.014 * Math.sin(angle * 7 - 1.1) +
+          (random() - 0.5) * 0.035;
+
+        spongePositions.setX(i, x * organicScale);
+        spongePositions.setZ(i, z * organicScale);
+        spongePositions.setY(i, y + 0.035 * Math.sin(angle * 5));
+      }
+    }
+
+    spongeGeometry.computeVertexNormals();
+
+    const spongeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: colorTexture,
+      bumpMap,
+      bumpScale: 0.075,
+      roughness: 0.96,
+      metalness: 0
+    });
+
+    const sponge = new THREE.Mesh(spongeGeometry, spongeMaterial);
+    sponge.position.y = -0.02;
+    sponge.castShadow = true;
+    sponge.receiveShadow = true;
+    scene.add(sponge);
+
+    const rimMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc58a4d,
+      map: colorTexture,
+      bumpMap,
+      bumpScale: 0.055,
+      roughness: 0.94
+    });
+
+    const upperRim = new THREE.Mesh(
+      new THREE.TorusGeometry(2.16, 0.13, 16, 96),
+      rimMaterial
+    );
+
+    upperRim.rotation.x = Math.PI / 2;
+    upperRim.position.y = 1.105;
+    upperRim.castShadow = true;
+    upperRim.receiveShadow = true;
+    scene.add(upperRim);
+
+    const lowerRim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.73, 0.09, 12, 80),
+      rimMaterial
+    );
+
+    lowerRim.rotation.x = Math.PI / 2;
+    lowerRim.position.y = -1.01;
+    lowerRim.castShadow = true;
+    lowerRim.receiveShadow = true;
+    scene.add(lowerRim);
+
+    // ------------------------------------------------------------
+    // Brittle star
+    // ------------------------------------------------------------
+
+    const animal = new THREE.Group();
+    animal.position.y = 1.28;
+    scene.add(animal);
+
+    const brittleStarMaterial = new THREE.MeshStandardMaterial({
+      color: 0xded8c4,
+      roughness: 0.83,
+      metalness: 0
+    });
+
+    const jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa99e82,
+      roughness: 0.9
+    });
+
+    const disc = new THREE.Mesh(
+      new THREE.SphereGeometry(0.4, 36, 20),
+      brittleStarMaterial
+    );
+
+    disc.scale.set(1, 0.25, 0.88);
+    disc.position.y = 0.055;
+    disc.castShadow = true;
+    disc.receiveShadow = true;
+    animal.add(disc);
+
+    // Small nodules across the central disc.
+    const discRandom = seededRandom(441);
+
+    for (let i = 0; i < 13; i++) {
+      const angle = discRandom() * Math.PI * 2;
+      const radius = discRandom() * 0.29;
+      const nodule = new THREE.Mesh(
+        new THREE.SphereGeometry(0.025 + discRandom() * 0.025, 10, 8),
+        brittleStarMaterial
+      );
+
+      nodule.position.set(
+        Math.cos(angle) * radius,
+        0.115 + discRandom() * 0.012,
+        Math.sin(angle) * radius
+      );
+
+      nodule.scale.y = 0.55;
+      animal.add(nodule);
+    }
+
+    const upAxis = new THREE.Vector3(0, 1, 0);
+    const forwardAxis = new THREE.Vector3(0, 0, 1);
+
+    function addSegment(start, end, startRadius, endRadius, material) {
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+
+      const geometry = new THREE.CylinderGeometry(
+        endRadius,
+        startRadius,
+        length,
+        10,
+        1,
+        false
+      );
+
+      const segment = new THREE.Mesh(geometry, material);
+      segment.position.copy(start).add(end).multiplyScalar(0.5);
+      segment.quaternion.setFromUnitVectors(
+        upAxis,
+        direction.normalize()
+      );
+
+      segment.castShadow = true;
+      segment.receiveShadow = true;
+      animal.add(segment);
+
+      return segment;
+    }
+
+    function addJoint(position, radius) {
+      const joint = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 16, 12),
+        jointMaterial
+      );
+
+      joint.position.copy(position);
+      joint.scale.y = 0.82;
+      joint.castShadow = true;
+      animal.add(joint);
+    }
+
+    function createArm(angle, length, lift, phase) {
+      const arm = new THREE.Group();
+      animal.add(arm);
+
+      const segmentCount = 6;
+      const points = [];
+
+      for (let i = 0; i <= segmentCount; i++) {
+        const t = i / segmentCount;
+
+        // Each arm follows a high arch over the sponge before bending down.
+        const radius = length * (0.1 + 3.15 * t);
+        const y =
+          0.1 +
+          0.7 * Math.sin(t * Math.PI * 1.12) -
+          2.18 * t * t +
+          lift;
+
+        // Slight angular curl gives the arms a natural, irregular silhouette.
+        const localAngle =
+          angle +
+          0.2 * Math.sin(t * 2.7 + phase) * t +
+          0.07 * t;
+
+        points.push(
+          new THREE.Vector3(
+            Math.cos(localAngle) * radius,
+            y,
+            Math.sin(localAngle) * radius
+          )
+        );
+      }
+
+      for (let i = 0; i < segmentCount; i++) {
+        const start = points[i];
+        const end = points[i + 1];
+
+        const startRadius = 0.145 - i * 0.012;
+        const endRadius = startRadius * 0.78;
+
+        addSegment(
+          start,
+          end,
+          startRadius,
+          endRadius,
+          brittleStarMaterial
+        );
+      }
+
+      for (let i = 1; i < segmentCount; i++) {
+        addJoint(points[i], 0.105 + (i % 2) * 0.018);
+      }
+
+      const tip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.095, 14, 10),
+        jointMaterial
+      );
+
+      tip.position.copy(points[points.length - 1]);
+      tip.scale.y = 0.8;
+      tip.castShadow = true;
+      arm.add(tip);
+    }
+
+    // Five distinct arms, each draping down the sponge at a different angle.
+    createArm(0.18, 1.00, 0.04, 0.2);
+    createArm(1.27, 0.94, 0.10, 1.7);
+    createArm(2.38, 1.04, 0.02, 3.1);
+    createArm(3.48, 0.91, 0.15, 4.4);
+    createArm(4.62, 1.08, 0.08, 5.6);
+
+    // ------------------------------------------------------------
+    // Suspended particles
+    // ------------------------------------------------------------
+
+    const particleCount = 280;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleRandom = seededRandom(9012);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (particleRandom() - 0.5) * 22;
+      particlePositions[i * 3 + 1] = particleRandom() * 10 - 1.5;
+      particlePositions[i * 3 + 2] = (particleRandom() - 0.5) * 22;
+    }
+
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+
+    const particles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0xb9ddd0,
+        size: 0.025,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      })
+    );
+
+    scene.add(particles);
+
+    // ------------------------------------------------------------
+    // Background seaweed
+    // ------------------------------------------------------------
+
+    const seaweedMaterial = new THREE.MeshStandardMaterial({
+      color: 0x183c34,
+      roughness: 1,
+      metalness: 0
+    });
+
+    const seaweedRandom = seededRandom(2024);
+
+    for (let i = 0; i < 10; i++) {
+      const angle = seaweedRandom() * Math.PI * 2;
+      const radius = 5.5 + seaweedRandom() * 5;
+      const height = 1.2 + seaweedRandom() * 2.4;
+
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(
+          Math.cos(angle) * radius,
+          -1.0,
+          Math.sin(angle) * radius
+        ),
+        new THREE.Vector3(
+          Math.cos(angle) * (radius + 0.12),
+          height * 0.35,
+          Math.sin(angle) * (radius + 0.12)
+        ),
+        new THREE.Vector3(
+          Math.cos(angle + 0.2) * (radius + 0.28),
+          height * 0.7,
+          Math.sin(angle + 0.2) * (radius + 0.28)
+        ),
+        new THREE.Vector3(
+          Math.cos(angle - 0.15) * (radius + 0.42),
+          height,
+          Math.sin(angle - 0.15) * (radius + 0.42)
+        )
+      ]);
+
+      const blade = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 18, 0.045 + seaweedRandom() * 0.025, 6, false),
+        seaweedMaterial
+      );
+
+      scene.add(blade);
+    }
+
+    // ------------------------------------------------------------
+    // Direct camera controls: orbit, wheel zoom, and touch pinch
+    // ------------------------------------------------------------
+
+    const pointers = new Map();
+    let lastPinchDistance = 0;
+
+    function pointerDistance() {
+      const values = [...pointers.values()];
+      if (values.length < 2) return 0;
+
+      return Math.hypot(
+        values[0].x - values[1].x,
+        values[0].y - values[1].y
+      );
+    }
+
+    renderer.domElement.addEventListener("pointerdown", (event) => {
+      renderer.domElement.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 2) {
+        lastPinchDistance = pointerDistance();
+      }
+    });
+
+    renderer.domElement.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+
+      const previous = pointers.get(event.pointerId);
+      pointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      if (pointers.size === 1) {
+        const deltaX = event.clientX - previous.x;
+        const deltaY = event.clientY - previous.y;
+
+        orbit.theta -= deltaX * 0.006;
+        orbit.phi = THREE.MathUtils.clamp(
+          orbit.phi - deltaY * 0.005,
+          0.28,
+          Math.PI * 0.485
+        );
+      } else if (pointers.size === 2) {
+        const distance = pointerDistance();
+
+        if (lastPinchDistance > 0 && distance > 0) {
+          orbit.radius = THREE.MathUtils.clamp(
+            orbit.radius * (lastPinchDistance / distance),
+            5.2,
+            15
+          );
+        }
+
+        lastPinchDistance = distance;
+      }
+
+      updateCamera();
+    });
+
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+
+      if (pointers.size < 2) {
+        lastPinchDistance = 0;
+      }
+    }
+
+    renderer.domElement.addEventListener("pointerup", releasePointer);
+    renderer.domElement.addEventListener("pointercancel", releasePointer);
+
+    renderer.domElement.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+
+        orbit.radius = THREE.MathUtils.clamp(
+          orbit.radius * Math.exp(event.deltaY * 0.001),
+          5.2,
+          15
+        );
+
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    function resetView() {
+      orbit.theta = 0.68;
+      orbit.phi = 1.12;
+      orbit.radius = 9.2;
+      updateCamera();
+    }
+
+    resetButton.addEventListener("click", resetView);
+
+    renderer.domElement.addEventListener("dblclick", resetView);
+
+    // ------------------------------------------------------------
+    // Resize and animation
+    // ------------------------------------------------------------
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+
+    renderer.setAnimationLoop(() => {
+      const elapsed = clock.getElapsedTime();
+
+      // Very subtle movement, pivoting around the central disc.
+      animal.rotation.z = Math.sin(elapsed * 0.55) * 0.012;
+      animal.rotation.x = Math.cos(elapsed * 0.43) * 0.008;
+
+      particles.rotation.y = elapsed * 0.008;
+      particles.position.y = Math.sin(elapsed * 0.18) * 0.08;
+
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>

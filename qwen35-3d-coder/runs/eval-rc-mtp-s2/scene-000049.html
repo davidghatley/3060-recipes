@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ball-and-Stick Water Molecule</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 35%, #182838 0%, #09121c 55%, #05090f 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .title {
+      position: fixed;
+      top: 24px;
+      left: 28px;
+      z-index: 2;
+      color: #eef5ff;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 32px);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .title p {
+      margin: 7px 0 0;
+      color: #91a3b7;
+      font-size: 13px;
+    }
+
+    .badge {
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      z-index: 2;
+      padding: 8px 12px;
+      border: 1px solid rgba(160, 190, 220, 0.16);
+      border-radius: 999px;
+      color: #9eb0c3;
+      background: rgba(8, 15, 23, 0.55);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        top: 18px;
+        left: 18px;
+      }
+
+      .badge {
+        right: 14px;
+        bottom: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="title">
+    <h1>H₂O</h1>
+    <p>Ball-and-stick water molecule</p>
+  </div>
+
+  <div class="badge">104° H–O–H · Drag to orbit · Scroll to zoom</div>
+
+  <script type="module">
+    import * as THREE from
+      "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js";
+
+    // Scene
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    document.body.appendChild(renderer.domElement);
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight(0xb9d9ff, 0x10141c, 1.45));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    keyLight.position.set(3.5, 6, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 20;
+    keyLight.shadow.camera.left = -4;
+    keyLight.shadow.camera.right = 4;
+    keyLight.shadow.camera.top = 4;
+    keyLight.shadow.camera.bottom = -4;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.PointLight(0x438dff, 18, 12, 2);
+    rimLight.position.set(-3, 2.5, -3);
+    scene.add(rimLight);
+
+    const warmLight = new THREE.PointLight(0xff7b5c, 8, 8, 2);
+    warmLight.position.set(2.5, -0.5, 2);
+    scene.add(warmLight);
+
+    // A transparent shadow receiver beneath the floating molecule.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.ShadowMaterial({
+        color: 0x000000,
+        opacity: 0.32
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.25;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // The molecule.
+    const molecule = new THREE.Group();
+    molecule.rotation.y = -0.12;
+    scene.add(molecule);
+
+    const oxygenPosition = new THREE.Vector3(0, 1.38, 0);
+
+    // The H-O-H bond angle is 104 degrees.
+    const bondLength = 1.15;
+    const halfBondAngle = THREE.MathUtils.degToRad(52);
+
+    const hydrogenPositions = [-1, 1].map((side) => {
+      const direction = new THREE.Vector3(
+        Math.sin(halfBondAngle) * side,
+        -Math.cos(halfBondAngle) * side,
+        0
+      );
+
+      return oxygenPosition.clone().add(direction).multiplyScalar(bondLength);
+    });
+
+    const oxygenMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe63946,
+      roughness: 0.28,
+      metalness: 0.05,
+      emissive: 0x3d0306,
+      emissiveIntensity: 0.22
+    });
+
+    const hydrogenMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf4f6f7,
+      roughness: 0.3,
+      metalness: 0.02,
+      emissive: 0x111518,
+      emissiveIntensity: 0.18
+    });
+
+    const bondMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8794a3,
+      roughness: 0.46,
+      metalness: 0.12
+    });
+
+    const sleeveMaterial = new THREE.MeshStandardMaterial({
+      color: 0xaab6c3,
+      roughness: 0.38,
+      metalness: 0.18
+    });
+
+    function createBond(start, end) {
+      const group = new THREE.Group();
+
+      const direction = new THREE.Vector3().subVectors(end, start).normalize();
+      const bodyStart = start.clone().addScaledVector(direction, 0.1);
+      const bodyEnd = end.clone().addScaledVector(direction, -0.1);
+      const bodyLength = bodyStart.distanceTo(bodyEnd);
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.105, 0.105, bodyLength, 24),
+        bondMaterial
+      );
+      body.position.copy(bodyStart).add(bodyEnd).multiplyScalar(0.5);
+      body.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction
+      );
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+
+      // Short, wider cylinders form shallow collars/sleeves at both ends.
+      const sleeveLength = 0.22;
+      const sleeveRadius = 0.145;
+
+      for (const [center, outward] of [
+        [start.clone().addScaledVector(direction, -0.035), direction],
+        [end.clone().addScaledVector(direction, 0.035), direction]
+      ]) {
+        const sleeve = new THREE.Mesh(
+          new THREE.CylinderGeometry(sleeveRadius, sleeveRadius, sleeveLength, 24),
+          sleeveMaterial
+        );
+        sleeve.position.copy(center);
+        sleeve.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          outward
+        );
+        sleeve.castShadow = true;
+        sleeve.receiveShadow = true;
+        group.add(sleeve);
+      }
+
+      molecule.add(group);
+    }
+
+    createBond(oxygenPosition, hydrogenPositions[0]);
+    createBond(oxygenPosition, hydrogenPositions[1]);
+
+    function createAtom(position, radius, material) {
+      const atom = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 48, 32),
+        material
+      );
+      atom.position.copy(position);
+      atom.castShadow = true;
+      atom.receiveShadow = true;
+      molecule.add(atom);
+      return atom;
+    }
+
+    createAtom(oxygenPosition, 0.48, oxygenMaterial);
+    createAtom(hydrogenPositions[0], 0.31, hydrogenMaterial);
+    createAtom(hydrogenPositions[1], 0.31, hydrogenMaterial);
+
+    // Camera controls implemented directly, without external controls modules.
+    const target = new THREE.Vector3(0, 0.48, 0);
+    const initialView = {
+      theta: 0,
+      phi: 1.48,
+      radius: 7.2
+    };
+
+    let theta = initialView.theta;
+    let phi = initialView.phi;
+    let radius = initialView.radius;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function updateCamera() {
+      const sinPhi = Math.sin(phi);
+
+      camera.position.set(
+        target.x + radius * sinPhi * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * sinPhi * Math.cos(theta)
+      );
+
+      camera.lookAt(target);
+    }
+
+    function resetView() {
+      theta = initialView.theta;
+      phi = initialView.phi;
+      radius = initialView.radius;
+      updateCamera();
+    }
+
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+
+      lastX = event.clientX;
+      lastY = event.clientY;
+
+      theta -= deltaX * 0.006;
+      phi = THREE.MathUtils.clamp(phi - deltaY * 0.005, 0.25, Math.PI - 0.25);
+
+      updateCamera();
+    });
+
+    function stopDragging(event) {
+      dragging = false;
+      if (event.pointerId !== undefined && canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    canvas.addEventListener("pointerup", stopDragging);
+    canvas.addEventListener("pointercancel", stopDragging);
+
+    canvas.addEventListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        radius = THREE.MathUtils.clamp(
+          radius * Math.exp(event.deltaY * 0.001),
+          4.5,
+          12
+        );
+        updateCamera();
+      },
+      { passive: false }
+    );
+
+    canvas.addEventListener("dblclick", resetView);
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", onResize);
+
+    updateCamera();
+    renderer.setAnimationLoop(() => renderer.render(scene, camera));
+  </script>
+</body>
+</html>

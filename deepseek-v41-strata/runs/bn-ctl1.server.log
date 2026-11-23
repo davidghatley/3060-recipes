@@ -1,0 +1,554 @@
+[12:11:22] start bn-ctl1: --ssd-cache 27
+loading the model (the first start takes a minute or two) ...
+[strata] starting the engine: reading the model's weights ...
+[strata] still starting (20 s) - please wait ...
+[strata] still starting (40 s) - please wait ...
+[strata] still starting (60 s) - please wait ...
+[strata] still starting (80 s) - please wait ...
+[strata] still starting (100 s) - please wait ...
+[strata] still starting (120 s) - please wait ...
+[strata] still starting (140 s) - please wait ...
+[strata] still starting (160 s) - please wait ...
+[strata] still starting (180 s) - please wait ...
+[strata] still starting (200 s) - please wait ...
+[strata] still starting (220 s) - please wait ...
+[strata] this pack's chat template spells the tool-call block differently from the V4.1 model's; using the V4.1 template so tool calls come back as real calls
+[strata] pictures: on (DeepSeek-V4.1 reads them with the engine's own vision tower; --vision off turns them off)
+ready: http://127.0.0.1:8080/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 8192 tokens)
+       open http://127.0.0.1:8080/ in a browser to chat; close this window to stop the model
+[strata] thinking capped at 4 of max_tokens 8 to leave room for the answer (budget 32768)
+[strata] reading the prompt: 33 tokens, 10 s so far
+[strata] reading the prompt: 33 tokens, 20 s so far
+[strata] reading the prompt: 33 tokens, 30 s so far
+[strata] reading the prompt: 33 tokens, 40 s so far
+[strata] reading the prompt: 33 tokens, 50 s so far
+[strata] reading the prompt: 33 tokens, 60 s so far
+[strata] reading the prompt: 33 tokens, 70 s so far
+[strata] reading the prompt: 33 tokens, 80 s so far
+[strata] the engine has said nothing for 90 s but is still working; it is not ended (the limit is engine_silence_s). If it is stuck, "engine_silence_s" can be set lower.
+[strata] reading the prompt: 33 tokens, 90 s so far
+[strata] reading the prompt: 33 tokens, 100 s so far
+[strata] reading the prompt: 33 tokens, 110 s so far
+[strata] reading the prompt: 33 tokens, 120 s so far
+[strata] reading the prompt: 33 tokens, 130 s so far
+[strata] thinking: 2 of budget 4 (max 8) tokens, 0.6 tok/s, 134 s
+[strata] thinking: 3 of budget 4 (max 8) tokens, 0.3 tok/s, 140 s
+[strata] thinking: 4 of budget 4 (max 8) tokens, 0.3 tok/s, 144 s
+[strata] done: 4 tokens in 149 s (0.2 tok/s) (length, cancel=False)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[12:17:36] ready after 374 s; vram 11376 MiB; rss 26.9 GiB
+[strata] thinking capped at 128 of max_tokens 256 to leave room for the answer (budget 32768)
+[strata] reading the prompt: 60 tokens, 10 s so far
+[strata] reading the prompt: 60 tokens, 20 s so far
+[strata] reading the prompt: 60 tokens, 30 s so far
+[strata] reading the prompt: 60 tokens, 40 s so far
+[strata] reading the prompt: 60 tokens, 50 s so far
+[strata] reading the prompt: 60 tokens, 60 s so far
+[strata] reading the prompt: 60 tokens, 70 s so far
+[strata] reading the prompt: 60 tokens, 80 s so far
+[strata] the engine has said nothing for 90 s but is still working; it is not ended (the limit is engine_silence_s). If it is stuck, "engine_silence_s" can be set lower.
+[strata] reading the prompt: 60 tokens, 90 s so far
+[strata] reading the prompt: 60 tokens, 100 s so far
+[strata] reading the prompt: 60 tokens, 110 s so far
+[strata] reading the prompt: 60 tokens, 120 s so far
+[strata] reading the prompt: 60 tokens, 130 s so far
+[strata] reading the prompt: 60 tokens, 140 s so far
+[strata] reading the prompt: 60 tokens, 150 s so far
+[strata] reading the prompt: 60 tokens, 160 s so far
+[strata] reading the prompt: 60 tokens, 170 s so far
+[strata] reading the prompt: 60 tokens, 180 s so far
+[strata] reading the prompt: 60 tokens, 190 s so far
+[strata] reading the prompt: 60 tokens, 200 s so far
+[strata] reading the prompt: 60 of 60 tokens, 204 s so far
+[strata] thinking: 2 of budget 128 (max 256) tokens, 0.4 tok/s, 209 s
+[strata] thinking: 3 of budget 128 (max 256) tokens, 0.3 tok/s, 213 s
+[strata] thinking: 4 of budget 128 (max 256) tokens, 0.3 tok/s, 218 s
+[strata] thinking: 5 of budget 128 (max 256) tokens, 0.3 tok/s, 222 s
+[strata] thinking: 6 of budget 128 (max 256) tokens, 0.3 tok/s, 224 s
+[strata] thinking: 7 of budget 128 (max 256) tokens, 0.3 tok/s, 229 s
+[strata] thinking: 8 of budget 128 (max 256) tokens, 0.3 tok/s, 231 s
+[strata] thinking: 9 of budget 128 (max 256) tokens, 0.3 tok/s, 235 s
+[strata] thinking: 10 of budget 128 (max 256) tokens, 0.3 tok/s, 239 s
+[strata] thinking: 11 of budget 128 (max 256) tokens, 0.3 tok/s, 243 s
+[strata] thinking: 12 of budget 128 (max 256) tokens, 0.3 tok/s, 248 s
+[strata] thinking: 13 of budget 128 (max 256) tokens, 0.3 tok/s, 252 s
+[strata] thinking: 14 of budget 128 (max 256) tokens, 0.3 tok/s, 257 s
+[strata] thinking: 15 of budget 128 (max 256) tokens, 0.3 tok/s, 261 s
+[strata] thinking: 16 of budget 128 (max 256) tokens, 0.3 tok/s, 265 s
+[strata] thinking: 17 of budget 128 (max 256) tokens, 0.3 tok/s, 268 s
+[strata] thinking: 18 of budget 128 (max 256) tokens, 0.3 tok/s, 271 s
+[strata] thinking: 19 of budget 128 (max 256) tokens, 0.3 tok/s, 273 s
+[strata] thinking: 20 of budget 128 (max 256) tokens, 0.3 tok/s, 279 s
+[strata] thinking: 21 of budget 128 (max 256) tokens, 0.3 tok/s, 282 s
+[strata] thinking: 22 of budget 128 (max 256) tokens, 0.3 tok/s, 286 s
+[strata] thinking: 23 of budget 128 (max 256) tokens, 0.3 tok/s, 291 s
+[strata] thinking: 24 of budget 128 (max 256) tokens, 0.3 tok/s, 294 s
+[strata] thinking: 25 of budget 128 (max 256) tokens, 0.3 tok/s, 296 s
+[strata] thinking: 26 of budget 128 (max 256) tokens, 0.3 tok/s, 300 s
+[strata] thinking: 27 of budget 128 (max 256) tokens, 0.3 tok/s, 303 s
+[strata] thinking: 28 of budget 128 (max 256) tokens, 0.3 tok/s, 307 s
+[strata] thinking: 29 of budget 128 (max 256) tokens, 0.3 tok/s, 310 s
+[strata] thinking: 30 of budget 128 (max 256) tokens, 0.3 tok/s, 313 s
+[strata] thinking: 31 of budget 128 (max 256) tokens, 0.3 tok/s, 315 s
+[strata] thinking: 32 of budget 128 (max 256) tokens, 0.3 tok/s, 318 s
+[strata] thinking: 33 of budget 128 (max 256) tokens, 0.3 tok/s, 321 s
+[strata] thinking: 34 of budget 128 (max 256) tokens, 0.3 tok/s, 325 s
+[strata] thinking: 35 of budget 128 (max 256) tokens, 0.3 tok/s, 328 s
+[strata] thinking: 36 of budget 128 (max 256) tokens, 0.3 tok/s, 332 s
+[strata] thinking: 37 of budget 128 (max 256) tokens, 0.3 tok/s, 336 s
+[strata] thinking: 38 of budget 128 (max 256) tokens, 0.3 tok/s, 339 s
+[strata] thinking: 39 of budget 128 (max 256) tokens, 0.3 tok/s, 341 s
+[strata] thinking: 40 of budget 128 (max 256) tokens, 0.3 tok/s, 344 s
+[strata] thinking: 41 of budget 128 (max 256) tokens, 0.3 tok/s, 347 s
+[strata] thinking: 42 of budget 128 (max 256) tokens, 0.3 tok/s, 348 s
+[strata] thinking: 43 of budget 128 (max 256) tokens, 0.3 tok/s, 350 s
+[strata] thinking: 44 of budget 128 (max 256) tokens, 0.3 tok/s, 353 s
+[strata] thinking: 45 of budget 128 (max 256) tokens, 0.3 tok/s, 356 s
+[strata] thinking: 46 of budget 128 (max 256) tokens, 0.3 tok/s, 358 s
+[strata] thinking: 47 of budget 128 (max 256) tokens, 0.3 tok/s, 360 s
+[strata] thinking: 48 of budget 128 (max 256) tokens, 0.3 tok/s, 362 s
+[strata] thinking: 49 of budget 128 (max 256) tokens, 0.3 tok/s, 364 s
+[strata] thinking: 50 of budget 128 (max 256) tokens, 0.3 tok/s, 369 s
+[strata] thinking: 51 of budget 128 (max 256) tokens, 0.3 tok/s, 371 s
+[strata] thinking: 52 of budget 128 (max 256) tokens, 0.3 tok/s, 375 s
+[strata] thinking: 53 of budget 128 (max 256) tokens, 0.3 tok/s, 380 s
+[strata] thinking: 54 of budget 128 (max 256) tokens, 0.3 tok/s, 384 s
+[strata] thinking: 55 of budget 128 (max 256) tokens, 0.3 tok/s, 388 s
+[strata] thinking: 56 of budget 128 (max 256) tokens, 0.3 tok/s, 391 s
+[strata] thinking: 57 of budget 128 (max 256) tokens, 0.3 tok/s, 393 s
+[strata] thinking: 58 of budget 128 (max 256) tokens, 0.3 tok/s, 396 s
+[strata] thinking: 59 of budget 128 (max 256) tokens, 0.3 tok/s, 399 s
+[strata] thinking: 60 of budget 128 (max 256) tokens, 0.3 tok/s, 402 s
+[strata] thinking: 61 of budget 128 (max 256) tokens, 0.3 tok/s, 405 s
+[strata] thinking: 62 of budget 128 (max 256) tokens, 0.3 tok/s, 407 s
+[strata] thinking: 63 of budget 128 (max 256) tokens, 0.3 tok/s, 410 s
+[strata] thinking: 64 of budget 128 (max 256) tokens, 0.3 tok/s, 411 s
+[strata] thinking: 65 of budget 128 (max 256) tokens, 0.3 tok/s, 414 s
+[strata] thinking: 66 of budget 128 (max 256) tokens, 0.3 tok/s, 416 s
+[strata] thinking: 67 of budget 128 (max 256) tokens, 0.3 tok/s, 419 s
+[strata] thinking: 68 of budget 128 (max 256) tokens, 0.3 tok/s, 421 s
+[strata] thinking: 69 of budget 128 (max 256) tokens, 0.3 tok/s, 425 s
+[strata] thinking: 70 of budget 128 (max 256) tokens, 0.3 tok/s, 427 s
+[strata] thinking: 71 of budget 128 (max 256) tokens, 0.3 tok/s, 429 s
+[strata] thinking: 72 of budget 128 (max 256) tokens, 0.3 tok/s, 431 s
+[strata] thinking: 73 of budget 128 (max 256) tokens, 0.3 tok/s, 432 s
+[strata] thinking: 74 of budget 128 (max 256) tokens, 0.3 tok/s, 434 s
+[strata] thinking: 75 of budget 128 (max 256) tokens, 0.3 tok/s, 436 s
+[strata] thinking: 76 of budget 128 (max 256) tokens, 0.3 tok/s, 439 s
+[strata] thinking: 77 of budget 128 (max 256) tokens, 0.3 tok/s, 442 s
+[strata] thinking: 78 of budget 128 (max 256) tokens, 0.3 tok/s, 444 s
+[strata] thinking: 80 of budget 128 (max 256) tokens, 0.3 tok/s, 449 s
+[strata] thinking: 81 of budget 128 (max 256) tokens, 0.3 tok/s, 451 s
+[strata] thinking: 82 of budget 128 (max 256) tokens, 0.3 tok/s, 453 s
+[strata] thinking: 83 of budget 128 (max 256) tokens, 0.3 tok/s, 455 s
+[strata] thinking: 84 of budget 128 (max 256) tokens, 0.3 tok/s, 456 s
+[strata] thinking: 85 of budget 128 (max 256) tokens, 0.3 tok/s, 460 s
+[strata] thinking: 86 of budget 128 (max 256) tokens, 0.3 tok/s, 461 s
+[strata] thinking: 87 of budget 128 (max 256) tokens, 0.3 tok/s, 464 s
+[strata] thinking: 88 of budget 128 (max 256) tokens, 0.3 tok/s, 465 s
+[strata] thinking: 89 of budget 128 (max 256) tokens, 0.3 tok/s, 467 s
+[strata] thinking: 90 of budget 128 (max 256) tokens, 0.3 tok/s, 469 s
+[strata] thinking: 91 of budget 128 (max 256) tokens, 0.3 tok/s, 471 s
+[strata] thinking: 92 of budget 128 (max 256) tokens, 0.3 tok/s, 474 s
+[strata] thinking: 93 of budget 128 (max 256) tokens, 0.3 tok/s, 478 s
+[strata] thinking: 94 of budget 128 (max 256) tokens, 0.3 tok/s, 480 s
+[strata] thinking: 95 of budget 128 (max 256) tokens, 0.3 tok/s, 482 s
+[strata] thinking: 96 of budget 128 (max 256) tokens, 0.3 tok/s, 483 s
+[strata] thinking: 97 of budget 128 (max 256) tokens, 0.3 tok/s, 486 s
+[strata] thinking: 98 of budget 128 (max 256) tokens, 0.3 tok/s, 488 s
+[strata] thinking: 99 of budget 128 (max 256) tokens, 0.3 tok/s, 489 s
+[strata] thinking: 100 of budget 128 (max 256) tokens, 0.3 tok/s, 491 s
+[strata] thinking: 101 of budget 128 (max 256) tokens, 0.4 tok/s, 493 s
+[strata] thinking: 102 of budget 128 (max 256) tokens, 0.4 tok/s, 494 s
+[strata] thinking: 103 of budget 128 (max 256) tokens, 0.4 tok/s, 496 s
+[strata] thinking: 104 of budget 128 (max 256) tokens, 0.4 tok/s, 499 s
+[strata] thinking: 105 of budget 128 (max 256) tokens, 0.4 tok/s, 501 s
+[strata] thinking: 106 of budget 128 (max 256) tokens, 0.4 tok/s, 503 s
+[strata] thinking: 107 of budget 128 (max 256) tokens, 0.4 tok/s, 504 s
+[strata] thinking: 108 of budget 128 (max 256) tokens, 0.4 tok/s, 506 s
+[strata] thinking: 109 of budget 128 (max 256) tokens, 0.4 tok/s, 507 s
+[strata] thinking: 110 of budget 128 (max 256) tokens, 0.4 tok/s, 509 s
+[strata] thinking: 111 of budget 128 (max 256) tokens, 0.4 tok/s, 511 s
+[strata] thinking: 113 of budget 128 (max 256) tokens, 0.4 tok/s, 512 s
+[strata] thinking: 114 of budget 128 (max 256) tokens, 0.4 tok/s, 513 s
+[strata] thinking: 115 of budget 128 (max 256) tokens, 0.4 tok/s, 515 s
+[strata] thinking: 116 of budget 128 (max 256) tokens, 0.4 tok/s, 516 s
+[strata] thinking: 118 of budget 128 (max 256) tokens, 0.4 tok/s, 520 s
+[strata] thinking: 119 of budget 128 (max 256) tokens, 0.4 tok/s, 521 s
+[strata] thinking: 120 of budget 128 (max 256) tokens, 0.4 tok/s, 523 s
+[strata] thinking: 122 of budget 128 (max 256) tokens, 0.4 tok/s, 526 s
+[strata] thinking: 123 of budget 128 (max 256) tokens, 0.4 tok/s, 527 s
+[strata] thinking: 124 of budget 128 (max 256) tokens, 0.4 tok/s, 529 s
+[strata] thinking: 125 of budget 128 (max 256) tokens, 0.4 tok/s, 531 s
+[strata] thinking: 126 of budget 128 (max 256) tokens, 0.4 tok/s, 532 s
+[strata] thinking: 127 of budget 128 (max 256) tokens, 0.4 tok/s, 534 s
+[strata] thinking budget reached (128 tokens): wrapping up the thinking
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 546 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 556 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 566 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 576 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 586 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 590 s
+[strata] answering: 147 of max 256 tokens, 0.4 tok/s, 591 s
+[strata] answering: 148 of max 256 tokens, 0.4 tok/s, 593 s
+[strata] answering: 149 of max 256 tokens, 0.4 tok/s, 595 s
+[strata] answering: 150 of max 256 tokens, 0.4 tok/s, 597 s
+[strata] answering: 151 of max 256 tokens, 0.4 tok/s, 599 s
+[strata] answering: 152 of max 256 tokens, 0.4 tok/s, 601 s
+[strata] answering: 153 of max 256 tokens, 0.4 tok/s, 603 s
+[strata] answering: 154 of max 256 tokens, 0.4 tok/s, 605 s
+[strata] answering: 155 of max 256 tokens, 0.4 tok/s, 607 s
+[strata] answering: 157 of max 256 tokens, 0.4 tok/s, 609 s
+[strata] answering: 158 of max 256 tokens, 0.4 tok/s, 612 s
+[strata] answering: 159 of max 256 tokens, 0.4 tok/s, 613 s
+[strata] done: 160 tokens in 615 s (0.4 tok/s) (stop, cancel=False)
+[strata] thinking capped at 128 of max_tokens 256 to leave room for the answer (budget 32768)
+[strata] reading the prompt: 60 tokens, 10 s so far
+[strata] reading the prompt: 60 tokens, 20 s so far
+[strata] reading the prompt: 60 tokens, 30 s so far
+[strata] reading the prompt: 60 tokens, 40 s so far
+[strata] reading the prompt: 60 tokens, 50 s so far
+[strata] reading the prompt: 60 tokens, 60 s so far
+[strata] reading the prompt: 60 tokens, 70 s so far
+[strata] reading the prompt: 60 tokens, 80 s so far
+[strata] the engine has said nothing for 90 s but is still working; it is not ended (the limit is engine_silence_s). If it is stuck, "engine_silence_s" can be set lower.
+[strata] reading the prompt: 60 tokens, 90 s so far
+[strata] reading the prompt: 60 tokens, 100 s so far
+[strata] reading the prompt: 60 tokens, 110 s so far
+[strata] reading the prompt: 60 tokens, 120 s so far
+[strata] reading the prompt: 60 tokens, 130 s so far
+[strata] reading the prompt: 60 tokens, 140 s so far
+[strata] reading the prompt: 60 tokens, 150 s so far
+[strata] reading the prompt: 60 tokens, 160 s so far
+[strata] reading the prompt: 60 tokens, 170 s so far
+[strata] reading the prompt: 60 tokens, 180 s so far
+[strata] reading the prompt: 60 tokens, 190 s so far
+[strata] reading the prompt: 60 tokens, 200 s so far
+[strata] thinking: 2 of budget 128 (max 256) tokens, 0.5 tok/s, 205 s
+[strata] thinking: 3 of budget 128 (max 256) tokens, 0.4 tok/s, 208 s
+[strata] thinking: 4 of budget 128 (max 256) tokens, 0.4 tok/s, 212 s
+[strata] thinking: 5 of budget 128 (max 256) tokens, 0.3 tok/s, 215 s
+[strata] thinking: 6 of budget 128 (max 256) tokens, 0.3 tok/s, 218 s
+[strata] thinking: 7 of budget 128 (max 256) tokens, 0.3 tok/s, 221 s
+[strata] thinking: 8 of budget 128 (max 256) tokens, 0.4 tok/s, 222 s
+[strata] thinking: 9 of budget 128 (max 256) tokens, 0.4 tok/s, 225 s
+[strata] thinking: 10 of budget 128 (max 256) tokens, 0.4 tok/s, 229 s
+[strata] thinking: 11 of budget 128 (max 256) tokens, 0.4 tok/s, 231 s
+[strata] thinking: 12 of budget 128 (max 256) tokens, 0.4 tok/s, 235 s
+[strata] thinking: 13 of budget 128 (max 256) tokens, 0.4 tok/s, 238 s
+[strata] thinking: 14 of budget 128 (max 256) tokens, 0.3 tok/s, 242 s
+[strata] thinking: 15 of budget 128 (max 256) tokens, 0.3 tok/s, 246 s
+[strata] thinking: 16 of budget 128 (max 256) tokens, 0.3 tok/s, 248 s
+[strata] thinking: 17 of budget 128 (max 256) tokens, 0.3 tok/s, 250 s
+[strata] thinking: 18 of budget 128 (max 256) tokens, 0.3 tok/s, 253 s
+[strata] thinking: 19 of budget 128 (max 256) tokens, 0.3 tok/s, 255 s
+[strata] thinking: 20 of budget 128 (max 256) tokens, 0.4 tok/s, 257 s
+[strata] thinking: 21 of budget 128 (max 256) tokens, 0.4 tok/s, 259 s
+[strata] thinking: 22 of budget 128 (max 256) tokens, 0.4 tok/s, 261 s
+[strata] thinking: 23 of budget 128 (max 256) tokens, 0.4 tok/s, 264 s
+[strata] thinking: 25 of budget 128 (max 256) tokens, 0.4 tok/s, 266 s
+[strata] thinking: 26 of budget 128 (max 256) tokens, 0.4 tok/s, 268 s
+[strata] thinking: 27 of budget 128 (max 256) tokens, 0.4 tok/s, 269 s
+[strata] thinking: 28 of budget 128 (max 256) tokens, 0.4 tok/s, 271 s
+[strata] thinking: 29 of budget 128 (max 256) tokens, 0.4 tok/s, 272 s
+[strata] thinking: 30 of budget 128 (max 256) tokens, 0.4 tok/s, 274 s
+[strata] thinking: 31 of budget 128 (max 256) tokens, 0.4 tok/s, 275 s
+[strata] thinking: 32 of budget 128 (max 256) tokens, 0.4 tok/s, 277 s
+[strata] thinking: 33 of budget 128 (max 256) tokens, 0.4 tok/s, 279 s
+[strata] thinking: 34 of budget 128 (max 256) tokens, 0.4 tok/s, 281 s
+[strata] thinking: 35 of budget 128 (max 256) tokens, 0.4 tok/s, 283 s
+[strata] thinking: 36 of budget 128 (max 256) tokens, 0.4 tok/s, 285 s
+[strata] thinking: 37 of budget 128 (max 256) tokens, 0.4 tok/s, 288 s
+[strata] thinking: 38 of budget 128 (max 256) tokens, 0.4 tok/s, 289 s
+[strata] thinking: 39 of budget 128 (max 256) tokens, 0.4 tok/s, 291 s
+[strata] thinking: 40 of budget 128 (max 256) tokens, 0.4 tok/s, 293 s
+[strata] thinking: 41 of budget 128 (max 256) tokens, 0.4 tok/s, 295 s
+[strata] thinking: 42 of budget 128 (max 256) tokens, 0.4 tok/s, 299 s
+[strata] thinking: 43 of budget 128 (max 256) tokens, 0.4 tok/s, 303 s
+[strata] thinking: 44 of budget 128 (max 256) tokens, 0.4 tok/s, 307 s
+[strata] thinking: 45 of budget 128 (max 256) tokens, 0.4 tok/s, 310 s
+[strata] thinking: 46 of budget 128 (max 256) tokens, 0.4 tok/s, 312 s
+[strata] thinking: 47 of budget 128 (max 256) tokens, 0.4 tok/s, 314 s
+[strata] thinking: 48 of budget 128 (max 256) tokens, 0.4 tok/s, 317 s
+[strata] thinking: 49 of budget 128 (max 256) tokens, 0.4 tok/s, 319 s
+[strata] thinking: 50 of budget 128 (max 256) tokens, 0.4 tok/s, 321 s
+[strata] thinking: 51 of budget 128 (max 256) tokens, 0.4 tok/s, 322 s
+[strata] thinking: 53 of budget 128 (max 256) tokens, 0.4 tok/s, 325 s
+[strata] thinking: 54 of budget 128 (max 256) tokens, 0.4 tok/s, 327 s
+[strata] thinking: 55 of budget 128 (max 256) tokens, 0.4 tok/s, 328 s
+[strata] thinking: 56 of budget 128 (max 256) tokens, 0.4 tok/s, 331 s
+[strata] thinking: 57 of budget 128 (max 256) tokens, 0.4 tok/s, 332 s
+[strata] thinking: 58 of budget 128 (max 256) tokens, 0.4 tok/s, 334 s
+[strata] thinking: 59 of budget 128 (max 256) tokens, 0.4 tok/s, 336 s
+[strata] thinking: 60 of budget 128 (max 256) tokens, 0.4 tok/s, 338 s
+[strata] thinking: 61 of budget 128 (max 256) tokens, 0.4 tok/s, 340 s
+[strata] thinking: 63 of budget 128 (max 256) tokens, 0.4 tok/s, 343 s
+[strata] thinking: 64 of budget 128 (max 256) tokens, 0.4 tok/s, 344 s
+[strata] thinking: 65 of budget 128 (max 256) tokens, 0.4 tok/s, 346 s
+[strata] thinking: 66 of budget 128 (max 256) tokens, 0.4 tok/s, 348 s
+[strata] thinking: 67 of budget 128 (max 256) tokens, 0.5 tok/s, 349 s
+[strata] thinking: 69 of budget 128 (max 256) tokens, 0.5 tok/s, 351 s
+[strata] thinking: 70 of budget 128 (max 256) tokens, 0.5 tok/s, 353 s
+[strata] thinking: 72 of budget 128 (max 256) tokens, 0.5 tok/s, 355 s
+[strata] thinking: 73 of budget 128 (max 256) tokens, 0.5 tok/s, 356 s
+[strata] thinking: 74 of budget 128 (max 256) tokens, 0.5 tok/s, 359 s
+[strata] thinking: 75 of budget 128 (max 256) tokens, 0.5 tok/s, 360 s
+[strata] thinking: 76 of budget 128 (max 256) tokens, 0.5 tok/s, 361 s
+[strata] thinking: 77 of budget 128 (max 256) tokens, 0.5 tok/s, 362 s
+[strata] thinking: 79 of budget 128 (max 256) tokens, 0.5 tok/s, 367 s
+[strata] thinking: 80 of budget 128 (max 256) tokens, 0.5 tok/s, 368 s
+[strata] thinking: 81 of budget 128 (max 256) tokens, 0.5 tok/s, 371 s
+[strata] thinking: 82 of budget 128 (max 256) tokens, 0.5 tok/s, 373 s
+[strata] thinking: 84 of budget 128 (max 256) tokens, 0.5 tok/s, 374 s
+[strata] thinking: 85 of budget 128 (max 256) tokens, 0.5 tok/s, 377 s
+[strata] thinking: 86 of budget 128 (max 256) tokens, 0.5 tok/s, 380 s
+[strata] thinking: 87 of budget 128 (max 256) tokens, 0.5 tok/s, 382 s
+[strata] thinking: 88 of budget 128 (max 256) tokens, 0.5 tok/s, 383 s
+[strata] answering: 89 of max 256 tokens, 0.5 tok/s, 389 s
+[strata] answering: 90 of max 256 tokens, 0.5 tok/s, 393 s
+[strata] answering: 91 of max 256 tokens, 0.5 tok/s, 397 s
+[strata] answering: 92 of max 256 tokens, 0.5 tok/s, 399 s
+[strata] answering: 93 of max 256 tokens, 0.5 tok/s, 402 s
+[strata] answering: 94 of max 256 tokens, 0.5 tok/s, 404 s
+[strata] answering: 95 of max 256 tokens, 0.5 tok/s, 407 s
+[strata] answering: 96 of max 256 tokens, 0.5 tok/s, 409 s
+[strata] answering: 97 of max 256 tokens, 0.5 tok/s, 412 s
+[strata] answering: 98 of max 256 tokens, 0.5 tok/s, 415 s
+[strata] answering: 99 of max 256 tokens, 0.5 tok/s, 416 s
+[strata] answering: 100 of max 256 tokens, 0.5 tok/s, 419 s
+[strata] answering: 101 of max 256 tokens, 0.5 tok/s, 421 s
+[strata] answering: 102 of max 256 tokens, 0.5 tok/s, 423 s
+[strata] answering: 103 of max 256 tokens, 0.5 tok/s, 427 s
+[strata] answering: 104 of max 256 tokens, 0.5 tok/s, 429 s
+[strata] answering: 105 of max 256 tokens, 0.5 tok/s, 431 s
+[strata] answering: 106 of max 256 tokens, 0.5 tok/s, 433 s
+[strata] answering: 107 of max 256 tokens, 0.5 tok/s, 434 s
+[strata] answering: 108 of max 256 tokens, 0.5 tok/s, 436 s
+[strata] answering: 109 of max 256 tokens, 0.5 tok/s, 438 s
+[strata] answering: 110 of max 256 tokens, 0.5 tok/s, 441 s
+[strata] answering: 111 of max 256 tokens, 0.5 tok/s, 443 s
+[strata] answering: 112 of max 256 tokens, 0.5 tok/s, 445 s
+[strata] answering: 113 of max 256 tokens, 0.5 tok/s, 447 s
+[strata] answering: 114 of max 256 tokens, 0.5 tok/s, 451 s
+[strata] answering: 115 of max 256 tokens, 0.5 tok/s, 453 s
+[strata] answering: 116 of max 256 tokens, 0.5 tok/s, 455 s
+[strata] answering: 117 of max 256 tokens, 0.5 tok/s, 457 s
+[strata] answering: 118 of max 256 tokens, 0.5 tok/s, 460 s
+[strata] answering: 119 of max 256 tokens, 0.5 tok/s, 463 s
+[strata] answering: 120 of max 256 tokens, 0.5 tok/s, 464 s
+[strata] answering: 121 of max 256 tokens, 0.5 tok/s, 466 s
+[strata] answering: 122 of max 256 tokens, 0.5 tok/s, 467 s
+[strata] answering: 123 of max 256 tokens, 0.5 tok/s, 470 s
+[strata] answering: 124 of max 256 tokens, 0.5 tok/s, 472 s
+[strata] answering: 125 of max 256 tokens, 0.5 tok/s, 474 s
+[strata] answering: 126 of max 256 tokens, 0.5 tok/s, 475 s
+[strata] answering: 127 of max 256 tokens, 0.5 tok/s, 479 s
+[strata] answering: 128 of max 256 tokens, 0.5 tok/s, 481 s
+[strata] answering: 129 of max 256 tokens, 0.5 tok/s, 483 s
+[strata] answering: 130 of max 256 tokens, 0.5 tok/s, 485 s
+[strata] answering: 131 of max 256 tokens, 0.5 tok/s, 488 s
+[strata] answering: 132 of max 256 tokens, 0.5 tok/s, 490 s
+[strata] answering: 133 of max 256 tokens, 0.5 tok/s, 491 s
+[strata] answering: 134 of max 256 tokens, 0.5 tok/s, 493 s
+[strata] answering: 135 of max 256 tokens, 0.5 tok/s, 494 s
+[strata] answering: 136 of max 256 tokens, 0.5 tok/s, 496 s
+[strata] answering: 137 of max 256 tokens, 0.5 tok/s, 497 s
+[strata] answering: 138 of max 256 tokens, 0.5 tok/s, 499 s
+[strata] answering: 139 of max 256 tokens, 0.5 tok/s, 500 s
+[strata] answering: 140 of max 256 tokens, 0.5 tok/s, 502 s
+[strata] answering: 141 of max 256 tokens, 0.5 tok/s, 503 s
+[strata] answering: 142 of max 256 tokens, 0.5 tok/s, 505 s
+[strata] answering: 143 of max 256 tokens, 0.5 tok/s, 507 s
+[strata] answering: 144 of max 256 tokens, 0.5 tok/s, 509 s
+[strata] answering: 145 of max 256 tokens, 0.5 tok/s, 511 s
+[strata] answering: 146 of max 256 tokens, 0.5 tok/s, 513 s
+[strata] answering: 147 of max 256 tokens, 0.5 tok/s, 515 s
+[strata] answering: 148 of max 256 tokens, 0.5 tok/s, 516 s
+[strata] answering: 149 of max 256 tokens, 0.5 tok/s, 518 s
+[strata] answering: 150 of max 256 tokens, 0.5 tok/s, 523 s
+[strata] answering: 151 of max 256 tokens, 0.5 tok/s, 526 s
+[strata] answering: 152 of max 256 tokens, 0.5 tok/s, 527 s
+[strata] answering: 153 of max 256 tokens, 0.5 tok/s, 530 s
+[strata] answering: 154 of max 256 tokens, 0.5 tok/s, 531 s
+[strata] answering: 155 of max 256 tokens, 0.5 tok/s, 533 s
+[strata] answering: 156 of max 256 tokens, 0.5 tok/s, 535 s
+[strata] answering: 157 of max 256 tokens, 0.5 tok/s, 537 s
+[strata] answering: 158 of max 256 tokens, 0.5 tok/s, 538 s
+[strata] answering: 159 of max 256 tokens, 0.5 tok/s, 540 s
+[strata] answering: 160 of max 256 tokens, 0.5 tok/s, 541 s
+[strata] answering: 162 of max 256 tokens, 0.5 tok/s, 543 s
+[strata] answering: 163 of max 256 tokens, 0.5 tok/s, 544 s
+[strata] answering: 164 of max 256 tokens, 0.5 tok/s, 546 s
+[strata] answering: 165 of max 256 tokens, 0.5 tok/s, 547 s
+[strata] answering: 166 of max 256 tokens, 0.5 tok/s, 551 s
+[strata] answering: 167 of max 256 tokens, 0.5 tok/s, 552 s
+[strata] answering: 168 of max 256 tokens, 0.5 tok/s, 554 s
+[strata] done: 169 tokens in 559 s (0.5 tok/s) (stop, cancel=False)
+[strata] thinking capped at 128 of max_tokens 256 to leave room for the answer (budget 32768)
+[strata] reading the prompt: 58 tokens, 10 s so far
+[strata] reading the prompt: 58 tokens, 20 s so far
+[strata] reading the prompt: 58 tokens, 30 s so far
+[strata] reading the prompt: 58 tokens, 40 s so far
+[strata] reading the prompt: 58 tokens, 50 s so far
+[strata] reading the prompt: 58 tokens, 60 s so far
+[strata] reading the prompt: 58 tokens, 70 s so far
+[strata] reading the prompt: 58 tokens, 80 s so far
+[strata] the engine has said nothing for 90 s but is still working; it is not ended (the limit is engine_silence_s). If it is stuck, "engine_silence_s" can be set lower.
+[strata] reading the prompt: 58 tokens, 90 s so far
+[strata] reading the prompt: 58 tokens, 100 s so far
+[strata] reading the prompt: 58 tokens, 110 s so far
+[strata] reading the prompt: 58 tokens, 120 s so far
+[strata] reading the prompt: 58 tokens, 130 s so far
+[strata] reading the prompt: 58 tokens, 140 s so far
+[strata] reading the prompt: 58 tokens, 150 s so far
+[strata] reading the prompt: 58 tokens, 160 s so far
+[strata] reading the prompt: 58 tokens, 170 s so far
+[strata] reading the prompt: 58 tokens, 180 s so far
+[strata] reading the prompt: 58 tokens, 190 s so far
+[strata] reading the prompt: 58 tokens, 200 s so far
+[strata] reading the prompt: 58 of 58 tokens, 210 s so far
+[strata] thinking: 2 of budget 128 (max 256) tokens, 0.5 tok/s, 214 s
+[strata] thinking: 3 of budget 128 (max 256) tokens, 0.4 tok/s, 217 s
+[strata] thinking: 4 of budget 128 (max 256) tokens, 0.4 tok/s, 220 s
+[strata] thinking: 5 of budget 128 (max 256) tokens, 0.4 tok/s, 224 s
+[strata] thinking: 6 of budget 128 (max 256) tokens, 0.4 tok/s, 227 s
+[strata] thinking: 7 of budget 128 (max 256) tokens, 0.4 tok/s, 229 s
+[strata] thinking: 8 of budget 128 (max 256) tokens, 0.4 tok/s, 231 s
+[strata] thinking: 9 of budget 128 (max 256) tokens, 0.4 tok/s, 233 s
+[strata] thinking: 10 of budget 128 (max 256) tokens, 0.4 tok/s, 237 s
+[strata] thinking: 11 of budget 128 (max 256) tokens, 0.4 tok/s, 240 s
+[strata] thinking: 12 of budget 128 (max 256) tokens, 0.4 tok/s, 243 s
+[strata] thinking: 13 of budget 128 (max 256) tokens, 0.4 tok/s, 245 s
+[strata] thinking: 14 of budget 128 (max 256) tokens, 0.4 tok/s, 247 s
+[strata] thinking: 15 of budget 128 (max 256) tokens, 0.4 tok/s, 249 s
+[strata] thinking: 16 of budget 128 (max 256) tokens, 0.4 tok/s, 252 s
+[strata] thinking: 17 of budget 128 (max 256) tokens, 0.4 tok/s, 254 s
+[strata] thinking: 18 of budget 128 (max 256) tokens, 0.4 tok/s, 257 s
+[strata] thinking: 19 of budget 128 (max 256) tokens, 0.4 tok/s, 260 s
+[strata] thinking: 20 of budget 128 (max 256) tokens, 0.4 tok/s, 263 s
+[strata] thinking: 21 of budget 128 (max 256) tokens, 0.4 tok/s, 266 s
+[strata] thinking: 22 of budget 128 (max 256) tokens, 0.4 tok/s, 268 s
+[strata] thinking: 23 of budget 128 (max 256) tokens, 0.4 tok/s, 270 s
+[strata] thinking: 24 of budget 128 (max 256) tokens, 0.4 tok/s, 273 s
+[strata] thinking: 25 of budget 128 (max 256) tokens, 0.4 tok/s, 275 s
+[strata] thinking: 26 of budget 128 (max 256) tokens, 0.4 tok/s, 278 s
+[strata] thinking: 27 of budget 128 (max 256) tokens, 0.4 tok/s, 280 s
+[strata] thinking: 28 of budget 128 (max 256) tokens, 0.4 tok/s, 282 s
+[strata] thinking: 29 of budget 128 (max 256) tokens, 0.4 tok/s, 284 s
+[strata] thinking: 30 of budget 128 (max 256) tokens, 0.4 tok/s, 286 s
+[strata] thinking: 31 of budget 128 (max 256) tokens, 0.4 tok/s, 288 s
+[strata] thinking: 32 of budget 128 (max 256) tokens, 0.4 tok/s, 289 s
+[strata] thinking: 33 of budget 128 (max 256) tokens, 0.4 tok/s, 291 s
+[strata] thinking: 34 of budget 128 (max 256) tokens, 0.4 tok/s, 292 s
+[strata] thinking: 35 of budget 128 (max 256) tokens, 0.4 tok/s, 297 s
+[strata] thinking: 36 of budget 128 (max 256) tokens, 0.4 tok/s, 299 s
+[strata] thinking: 37 of budget 128 (max 256) tokens, 0.4 tok/s, 301 s
+[strata] thinking: 38 of budget 128 (max 256) tokens, 0.4 tok/s, 302 s
+[strata] thinking: 39 of budget 128 (max 256) tokens, 0.4 tok/s, 304 s
+[strata] thinking: 41 of budget 128 (max 256) tokens, 0.4 tok/s, 306 s
+[strata] thinking: 42 of budget 128 (max 256) tokens, 0.4 tok/s, 308 s
+[strata] thinking: 43 of budget 128 (max 256) tokens, 0.4 tok/s, 309 s
+[strata] thinking: 44 of budget 128 (max 256) tokens, 0.4 tok/s, 310 s
+[strata] thinking: 45 of budget 128 (max 256) tokens, 0.4 tok/s, 312 s
+[strata] thinking: 46 of budget 128 (max 256) tokens, 0.4 tok/s, 314 s
+[strata] thinking: 47 of budget 128 (max 256) tokens, 0.4 tok/s, 316 s
+[strata] thinking: 49 of budget 128 (max 256) tokens, 0.5 tok/s, 317 s
+[strata] thinking: 50 of budget 128 (max 256) tokens, 0.5 tok/s, 319 s
+[strata] thinking: 51 of budget 128 (max 256) tokens, 0.5 tok/s, 320 s
+[strata] thinking: 53 of budget 128 (max 256) tokens, 0.5 tok/s, 325 s
+[strata] thinking: 54 of budget 128 (max 256) tokens, 0.5 tok/s, 328 s
+[strata] thinking: 55 of budget 128 (max 256) tokens, 0.5 tok/s, 330 s
+[strata] thinking: 56 of budget 128 (max 256) tokens, 0.5 tok/s, 333 s
+[strata] thinking: 57 of budget 128 (max 256) tokens, 0.5 tok/s, 335 s
+[strata] thinking: 58 of budget 128 (max 256) tokens, 0.5 tok/s, 336 s
+[strata] thinking: 59 of budget 128 (max 256) tokens, 0.5 tok/s, 337 s
+[strata] thinking: 61 of budget 128 (max 256) tokens, 0.5 tok/s, 340 s
+[strata] thinking: 62 of budget 128 (max 256) tokens, 0.5 tok/s, 342 s
+[strata] thinking: 63 of budget 128 (max 256) tokens, 0.5 tok/s, 347 s
+[strata] thinking: 64 of budget 128 (max 256) tokens, 0.5 tok/s, 350 s
+[strata] thinking: 65 of budget 128 (max 256) tokens, 0.5 tok/s, 353 s
+[strata] thinking: 66 of budget 128 (max 256) tokens, 0.5 tok/s, 356 s
+[strata] thinking: 67 of budget 128 (max 256) tokens, 0.5 tok/s, 358 s
+[strata] thinking: 68 of budget 128 (max 256) tokens, 0.5 tok/s, 360 s
+[strata] thinking: 69 of budget 128 (max 256) tokens, 0.4 tok/s, 363 s
+[strata] thinking: 70 of budget 128 (max 256) tokens, 0.4 tok/s, 366 s
+[strata] thinking: 71 of budget 128 (max 256) tokens, 0.4 tok/s, 368 s
+[strata] thinking: 72 of budget 128 (max 256) tokens, 0.4 tok/s, 370 s
+[strata] thinking: 73 of budget 128 (max 256) tokens, 0.4 tok/s, 373 s
+[strata] thinking: 74 of budget 128 (max 256) tokens, 0.4 tok/s, 374 s
+[strata] thinking: 75 of budget 128 (max 256) tokens, 0.5 tok/s, 376 s
+[strata] thinking: 77 of budget 128 (max 256) tokens, 0.5 tok/s, 378 s
+[strata] thinking: 78 of budget 128 (max 256) tokens, 0.5 tok/s, 379 s
+[strata] thinking: 81 of budget 128 (max 256) tokens, 0.5 tok/s, 382 s
+[strata] thinking: 82 of budget 128 (max 256) tokens, 0.5 tok/s, 385 s
+[strata] thinking: 83 of budget 128 (max 256) tokens, 0.5 tok/s, 388 s
+[strata] thinking: 84 of budget 128 (max 256) tokens, 0.5 tok/s, 391 s
+[strata] thinking: 85 of budget 128 (max 256) tokens, 0.5 tok/s, 394 s
+[strata] thinking: 86 of budget 128 (max 256) tokens, 0.5 tok/s, 396 s
+[strata] thinking: 87 of budget 128 (max 256) tokens, 0.5 tok/s, 399 s
+[strata] thinking: 88 of budget 128 (max 256) tokens, 0.5 tok/s, 401 s
+[strata] thinking: 89 of budget 128 (max 256) tokens, 0.5 tok/s, 403 s
+[strata] thinking: 90 of budget 128 (max 256) tokens, 0.5 tok/s, 405 s
+[strata] thinking: 91 of budget 128 (max 256) tokens, 0.5 tok/s, 408 s
+[strata] thinking: 92 of budget 128 (max 256) tokens, 0.5 tok/s, 410 s
+[strata] thinking: 93 of budget 128 (max 256) tokens, 0.5 tok/s, 413 s
+[strata] thinking: 94 of budget 128 (max 256) tokens, 0.5 tok/s, 416 s
+[strata] thinking: 95 of budget 128 (max 256) tokens, 0.5 tok/s, 418 s
+[strata] thinking: 96 of budget 128 (max 256) tokens, 0.5 tok/s, 421 s
+[strata] thinking: 97 of budget 128 (max 256) tokens, 0.5 tok/s, 422 s
+[strata] thinking: 98 of budget 128 (max 256) tokens, 0.5 tok/s, 425 s
+[strata] thinking: 99 of budget 128 (max 256) tokens, 0.5 tok/s, 427 s
+[strata] thinking: 100 of budget 128 (max 256) tokens, 0.5 tok/s, 430 s
+[strata] thinking: 101 of budget 128 (max 256) tokens, 0.5 tok/s, 434 s
+[strata] thinking: 102 of budget 128 (max 256) tokens, 0.4 tok/s, 436 s
+[strata] thinking: 103 of budget 128 (max 256) tokens, 0.5 tok/s, 438 s
+[strata] thinking: 104 of budget 128 (max 256) tokens, 0.5 tok/s, 440 s
+[strata] thinking: 105 of budget 128 (max 256) tokens, 0.5 tok/s, 442 s
+[strata] thinking: 106 of budget 128 (max 256) tokens, 0.5 tok/s, 445 s
+[strata] thinking: 107 of budget 128 (max 256) tokens, 0.5 tok/s, 447 s
+[strata] thinking: 108 of budget 128 (max 256) tokens, 0.5 tok/s, 449 s
+[strata] thinking: 109 of budget 128 (max 256) tokens, 0.5 tok/s, 450 s
+[strata] thinking: 110 of budget 128 (max 256) tokens, 0.5 tok/s, 452 s
+[strata] thinking: 111 of budget 128 (max 256) tokens, 0.5 tok/s, 456 s
+[strata] thinking: 112 of budget 128 (max 256) tokens, 0.5 tok/s, 457 s
+[strata] thinking: 113 of budget 128 (max 256) tokens, 0.5 tok/s, 460 s
+[strata] thinking: 114 of budget 128 (max 256) tokens, 0.5 tok/s, 461 s
+[strata] thinking: 115 of budget 128 (max 256) tokens, 0.5 tok/s, 463 s
+[strata] thinking: 116 of budget 128 (max 256) tokens, 0.5 tok/s, 465 s
+[strata] thinking: 117 of budget 128 (max 256) tokens, 0.5 tok/s, 467 s
+[strata] thinking: 118 of budget 128 (max 256) tokens, 0.5 tok/s, 468 s
+[strata] thinking: 119 of budget 128 (max 256) tokens, 0.5 tok/s, 470 s
+[strata] thinking: 120 of budget 128 (max 256) tokens, 0.5 tok/s, 472 s
+[strata] thinking: 121 of budget 128 (max 256) tokens, 0.5 tok/s, 473 s
+[strata] thinking: 122 of budget 128 (max 256) tokens, 0.5 tok/s, 474 s
+[strata] thinking: 123 of budget 128 (max 256) tokens, 0.5 tok/s, 475 s
+[strata] thinking: 124 of budget 128 (max 256) tokens, 0.5 tok/s, 477 s
+[strata] thinking: 125 of budget 128 (max 256) tokens, 0.5 tok/s, 478 s
+[strata] thinking: 126 of budget 128 (max 256) tokens, 0.5 tok/s, 479 s
+[strata] thinking: 127 of budget 128 (max 256) tokens, 0.5 tok/s, 480 s
+[strata] thinking: 128 of budget 128 (max 256) tokens, 0.5 tok/s, 482 s
+[strata] thinking budget reached (128 tokens): wrapping up the thinking
+[strata] thinking: 145 of max 256 tokens, 0.5 tok/s, 494 s
+[strata] thinking: 145 of max 256 tokens, 0.5 tok/s, 504 s
+[strata] thinking: 145 of max 256 tokens, 0.5 tok/s, 514 s
+[strata] thinking: 145 of max 256 tokens, 0.5 tok/s, 524 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 534 s
+[strata] thinking: 145 of max 256 tokens, 0.4 tok/s, 538 s
+[strata] answering: 147 of max 256 tokens, 0.4 tok/s, 542 s
+[strata] answering: 148 of max 256 tokens, 0.4 tok/s, 547 s
+[strata] answering: 149 of max 256 tokens, 0.4 tok/s, 551 s
+[strata] answering: 150 of max 256 tokens, 0.4 tok/s, 554 s
+[strata] answering: 151 of max 256 tokens, 0.4 tok/s, 557 s
+[strata] answering: 152 of max 256 tokens, 0.4 tok/s, 559 s
+[strata] answering: 153 of max 256 tokens, 0.4 tok/s, 561 s
+[strata] answering: 154 of max 256 tokens, 0.4 tok/s, 564 s
+[strata] answering: 155 of max 256 tokens, 0.4 tok/s, 568 s
+[strata] answering: 156 of max 256 tokens, 0.4 tok/s, 569 s
+[strata] answering: 157 of max 256 tokens, 0.4 tok/s, 573 s
+[strata] answering: 158 of max 256 tokens, 0.4 tok/s, 575 s
+[strata] answering: 159 of max 256 tokens, 0.4 tok/s, 577 s
+[strata] answering: 160 of max 256 tokens, 0.4 tok/s, 581 s
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] done: 160 tokens in 583 s (0.4 tok/s) (length, cancel=False)
+[strata] stopped
