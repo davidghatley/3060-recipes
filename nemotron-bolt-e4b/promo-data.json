@@ -1,0 +1,88 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md / README.md / best-config.json. Speed values are [value, ledger label, ledger case] and are checked against runs/ledger.jsonl (decode_tps; prefill_tps for pp-* cases; agg_tps for c4-agg cases; accept with a 4th element 'accept'; ttft_s with 'ttft'). Needle results [ctx, label, case] read 'found' from the same file; codeeval against runs/codeeval-lenient-<label>.json; VRAM [MiB, label, case] against the ledger's vram_mib; the 4 x 64k + DFlash crash against its server log; statements in 'text' are matched word for word in RESULTS.md (keys starting readme_ in README.md). promo/tools/prep.py refuses to mark the set measured if any differ. Derived numbers (speed-ups, prefill ratio, lever gains, means of controls) are computed in prep and compared with the rounded figures RESULTS.md / README.md / PLAN.md state.",
+ "model": {"name": "Nemotron-3.5-Bolt-E4B", "org": "NVIDIA", "base": "Gemma-4-E4B-it", "_source": "RESULTS.md: 'NVIDIA's post-train of Gemma-4-E4B-it. 42 dense layers (35 with a 512-token sliding window, 7 global) ... 64k window'", "layers": 42},
+ "engine": {"name": "llama.cpp", "short": "225a5345b", "patch": "none (stock master)"},
+ "weights": {"file": "Q4_K_M", "gb": 6.18, "by": "NVIDIA", "drafter": "DFlash BF16", "drafter_mb": 737},
+ "ctx": 65536,
+ "stock": {
+  "_what": "the model card's command line (-c 65536 -ngl 999 --jinja), NB_PROFILE=stock, measurement batch b08",
+  "decode_think": [75.94, "b08-stock-think", "code-0k-med"],
+  "decode_off": [76.28, "b08-stock", "code-0k-med"],
+  "decode_60k": [54.15, "b08-stock", "code-60k-med"],
+  "prefill_8k": [4889.5, "b08-stock", "pp-8k-med"],
+  "prefill_32k": [3900.8, "b08-stock", "pp-32k-med"],
+  "prefill_60k": [3117.1, "b08-stock", "pp-60k-med"],
+  "ttft_61k": [19.8, "b08-stock", "needle-61k", "ttft"],
+  "needles_61k": ["61k", "b08-stock", "needle-61k"],
+  "vram": [5408, "b08-stock-think", "code-0k-med"]
+ },
+ "tuned": {
+  "_what": "serve.sh default = configs/b07-default.json: DFlash n=7, ub 1024, -bs, f16 K/V, 64k, one slot; measurement batch b07",
+  "decode_think": [190.38, "b07-default-think", "code-0k-med"],
+  "accept_think": [0.411, "b07-default-think", "code-0k-med", "accept"],
+  "decode_off": [216.65, "b07-default", "code-0k-med"],
+  "accept_off": [0.482, "b07-default", "code-0k-med", "accept"],
+  "decode_60k": [157.82, "b07-default", "code-60k-med"],
+  "prefill_8k": [3031.1, "b07-default", "pp-8k-med"],
+  "prefill_32k": [2471.6, "b07-default", "pp-32k-med"],
+  "prefill_60k": [2006.1, "b07-default", "pp-60k-med"],
+  "ttft_61k": [30.9, "b07-default", "needle-61k", "ttft"],
+  "needles_32k": ["32k", "b07-default", "needle-32k"],
+  "needles_61k": ["61k", "b07-default", "needle-61k"],
+  "codeeval_off": "b10-default-nothink",
+  "codeeval_off_stock": "b10-stock-nothink",
+  "vram": [8598, "b07-default-think", "code-0k-med"]
+ },
+ "nospec": {
+  "_what": "NB_PROFILE=nospec: the default without the drafter, measurement batch b07",
+  "decode_off": [77.61, "b07-nospec", "code-0k-med"],
+  "decode_think": [77.45, "b07-nospec-think", "code-0k-med"],
+  "decode_60k": [54.59, "b07-nospec", "code-60k-med"],
+  "prefill_8k": [5060.4, "b07-nospec", "pp-8k-med"],
+  "prefill_32k": [4209.9, "b07-nospec", "pp-32k-med"],
+  "prefill_60k": [3450.5, "b07-nospec", "pp-60k-med"],
+  "ttft_61k": [18.0, "b07-nospec", "needle-61k", "ttft"],
+  "needles_61k": ["61k", "b07-nospec", "needle-61k"],
+  "vram": [5546, "b07-nospec", "needle-61k"]
+ },
+ "multi": {
+  "_what": "NB_PROFILE=multi: 4 slots x 32k + DFlash, ub 512 (PLAN row 21), and the 4 x 64k layouts (rows 22 and b08)",
+  "c4": [270.7, "b09-multi-df32k", "c4-agg-med"],
+  "soak": [["30k", "b09-multi-df32k-soak1", "needle-30k"], ["30k", "b09-multi-df32k-soak2", "needle-30k"], ["30k", "b09-multi-df32k-soak3", "needle-30k"], ["30k", "b09-multi-df32k-soak4", "needle-30k"]],
+  "c4_64k_nospec": [164.6, "b09-multi-ns64k", "c4-agg-med"],
+  "oom_log": "runs/server-b08-multi.log",
+  "vram_mib": 8688
+ },
+ "levers": {
+  "_what": "each lever against the controls run either side of it (PLAN batch tables / RESULTS 'What was tried' rows)",
+  "df_controls_think": [[76.12, "b01-ctl-a-think", "code-0k-med"], [76.19, "b01-ctl-b-think", "code-0k-med"]],
+  "df_think": [182.72, "b01-dflash7-think", "code-0k-med"],
+  "kv_controls_32k": [[62.16, "b01-ctl-a", "code-32k-med"], [62.21, "b01-ctl-b", "code-32k-med"]],
+  "q8_32k": [48.3, "b01-q8", "code-32k-med"],
+  "ub_controls_pp8k": [[4908.7, "b03-ctl-a", "pp-8k-med"], [4888.9, "b03-ctl-b", "pp-8k-med"]],
+  "ub_controls_pp32k": [[3945.0, "b03-ctl-a", "pp-32k-med"], [3936.8, "b03-ctl-b", "pp-32k-med"]],
+  "ub1024_pp8k": [5059.6, "b03-ub1024", "pp-8k-med"],
+  "ub1024_pp32k": [4209.5, "b03-ub1024", "pp-32k-med"],
+  "draft_n": 7
+ },
+ "ceiling": {"_source": "RESULTS.md 'Baseline vs tuned vs ceiling' (bytes per token over measured 342 GB/s, THEORY.md)", "decode_plain": 109, "decode_60k_plain": 70},
+ "results_md": {
+  "_what": "figures RESULTS.md / README.md / PLAN.md state as rounded; prep checks its own derivations against these",
+  "speedup_think": 2.5, "speedup_off": 2.8, "speedup_60k": 2.9, "prefill_ratio_8k": 0.62,
+  "df_lever_think": 2.4, "q8_slower_at_32k_pct": 22, "ub1024_pp8k_pct": 3.3, "ub1024_pp32k_pct": 6.8,
+  "plain_pct_of_ceiling": 71
+ },
+ "text": {
+  "_what": "statements the copy and plates make that are not in the ledger; each must appear word for word in RESULTS.md (or README.md where the key starts readme_)",
+  "kld": "No KLD (no reference file on disk).",
+  "acceptance_corpus": "DFlash acceptance was measured on coding and the stdlib-code corpus; prose, chat and other languages may accept less",
+  "bs_experimental": "`-bs` is marked experimental by llama.cpp; checked only by greedy equivalence and output sanity.",
+  "needles_every_profile": "Needles 3/3 at 32k and 61k on every profile",
+  "oom": "**CUDA out of memory** in `cudaGraphInstantiate` under the soak",
+  "plain_wall": "77.6 tok/s is 71% of the 109 tok/s bandwidth ceiling at empty context",
+  "readme_bs": "+1.5% plain, +5% with the drafter, same greedy output",
+  "readme_tokens_per_step": "The drafter accepts 41% of its 7-token drafts with thinking on (48% off), about 3.9 tokens per step.",
+  "readme_licence": "The DFlash drafter's GGUF metadata names the **NVIDIA Software and Model Evaluation License**",
+  "readme_model_licence": "The model: [OpenMDW-1.1]"
+ }
+}

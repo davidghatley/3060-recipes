@@ -1,0 +1,69 @@
+{
+ "label": "kintsugi-nolora",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n: int) -> int:\n    \"\"\"\n    Return the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence is defined as:\n        F(0) = 0\n        F(1) = 1\n        F(n) = F(n-1) + F(n-2) for n >= 2\n\n    Args:\n        n: A non-negative integer representing the position in the Fibonacci sequence.\n\n    Returns:\n        The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is negative.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+   "n": 213,
+   "decode_tps": 15.9,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes for a `Permission denied` error when running `./build.sh`, along with their respective fixes:\n\n### 1. The script lacks execute permission\n**Cause:** The file `build.sh` does not have the execute bit set. By default, newly created files often only have read/write permissions (`rw-`), not execute (`rwx`).\n\n**Fix:**\nAdd execute permission to the file:\n```bash\nchmod +x build.sh\n```\nOr, if you want to be more specific (e.g., only for the owner):\n```bash\nchmod u+x build.sh\n```\n\n### 2. The directory containing the script is not searchable/executable\n**Cause:** The directory in which `build.sh` resides does not have execute permission for the user. In Unix/Linux, you need execute permission on a directory to access files within it. If the directory lacks `x` permission, you cannot run scripts inside it, even if the script itself has execute permission.\n\n**Fix:**\nEnsure the parent directory has execute permission:\n```bash\nchmod +x /path/to/directory\n```\n*(Replace `/path/to/directory` with the actual path containing `build.sh`.)*\n\n### 3. The script is being run from a read-only filesystem or mounted without execute permissions\n**Cause:** The filesystem where `build.sh` resides is mounted as read-only or with the `noexec`",
+   "n": 300,
+   "decode_tps": 15.8,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a linear-time attention mechanism that combines the efficiency of linear attention with the expressive power of gated linear recurrences. It utilizes a delta rule to update a low-rank state matrix, allowing the model to selectively overwrite previous information rather than simply accumulating it. This mechanism enables the layer to handle long sequences efficiently while maintaining strong performance on tasks requiring precise memory retrieval. By integrating gating mechanisms, it provides a balance between computational speed and the ability to model complex dependencies in data.",
+   "n": 101,
+   "decode_tps": 15.8,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "Here is the step-by-step sequence of tool calls I would make to fix the `IndexError` in `tests/test_parser.py::test_empty`:\n\n### Step 1: Run the failing test to confirm the error\nFirst, I need to see the exact error message and traceback to understand where the `IndexError` occurs.\n\n```bash\npytest tests/test_parser.py::test_empty -v\n```\n\n**Expected Output:**\n```\nFAILED tests/test_parser.py::test_empty - IndexError: list index out of range\n```\n\n### Step 2: Read the test file to understand what `test_empty` expects\nI need to see what input is being passed and what the expected behavior is.\n\n```bash\ncat tests/test_parser.py\n```\n\n**Expected Output (hypothetical):**\n```python\ndef test_empty():\n    result = parse(\"\")\n    assert result == []\n```\n\n### Step 3: Locate the parser implementation\nI need to find the `parse` function that is being tested. I\u2019ll search for it.\n\n```bash\ngrep -r \"def parse\" .\n```\n\n**Expected Output:**\n```\nparser.py:10:def parse(text):\n```\n\n### Step 4: Read the parser implementation\nNow I\u2019ll read the `parser.py` file to see how `parse` handles empty strings.\n\n```bash\ncat parser.py\n```\n\n**Expected Output (hypothetical):**\n",
+   "n": 300,
+   "decode_tps": 15.77,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files '*.py' | grep -v -E '(^|/)tests?/|_test\\.py$|test_.*\\.py$' | xargs wc -l | tail -1\n```\n\n**Explanation:**\n\n1. `git ls-files '*.py'` \u2014 Lists all tracked Python files in the repository.\n2. `grep -v -E '(^|/)tests?/|_test\\.py$|test_.*\\.py$'` \u2014 Excludes files in `test/` or `tests/` directories, and files named `*_test.py` or `test_*.py`.\n3. `xargs wc -l` \u2014 Counts lines in each remaining file.\n4. `tail -1` \u2014 Prints only the total line count.",
+   "n": 170,
+   "decode_tps": 15.77,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "To solve the expression $17 \\times 23 + 144 / 12$, we must follow the order of operations (PEMDAS/BODMAS), which dictates that multiplication and division are performed before addition.\n\n**Step 1: Perform the multiplication**\n$$17 \\times 23$$\n\nCalculation:\n$$17 \\times 20 = 340$$\n$$17 \\times 3 = 51$$\n$$340 + 51 = 391$$\n\nSo, $17 \\times 23 = 391$.\n\n**Step 2: Perform the division**\n$$144 / 12$$\n\nCalculation:\n$$144 \\div 12 = 12$$\n\nSo, $144 / 12 = 12$.\n\n**Step 3: Perform the addition**\nNow substitute the results back into the expression:\n$$391 + 12$$\n\nCalculation:\n$$391 + 12 = 403$$\n\n**Final Answer:**\n$$403$$",
+   "n": 248,
+   "decode_tps": 15.73,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.every((item) => typeof item === \"string\");\n}\n```",
+   "n": 41,
+   "decode_tps": 15.71,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "Here is a summary of the CAP theorem tailored for a junior engineer:\n\n*   **The Core Constraint**: In a distributed system, you can only guarantee **two** of the three properties: **Consistency**, **Availability**, and **Partition Tolerance**. You cannot have all three simultaneously.\n*   **Partition Tolerance (P)**: This is the reality of distributed systems. Network failures (partitions) will happen. Since you can\u2019t prevent partitions, you must choose how to handle them.\n*   **Consistency (C)**: Every read operation returns the most recent write. All nodes see the same data at the same time. If you choose C, you might have to reject requests during a network failure to ensure data accuracy.\n*   **Availability (A)**: Every request receives a response (even if it\u2019s stale or incomplete). The system stays up and responsive, even if some nodes are down or disconnected.\n*   **The Trade-off**: When a network partition occurs, you must choose between **CP** (Consistency + Partition Tolerance, sacrificing Availability) or **AP** (Availability + Partition Tolerance, sacrificing Consistency). Most modern distributed systems (like Cassandra or DynamoDB) lean toward AP to keep the system responsive.",
+   "n": 259,
+   "decode_tps": 15.71,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

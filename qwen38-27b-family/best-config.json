@@ -1,0 +1,12 @@
+{"id": "best", "serve": "serve.sh (defaults: VARIANT=pi, Q38_PROFILE=default)", "build": "/mnt/scratch/llama.cpp/master-225a5345b (stock)",
+ "model": "/mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf (netprojects @ 5ee3670a)",
+ "flags": "-ngl 99 -ot 'blk\\.(0|1|2)\\.ffn_(up|gate|down)=CPU' --fit off -c 32768 -np 1 -t 6 -b 2048 -ub 256 -fa on -ctk q4_0 -ctv q4_0 --jinja --reasoning-format deepseek --reasoning off --temp 0.8 --top-p 1.0 --top-k 0 --min-p 0",
+ "env": {"GPU_RUN_MEM": "44G", "LD_LIBRARY_PATH": "/mnt/scratch/envs/llama-build-cuda/lib"},
+ "server": {"decode_0k": 16.62, "decode_30k": 13.76, "prefill_8k": 543.4, "prefill_30k": 487.0, "ttft_8k_s": 14.8, "needles": "3/3 @16k, 3/3 @30k", "codeeval": "7/8", "vram_mib": 11886, "baseline_decode_0k": 7.93, "ceiling_decode": 31.7},
+ "profiles": {"fast": {"ctx": 16384, "ffn_cpu": 0, "decode_0k": 19.72, "decode_15k": 17.57, "prefill_8k": 569.6},
+              "long": {"ctx": 131072, "ffn_cpu": 26, "decode_0k": 7.48, "decode_120k": 5.63, "prefill_120k": 277.6, "needles": "3/3 @65k, 3/3 @123k"}},
+ "variants": {"pi": {"ffn_cpu": [3, 0, 26], "decode_0k": 16.62},
+              "huihui": {"ffn_cpu": [0, 0, 22], "decode_0k": 20.77},
+              "daisyrose": {"ffn_cpu": [7, 4, 28], "decode_0k": 14.35},
+              "heretic": {"ffn_cpu": [10, 5, 37], "decode_0k": 11.62}},
+ "note": "ffn_cpu = [default, fast, long]: leading layers whose FFN matrices stay in RAM."}

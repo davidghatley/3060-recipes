@@ -1,0 +1,3 @@
+{"id": "02-ncmoe33-q8", "from": "01-stock-fit-64k", "change": "explicit split: -ngl 99 --n-cpu-moe 33 (MoE layers 3-32 in RAM, 33-44 on GPU: 12 layers, 4.9 GiB), q8_0 KV, --fit off; ub 512",
+ "serve": "MX_PLACEMENT=ncmoe MX_NCMOE=33 MX_KV=q8_0 ./serve.sh", "build": "maxwell-4f969ad24", "model": "AD-Q4_K-IQ4_XS", "lora": null,
+ "env": {"GPU_RUN_MEM": "44G", "MX_PORT": "8104"}}

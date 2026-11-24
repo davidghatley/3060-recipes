@@ -1,0 +1,43 @@
+  general.architecture = dflash
+  general.type = model
+  general.name = Hf
+  general.size_label = 360M
+  general.license = other
+  general.license.name = nvidia-software-and-model-evaluation-license
+  general.license.link = https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-software-and-model-evaluation-license/
+  general.base_model.count = 1
+  general.base_model.0.name = NVIDIA Nemotron 3.5 Bolt E4B
+  general.base_model.0.organization = Nvidia
+  general.base_model.0.repo_url = https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B
+  general.tags = ['nvidia', 'ModelOpt', 'Nemotron-3.5-Bolt', 'gemma4', 'reasoning', 'DFlash', 'text-generation']
+  dflash.block_count = 5
+  dflash.context_length = 131072
+  dflash.embedding_length = 2560
+  dflash.feed_forward_length = 5120
+  dflash.attention.head_count = 32
+  dflash.attention.head_count_kv = 8
+  dflash.rope.freq_base = 1000000.0
+  dflash.attention.layer_norm_rms_epsilon = 9.999999974752427e-07
+  dflash.attention.key_length = 128
+  dflash.attention.value_length = 128
+  general.file_type = 32
+  dflash.block_size = 8
+  dflash.embedding_scale = 50.59644317626953
+  dflash.target_layers = [6, 12, 18, 24, 36]
+  dflash.attention.sliding_window = 1024
+  dflash.attention.sliding_window_pattern = [True, True, True, True, True]
+  dflash.attention.causal = False
+  general.quantization_version = 2
+  tokenizer.ggml.model = gemma4
+  tokenizer.chat_template = {%- if conversational_mode | default(false) -%}
+    {%- set spoken_instruction = "You are having a spoken conversation with the user. Respond as briefly as possible while still addressing their questi
+tensors 58, total 0.721 GB (0.672 GiB)
+  blk.*.ffn_down                         0.131 GB  ['BF16']
+  blk.*.ffn_gate                         0.131 GB  ['BF16']
+  blk.*.ffn_up                           0.131 GB  ['BF16']
+  blk.*.attn_output                      0.105 GB  ['BF16']
+  blk.*.attn_q                           0.105 GB  ['BF16']
+  fc.weight                              0.066 GB  ['BF16']
+  blk.*.attn_k                           0.026 GB  ['BF16']
+  blk.*.attn_v                           0.026 GB  ['BF16']
+per layer (MB): {0: 131, 1: 131, 2: 131, 3: 131, 4: 131}

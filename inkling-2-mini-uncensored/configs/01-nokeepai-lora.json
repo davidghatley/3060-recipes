@@ -1,0 +1,4 @@
+{"id": "01-nokeepai-lora", "from": "00-base-control", "change": "add --lora-scaled Inkling-2-Mini-Unbound-v2-LoRA-r64.gguf:1 (runtime LoRA on the GPU-resident attention tensors)",
+ "serve": "VARIANT=nokeepai ./serve.sh", "build": "r2inkfix-19c41d2ff",
+ "model": "/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf", "lora": "/mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-LoRA-r64.gguf (nokeepai/Inkling-2-Mini-Unbound-GGUF @ c61cf03f, sha256 544222ad...)",
+ "flags": "base serve.sh defaults + --alias inkling-2-mini-uncensored-nokeepai --lora-scaled <lora>:1", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

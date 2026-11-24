@@ -1,0 +1,4 @@
+{"id": "00-base-control", "serve": "VARIANT=base ./serve.sh", "build": "r2inkfix-19c41d2ff (../inkling-2-mini, master 225a5345b + patches 0001/0002)",
+ "model": "/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf (ggml-org @ db61c5b4)", "lora": null,
+ "flags": "../inkling-2-mini/serve.sh defaults: -ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 128 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0",
+ "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}, "role": "control for every LoRA A/B (the base recipe's shipped config)"}

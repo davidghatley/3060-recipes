@@ -1,0 +1,66 @@
+  general.architecture = qwen35
+  general.type = model
+  general.sampling.top_k = 20
+  general.sampling.top_p = 0.949999988079071
+  general.sampling.temp = 1.0
+  general.name = DaisyRose 27B
+  general.basename = DaisyRose
+  general.size_label = 27B
+  general.license = apache-2.0
+  general.license.link = https://huggingface.co/RadixArk/DaisyRose-27B/blob/main/LICENSE
+  general.base_model.count = 1
+  general.base_model.0.name = Qwen3.8 27B
+  general.base_model.0.organization = Qwen
+  general.base_model.0.repo_url = https://huggingface.co/Qwen/Qwen3.8-27B
+  general.tags = ['daisyrose', 'qwen3.8', 'reinforcement-learning', 'image-text-to-text']
+  qwen35.block_count = 65
+  qwen35.context_length = 262144
+  qwen35.embedding_length = 5120
+  qwen35.feed_forward_length = 17408
+  qwen35.attention.head_count = 24
+  qwen35.attention.head_count_kv = 4
+  qwen35.rope.dimension_sections = [11, 11, 10, 0]
+  qwen35.rope.freq_base = 10000000.0
+  qwen35.attention.layer_norm_rms_epsilon = 9.999999974752427e-07
+  qwen35.attention.key_length = 256
+  qwen35.attention.value_length = 256
+  qwen35.nextn_predict_layers = 1
+  qwen35.ssm.conv_kernel = 4
+  qwen35.ssm.state_size = 128
+  qwen35.ssm.group_count = 16
+  qwen35.ssm.time_step_rank = 48
+  qwen35.ssm.inner_size = 6144
+  qwen35.attention.recurrent_layers = [65 x type 7] first=[True, True, True, False]
+  qwen35.full_attention_interval = 4
+  qwen35.rope.dimension_count = 64
+  tokenizer.ggml.model = gpt2
+  tokenizer.ggml.pre = qwen35
+  tokenizer.chat_template = {%- set image_count = namespace(value=0) %}
+{%- set video_count = namespace(value=0) %}
+{%- macro render_content(content, do_vision_count, is_system_content=false) %}
+    {%- if content is string %}
+ 
+  general.quantization_version = 2
+  general.file_type = 23
+  quantize.imatrix.file = RadixArk_DaisyRose-27B-imatrix.gguf
+  quantize.imatrix.dataset = RadixArk_DaisyRose-27B-calibration-v6.txt
+  quantize.imatrix.entries_count = 400
+  quantize.imatrix.chunks_count = 583
+tensors 770, total 12.160 GB (11.325 GiB)
+  blk.*.ffn_up                           2.473 GB  ['IQ3_XXS', 'IQ4_XS', 'Q4_0', 'Q5_K']
+  blk.*.ffn_down                         2.413 GB  ['IQ3_S', 'IQ3_XXS', 'IQ4_XS', 'Q4_0', 'Q5_K']
+  blk.*.ffn_gate                         2.250 GB  ['IQ3_XXS', 'Q4_0', 'Q4_K']
+  blk.*.attn_qkv_gate                    1.541 GB  ['IQ3_XXS']
+  blk.*.ssm_out                          0.901 GB  ['Q4_K', 'Q5_K', 'Q6_K']
+  output.weight                          0.874 GB  ['Q5_K']
+  token_embd.weight                      0.715 GB  ['Q4_K']
+  blk.*.attn_q                           0.430 GB  ['IQ3_XXS', 'IQ4_XS', 'Q4_0']
+  blk.*.attn_output                      0.364 GB  ['Q4_0', 'Q5_K']
+  blk.*.attn_v                           0.072 GB  ['Q4_0', 'Q6_K']
+  blk.*.attn_k                           0.062 GB  ['Q4_0', 'Q5_K', 'Q6_K']
+  blk.*.nextn.eh_proj                    0.029 GB  ['Q4_0']
+  blk.*.ssm_beta_alpha                   0.025 GB  ['Q8_0']
+  blk.*.ssm_conv1d                       0.008 GB  ['F32']
+  blk.*.attn_norm                        0.001 GB  ['F32']
+  blk.*.post_attention_norm              0.001 GB  ['F32']
+per layer (MB): {0: 187, 1: 183, 2: 174, 3: 182, 4: 174, 5: 174, 6: 174, 7: 182, 8: 174, 9: 174, 10: 174, 11: 182, 12: 174, 13: 170, 14: 170, 15: 182, 16: 153, 17: 153, 18: 153, 19: 156, 20: 153, 21: 153, 22: 153, 23: 156, 24: 153, 25: 153, 26: 153, 27: 156, 28: 153, 29: 153, 30: 153, 31: 156, 32: 153, 33: 153, 34: 153, 35: 156, 36: 153, 37: 153, 38: 153, 39: 156, 40: 153, 41: 153, 42: 153, 43: 156, 44: 153, 45: 153, 46: 153, 47: 156, 48: 153, 49: 153, 50: 153, 51: 170, 52: 153, 53: 153, 54: 153, 55: 170, 56: 153, 57: 153, 58: 153, 59: 169, 60: 153, 61: 153, 62: 153, 63: 236, 64: 239}

@@ -1,0 +1,3 @@
+{"id": "14-ub2048-cache1100", "from": "09-f16kv-cache2100", "change": "-ub 2048, cache cut to 1100 MiB for its compute buffer (prefill end of the frontier)",
+ "serve": "MX_PLACEMENT=cpu MX_LOAD_MODE=none MX_KV=f16 MX_UBATCH=2048 MX_MOE_CACHE_MIB=1100 ./serve.sh", "build": "maxwell-4f969ad24", "model": "AD-Q4_K-IQ4_XS", "lora": null,
+ "env": {"GPU_RUN_MEM": "44G", "MX_PORT": "8104"}}

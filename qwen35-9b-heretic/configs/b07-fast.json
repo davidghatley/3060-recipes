@@ -1,0 +1,59 @@
+{
+ "id": "b07-fast",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/scratch/tmp-qwen35-9b-heretic/Qwen3.5-9B-Defiant-Fable-Heretic-MTP-Q6_K-headQ8_0-local.gguf --alias qwen35-9b-heretic --no-mmproj -ngl 99 --fit off -c 131072 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q8_0 -ctv q8_0 --spec-type draft-mtp --spec-draft-n-max 2 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --presence-penalty 0 --host 127.0.0.1 --port 8106",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 11458,
+   "prefill_tps": 1671.9
+  },
+  {
+   "case": "pp-32k-med",
+   "vram_mib": 11468,
+   "prefill_tps": 1494.3
+  },
+  {
+   "case": "pp-120k-med",
+   "vram_mib": 11468,
+   "prefill_tps": 1073.5
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 11468,
+   "decode_tps": 78.34,
+   "min": 68.27,
+   "max": 85.56,
+   "accept": 0.819
+  },
+  {
+   "case": "code-120k-med",
+   "vram_mib": 11468,
+   "decode_tps": 38.2,
+   "min": 32.61,
+   "max": 39.5,
+   "accept": 0.825
+  },
+  {
+   "case": "needle-65k",
+   "vram_mib": 11468,
+   "prompt_n": 65875,
+   "found": "3/3",
+   "prefill_tps": 1295.9,
+   "ttft_s": 50.8,
+   "decode_tps": 56.73,
+   "answer": "JCG0E3NF | PF2AAGAA | H80L02H3"
+  },
+  {
+   "case": "needle-123k",
+   "vram_mib": 11468,
+   "prompt_n": 124476,
+   "found": "3/3",
+   "prefill_tps": 1061.6,
+   "ttft_s": 117.3,
+   "decode_tps": 40.79,
+   "answer": "UF7IAF0T | 32ZXEKN3 | C6VSXC8Z"
+  }
+ ],
+ "server_log": "runs/server-b07-fast.log"
+}

@@ -1,0 +1,83 @@
+{
+ "label": "b06-def-nothink",
+ "passed": 6,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 104,
+   "decode_tps": 37.15,
+   "wall_s": 3.1
+  },
+  {
+   "task": "roman",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 167,
+   "decode_tps": 40.31,
+   "wall_s": 4.3
+  },
+  {
+   "task": "lru",
+   "pass": false,
+   "err": [
+    "AttributeError: 'dict' object has no attribute 'move_to_end'"
+   ],
+   "finish": "stop",
+   "gen_n": 144,
+   "decode_tps": 39.12,
+   "wall_s": 3.9
+  },
+  {
+   "task": "topo",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 125,
+   "decode_tps": 38.43,
+   "wall_s": 3.4
+  },
+  {
+   "task": "rle",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 214,
+   "decode_tps": 39.38,
+   "wall_s": 5.6
+  },
+  {
+   "task": "parse_duration",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 228,
+   "decode_tps": 35.88,
+   "wall_s": 6.5
+  },
+  {
+   "task": "bisect",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 74,
+   "decode_tps": 39.58,
+   "wall_s": 2.0
+  },
+  {
+   "task": "matrix_spiral",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 210,
+   "decode_tps": 40.4,
+   "wall_s": 5.4
+  }
+ ]
+}

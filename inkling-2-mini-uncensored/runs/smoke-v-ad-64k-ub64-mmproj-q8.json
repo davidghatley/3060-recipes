@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 136,
+  "reasoning_head": "The user says \"Reply with exactly: ok\". Need reply exactly \"ok\". Ensure no extra punctuation or explanation. Final should be exactly ok.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 18,
+   "prompt_ms": 402.39,
+   "prompt_per_token_ms": 22.35,
+   "prompt_per_second": 44.73,
+   "predicted_n": 40,
+   "predicted_ms": 1431.22,
+   "predicted_per_token_ms": 36.7,
+   "predicted_per_second": 27.25
+  },
+  "wall_s": 1.85
+ },
+ "math": {
+  "content": "391",
+  "reasoning_chars": 83,
+  "reasoning_head": "The user wants 17 * 23. Compute: 17*20=340, 17*3=51, total 391. Answer just number.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 29,
+   "prompt_ms": 441.35,
+   "prompt_per_token_ms": 15.22,
+   "prompt_per_second": 65.71,
+   "predicted_n": 41,
+   "predicted_ms": 1417.24,
+   "predicted_per_token_ms": 35.43,
+   "predicted_per_second": 28.22
+  },
+  "wall_s": 1.86
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = [c.lower() for c in s if c.isalnum()]\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 429,
+  "reasoning_head": "The user wants a Python function is_palindrome(s) that ignores case and non-alphanumerics. Output only one code block. Need ensure code only. Need produce final with one code block, no extra text. Need decide implementation: keep alphanumeric chars using str.isalnum, lower. Then compare s == s[::-1]",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 33,
+   "prompt_ms": 446.29,
+   "prompt_per_token_ms": 13.52,
+   "prompt_per_second": 73.94,
+   "predicted_n": 155,
+   "predicted_ms": 5507.19,
+   "predicted_per_token_ms": 35.76,
+   "predicted_per_second": 27.96
+  },
+  "wall_s": 5.96
+ },
+ "image": {
+  "content": "A vertical split of red on the left and blue on the right is overlaid with a centered white square straddling the boundary.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 68,
+   "prompt_ms": 770.7,
+   "prompt_per_token_ms": 11.33,
+   "prompt_per_second": 88.23,
+   "predicted_n": 126,
+   "predicted_ms": 4517.3,
+   "predicted_per_token_ms": 36.14,
+   "predicted_per_second": 27.67
+  },
+  "wall_s": 5.3
+ }
+}

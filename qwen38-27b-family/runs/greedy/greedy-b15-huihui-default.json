@@ -1,0 +1,69 @@
+{
+ "label": "b15-huihui-default",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n: int) -> int:\n    \"\"\"\n    Return the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence is defined as:\n        F(0) = 0\n        F(1) = 1\n        F(k) = F(k-1) + F(k-2) for k >= 2\n\n    Args:\n        n: A non-negative integer representing the position in the Fibonacci sequence.\n\n    Returns:\n        The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is negative.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```",
+   "n": 213,
+   "decode_tps": 20.74,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "When you run `./build.sh` and receive a \"Permission denied\" error, it means the operating system is preventing the shell from executing the file. Here are the three most likely causes and their fixes:\n\n### 1. The script lacks the executable permission bit\n**Cause:** The file `build.sh` does not have the execute (`x`) permission set for the user running the command. By default, many text editors or file transfers (e.g., via `cp` or `git clone` without proper attributes) do not set the executable bit.\n\n**Fix:**\nAdd the executable permission for the owner (and optionally group/others):\n```bash\nchmod +x build.sh\n```\nOr, to be more specific:\n```bash\nchmod u+x build.sh\n```\n\n### 2. The current directory lacks execute permission\n**Cause:** To run `./build.sh`, your shell must have **execute** permission on the **current directory** (to traverse into it) and **read** permission on the file. If the directory containing `build.sh` has no execute permission for your user, you cannot access the file via `./`.\n\n**Fix:**\nCheck the permissions of the current directory:\n```bash\nls -ld .\n```\nIf the execute bit is missing, add it:\n```bash\nchmod +x .\n```\n*(Note: This is less common than #1, but critical in restricted environments",
+   "n": 300,
+   "decode_tps": 20.72,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a type of linear attention mechanism that extends the DeltaNet architecture by incorporating a gating mechanism to modulate the update of the hidden state. This gating allows the model to selectively control how much new information is written into the memory, thereby improving its ability to handle long-range dependencies and mitigate the issue of information leakage. By combining the efficient O(N) complexity of linear attention with this adaptive memory management, Gated DeltaNet offers a more robust alternative to standard Transformers for sequence modeling tasks. This architecture has demonstrated strong performance in various natural language processing benchmarks, particularly in scenarios requiring the retention of specific contextual details over long sequences.",
+   "n": 131,
+   "decode_tps": 20.73,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "I'll start by exploring the codebase to understand the structure and find the relevant files.\n\n<tool_call>\n<function=list_files>\n<parameter=path>\n.\n</parameter>\n</function>\n</tool_call>",
+   "n": 44,
+   "decode_tps": 20.73,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files '*.py' | grep -v -E '(^|/)tests?/|_test\\.py$|test_.*\\.py$' | xargs wc -l | tail -1\n```\n\n### How it works:\n1. **`git ls-files '*.py'`** \u2013 Lists all tracked `.py` files in the repo.\n2. **`grep -v -E '(^|/)tests?/|_test\\.py$|test_.*\\.py$'`** \u2013 Excludes files that:\n   - Are in a `test/` or `tests/` directory (at any depth),\n   - End with `_test.py`,\n   - Match the `test_*.py` naming convention.\n3. **`xargs wc -l`** \u2013 Counts lines in each remaining file.\n4. **`tail -1`** \u2013 Prints only the final total line from `wc -l`.\n\n> **Note:** This counts only *tracked* files. If you want to include untracked files, replace `git ls-files '*.py'` with `find . -name '*.py' -not -path './.git/*'`.",
+   "n": 256,
+   "decode_tps": 20.75,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order of operations, often remembered by the acronym **PEMDAS** (Parentheses, Exponents, Multiplication and Division, Addition and Subtraction).\n\n**Step 1: Perform Multiplication and Division**\nAccording to the order of operations, multiplication and division are performed before addition. We can perform them from left to right, but since they are independent operations in this expression, we can calculate them separately.\n\n1.  **Multiplication:**\n    $$17 \\times 23$$\n    \n    Calculation:\n    $$17 \\times 20 = 340$$\n    $$17 \\times 3 = 51$$\n    $$340 + 51 = 391$$\n\n2.  **Division:**\n    $$144 / 12$$\n    \n    Calculation:\n    $$144 \\div 12 = 12$$\n\n**Step 2: Perform Addition**\nNow substitute the results back into the original expression:\n$$391 + 12$$\n\n**Step 3: Final Calculation**\n$$391 + 12 = 403$$\n\n**Final Answer:**\nThe result is **403**.",
+   "n": 289,
+   "decode_tps": 20.73,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.every((item) => typeof item === \"string\");\n}\n```",
+   "n": 41,
+   "decode_tps": 20.7,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "Here is a summary of the CAP theorem for a junior engineer:\n\n*   **The Core Constraint**: In a distributed data system, you can only guarantee two of the three properties: **Consistency**, **Availability**, and **Partition Tolerance**. You must choose which two to prioritize.\n*   **Consistency**: This means that all nodes in the system see the same data at the same time. If you update a value, every node immediately reflects that change, ensuring no stale data is served.\n*   **Availability**: This means that every request receives a response from *any* non-failing node, even if the data might be slightly outdated. The system remains operational and responsive even during network issues.\n*   **Partition Tolerance**: This is the ability of the system to continue operating despite an arbitrary failure of network partitions (e.g., a network cable is cut or a server goes offline). In distributed systems, partitions are inevitable, so you almost always have to accept this property.\n*   **The Trade-off**: Since Partition Tolerance is usually a given in distributed systems, you are effectively choosing between **Consistency** (CP systems, like ZooKeeper or etcd, which may block writes during a partition) or **Availability** (AP systems, like DynamoDB or Cassandra, which may serve stale data during a partition).",
+   "n": 275,
+   "decode_tps": 20.72,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

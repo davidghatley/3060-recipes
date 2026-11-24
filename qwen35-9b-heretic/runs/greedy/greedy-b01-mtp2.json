@@ -1,0 +1,29 @@
+{
+ "label": "b01-mtp2",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n: int) -> int:\n    \"\"\"\n    Return the n-th Fibonacci number using an iterative approach.\n\n    The Fibonacci sequence is defined as:\n        F(0) = 0\n        F(1) = 1\n        F(n) = F(n-1) + F(n-2) for n >= 2\n\n    Parameters:\n        n (int): The position in the Fibonacci sequence (must be >= 0).\n\n    Returns:\n        int: The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is negative.\n\n    Examples:\n        >>> fibonacci(0)\n        0\n        >>> fibonacci(1)\n        1\n        >>> fibonacci(10)\n        55\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n\n    if n == 0:\n       ",
+   "n": 200,
+   "decode_tps": 67.88,
+   "draft_n": 139,
+   "accepted": 129
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes and their fixes:\n\n1. **The script isn\u2019t executable**\n   - Cause: The file lacks execute permission.\n   - Fix:\n     ```bash\n     chmod +x ./build.sh\n     ```\n\n2. **The script is a text file, not a shell script**\n   - Cause: It\u2019s a regular text file (e.g., from a web page or editor) that starts with something like `#!/bin/bash` but isn\u2019t actually a valid script.\n   - Fix:\n     - Check the first line:\n       ```bash\n       head -n 1 ./build.sh\n       ```\n     - If it\u2019s not a proper shebang or the file is corrupted, recreate it or download it again.\n\n3. **The shebang points to a non-existent or wrong shell**\n   - Cause: The first line is something like `#!/usr/bin/python3` or `#!/bin",
+   "n": 200,
+   "decode_tps": 59.03,
+   "draft_n": 162,
+   "accepted": 118
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a specialized neural network component designed to efficiently capture long-range dependencies in sequential data. It combines delta networks, which use residual connections to preserve gradient flow, with gating mechanisms that selectively control information updates. This architecture allows the model to learn incremental changes while maintaining a stable baseline representation across many time steps. As a result, Gated DeltaNets often achieve better performance and training stability on tasks like language modeling and time-series prediction compared to standard recurrent or transformer layers.",
+   "n": 100,
+   "decode_tps": 49.5,
+   "draft_n": 96,
+   "accepted": 52
+  }
+ ]
+}

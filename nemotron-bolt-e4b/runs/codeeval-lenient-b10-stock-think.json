@@ -1,0 +1,105 @@
+{
+ "label": "b10-stock-think",
+ "think": "on",
+ "strict": 1,
+ "lenient": 6,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "strict": false,
+   "lenient": true,
+   "err": "",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 434,
+   "decode_tps": 76.03,
+   "wall_s": 5.8,
+   "content": "def merge_intervals(intervals):\n    \"\"\"\n    Merges overlapping closed intervals.\n\n    Args:\n        intervals: A list of intervals, where each interval is [start, end].\n\n    Returns:\n        A list of merged, non-overlapping intervals, sorted by start.\n    \"\"\"\n    if not intervals:\n        return []\n\n    # Sort the intervals based on the start time\n    intervals.sort(key=lambda x: x[0])\n\n    merged = []\n    # Initialize the current merged interval with the first interval\n    current_start, current_end = intervals[0]\n\n    for next_start, next_end in intervals[1:]:\n        # Check for overlap: if the next interval starts before or at the current end\n        if next_start <= current_end:\n            # Merge: update the end to the maximum of the current end and the next end\n            current_end = max(current_end, next_end)\n        else:\n            # No overlap: finalize the current merged interval and start a new one\n            merged.append([current_start, current_end])\n            current_start, current_end = next_start, next_end\n\n    # Append the last processed interval\n    merged.append([current_start, current_end])\n\n    return merged"
+  },
+  {
+   "task": "roman",
+   "strict": false,
+   "lenient": true,
+   "err": "",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 537,
+   "decode_tps": 76.04,
+   "wall_s": 7.1,
+   "content": "def to_roman(n: int) -> str:\n    \"\"\"\n    Converts an integer (1 to 3999) to a Roman numeral string.\n    \"\"\"\n    if not 1 <= n <= 3999:\n        raise ValueError(\"Input must be between 1 and 3999\")\n\n    roman_map = [\n        (1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'),\n        (100, 'C'), (90, 'XC'), (50, 'L'), (40, 'XL'),\n        (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')\n    ]\n\n    result = []\n    for value, symbol in roman_map:\n        while n >= value:\n            result.append(symbol)\n            n -= value\n    \n    return \"\".join(result)"
+  },
+  {
+   "task": "lru",
+   "strict": false,
+   "lenient": false,
+   "err": "no code block, not bare Python",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 978,
+   "decode_tps": 75.79,
+   "wall_s": 12.9,
+   "content": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    Implements an LRU Cache with O(1) time complexity for get and put operations.\n    \"\"\"\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        # OrderedDict maintains insertion order and allows O(1) move_to_end and popitem\n        self.cache = OrderedDict()\n\n    def get(self, key: int) -> int:\n        \"\"\"\n        Retrieves the value for a key. Returns -1 if the key is not found.\n        O(1) complexity.\n        \"\"\"\n        if key not in self.cache:\n            return -1\n        \n        # Move the accessed item to the end (Most Recently Used)\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key: int, value: int) -> None:\n        \"\"\"\n        Inserts or updates a key-value pair. Handles capacity eviction.\n        O(1) complexity.\n        \"\"\"\n        if key in self.cache:\n            # Update value and move to MRU position\n            self.cache[key] = value\n            self.cache.move_to_end(key)\n        else:\n            # Check if capacity is reached\n            if len(self.cache) >= self.capacity:\n                # Evict the Least Recently Used item (the first item)\n                # last=False ensures popitem removes the first item\n                self.cache.popitem(last=False)\n            \n            # Insert the new item (it automatically goes to the MRU end)\n            self.cache[key] = value\n\nif __name__ == '__main__':\n    # Example usage: Capacity 2\n    lru = LRUCache(2)\n    \n    # put(1, 1)\n    lru.put(1, 1)\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n    \n    # put(2, 2)\n    lru.put(2, 2)\n    \n    # Get 1 (moves 1 to MRU)\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n    \n    # put(3, 3) -> Capacity exceeded (2). Evicts 2 (LRU).\n    lru.put(3, 3)\n    \n    # Get 2 (should be evicted)\n    print(f\"Get 2: {lru.get(2)}\") # Output: -1\n    \n    # Get 3\n    print(f\"Get 3: {lru.get(3)}\") # Output: 3\n    \n    # Get 1\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n```"
+  },
+  {
+   "task": "topo",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 808,
+   "decode_tps": 75.72,
+   "wall_s": 10.7,
+   "content": "```python\nfrom collections import deque, defaultdict\n\ndef topo_sort(graph):\n    \"\"\"\n    Performs a topological sort on a graph represented by an adjacency list.\n\n    Args:\n        graph (dict): Maps a node to a list of nodes it must come before \n                      (i.e., node -> [neighbor1, neighbor2]).\n\n    Returns:\n        list: A list of nodes in a valid topological order.\n\n    Raises:\n        ValueError: If the graph contains a cycle.\n    \"\"\"\n    \n    # 1. Identify all unique nodes\n    nodes = set(graph.keys())\n    for neighbors in graph.values():\n        nodes.update(neighbors)\n    \n    if not nodes:\n        return []\n\n    # 2. Calculate in-degrees\n    in_degree = {node: 0 for node in nodes}\n    \n    # 3. Build the adjacency list (if not already fully defined) and calculate degrees\n    # We use the input 'graph' as the adjacency list\n    for u, neighbors in graph.items():\n        for v in neighbors:\n            # Ensure v is in the in_degree map (it should be, but safety first)\n            if v not in in_degree:\n                in_degree[v] = 0\n            in_degree[v] += 1\n\n    # 4. Initialize queue with nodes having in-degree 0\n    queue = deque([node for node in nodes if in_degree[node] == 0])\n    \n    sorted_order = []\n    \n    # 5. Kahn's Algorithm\n    while queue:\n        u = queue.popleft()\n        sorted_order.append(u)\n        \n        # Check neighbors (u must be a key in the graph)\n        if u in graph:\n            for v in graph[u]:\n                # Decrement in-degree\n                in_degree[v] -= 1\n                \n                # If in-degree becomes 0, add to queue\n                if in_degree[v] == 0:\n                    queue.append(v)\n                    \n    # 6. Cycle Detection\n    if len(sorted_order) != len(nodes):\n        raise ValueError(\"Graph contains a cycle, topological sort is impossible.\")\n        \n    return sorted_order\n```"
+  },
+  {
+   "task": "rle",
+   "strict": false,
+   "lenient": true,
+   "err": "",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 1706,
+   "decode_tps": 75.46,
+   "wall_s": 22.7,
+   "content": "def rle_encode(s: str) -> str:\n    \"\"\"\n    Encodes a string using run-length encoding.\n    Example: 'aaabcc' -> '3a1b2c'\n    \"\"\"\n    if not s:\n        return \"\"\n    \n    encoded = []\n    i = 0\n    n = len(s)\n    \n    while i < n:\n        char = s[i]\n        count = 1\n        j = i + 1\n        while j < n and s[j] == char:\n            count += 1\n            j += 1\n        \n        encoded.append(str(count) + char)\n        i = j\n        \n    return \"\".join(encoded)\n\ndef rle_decode(s: str) -> str:\n    \"\"\"\n    Decodes a run-length encoded string.\n    Example: '3a1b2c' -> 'aaabcc'\n    \"\"\"\n    if not s:\n        return \"\"\n    \n    decoded = []\n    i = 0\n    n = len(s)\n    \n    while i < n:\n        # Find the end of the numeric count\n        j = i\n        while j < n and s[j].isdigit():\n            j += 1\n        \n        # The count string is s[i:j]\n        count_str = s[i:j]\n        \n        if not count_str:\n            # Should not happen if input is well-formed, but handles edge case\n            raise ValueError(\"Invalid RLE format: expected count before character.\")\n            \n        try:\n            count = int(count_str)\n        except ValueError:\n            raise ValueError(\"Invalid RLE format: count must be an integer.\")\n            \n        # The character is immediately after the count\n        if j >= n:\n            raise ValueError(\"Invalid RLE format: expected character after count.\")\n            \n        char = s[j]\n        \n        # Append the character repeated 'count' times\n        decoded.append(char * count)\n        \n        # Move the pointer past the count and the character\n        i = j + 1\n        \n    return \"\".join(decoded)\n\n# Example usage (optional, for testing):\n# print(rle_encode(\"aaabcc\"))  # Output: 3a1b2c\n# print(rle_decode(\"3a1b2c\"))  # Output: aaabcc\n# print(rle_encode(\"zzzzzzzzzz\")) # Output: 10z\n# print(rle_decode(\"10z\"))     # Output: zzzzzzzzzz\n# print(rle_encode(\"\"))         # Output: \n# print(rle_decode(\"\"))         # Output: \n# print(rle_encode(\"a\"))       # Output: 1a\n# print(rle_decode(\"1a\"))     # Output: a\n# print(rle_encode(\"abc\"))     # Output: 1a1b1c\n# print(rle_decode(\"1a1b1c\"))  # Output: abc\n# print(rle_encode(\"aaaaa\"))   # Output: 5a\n# print(rle_decode(\"5a\"))     # Output: aaaaa\n# print(rle_encode(\"aabbaa\"))  # Output: 2a2b2a\n# print(rle_decode(\"2a2b2a\"))  # Output: aabbaa\n# print(rle_encode(\"123\"))    # Output: 11213\n# print(rle_decode(\"11213\"))  # Output: 123\n# print(rle_encode(\"a\" * 100)) # Output: 100a\n# print(rle_decode(\"100a\"))   # Output: a*100\n#\n# Note: The implementation handles multi-digit counts correctly (e.g., 100a).\n# The format assumes count is always followed immediately by the character.\n# The implementation assumes the input string is well-formed according to the specified format.\n# The provided solution uses robust parsing for multi-digit counts.\n#\n# Final check: The requirement was to output only one Python code block.\n# The functions are defined and ready.\n#"
+  },
+  {
+   "task": "parse_duration",
+   "strict": false,
+   "lenient": false,
+   "err": "no code block, not bare Python",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 808,
+   "decode_tps": 75.72,
+   "wall_s": 10.7,
+   "content": "import re\n\ndef parse_duration(s: str) -> int:\n    \"\"\"\n    Parses a duration string (e.g., '1h30m', '45s', '2h5s') into a total number of seconds.\n\n    Raises ValueError if the string format is invalid.\n    \"\"\"\n    if not isinstance(s, str) or not s:\n        raise ValueError(\"Input must be a non-empty string.\")\n\n    # Regex to find all pairs of (number, unit) where unit is h, m, or s\n    matches = re.findall(r'(\\d+)([hms])', s)\n\n    # Check if the entire string was consumed by the matches\n    # This ensures no extraneous characters (like '1h30x') exist\n    consumed_length = sum(len(val) + len(unit) for val, unit in matches)\n    if consumed_length != len(s):\n        # Check if the string contains only valid characters (digits and h, m, s)\n        if not re.fullmatch(r'(\\d+[hms])*', s):\n             raise ValueError(f\"Invalid duration format: '{s}'. Contains unknown characters or structure.\")\n        # If the regex matched but didn't consume the whole string, it means there's an issue\n        # (e.g., '1h 30m' - space is not handled by the current regex)\n        raise ValueError(f\"Invalid duration format: '{s}'. Must be tightly packed (e.g., '1h30m').\")\n\n\n    total_seconds = 0\n    conversions = {'h': 3600, 'm': 60, 's': 1}\n\n    for value_str, unit in matches:\n        try:\n            value = int(value_str)\n        except ValueError:\n            # Should not happen if regex is correct, but good practice\n            raise ValueError(f\"Invalid numeric value found: {value_str}\")\n\n        if unit not in conversions:\n            # Should not happen due to regex, but defensive check\n            raise ValueError(f\"Unknown unit: {unit}\")\n\n        total_seconds += value * conversions[unit]\n\n    return total_seconds\n```"
+  },
+  {
+   "task": "bisect",
+   "strict": false,
+   "lenient": true,
+   "err": "",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 1120,
+   "decode_tps": 75.7,
+   "wall_s": 14.8,
+   "content": "def first_ge(a, x):\n    \"\"\"\n    Returns the index of the first element >= x in the sorted list a.\n    Returns len(a) if no such element exists. O(log n).\n    \"\"\"\n    n = len(a)\n    low = 0\n    high = n  # Search space includes the possibility of returning n\n    ans = n\n\n    while low < high:\n        mid = low + (high - low) // 2\n        \n        if a[mid] >= x:\n            # This is a potential answer. Try to find an even smaller index.\n            ans = mid\n            high = mid\n        else:\n            # a[mid] is too small, the answer must be to the right.\n            low = mid + 1\n            \n    return ans"
+  },
+  {
+   "task": "matrix_spiral",
+   "strict": false,
+   "lenient": true,
+   "err": "",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 1206,
+   "decode_tps": 75.57,
+   "wall_s": 16.0,
+   "content": "def spiral(m):\n    if not m or not m[0]:\n        return []\n\n    R = len(m)\n    C = len(m[0])\n    \n    top, bottom = 0, R - 1\n    left, right = 0, C - 1\n    \n    result = []\n    \n    while top <= bottom and left <= right:\n        # 1. Traverse Right (Top row)\n        for c in range(left, right + 1):\n            result.append(m[top][c])\n        top += 1\n        \n        # 2. Traverse Down (Right column)\n        for r in range(top, bottom + 1):\n            result.append(m[r][right])\n        right -= 1\n        \n        # 3. Traverse Left (Bottom row) - Check if row still exists\n        if top <= bottom:\n            for c in range(right, left - 1, -1):\n                result.append(m[bottom][c])\n            bottom -= 1\n            \n        # 4. Traverse Up (Left column) - Check if column still exists\n        if left <= right:\n            for r in range(bottom, top - 1, -1):\n                result.append(m[r][left])\n            left += 1\n            \n    return result"
+  }
+ ]
+}

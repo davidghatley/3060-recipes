@@ -1,0 +1,52 @@
+== gpu-all: -ngl 99
+986 MiB
+llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+llama_bench: error: failed to create context with model '/mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf'
+== ffn4-cpu: -ngl 99 -ot blk\.([0-3])\.ffn_(up|gate|down)=CPU
+986 MiB
+ffn4-cpu pp 609.59 0.4
+ffn4-cpu tg 16.47 0.23
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ffn8-cpu: -ngl 99 -ot blk\.([0-7])\.ffn_(up|gate|down)=CPU
+986 MiB
+ffn8-cpu pp 586.09 1.43
+ffn8-cpu tg 13.8 0.04
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ngl57: -ngl 57
+1016 MiB
+ngl57 pp 550.19 1.81
+ngl57 tg 11.26 0.02
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== down8-cpu: -ngl 99 -ot blk\.([0-7])\.ffn_down=CPU
+1016 MiB
+down8-cpu pp 607.55 0.97
+down8-cpu tg 17.14 0.03
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== up8-cpu: -ngl 99 -ot blk\.([0-7])\.ffn_up=CPU
+1016 MiB
+up8-cpu pp 606.17 0.81
+up8-cpu tg 17.53 0.24
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== output-cpu: -ngl 99 -ot output\.weight=CPU
+1016 MiB
+output-cpu pp 598.03 2.32
+output-cpu tg 13.52 1.4
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ffn8-cpu-t12: -ngl 99 -ot blk\.([0-7])\.ffn_(up|gate|down)=CPU -t 12
+986 MiB
+ffn8-cpu-t12 pp 581.57 1.18
+ffn8-cpu-t12 tg 13.79 0.04
+ffn8-cpu-t12 pp 581.8 1.69
+ffn8-cpu-t12 tg 13.51 0.18
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 11954 MiB):
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== gpu-all-2: -ngl 99
+1016 MiB
+llama_init_from_model: failed to initialize the context: failed to allocate compute pp buffers
+llama_bench: error: failed to create context with model '/mnt/models/llm/qwen38-27b-family/pi-adapted/Qwen3.8-27B-pi-IQ3_XXS.gguf'

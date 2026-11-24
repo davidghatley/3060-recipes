@@ -1,0 +1,29 @@
+{
+ "recipe": "qwen35-9b-heretic",
+ "model": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF @ 4d47954f2ef8277567a20508dd3f88def5404455",
+ "file": "/mnt/models/llm/qwen35-9b-heretic/Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf",
+ "sha256": "b54d045cc07cc48259a2329f2b86ba8956de15a44d71d5004a6f8598d71c36d6",
+ "engine": "llama.cpp master 225a5345b (stock, CUDA), /mnt/scratch/llama.cpp/master-225a5345b/bin",
+ "default": {
+  "profile": "QH_PROFILE=default (./serve.sh)",
+  "command": "llama-server -m Qwen3.5-9B-The-Defiant-Fable-Uncnr-Heretic-NEO-MAX-MTP-Q6_K.gguf --no-mmproj -ngl 99 --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk f16 -ctv f16 --spec-type draft-mtp --spec-draft-n-max 2 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0 --repeat-penalty 1.0 --presence-penalty 0 --host 127.0.0.1 --port 8106",
+  "gpu_run": "GPU_RUN_MEM=24G gpu_run --free --need 10000",
+  "measured": {"run": "b13-default", "decode_d0_think_off": 64.32, "decode_d0_think_on": 61.51, "decode_60k": 49.93,
+   "accept_d0": 0.849, "prefill_8k": 1680.6, "prefill_32k": 1513.3, "prefill_60k": 1349.6, "ttft_61k_s": 46.1,
+   "needles": "3/3 at 32.8k, 3/3 at 61.8k", "codeeval": "5/8 (stock 5/8)", "vram_card_mib": 11404, "cgroup_peak_gb": 9.37, "startup_s": 1.11},
+  "lossless": "weights and K/V as published; MTP verify is exact in distribution, greedy 3/4 (thinking on) and 3/3 (off) identical to no-spec"
+ },
+ "fast": {
+  "profile": "QH_PROFILE=fast (needs tools/requant_head.sh first)",
+  "file": "/mnt/scratch/tmp-qwen35-9b-heretic/Qwen3.5-9B-Defiant-Fable-Heretic-MTP-Q6_K-headQ8_0-local.gguf (output.weight BF16 -> Q8_0, all else byte-identical)",
+  "command_diff": "-m <local Q8_0-head copy> -c 131072 -ctk q8_0 -ctv q8_0",
+  "measured": {"run": "b07-fast", "decode_d0_think_off": 78.34, "decode_d0_think_on": 78.08, "decode_120k": 38.2,
+   "prefill_8k": 1671.9, "prefill_32k": 1494.3, "prefill_120k": 1073.5, "needles": "3/3 at 65.9k, 3/3 at 124.5k",
+   "codeeval": "6/8", "vram_card_mib": 11474},
+  "lossy": "KLD vs the published file: Q8_0 head 0.000093 (wiki) / 0.000038 (code); q8_0 K/V 0.00036 / 0.0013"
+ },
+ "baseline": {"run": "b08-stock", "command": "llama-server -m <file> --jinja (fit: 4 slots, 69,376 unified f16 K/V)",
+  "decode_d0": 39.40, "decode_63k": 31.47, "prefill_8k": 1786.5, "prefill_32k": 1624.2, "prefill_63k": 1438.2},
+ "ceilings": {"plain_d0": 43.8, "mtp2_d0_at_accept_0.85": 71.7, "fast_plain_d0": 49.9, "fast_mtp2_d0_at_accept_0.82": 90.4,
+  "prefill_8k_51tflops": 3550}
+}

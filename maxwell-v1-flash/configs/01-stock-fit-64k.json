@@ -1,0 +1,3 @@
+{"id": "01-stock-fit-64k", "from": "00-card-line", "change": "drop -ngl 99 so llama.cpp's --fit (default on) picks the GPU/RAM split; 64k window, f16 KV, ub 512, every other flag stock",
+ "serve": "MX_PLACEMENT=fit MX_KV=f16 ./serve.sh", "build": "maxwell-4f969ad24", "model": "AD-Q4_K-IQ4_XS", "lora": null,
+ "env": {"GPU_RUN_MEM": "44G", "MX_PORT": "8104"}}

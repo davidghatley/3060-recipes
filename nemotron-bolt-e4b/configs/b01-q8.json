@@ -1,0 +1,27 @@
+{
+ "id": "b01-q8",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/nemotron-bolt-e4b/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf --alias nemotron-bolt -ngl 999 -c 65536 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 64 --min-p 0 --host 127.0.0.1 --port 8105",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 5102,
+   "prefill_tps": 4640.1
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 5102,
+   "decode_tps": 74.95,
+   "min": 74.67,
+   "max": 75.11
+  },
+  {
+   "case": "code-32k-med",
+   "vram_mib": 5104,
+   "decode_tps": 48.3,
+   "min": 48.25,
+   "max": 48.32
+  }
+ ],
+ "server_log": "runs/server-b01-q8.log"
+}

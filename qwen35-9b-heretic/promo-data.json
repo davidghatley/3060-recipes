@@ -1,0 +1,118 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md / README.md / THEORY.md / best-config.json. Speed values are [value, ledger label, ledger case] (optionally a 4th element naming the field) and are checked against runs/ledger.jsonl (decode_tps, or prefill_tps for pp-* cases; needle-* cases read ttft_s); needles [ctx, label, case] read 'found' (and prompt_n); codeeval against runs/codeeval-<label>.json; the refusal classifier against runs/refusal-<label>.json; greedy identity against runs/greedy/ (texts compared exactly); long answers against runs/longans/; KLD against runs/kld/summary.txt; the default's card VRAM against best-config.json; statements in 'text' are matched word for word in RESULTS.md (keys starting readme_ in README.md, theory_ in THEORY.md). promo/tools/prep.py refuses to mark the set measured if any differ. Derived numbers (speed-ups, the head's share of bytes, percent of ceiling, prefill cost) are computed in prep and compared with the rounded figures RESULTS.md / README.md state.",
+ "model": {"name": "Qwen3.5-9B Heretic", "full": "Qwen3.5-9B \"The Defiant Fable\" Uncensored Heretic", "size": "9B", "layers": 32, "quant": "Q6_K", "file_gb": 8.76,
+   "_source": "RESULTS.md: 'Qwen3.5-9B hybrid layout: 32 layers, 3 Gated DeltaNet : 1 full attention'; '(8.76 GB, sha256 b54d045c…): Q6_K blocks, imatrix (\"NEO\" dataset), and a **BF16 output head** (2.03 GB'"},
+ "engine": {"name": "llama.cpp", "master": "225a5345b"},
+ "bytes": {
+  "_what": "THEORY.md: bytes read per emitted token (GB). Each value is also a theory_ text check below",
+  "blocks": 5.672, "head_bf16": 2.034, "state": 0.10, "total": 7.81, "head_q8": 1.08, "total_q8": 6.86, "draft": 2.23
+ },
+ "ceilings": {"_what": "RESULTS.md / THEORY.md ceilings at the measured acceptance (bytes only)", "plain": 43.8, "default": 71.7, "fast": 90.4},
+ "stock": {
+  "_what": "b08: llama-server -m <file> --jinja; --fit picked 4 slots sharing 69,376 tokens of f16 K/V",
+  "decode_off": [39.40, "b08-stock", "code-0k-med"],
+  "decode_on": [39.41, "b08-stock-think", "code-0k-med"],
+  "decode_deep": [31.47, "b08-stock", "code-63k-med"],
+  "prefill_8k": [1786.5, "b08-stock", "pp-8k-med"],
+  "prefill_32k": [1624.2, "b08-stock", "pp-32k-med"],
+  "needles_50": ["34.7k", "b08-stock", "needle-34k"],
+  "needles_95": ["65.7k", "b08-stock", "needle-65k"],
+  "codeeval": "b08-stock"
+ },
+ "default": {
+  "_what": "b13: serve.sh default, the published file, MTP n=2, 64k f16 K/V, one slot",
+  "decode_off": [64.32, "b13-default", "code-0k-med"],
+  "decode_on": [61.51, "b13-default-think", "code-0k-med"],
+  "decode_deep": [49.93, "b13-default", "code-60k-med"],
+  "accept_off": [0.849, "b13-default", "code-0k-med", "accept"],
+  "accept_on": [0.786, "b13-default-think", "code-0k-med", "accept"],
+  "prefill_8k": [1680.6, "b13-default", "pp-8k-med"],
+  "prefill_32k": [1513.3, "b13-default", "pp-32k-med"],
+  "needles_50": ["32.8k", "b13-default", "needle-32k"],
+  "needles_95": ["61.8k", "b13-default", "needle-61k"],
+  "ttft_95": [46.1, "b13-default", "needle-61k"],
+  "codeeval": "b13-default",
+  "vram_mib": 11404
+ },
+ "fast": {
+  "_what": "b07: QH_PROFILE=fast, local copy with output.weight BF16 -> Q8_0, MTP n=2, 128k q8_0 K/V",
+  "decode_off": [78.34, "b07-fast", "code-0k-med"],
+  "decode_on": [78.08, "b07-fast-think", "code-0k-med"],
+  "decode_deep": [38.20, "b07-fast", "code-120k-med"],
+  "prefill_8k": [1671.9, "b07-fast", "pp-8k-med"],
+  "needles_50": ["65.9k", "b07-fast", "needle-65k"],
+  "needles_95": ["124.5k", "b07-fast", "needle-123k"],
+  "codeeval": "b07-fast"
+ },
+ "nospec": {
+  "_what": "b09: QH_PROFILE=nospec, 128k q8_0, no speculation",
+  "decode_off": [39.32, "b09-nospec", "code-0k-med"],
+  "decode_deep": [24.64, "b09-nospec", "code-120k-med"],
+  "prefill_8k": [1766.8, "b09-nospec", "pp-8k-med"],
+  "needles_50": ["65.9k", "b09-nospec", "needle-65k"],
+  "needles_95": ["124.5k", "b09-nospec", "needle-123k"]
+ },
+ "long": {
+  "_what": "b09: QH_PROFILE=long, 192k q4_0, no speculation",
+  "decode_off": [39.33, "b09-long", "code-0k-med"],
+  "decode_deep": [20.17, "b09-long", "code-180k-med"],
+  "prefill_8k": [1752.1, "b09-long", "pp-8k-med"],
+  "needles_50": ["98.5k", "b09-long", "needle-98k"],
+  "needles_95": ["186.0k", "b09-long", "needle-186k"],
+  "ttft_95": [188.6, "b09-long", "needle-186k"]
+ },
+ "head_ab": {
+  "_what": "b04: plain Q8_0 head against the two plain controls either side; MTP n=2 with the Q8_0 head against MTP n=2 on the published file",
+  "ctl": [[39.43, "b04-ctl-a", "code-0k-med"], [39.42, "b04-ctl-b", "code-0k-med"]],
+  "headq8": [44.33, "b04-headq8", "code-0k-med"],
+  "mtp2": [64.57, "b04-mtp2", "code-0k-med"],
+  "headq8_mtp2": [76.26, "b04-headq8-mtp2", "code-0k-med"]
+ },
+ "kld": {
+  "_what": "runs/kld/summary.txt, 'Mean KLD' of each change against the published file at its own settings",
+  "head_wiki": 0.000093, "head_code": 0.000038, "kv_q8_wiki": 0.000364, "kv_q8_code": 0.001259
+ },
+ "longans": {
+  "_what": "tools/longans.py, six prompts, thinking on, 10k cap, one sample each; plus the 24k-cap rerun of the probability problem (b10)",
+  "mtp": "longans-b02-mtp2", "nospec": "longans-b03-nospec", "long24k": "longans-b10-mtp2-24k",
+  "finished": 5, "n": 6, "capped": 1, "loops": 0, "z_floor": 0.1, "gen_24k": 24000
+ },
+ "greedy": {
+  "_what": "temperature 0; MTP n=2 vs no speculation, texts compared exactly",
+  "on": ["greedy-b13-nospec-think", "greedy-b13-default-think"], "identical_on": 3, "n_on": 4,
+  "off": ["greedy-b01-ctl-a", "greedy-b01-mtp2"], "identical_off": 3, "n_off": 3
+ },
+ "refusal": {"label": "b10-think-off", "answered_by_hand": 20, "n": 20},
+ "results_md": {
+  "_what": "figures RESULTS.md / README.md state as rounded; prep checks its own derivations against these",
+  "x_default": 1.6, "x_deep": 1.6, "x_fast": 2.0, "x_on": 1.6, "head_pct": 26, "draft_pct": 29, "ceiling_pct": 90, "fast_ceiling_pct": 87,
+  "plain_ceiling_pct": 90, "prefill_cost_pct": 6, "headq8_plain_pct": 12, "headq8_mtp_pct": 18, "accept_off_pct": 85, "accept_on_pct": 79
+ },
+ "text": {
+  "_what": "statements the copy and plates make that are not in a run file as such; each must appear word for word in RESULTS.md (readme_ keys in README.md, theory_ keys in THEORY.md)",
+  "verdict": "The published file as downloaded, all in VRAM, its own MTP head (n=2), f16 K/V, 64k window, one slot.",
+  "b12242": "The same Qwen3.5 family's MTP head looped on long answers with llama.cpp b12242",
+  "longans": "six long answers (to 10k tokens, thinking on) behaved the same with and without MTP, and a 24k-token answer stayed coherent.",
+  "coherent_24k": "used all 24,000 tokens in a coherent, non-repeating case enumeration",
+  "head": "The BF16 head is 26% of the bytes read per token and MTP's draft step reads it again.",
+  "requant": "(48 s on the CPU, every other tensor byte-identical)",
+  "fast_profile": "It is a profile, not the default, because it changes the published file.",
+  "prefill": "MTP costs ~6% of prompt speed (1,681 vs 1,787 tok/s at 8k).",
+  "no_262k": "The full 262k window does not fit with the BF16 head.",
+  "refusal": "**answered 20/20, refused 0**; each answer read and each does what was asked.",
+  "no_base": "No base comparison: no base Qwen3.5-9B file on disk.",
+  "no_quant_kld": "Quantization error against a BF16 or Q8_0 reference (none on disk; nothing downloaded).",
+  "card_gb": "11.4 GB on the card including the desktop.",
+  "readme_acceptance": "MTP n=2 accepts 85% of drafts on code (79% with thinking on)",
+  "readme_plain_ceiling": "Plain decode tops out at 39.4 tok/s, 90% of the 43.8 tok/s ceiling",
+  "readme_window": "12 GB holds 64k (f16 K/V) with MTP, 128k with MTP and the Q8_0 head, and 192k without MTP.",
+  "theory_blocks": "| Block weights (layers 0–31) | 5.672 GB, Q6_K |",
+  "theory_head": "| Output head (`output.weight`) | **2.034 GB, BF16**",
+  "theory_total": "5.672 (blocks) + 2.034 (head) + ~0.10 (24 GDN layers' recurrent state,",
+  "theory_q8": "A Q8_0 head (1.08 GB) would lift the d0 ceiling",
+  "theory_q8_total": "would lift the d0 ceiling to 342 / 6.86 =",
+  "theory_draft": "so one draft token costs ~2.23 GB, 29% of a full step.",
+  "ceil_default": "71.7 / 90.4 at the measured acceptance",
+  "theory_7_81": "= **7.81 GB**"
+ }
+}

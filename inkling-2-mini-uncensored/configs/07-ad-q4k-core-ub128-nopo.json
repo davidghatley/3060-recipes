@@ -1,0 +1,2 @@
+{"id": "07-ad-q4k-core-ub128-nopo", "from": "04-ad-q4k-core-ub128", "change": "add --no-op-offload (drops the ~0.9 GB op-offload staging buffer; prefill of the RAM layers' experts then runs on the CPU)",
+ "serve": "VARIANT=atomicchat ./serve.sh --no-op-offload", "build": "r2inkfix-19c41d2ff", "model": "AD-Q4_K as in 04", "lora": null, "flags": "base serve.sh defaults + --no-op-offload", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

@@ -1,0 +1,7 @@
+{
+ "id": "b10-stock",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/nemotron-bolt-e4b/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf --alias nemotron-bolt -ngl 999 -c 65536 -t 6 -b 2048 -ub 512 -fa auto -ctk f16 -ctv f16 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 64 --min-p 0 --host 127.0.0.1 --port 8105",
+ "results": [],
+ "server_log": "runs/server-b10-stock.log"
+}

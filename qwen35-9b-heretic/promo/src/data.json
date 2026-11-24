@@ -1,0 +1,191 @@
+{
+ "status": "measured",
+ "problems": [],
+ "model": {
+  "name": "Qwen3.5-9B Heretic",
+  "full": "Qwen3.5-9B \"The Defiant Fable\" Uncensored Heretic",
+  "size": "9B",
+  "layers": 32,
+  "quant": "Q6_K",
+  "file_gb": 8.76,
+  "_source": "RESULTS.md: 'Qwen3.5-9B hybrid layout: 32 layers, 3 Gated DeltaNet : 1 full attention'; '(8.76 GB, sha256 b54d045c…): Q6_K blocks, imatrix (\"NEO\" dataset), and a **BF16 output head** (2.03 GB'"
+ },
+ "engine": {
+  "name": "llama.cpp",
+  "master": "225a5345b"
+ },
+ "bytes": {
+  "_what": "THEORY.md: bytes read per emitted token (GB). Each value is also a theory_ text check below",
+  "blocks": 5.672,
+  "head_bf16": 2.034,
+  "state": 0.1,
+  "total": 7.81,
+  "head_q8": 1.08,
+  "total_q8": 6.86,
+  "draft": 2.23
+ },
+ "ceilings": {
+  "_what": "RESULTS.md / THEORY.md ceilings at the measured acceptance (bytes only)",
+  "plain": 43.8,
+  "default": 71.7,
+  "fast": 90.4
+ },
+ "stock": {
+  "decode_off": 39.4,
+  "decode_on": 39.41,
+  "decode_deep": 31.47,
+  "prefill_8k": 1786.5,
+  "prefill_32k": 1624.2,
+  "needles_50": [
+   "34.7k",
+   "3/3"
+  ],
+  "needles_95": [
+   "65.7k",
+   "3/3"
+  ],
+  "codeeval": [
+   5,
+   8
+  ]
+ },
+ "default": {
+  "decode_off": 64.32,
+  "decode_on": 61.51,
+  "decode_deep": 49.93,
+  "accept_off": 0.849,
+  "accept_on": 0.786,
+  "prefill_8k": 1680.6,
+  "prefill_32k": 1513.3,
+  "ttft_95": 46.1,
+  "needles_50": [
+   "32.8k",
+   "3/3"
+  ],
+  "needles_95": [
+   "61.8k",
+   "3/3"
+  ],
+  "vram_mib": 11404,
+  "codeeval": [
+   5,
+   8
+  ]
+ },
+ "fast": {
+  "decode_off": 78.34,
+  "decode_on": 78.08,
+  "decode_deep": 38.2,
+  "prefill_8k": 1671.9,
+  "needles_50": [
+   "65.9k",
+   "3/3"
+  ],
+  "needles_95": [
+   "124.5k",
+   "3/3"
+  ],
+  "codeeval": [
+   6,
+   8
+  ]
+ },
+ "nospec": {
+  "decode_off": 39.32,
+  "decode_deep": 24.64,
+  "prefill_8k": 1766.8,
+  "needles_50": [
+   "65.9k",
+   "3/3"
+  ],
+  "needles_95": [
+   "124.5k",
+   "3/3"
+  ]
+ },
+ "long": {
+  "decode_off": 39.33,
+  "decode_deep": 20.17,
+  "prefill_8k": 1752.1,
+  "ttft_95": 188.6,
+  "needles_50": [
+   "98.5k",
+   "3/3"
+  ],
+  "needles_95": [
+   "186.0k",
+   "3/3"
+  ]
+ },
+ "head_ab": {
+  "ctl": [
+   39.43,
+   39.42
+  ],
+  "headq8": 44.33,
+  "mtp2": 64.57,
+  "headq8_mtp2": 76.26,
+  "ctl_mean": 39.425
+ },
+ "kld": {
+  "head_wiki": 9.3e-05,
+  "head_code": 3.8e-05,
+  "kv_q8_wiki": 0.000364,
+  "kv_q8_code": 0.001259
+ },
+ "longans": {
+  "mtp": {
+   "finished": 5,
+   "capped": 1,
+   "n": 6,
+   "loops": 0,
+   "z_min": 0.289,
+   "z_max": 0.611,
+   "tps_min": 45.29,
+   "tps_max": 62.0
+  },
+  "nospec": {
+   "finished": 5,
+   "capped": 1,
+   "n": 6,
+   "loops": 0,
+   "z_min": 0.183,
+   "z_max": 0.583,
+   "tps_min": 38.58,
+   "tps_max": 39.19
+  },
+  "tokens_24k": 24000,
+  "z_24k": 0.306
+ },
+ "greedy": {
+  "identical_on": 3,
+  "n_on": 4,
+  "identical_off": 3,
+  "n_off": 3
+ },
+ "refusal": {
+  "answered": 20,
+  "refused": 0,
+  "n": 20,
+  "answered_by_hand": 20
+ },
+ "derived": {
+  "x_default": 1.63248730964467,
+  "x_on": 1.5607713778228878,
+  "x_deep": 1.586590403558945,
+  "x_fast": 1.988324873096447,
+  "x_fast_on": 1.9812230398376047,
+  "head_pct": 26.04353393085787,
+  "draft_pct": 28.55313700384123,
+  "bytes_sum": 7.805999999999999,
+  "bytes_q8": 6.851999999999999,
+  "ceiling_pct": 89.7071129707113,
+  "fast_ceiling_pct": 86.65929203539822,
+  "plain_ceiling_pct": 89.95433789954338,
+  "prefill_cost_pct": 5.927791771620495,
+  "headq8_plain_pct": 12.441344324667103,
+  "headq8_mtp_pct": 18.104382840328338,
+  "accept_off_pct": 84.89999999999999,
+  "accept_on_pct": 78.60000000000001
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "id": "b08-stock",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/nemotron-bolt-e4b/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf --alias nemotron-bolt -ngl 999 -c 65536 -t 6 -b 2048 -ub 512 -fa auto -ctk f16 -ctv f16 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 64 --min-p 0 --host 127.0.0.1 --port 8105",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 5396,
+   "prefill_tps": 4889.5
+  },
+  {
+   "case": "pp-32k-med",
+   "vram_mib": 5396,
+   "prefill_tps": 3900.8
+  },
+  {
+   "case": "pp-60k-med",
+   "vram_mib": 5396,
+   "prefill_tps": 3117.1
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 5396,
+   "decode_tps": 76.28,
+   "min": 76.14,
+   "max": 76.38
+  },
+  {
+   "case": "code-60k-med",
+   "vram_mib": 5396,
+   "decode_tps": 54.15,
+   "min": 54.0,
+   "max": 54.17
+  },
+  {
+   "case": "needle-32k",
+   "vram_mib": 5406,
+   "prompt_n": 32506,
+   "found": "3/3",
+   "prefill_tps": 3888.6,
+   "ttft_s": 8.4,
+   "decode_tps": 61.48,
+   "answer": "113SAZ1X | 595WBHCE | 52WX5BT7"
+  },
+  {
+   "case": "needle-61k",
+   "vram_mib": 5406,
+   "prompt_n": 61356,
+   "found": "3/3",
+   "prefill_tps": 3092.1,
+   "ttft_s": 19.8,
+   "decode_tps": 53.54,
+   "answer": "52XHFCB3 | SRKJPIL0 | ABF7FJRY"
+  }
+ ],
+ "server_log": "runs/server-b08-stock.log"
+}

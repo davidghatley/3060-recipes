@@ -1,0 +1,69 @@
+{
+ "label": "b18-heretic-default",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci(n):\n    \"\"\"Return the n-th Fibonacci number (n >= 0).\"\"\"\n    if n < 0:\n        raise ValueError(\"n must be non-negative\")\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a\n```",
+   "n": 79,
+   "decode_tps": 11.6,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "1. Script lacks execute permission \u2192 `chmod +x build.sh`\n2. Running from wrong directory \u2192 `cd` to the script's directory first\n3. File is read-only \u2192 `chmod u+w build.sh`",
+   "n": 47,
+   "decode_tps": 11.67,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a neural network architecture that replaces traditional attention mechanisms with a stateful recurrence formulation. It processes sequences by maintaining a hidden state that is updated at each step using learned gating mechanisms. The layer computes output through a combination of the current input and the evolving state, enabling efficient long-range dependency modeling. This design achieves linear complexity in sequence length while maintaining competitive performance with transformer-based models.",
+   "n": 83,
+   "decode_tps": 11.67,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 3,
+   "text": "I would:\n\n1. Run `grep -n \"def parse\" src/parser.py` to locate the parse function.\n2. Run `sed -n '1,80p' src/parser.py` to read the top of the file and understand the structure.\n3. Run `sed -i` to add an early return for empty/whitespace-only input at the start of the parse function.\n4. Run `python tests/test_parser.py::test_empty` (or the full test suite) to confirm the fix.",
+   "n": 112,
+   "decode_tps": 11.67,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 4,
+   "text": "```bash\ngit ls-files '*.py' | grep -v test | xargs wc -l | tail -1\n```",
+   "n": 27,
+   "decode_tps": 11.61,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 5,
+   "text": "Let me solve this step by step.\n\n**Step 1: Multiplication**\n17 \u00d7 23 = 391\n\n**Step 2: Division**\n144 \u00f7 12 = 12\n\n**Step 3: Addition**\n391 + 12 = 403\n\n**Answer: 403**",
+   "n": 81,
+   "decode_tps": 11.67,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 6,
+   "text": "```typescript\nfunction isStringArray(x: unknown): x is string[] {\n    return Array.isArray(x) && x.every(item => typeof item === \"string\");\n}\n```",
+   "n": 39,
+   "decode_tps": 11.68,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 7,
+   "text": "- CAP theorem applies to distributed data stores, not single machines.\n- It states you can't simultaneously guarantee Consistency, Availability, and Partition tolerance.\n- Partition tolerance is usually non-negotiable in real distributed systems.\n- So you really choose between Consistency and Availability during network partitions.\n- NoSQL databases make this trade-off explicit (e.g., Cassandra prioritizes availability).",
+   "n": 81,
+   "decode_tps": 11.65,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+gpu_run: waiting for the GPU lock (2722201 00:12:52 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/k01-nokeepai.sh )
+== ffn4: -ot blk\.(0|1|2|3)\.ffn_(up|gate|down)=CPU -r 10 -p 1,2,3,4 -n 0
+ffn4 pp1 16.57 tok/s 60.4 ms/pass
+ffn4 pp2 24.67 tok/s 81.1 ms/pass
+ffn4 pp3 30.1 tok/s 99.7 ms/pass
+ffn4 pp4 33.12 tok/s 120.8 ms/pass
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ffn4-tg: -ot blk\.(0|1|2|3)\.ffn_(up|gate|down)=CPU -r 4 -p 0 -n 16
+ffn4-tg tg16 16.44 tok/s 973.2 ms/16
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ffn10: -ot blk\.(0|1|2|3|4|5|6|7|8|9)\.ffn_(up|gate|down)=CPU -r 10 -p 1,2,3,4 -n 0
+ffn10 pp1 11.72 tok/s 85.3 ms/pass
+ffn10 pp2 16.94 tok/s 118.1 ms/pass
+ffn10 pp3 18.97 tok/s 158.2 ms/pass
+ffn10 pp4 19.91 tok/s 200.9 ms/pass
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+== ffn10-tg: -ot blk\.(0|1|2|3|4|5|6|7|8|9)\.ffn_(up|gate|down)=CPU -r 4 -p 0 -n 16
+ffn10-tg tg16 12.68 tok/s 1261.6 ms/16
+  Device 0: NVIDIA GeForce RTX 3060, compute capability 8.6, VMM: yes, VRAM: 11954 MiB
+DONE

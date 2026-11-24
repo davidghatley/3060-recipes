@@ -1,0 +1,32 @@
+{
+ "id": "b03-ctl-b",
+ "build": "llama.cpp master-225a5345b (stock)",
+ "command": "/mnt/scratch/llama.cpp/master-225a5345b/bin/llama-server -m /mnt/models/llm/nemotron-bolt-e4b/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf --alias nemotron-bolt -ngl 999 -c 65536 -np 1 -t 6 -b 2048 -ub 512 -fa on -ctk f16 -ctv f16 --jinja --reasoning-format deepseek --reasoning on --temp 1.0 --top-p 0.95 --top-k 64 --min-p 0 --host 127.0.0.1 --port 8105",
+ "results": [
+  {
+   "case": "pp-8k-med",
+   "vram_mib": 5342,
+   "prefill_tps": 4888.9
+  },
+  {
+   "case": "pp-32k-med",
+   "vram_mib": 5342,
+   "prefill_tps": 3936.8
+  },
+  {
+   "case": "code-0k-med",
+   "vram_mib": 5342,
+   "decode_tps": 76.44,
+   "min": 76.15,
+   "max": 76.49
+  },
+  {
+   "case": "code-32k-med",
+   "vram_mib": 5344,
+   "decode_tps": 62.03,
+   "min": 61.98,
+   "max": 62.23
+  }
+ ],
+ "server_log": "runs/server-b03-ctl-b.log"
+}

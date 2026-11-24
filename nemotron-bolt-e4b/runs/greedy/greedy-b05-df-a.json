@@ -1,0 +1,37 @@
+{
+ "label": "b05-df-a",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci_iterative(n):\n    \"\"\"\n    Calculates the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence starts with F(0) = 0 and F(1) = 1.\n    F(n) = F(n-1) + F(n-2) for n > 1.\n\n    Args:\n        n (int): The index of the Fibonacci number to return (must be non-negative).\n\n    Returns:\n        int: The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is a negative integer.\n\n    Examples:\n        >>> fibonacci_iterative(0)\n        0\n        >>> fibonacci_iterative(1)\n        1\n        >>> fibonacci_iterative(6)\n        8\n    \"\"\"\n    if not isinstance(n, int) or n < 0:\n        raise ValueError",
+   "n": 200,
+   "decode_tps": 303.09,
+   "draft_n": 210,
+   "accepted": 169
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes for a \"Permission denied\" error when running `./build.sh`, along with the fix for each:\n\n| # | Most Likely Cause | Explanation | Fix |\n|---|---|---|---|\n| 1 | **The script file itself lacks execute permission.** | Even if you own the file, the operating system needs explicit permission to *run* it as a program. | Run: `chmod +x build.sh` |\n| 2 | **You are not running the script from the correct directory.** | `./` means \"in the current directory.\" If you are in `/home/user` but the script is in `/home/user/scripts`, the shell won't find it or execute it correctly. | Navigate to the directory containing the script: `cd /path/to/build.sh` then run: `./build.sh` |\n| 3 | **The script tries to access a resource (file,",
+   "n": 200,
+   "decode_tps": 161.28,
+   "draft_n": 400,
+   "accepted": 140
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a specialized neural network component designed to control information flow within a network. It incorporates gating mechanisms, similar to those in LSTMs, to selectively pass or suppress input signals. This selective control allows the network to better manage long-term dependencies and prevent vanishing gradients. Consequently, it enhances the model's ability to learn complex sequential patterns efficiently.",
+   "n": 77,
+   "decode_tps": 125.74,
+   "draft_n": 203,
+   "accepted": 47
+  },
+  {
+   "i": 3,
+   "text": "Here are the step-by-step tool calls I would make to fix the `IndexError` in `tests/test_parser.py::test_empty` when processing an empty string:\n\n**Goal:** Modify the parser logic (or the test setup) so that an empty input string does not cause an `IndexError`.\n\n**Step 1: Examine the Failing Test and Code**\n* **Tool Call:** `read_file(\"tests/test_parser.py\")`\n* **Purpose:** To see the definition of `test_empty` and how it calls the parser.\n* **Tool Call:** `read_file(\"src/parser.py\")` (or the relevant parser file)\n* **Purpose:** To locate the code path that is executed when an empty string (`\"\"`) is passed to the parsing function, and identify where the `IndexError` occurs (e.g., accessing `s[0]`, `s[i",
+   "n": 200,
+   "decode_tps": 173.04,
+   "draft_n": 370,
+   "accepted": 144
+  }
+ ]
+}

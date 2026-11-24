@@ -1,0 +1,50 @@
+[
+ {
+  "task": "merge_intervals",
+  "think": true,
+  "finish": "stop",
+  "n": 443,
+  "content": "def merge_intervals(intervals):\n    \"\"\"\n    Merges overlapping closed intervals.\n\n    Args:\n        intervals: A list of intervals, where each interval is [start, end].\n\n    Returns:\n        A list of merged, non-overlapping intervals, sorted by start.\n    \"\"\"\n    if not intervals:\n        return []\n\n    # Sort the intervals based on the start time\n    intervals.sort(key=lambda x: x[0])\n\n    merged = []\n    # Initialize the current merged interval with the first interval\n    current_start, current_end = intervals[0]\n\n    for i in range(1, len(intervals)):\n        next_start, next_end = intervals[i]\n\n        # Check for overlap: if the next interval starts before or at the current end\n        if next_start <= current_end:\n            # Merge: update the end to the maximum of the current end and the next end\n            current_end = max(current_end, next_end)\n        else:\n            # No overlap: finalize the current merged interval and start a new one\n            merged.append([current_start, current_end])\n            current_start, current_end = next_start, next_end\n\n    # Append the last processed interval\n    merged.append([current_start, current_end])\n\n    return merged",
+  "reasoning": "Plan:\n1. Define the function `merge_intervals` accepting a list of intervals.\n2. Handle edge cases (empty or single interval list).\n3. Sort the input intervals based on their start time.\n4. Initialize a result list with the first interval.\n5. Iterate through the remaining intervals.\n6. If the current interval overlaps with the last interval in the result (i.e., current start <= last end), merge them by updating the end of the last interval in the result to the maximum of the two ends.\n7. If there is no overlap, append the current interval to the result list.\n8. Return the result list.\n"
+ },
+ {
+  "task": "roman",
+  "think": true,
+  "finish": "stop",
+  "n": 537,
+  "content": "def to_roman(n: int) -> str:\n    \"\"\"\n    Converts an integer (1 to 3999) to a Roman numeral string.\n    \"\"\"\n    if not 1 <= n <= 3999:\n        raise ValueError(\"Input must be between 1 and 3999\")\n\n    roman_map = [\n        (1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'),\n        (100, 'C'), (90, 'XC'), (50, 'L'), (40, 'XL'),\n        (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')\n    ]\n\n    result = []\n    for value, symbol in roman_map:\n        while n >= value:\n            result.append(symbol)\n            n -= value\n    \n    return \"\".join(result)",
+  "reasoning": "Plan:\n1. Define the function `to_roman(n)`.\n2. Use a mapping (dictionary or list of tuples) for Roman numeral values (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1).\n3. Iterate through the values in descending order.\n4. For each value, check how many times it fits into `n`.\n5. Append the corresponding Roman symbol to the result string.\n6. Update `n` by subtracting the total value used.\n7. Return the result.\nConstraint: Input $n$ is between 1 and 3999.\n\nImplementation details:\nThe standard Roman numeral system uses subtractive notation (e.g., 900 = CM, 40 = XL). The mapping must include these special cases.\n\nMapping:\n(1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'), (100, 'C'), (90, 'XC'), (50, 'L'), (40, 'XL'), (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')\n"
+ },
+ {
+  "task": "lru",
+  "think": true,
+  "finish": "stop",
+  "n": 982,
+  "content": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    Implements an LRU Cache with O(1) time complexity for get and put operations.\n    \"\"\"\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        # OrderedDict stores key-value pairs and maintains insertion order.\n        # The beginning is LRU, the end is MRU.\n        self.cache = OrderedDict()\n\n    def get(self, key: int) -> int:\n        \"\"\"\n        Retrieves the value for a key. Returns -1 if the key is not found.\n        O(1) complexity.\n        \"\"\"\n        if key not in self.cache:\n            return -1\n        \n        # Move the accessed item to the end (MRU)\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key: int, value: int) -> None:\n        \"\"\"\n        Inserts or updates a key-value pair. Handles capacity eviction.\n        O(1) complexity.\n        \"\"\"\n        if key in self.cache:\n            # Update value and move to MRU\n            self.cache[key] = value\n            self.cache.move_to_end(key)\n        else:\n            # Check if capacity is reached\n            if len(self.cache) >= self.capacity:\n                # Evict the LRU item (the first item)\n                # last=False ensures popitem removes the first (oldest) item\n                self.cache.popitem(last=False)\n            \n            # Insert the new item (it automatically goes to the MRU end)\n            self.cache[key] = value\n\nif __name__ == '__main__':\n    # Example usage: Capacity 2\n    lru = LRUCache(2)\n    \n    # put(1, 1)\n    lru.put(1, 1)\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n    \n    # put(2, 2)\n    lru.put(2, 2)\n    \n    # Get 1 (moves 1 to MRU)\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n    \n    # put(3, 3) -> Capacity exceeded (2). Evicts LRU (2)\n    lru.put(3, 3)\n    \n    # Get 2 (should be evicted)\n    print(f\"Get 2: {lru.get(2)}\") # Output: -1\n    \n    # Get 3\n    print(f\"Get 3: {lru.get(3)}\") # Output: 3\n    \n    # Get 1\n    print(f\"Get 1: {lru.get(1)}\") # Output: 1\n```",
+  "reasoning": "Here's a plan to implement an LRU Cache with O(1) time complexity for `get` and `put`:\n\n1.  **Data Structures:**\n    *   A `dict` (hash map) to store `key -> node` for O(1) lookup.\n    *   A `collections.OrderedDict` or a `doubly linked list` (DLL) to maintain the order (recency). Using `OrderedDict` is the simplest Pythonic way to achieve this, as it handles insertion and movement to the end (most recently used) efficiently.\n\n2.  **Implementation Details:**\n    *   The `capacity` must be set during initialization.\n    *   `get(key)`: Check the dict. If found, move the node to the end (MRU) and return the value. If not found, return -1.\n    *   `put(key, value)`:\n        *   If the key exists, update the value and move the node to the end.\n        *   If the key is new:\n            *   Add it to the cache.\n            *   If the cache size exceeds capacity, evict the oldest item (the first item in the `OrderedDict`).\n\n3.  **Refinement (Using `OrderedDict`):** `OrderedDict` inherently supports O(1) operations for moving items (`move_to_end`) and eviction (`popitem(last=False)`).\n\nLet's write the code."
+ },
+ {
+  "task": "merge_intervals",
+  "think": false,
+  "finish": "stop",
+  "n": 295,
+  "content": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merges overlapping closed intervals.\n\n    Args:\n        intervals: A list of intervals, where each interval is [start, end].\n\n    Returns:\n        A list of merged, non-overlapping intervals, sorted by start.\n    \"\"\"\n    if not intervals:\n        return []\n\n    # Sort the intervals based on the start time\n    intervals.sort(key=lambda x: x[0])\n\n    merged = []\n    # Initialize the current merged interval with the first interval\n    current_start, current_end = intervals[0]\n\n    # Iterate through the rest of the intervals\n    for next_start, next_end in intervals[1:]:\n        # Check for overlap: if the next interval starts before or at the current end\n        if next_start <= current_end:\n            # Merge: extend the end of the current interval\n            current_end = max(current_end, next_end)\n        else:\n            # No overlap: finalize the current merged interval and start a new one\n            merged.append([current_start, current_end])\n            current_start, current_end = next_start, next_end\n\n    # Append the last processed interval\n    merged.append([current_start, current_end])\n\n    return merged\n```",
+  "reasoning": null
+ },
+ {
+  "task": "roman",
+  "think": false,
+  "finish": "stop",
+  "n": 243,
+  "content": "```python\ndef to_roman(n):\n    \"\"\"\n    Converts an integer (1-3999) to a Roman numeral string.\n    \"\"\"\n    if not 1 <= n <= 3999:\n        raise ValueError(\"Input must be between 1 and 3999\")\n\n    mapping = {\n        1000: 'M', 900: 'CM', 500: 'D', 400: 'CD', 100: 'C', 90: 'XC', 50: 'L', 40: 'XL', 10: 'X', 9: 'IX', 5: 'V', 4: 'IV', 1: 'I'\n    }\n    \n    roman_numeral = \"\"\n    sorted_values = sorted(mapping.keys(), reverse=True)\n    \n    for value in sorted_values:\n        while n >= value:\n            roman_numeral += mapping[value]\n            n -= value\n            \n    return roman_numeral\n```",
+  "reasoning": null
+ },
+ {
+  "task": "lru",
+  "think": false,
+  "finish": "stop",
+  "n": 237,
+  "content": "from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key: int) -> int:\n        if key not in self.cache:\n            return -1\n        # Move the accessed item to the end (most recently used)\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key: int, value: int) -> None:\n        if key in self.cache:\n            # Update value and move to end\n            self.cache[key] = value\n            self.cache.move_to_end(key)\n        else:\n            if len(self.cache) >= self.capacity:\n                # Evict the least recently used item (the first item)\n                self.cache.popitem(last=False)\n            # Insert the new item (it goes to the end)\n            self.cache[key] = value\n```",
+  "reasoning": null
+ }
+]

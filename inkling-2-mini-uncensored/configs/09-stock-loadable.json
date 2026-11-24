@@ -1,0 +1,4 @@
+{"id": "09-stock-loadable", "role": "baseline that loads on stock master 225a5345b with AtomicChat AD-Q4_K",
+ "a_fit": "llama-server -m Inkling-2-Mini-Uncensored-AD-Q4_K.gguf -c 32768 --jinja (default --fit placement)",
+ "b_expcpu": "llama-server -m Inkling-2-Mini-Uncensored-AD-Q4_K.gguf -ngl 99 -ot exps=CPU --no-op-offload -c 65536 -ctk q8_0 -ctv q8_0 --jinja",
+ "serve": "STOCK=atomicchat [STOCK_FIT=1] tools/stock.sh", "env": {"GPU_RUN_MEM": "44G"}}

@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 0,
+  "reasoning_head": "",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 17,
+   "prompt_ms": 200.25,
+   "prompt_per_token_ms": 11.78,
+   "prompt_per_second": 84.89,
+   "predicted_n": 2,
+   "predicted_ms": 57.88,
+   "predicted_per_token_ms": 57.88,
+   "predicted_per_second": 17.28
+  },
+  "wall_s": 0.27
+ },
+ "math": {
+  "content": "431",
+  "reasoning_chars": 0,
+  "reasoning_head": "",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 28,
+   "prompt_ms": 190.18,
+   "prompt_per_token_ms": 6.79,
+   "prompt_per_second": 147.23,
+   "predicted_n": 4,
+   "predicted_ms": 148.35,
+   "predicted_per_token_ms": 49.45,
+   "predicted_per_second": 20.22
+  },
+  "wall_s": 0.35
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = ''.join(c for c in s if c.isalnum()).lower()\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 0,
+  "reasoning_head": "",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 37,
+   "prompt_ms": 174.16,
+   "prompt_per_token_ms": 4.71,
+   "prompt_per_second": 212.45,
+   "predicted_n": 39,
+   "predicted_ms": 1723.49,
+   "predicted_per_token_ms": 45.36,
+   "predicted_per_second": 22.05
+  },
+  "wall_s": 1.91
+ },
+ "image": {
+  "content": "The image shows a vertically split flag with a red left half and a blue right half, overlaid by a centered white square.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 90,
+   "prompt_ms": 387.9,
+   "prompt_per_token_ms": 4.31,
+   "prompt_per_second": 232.02,
+   "predicted_n": 27,
+   "predicted_ms": 1183.69,
+   "predicted_per_token_ms": 45.53,
+   "predicted_per_second": 21.97
+  },
+  "wall_s": 1.6
+ }
+}

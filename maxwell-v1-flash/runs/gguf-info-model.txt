@@ -1,0 +1,123 @@
+GGUF.version = 3
+GGUF.tensor_count = 1161
+GGUF.kv_count = 55
+general.architecture = 'maxwell-moe'
+general.type = 'model'
+general.name = 'Maxwell-V1-Flash'
+general.size_label = '256x2.3B'
+general.license = 'apache-2.0'
+general.tags = ['moe', 'text-generation', 'text-generation']
+maxwell-moe.block_count = 45
+maxwell-moe.context_length = 524288
+maxwell-moe.embedding_length = 2048
+maxwell-moe.feed_forward_length = 6144
+maxwell-moe.attention.head_count = 32
+maxwell-moe.attention.head_count_kv = 4
+maxwell-moe.rope.freq_base = 20000000.0
+maxwell-moe.attention.layer_norm_rms_epsilon = 9.999999974752427e-07
+maxwell-moe.expert_count = 256
+maxwell-moe.expert_used_count = 12
+maxwell-moe.expert_gating_func = 2
+maxwell-moe.attention.key_length = 128
+maxwell-moe.attention.value_length = 128
+maxwell-moe.rope.dimension_count = 128
+maxwell-moe.leading_dense_block_count = 3
+maxwell-moe.expert_feed_forward_length = 512
+maxwell-moe.expert_shared_feed_forward_length = 1024
+maxwell-moe.expert_shared_count = 1
+maxwell-moe.expert_weights_norm = True
+maxwell-moe.expert_weights_scale = 1.0
+maxwell-moe.hyper_connection.count = 4
+maxwell-moe.hyper_connection.sinkhorn_iterations = 20
+maxwell-moe.hyper_connection.epsilon = 9.999999974752427e-07
+maxwell-moe.attention.indexer.head_count = 4
+maxwell-moe.attention.indexer.key_length = 128
+maxwell-moe.attention.indexer.top_k = 16
+maxwell-moe.attention.indexer.block_size = 128
+maxwell-moe.attention.indexer.local_blocks = 8
+maxwell-moe.attention.indexer.prefix_blocks = 8
+tokenizer.ggml.model = 'gpt2'
+tokenizer.ggml.pre = 'maxwell'
+tokenizer.ggml.bos_token_id = 1
+tokenizer.ggml.eos_token_id = 2
+tokenizer.chat_template = <7754 chars>
+general.quantization_version = 2
+general.file_type = 30
+quantize.imatrix.file = 'imatrix.gguf'
+quantize.imatrix.dataset = 'calib_train.txt'
+quantize.imatrix.entries_count = 573
+quantize.imatrix.chunks_count = 9310
+== 1161 tensors; bytes by type: IQ4_XS 11.16 GiB, Q4_K 5.91 GiB, Q8_0 2.03 GiB, F32 0.15 GiB, BF16 0.11 GiB
+L 3 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 4 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 5 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 6 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 7 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 8 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L 9 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L10 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L11 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L12 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L13 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L14 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L15 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L16 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L17 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L18 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L19 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L20 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L21 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L22 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L23 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L24 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L25 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L26 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L27 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L28 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L29 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L30 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L31 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L32 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L33 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L34 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L35 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L36 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L37 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L38 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L39 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L40 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L41 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L42 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L43 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+L44 experts   416.0 MiB  down:Q4_K gate:IQ4_XS up:IQ4_XS
+all experts 17.062 GiB; non-expert 2.286 GiB
+   output.weight                               416.5 MiB
+   token_embd.weight                           416.5 MiB
+   blk.N.attn_output.weight                    382.5 MiB
+   blk.N.attn_q.weight                         382.5 MiB
+   blk.N.indexer.q_proj.weight                  90.0 MiB
+   blk.N.ffn_down_shexp.weight                  89.2 MiB
+   blk.N.ffn_gate_shexp.weight                  89.2 MiB
+   blk.N.ffn_up_shexp.weight                    89.2 MiB
+   blk.N.ffn_gate_inp.weight                    84.0 MiB
+   blk.N.attn_k.weight                          47.8 MiB
+   blk.N.attn_v.weight                          47.8 MiB
+   blk.N.ffn_down.weight                        38.2 MiB
+   blk.N.ffn_gate.weight                        38.2 MiB
+   blk.N.ffn_up.weight                          38.2 MiB
+   blk.N.hc_attn_fn.weight                      33.8 MiB
+   blk.N.hc_ffn_fn.weight                       33.8 MiB
+   blk.N.indexer.k_proj.weight                  22.5 MiB
+   blk.N.attn_norm.weight                        0.4 MiB
+   blk.N.ffn_norm.weight                         0.4 MiB
+   output_hc_fn.weight                           0.1 MiB
+   blk.N.exp_probs_b.bias                        0.0 MiB
+   blk.N.attn_k_norm.weight                      0.0 MiB
+   blk.N.attn_q_norm.weight                      0.0 MiB
+   blk.N.indexer.k_norm.weight                   0.0 MiB
+   blk.N.indexer.q_norm.weight                   0.0 MiB
+   output_norm.weight                            0.0 MiB
+   blk.N.hc_attn_base.weight                     0.0 MiB
+   blk.N.hc_ffn_base.weight                      0.0 MiB
+   blk.N.hc_attn_scale.weight                    0.0 MiB
+   blk.N.hc_ffn_scale.weight                     0.0 MiB

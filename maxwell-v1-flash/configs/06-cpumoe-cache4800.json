@@ -1,0 +1,3 @@
+{"id": "06-cpumoe-cache4800", "from": "02-ncmoe33-q8", "change": "every routed expert in RAM (--cpu-moe) and the freed VRAM as llama.cpp's MoE cache: --moe-cache-mib 4800 --moe-cache-cpu-share 0.95 (flint: +14% decode over a static split)",
+ "serve": "MX_PLACEMENT=cpu MX_MOE_CACHE_MIB=4800 ./serve.sh", "build": "maxwell-4f969ad24", "model": "AD-Q4_K-IQ4_XS", "lora": null,
+ "env": {"GPU_RUN_MEM": "44G", "MX_PORT": "8104"}}

@@ -1,0 +1,105 @@
+{
+ "label": "b10-stock-nothink",
+ "think": "off",
+ "strict": 7,
+ "lenient": 7,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 295,
+   "decode_tps": 76.01,
+   "wall_s": 3.9,
+   "content": "```python\ndef merge_intervals(intervals):\n    \"\"\"\n    Merges overlapping closed intervals.\n\n    Args:\n        intervals: A list of intervals, where each interval is [start, end].\n\n    Returns:\n        A list of merged, non-overlapping intervals, sorted by start.\n    \"\"\"\n    if not intervals:\n        return []\n\n    # Sort the intervals based on the start time\n    intervals.sort(key=lambda x: x[0])\n\n    merged = []\n    # Initialize the current merged interval with the first interval\n    current_start, current_end = intervals[0]\n\n    # Iterate through the rest of the intervals\n    for next_start, next_end in intervals[1:]:\n        # Check for overlap: if the next interval starts before or at the current end\n        if next_start <= current_end:\n            # Merge: extend the end of the current interval\n            current_end = max(current_end, next_end)\n        else:\n            # No overlap: finalize the current merged interval and start a new one\n            merged.append([current_start, current_end])\n            current_start, current_end = next_start, next_end\n\n    # Append the last processed interval\n    merged.append([current_start, current_end])\n\n    return merged\n```"
+  },
+  {
+   "task": "roman",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 234,
+   "decode_tps": 76.06,
+   "wall_s": 3.1,
+   "content": "```python\ndef to_roman(n):\n    \"\"\"\n    Converts an integer (1-3999) to a Roman numeral string.\n    \"\"\"\n    if not 1 <= n <= 3999:\n        raise ValueError(\"Input must be between 1 and 3999\")\n\n    mapping = {\n        1000: 'M', 900: 'CM', 500: 'D', 400: 'CD', 100: 'C', 90: 'XC', 50: 'L', 40: 'XL', 10: 'X', 9: 'IX', 5: 'V', 4: 'IV', 1: 'I'\n    }\n    \n    result = \"\"\n    sorted_values = sorted(mapping.keys(), reverse=True)\n    \n    for value in sorted_values:\n        while n >= value:\n            result += mapping[value]\n            n -= value\n            \n    return result\n```"
+  },
+  {
+   "task": "lru",
+   "strict": false,
+   "lenient": false,
+   "err": "no code block, not bare Python",
+   "fenced": false,
+   "finish": "stop",
+   "gen_n": 237,
+   "decode_tps": 76.14,
+   "wall_s": 3.1,
+   "content": "from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key: int) -> int:\n        if key not in self.cache:\n            return -1\n        # Move the accessed item to the end (most recently used)\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key: int, value: int) -> None:\n        if key in self.cache:\n            # Update value and move to end\n            self.cache[key] = value\n            self.cache.move_to_end(key)\n        else:\n            if len(self.cache) >= self.capacity:\n                # Evict the least recently used item (the first item)\n                self.cache.popitem(last=False)\n            # Insert the new item (it goes to the end)\n            self.cache[key] = value\n```"
+  },
+  {
+   "task": "topo",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 434,
+   "decode_tps": 75.87,
+   "wall_s": 5.8,
+   "content": "```python\nfrom collections import deque\n\ndef topo_sort(graph):\n    \"\"\"\n    Performs a topological sort on a graph represented by a dictionary.\n\n    Args:\n        graph: A dict where keys are nodes and values are lists of nodes \n               that the key node must come before (i.e., edges go from key to nodes in the list).\n\n    Returns:\n        A list representing a valid topological order.\n\n    Raises:\n        ValueError: If the graph contains a cycle.\n    \"\"\"\n    # 1. Calculate in-degrees for all nodes\n    in_degree = {}\n    all_nodes = set(graph.keys())\n    for neighbors in graph.values():\n        all_nodes.update(neighbors)\n\n    for node in all_nodes:\n        in_degree[node] = 0\n\n    for node in graph:\n        for neighbor in graph[node]:\n            in_degree[neighbor] += 1\n\n    # 2. Initialize queue with nodes having in-degree 0\n    queue = deque([node for node in all_nodes if in_degree[node] == 0])\n    \n    topological_order = []\n    \n    # 3. Process nodes\n    while queue:\n        node = queue.popleft()\n        topological_order.append(node)\n        \n        # Check neighbors (nodes that 'node' must come before)\n        if node in graph:\n            for neighbor in graph[node]:\n                # Decrement in-degree\n                in_degree[neighbor] -= 1\n                \n                # If in-degree becomes 0, add to queue\n                if in_degree[neighbor] == 0:\n                    queue.append(neighbor)\n\n    # 4. Cycle detection\n    if len(topological_order) != len(all_nodes):\n        raise ValueError(\"Graph contains a cycle, topological sort is not possible.\")\n        \n    return topological_order\n```"
+  },
+  {
+   "task": "rle",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 836,
+   "decode_tps": 75.71,
+   "wall_s": 11.1,
+   "content": "```python\ndef rle_encode(s):\n    \"\"\"\n    Encodes a string using run-length encoding.\n    Example: 'aaabcc' -> '3a1b2c'\n    \"\"\"\n    if not s:\n        return \"\"\n\n    encoded = []\n    i = 0\n    n = len(s)\n    while i < n:\n        char = s[i]\n        count = 1\n        j = i + 1\n        while j < n and s[j] == char:\n            count += 1\n            j += 1\n        \n        encoded.append(str(count) + char)\n        i = j\n        \n    return \"\".join(encoded)\n\ndef rle_decode(s):\n    \"\"\"\n    Decodes a run-length encoded string.\n    Example: '3a1b2c' -> 'aaabcc'\n    \"\"\"\n    decoded = []\n    i = 0\n    n = len(s)\n    while i < n:\n        # Read the count (which can be multiple digits)\n        count_str = \"\"\n        start_count = i\n        while i < n and s[i].isdigit():\n            count_str += s[i]\n            i += 1\n        \n        if not count_str:\n            # Should not happen in a valid RLE string, but handle case where char starts immediately\n            # Assuming valid input format where count precedes char\n            raise ValueError(\"Invalid RLE format: expected count before character.\")\n\n        count = int(count_str)\n        \n        # The next character must be the character to repeat\n        if i < n:\n            char = s[i]\n            decoded.append(char * count)\n            i += 1\n        else:\n            raise ValueError(\"Invalid RLE format: expected character after count.\")\n            \n    return \"\".join(decoded)\n\nif __name__ == '__main__':\n    # Test cases\n    test_string1 = \"aaabcc\"\n    encoded1 = rle_encode(test_string1)\n    decoded1 = rle_decode(encoded1)\n    print(f\"'{test_string1}' -> '{encoded1}' -> '{decoded1}'\") # Expected: 3a1b2c -> aaabcc\n\n    test_string2 = \"aaaaa\"\n    encoded2 = rle_encode(test_string2)\n    decoded2 = rle_decode(encoded2)\n    print(f\"'{test_string2}' -> '{encoded2}' -> '{decoded2}'\") # Expected: 5a -> aaaaa\n\n    test_string3 = \"abc\"\n    encoded3 = rle_encode(test_string3)\n    decoded3 = rle_decode(encoded3)\n    print(f\"'{test_string3}' -> '{encoded3}' -> '{decoded3}'\") # Expected: 1a1b1c -> abc\n\n    # Test with multi-digit counts\n    test_string4 = \"zzzzzzzzzz\" # 10 'z's\n    encoded4 = rle_encode(test_string4)\n    decoded4 = rle_decode(encoded4)\n    print(f\"'{test_string4}' -> '{encoded4}' -> '{decoded4}'\") # Expected: 10z -> zzzzzzzzzz\n\n    test_string5 = \"a\" * 12\n    encoded5 = rle_encode(test_string5)\n    decoded5 = rle_decode(encoded5)\n    print(f\"'{test_string5}' -> '{encoded5}' -> '{decoded5}'\") # Expected: 12a -> aaaaaaaaaaaa\n```"
+  },
+  {
+   "task": "parse_duration",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 496,
+   "decode_tps": 75.69,
+   "wall_s": 6.6,
+   "content": "```python\nimport re\n\ndef parse_duration(s: str) -> int:\n    \"\"\"\n    Parses strings like '1h30m', '45s', '2h5s' or '3m' into a total number of seconds (int).\n    Raises ValueError on anything else.\n    \"\"\"\n    total_seconds = 0\n    # Regex to find patterns like (number)(unit) where unit is h, m, or s\n    matches = re.findall(r'(\\d+)([hms])', s)\n\n    if not matches and s:\n        # If the string is not empty but no valid matches are found\n        raise ValueError(f\"Invalid duration format: '{s}'\")\n    elif not s:\n        # Handle empty string input if necessary, though the prompt implies non-empty valid strings\n        raise ValueError(\"Input string cannot be empty\")\n\n    for value_str, unit in matches:\n        try:\n            value = int(value_str)\n        except ValueError:\n            # Should not happen if regex is correct, but good practice\n            raise ValueError(f\"Invalid number found in duration: '{value_str}'\")\n\n        if unit == 'h':\n            total_seconds += value * 3600\n        elif unit == 'm':\n            total_seconds += value * 60\n        elif unit == 's':\n            total_seconds += value\n        else:\n            # This case should be prevented by the regex, but included for robustness\n            raise ValueError(f\"Unknown unit '{unit}' in duration: '{s}'\")\n\n    # Final check: Ensure the entire string was consumed by the valid patterns\n    # This prevents inputs like '1h_junk' from passing\n    consumed_length = sum(len(v) + 1 for v, u in matches) # Rough check, better to check against the original string structure\n    \n    # A more robust check: reconstruct the expected string from matches and compare\n    reconstructed_s = \"\".join(f\"{v}{u}\" for v, u in matches)\n    if reconstructed_s != s:\n        raise ValueError(f\"Invalid duration format: '{s}' (Did not match expected structure)\")\n\n    return total_seconds\n```"
+  },
+  {
+   "task": "bisect",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 166,
+   "decode_tps": 76.03,
+   "wall_s": 2.2,
+   "content": "```python\ndef first_ge(a, x):\n    \"\"\"\n    Returns the index of the first element >= x in the sorted list a (len(a) if none), in O(log n).\n    \"\"\"\n    low = 0\n    high = len(a)\n    ans = len(a)  # Default to len(a) if no element >= x is found\n\n    while low < high:\n        mid = low + (high - low) // 2\n        if a[mid] >= x:\n            ans = mid\n            high = mid  # Try to find an even smaller index\n        else:\n            low = mid + 1  # Element is too small, search in the right half\n\n    return ans\n```"
+  },
+  {
+   "task": "matrix_spiral",
+   "strict": true,
+   "lenient": true,
+   "err": "",
+   "fenced": true,
+   "finish": "stop",
+   "gen_n": 322,
+   "decode_tps": 76.03,
+   "wall_s": 4.3,
+   "content": "```python\ndef spiral(m):\n    \"\"\"\n    Returns the elements of a rectangular matrix (list of lists) in clockwise spiral order.\n    \"\"\"\n    if not m or not m[0]:\n        return []\n\n    rows = len(m)\n    cols = len(m[0])\n    result = []\n\n    top, bottom = 0, rows - 1\n    left, right = 0, cols - 1\n\n    while top <= bottom and left <= right:\n        # Traverse top row (left to right)\n        for c in range(left, right + 1):\n            result.append(m[top][c])\n        top += 1\n\n        # Traverse right column (top to bottom)\n        if top <= bottom:\n            for r in range(top, bottom + 1):\n                result.append(m[r][right])\n            right -= 1\n\n        # Traverse bottom row (right to left)\n        if top <= bottom and left <= right:\n            for c in range(right, left - 1, -1):\n                result.append(m[bottom][c])\n            bottom -= 1\n\n        # Traverse left column (bottom to top)\n        if top <= bottom and left <= right:\n            for r in range(bottom, top - 1, -1):\n                result.append(m[r][left])\n            left += 1\n\n    return result\n```"
+  }
+ ]
+}

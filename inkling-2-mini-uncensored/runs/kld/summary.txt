@@ -1,0 +1,88 @@
+== nokeepai-lora wiki (/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf + /mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-LoRA-r64.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.812025 ±   0.276332
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.062570 ±   0.005161
+Mean PPL(Q)-PPL(base)         :   0.460014 ±   0.048113
+Mean    KLD:   0.042688 ±   0.000892
+Maximum KLD:   3.827307
+99.0%   KLD:   0.214557
+RMS Δp    :  5.668 ± 0.132 %
+Same top p: 93.676 ± 0.311 %
+== nokeepai-lora code (/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf + /mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-LoRA-r64.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.725828 ±   0.071321
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.033406 ±   0.004219
+Mean PPL(Q)-PPL(base)         :   0.088115 ±   0.012243
+Mean    KLD:   0.031448 ±   0.000838
+Maximum KLD:   1.101908
+99.0%   KLD:   0.301245
+RMS Δp    :  5.338 ± 0.148 %
+Same top p: 96.536 ± 0.234 %
+== nokeepai-merged wiki (/mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-r64-merged-IQ4_NL.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.789564 ±   0.275266
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.059515 ±   0.005062
+Mean PPL(Q)-PPL(base)         :   0.437552 ±   0.046902
+Mean    KLD:   0.042288 ±   0.000664
+Maximum KLD:   1.436358
+99.0%   KLD:   0.221837
+RMS Δp    :  5.688 ± 0.123 %
+Same top p: 93.709 ± 0.310 %
+== nokeepai-merged code (/mnt/models/llm/inkling-2-mini-uncensored/nokeepai/Inkling-2-Mini-Unbound-v2-r64-merged-IQ4_NL.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.727107 ±   0.071486
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.033891 ±   0.004197
+Mean PPL(Q)-PPL(base)         :   0.089394 ±   0.012237
+Mean    KLD:   0.030523 ±   0.000836
+Maximum KLD:   2.209412
+99.0%   KLD:   0.279923
+RMS Δp    :  5.211 ± 0.142 %
+Same top p: 96.454 ± 0.236 %
+== atomicchat-lora wiki (/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf + /mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-LoRA.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.399744 ±   0.240021
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.006492 ±   0.002770
+Mean PPL(Q)-PPL(base)         :   0.047732 ±   0.020413
+Mean    KLD:   0.013346 ±   0.000423
+Maximum KLD:   0.825312
+99.0%   KLD:   0.120285
+RMS Δp    :  2.980 ± 0.128 %
+Same top p: 94.722 ± 0.286 %
+== atomicchat-lora code (/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf + /mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-LoRA.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.643554 ±   0.063484
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.002214 ±   0.002215
+Mean PPL(Q)-PPL(base)         :   0.005840 ±   0.005836
+Mean    KLD:   0.011573 ±   0.000457
+Maximum KLD:   1.287368
+99.0%   KLD:   0.126664
+RMS Δp    :  3.359 ± 0.177 %
+Same top p: 96.765 ± 0.226 %
+== atomicchat-ad-q4k wiki (/mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-AD-Q4_K.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   7.384607 ±   0.239684
+Mean PPL(base)                :   7.352011 ±   0.237737
+Mean PPL(Q)/PPL(base)         :   1.004434 ±   0.002684
+Mean PPL(Q)-PPL(base)         :   0.032596 ±   0.019762
+Mean    KLD:   0.014224 ±   0.001324
+Maximum KLD:   7.478027
+99.0%   KLD:   0.116645
+RMS Δp    :  3.106 ± 0.271 %
+Same top p: 95.180 ± 0.274 %
+== atomicchat-ad-q4k code (/mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-AD-Q4_K.gguf)
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   2.651243 ±   0.063941
+Mean PPL(base)                :   2.637714 ±   0.063419
+Mean PPL(Q)/PPL(base)         :   1.005129 ±   0.002125
+Mean PPL(Q)-PPL(base)         :   0.013530 ±   0.005612
+Mean    KLD:   0.010887 ±   0.000390
+Maximum KLD:   0.801493
+99.0%   KLD:   0.123929
+RMS Δp    :  3.401 ± 0.148 %
+Same top p: 97.026 ± 0.217 %

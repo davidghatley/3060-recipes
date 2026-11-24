@@ -1,0 +1,46 @@
+== ref k00-base-ref wiki: 0.21.740.479 I Final estimate: PPL = 25.7161 +/- 1.42842
+== ref k00-base-ref code: 0.21.488.351 I Final estimate: PPL = 4.0706 +/- 0.14759
+== k01-uncensored-lora wiki (/mnt/models/llm/maxwell-v1-flash/Maxwell-V1-Flash-AD-Q4_K-IQ4_XS.gguf + /mnt/models/llm/maxwell-v1-flash/uncensored/Maxwell-V1-Flash-Uncensored-LoRA.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :  25.352473 ±   1.409288
+Mean PPL(base)                :  24.134929 ±   1.263363
+Mean PPL(Q)/PPL(base)         :   1.050447 ±   0.020895
+Mean PPL(Q)-PPL(base)         :   1.217544 ±   0.506913
+Mean    KLD:   0.386967 ±   0.010643
+Maximum KLD:  16.685741
+99.0%   KLD:   4.013828
+RMS Δp    : 14.762 ± 0.354 %
+Same top p: 77.663 ± 0.532 %
+== k01-uncensored-lora code (/mnt/models/llm/maxwell-v1-flash/Maxwell-V1-Flash-AD-Q4_K-IQ4_XS.gguf + /mnt/models/llm/maxwell-v1-flash/uncensored/Maxwell-V1-Flash-Uncensored-LoRA.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   4.086272 ±   0.147926
+Mean PPL(base)                :   4.048458 ±   0.145123
+Mean PPL(Q)/PPL(base)         :   1.009341 ±   0.010880
+Mean PPL(Q)-PPL(base)         :   0.037815 ±   0.043909
+Mean    KLD:   0.166990 ±   0.005436
+Maximum KLD:   7.419776
+99.0%   KLD:   2.020888
+RMS Δp    : 12.030 ± 0.315 %
+Same top p: 87.892 ± 0.417 %
+== k02-base-placement-floor wiki (/mnt/models/llm/maxwell-v1-flash/Maxwell-V1-Flash-AD-Q4_K-IQ4_XS.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :  25.716115 ±   1.428422
+Mean PPL(base)                :  24.134929 ±   1.263363
+Mean PPL(Q)/PPL(base)         :   1.065514 ±   0.009271
+Mean PPL(Q)-PPL(base)         :   1.581186 ±   0.260537
+Mean    KLD:   0.000000 ±   0.000000
+Maximum KLD:   0.000059
+99.0%   KLD:   0.000040
+RMS Δp    :  0.001 ± 0.000 %
+Same top p: 99.984 ± 0.016 %
+== k02-base-placement-floor code (/mnt/models/llm/maxwell-v1-flash/Maxwell-V1-Flash-AD-Q4_K-IQ4_XS.gguf )
+chunk             PPL               ln(PPL(Q)/PPL(base))          KL Divergence              Δp RMS            Same top p
+Mean PPL(Q)                   :   4.070631 ±   0.147589
+Mean PPL(base)                :   4.048458 ±   0.145123
+Mean PPL(Q)/PPL(base)         :   1.005477 ±   0.001811
+Mean PPL(Q)-PPL(base)         :   0.022174 ±   0.007533
+Mean    KLD:  -0.000000 ±   0.000000
+Maximum KLD:   0.000058
+99.0%   KLD:   0.000036
+RMS Δp    :  0.001 ± 0.000 %
+Same top p: 100.000 ± 0.000 %

@@ -1,0 +1,13 @@
+  general.architecture = inkling2_loop
+  general.type = adapter
+  adapter.type = lora
+  adapter.lora_alpha = 1.0
+  general.name = lora-r29pl-b
+attn_output                48 tensors       0.5 MiB  F32  layers 24  lora_a shape (3072, 1)
+ffn_down_exps              48 tensors      40.5 MiB  F32  layers 24  lora_a shape (1152, 1, 128)
+token_embd                  2 tensors       0.8 MiB  F32  layers n/a  lora_a shape (1, 201024)
+total 41.8 MiB in 98 tensors, 49 edited weights
+edited weights missing from base: 0 []
+  blk.0.attn_output.weight: base [3072, 2304]  lora_a [3072, 1]  lora_b [1, 2304]
+  blk.0.ffn_down_exps.weight: base [1152, 2304, 128]  lora_a [1152, 1, 128]  lora_b [1, 2304, 128]
+  blk.1.attn_output.weight: base [3072, 2304]  lora_a [3072, 1]  lora_b [1, 2304]

@@ -1,0 +1,206 @@
+{
+ "status": "measured",
+ "problems": [],
+ "engine": {
+  "name": "llama.cpp",
+  "build": "master 225a5345b + 2 F16-mask patches",
+  "short": "225a5345b"
+ },
+ "stock": {
+  "decode": 17.2,
+  "prefill_8k": 51.8,
+  "card_line_mib": [
+   15279,
+   16331
+  ]
+ },
+ "variants": [
+  {
+   "id": "base",
+   "name": "UNEDITED",
+   "by": "ggml-org IQ4_NL",
+   "file": "Inkling-2-Mini-IQ4_NL.gguf",
+   "how": "control",
+   "decode": 29.0,
+   "prefill_8k": 145.35,
+   "kld": [
+    0.0085,
+    0.0088
+   ],
+   "control": null,
+   "vs_control_pct": null,
+   "decode_32k": null,
+   "needles": [],
+   "refusal": {
+    "answered": 8,
+    "hedged": 12,
+    "refused": 0,
+    "n": 20
+   },
+   "codeeval": [
+    8,
+    8
+   ],
+   "image": null
+  },
+  {
+   "id": "atomicchat",
+   "name": "ATOMICCHAT AD-Q4_K",
+   "by": "AtomicChat",
+   "file": "Inkling-2-Mini-Uncensored-AD-Q4_K.gguf",
+   "how": "baked",
+   "decode": 29.6,
+   "prefill_8k": 136.7,
+   "kld": [
+    0.0142,
+    0.0109
+   ],
+   "control": 29.0,
+   "vs_control_pct": 2.0689655172413834,
+   "decode_32k": 24.1,
+   "needles": [
+    [
+     "32k",
+     "3/3"
+    ],
+    [
+     "62k",
+     "3/3"
+    ]
+   ],
+   "refusal": {
+    "answered": 20,
+    "hedged": 0,
+    "refused": 0,
+    "n": 20
+   },
+   "codeeval": [
+    8,
+    8
+   ],
+   "image": {
+    "pass": true,
+    "answer": "A vertical split of red on the left and blue on the right is overlaid with a centered white square straddling the boundary."
+   }
+  },
+  {
+   "id": "nokeepai-merged",
+   "name": "NOKEEPAI MERGED",
+   "by": "nokeepai",
+   "file": "merged into IQ4_NL locally",
+   "how": "merged",
+   "decode": 29.0,
+   "prefill_8k": 146.0,
+   "kld": [
+    0.0423,
+    0.0305
+   ],
+   "control": 28.9,
+   "vs_control_pct": 0.34602076124568004,
+   "decode_32k": 23.6,
+   "needles": [
+    [
+     "32k",
+     "3/3"
+    ],
+    [
+     "62k",
+     "3/3"
+    ]
+   ],
+   "refusal": {
+    "answered": 20,
+    "hedged": 0,
+    "refused": 0,
+    "n": 20
+   },
+   "codeeval": [
+    8,
+    8
+   ],
+   "image": {
+    "pass": true,
+    "answer": "A vertical red-and-blue split background with a white square centered over the boundary."
+   }
+  },
+  {
+   "id": "nokeepai",
+   "name": "NOKEEPAI LORA",
+   "by": "nokeepai",
+   "file": "rank-64 LoRA at runtime",
+   "how": "runtime",
+   "decode": 27.0,
+   "prefill_8k": 144.3,
+   "kld": [
+    0.0427,
+    0.0314
+   ],
+   "control": 29.0,
+   "vs_control_pct": -6.896551724137934,
+   "decode_32k": null,
+   "needles": [],
+   "refusal": {
+    "answered": 19,
+    "hedged": 1,
+    "refused": 0,
+    "n": 20
+   },
+   "codeeval": [
+    8,
+    8
+   ],
+   "image": null
+  },
+  {
+   "id": "atomicchat-lora",
+   "name": "ATOMICCHAT LORA",
+   "by": "AtomicChat",
+   "file": "rank-1 LoRA at runtime",
+   "how": "runtime",
+   "decode": 21.4,
+   "prefill_8k": 136.1,
+   "kld": [
+    0.0133,
+    0.0116
+   ],
+   "control": 28.95,
+   "vs_control_pct": -26.07944732297064,
+   "decode_32k": null,
+   "needles": [],
+   "refusal": {
+    "answered": 20,
+    "hedged": 0,
+    "refused": 0,
+    "n": 20
+   },
+   "codeeval": [
+    8,
+    8
+   ],
+   "image": {
+    "pass": true,
+    "answer": "A vertical split background of red on the left and blue on the right with a white square centered over the boundary."
+   }
+  }
+ ],
+ "derived": {
+  "speedup_decode": 1.7209302325581397,
+  "speedup_prefill": 2.6389961389961387,
+  "nokeepai_cost_pct": 6.896551724137934,
+  "atomicchat_lora_cost_pct": 26.07944732297064,
+  "kld_ratio": 2.9788732394366195,
+  "nkm_ppl_pct": 5.9514999999999985,
+  "ad_ppl_pct": 0.4434000000000049
+ },
+ "facts": {
+  "_source": "README.md / RESULTS.md of this recipe (file sizes from the GGUF headers, adapter shapes from tools/lora_info.py)",
+  "ad_q4k_gb": 16.5,
+  "merged_gb": 17.6,
+  "ub": 96,
+  "ctx": 65536,
+  "probe_n": 20,
+  "codeeval_n": 8,
+  "nokeepai_rank": 64,
+  "atomicchat_rank": 1
+ }
+}

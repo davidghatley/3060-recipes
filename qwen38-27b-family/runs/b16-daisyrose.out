@@ -1,0 +1,76 @@
+gpu_run: waiting for the GPU lock (4059498 04:19:26 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/d03-ad-ub64-deep.sh )
+b16-daisyrose-fit-default-ffn4: server exited during load:
+b16-daisyrose-fit-default-ffn5: server exited during load:
+b16-daisyrose-fit-default-ffn6: server exited during load:
+b16-daisyrose-fit-default-ffn7 code-30k     gen_n=32 prompt_n=30088 decode_tps=12.24 finish=length content_chars=150 z=None
+b16-daisyrose-fit-default-ffn7 code-30k-med decode_tps=12.24 min=12.24 max=12.24
+FIT daisyrose default FFN_CPU=7
+b16-daisyrose-fit-fast-ffn1: server exited during load:
+b16-daisyrose-fit-fast-ffn2: server exited during load:
+b16-daisyrose-fit-fast-ffn3: server exited during load:
+b16-daisyrose-fit-fast-ffn4 code-15k     gen_n=32 prompt_n=14942 decode_tps=15.04 finish=length content_chars=151 z=None
+b16-daisyrose-fit-fast-ffn4 code-15k-med decode_tps=15.04 min=15.04 max=15.04
+FIT daisyrose fast FFN_CPU=4
+b16-daisyrose-fit-long-ffn22: server exited during load:
+b16-daisyrose-fit-long-ffn24: server exited during load:
+b16-daisyrose-fit-long-ffn26: server exited during load:
+b16-daisyrose-fit-long-ffn28 code-32k     gen_n=32 prompt_n=32030 decode_tps=6.87 finish=length content_chars=151 z=None
+b16-daisyrose-fit-long-ffn28 code-32k-med decode_tps=6.87 min=6.87 max=6.87
+FIT daisyrose long FFN_CPU=28
+b16-daisyrose-ctl ready after 3 s (includes any GPU-queue wait); vram=10956 MiB
+b16-daisyrose-ctl          pp-8k-med    prefill_tps=464.0
+b16-daisyrose-ctl          code-0k-med  decode_tps=8.19 min=8.14 max=8.23
+b16-daisyrose-tuned ready after 2 s (includes any GPU-queue wait); vram=11900 MiB
+b16-daisyrose-tuned        pp-8k-med    prefill_tps=511.0
+b16-daisyrose-tuned        code-0k-med  decode_tps=14.35 min=14.26 max=14.42
+b16-daisyrose-ctl2 ready after 3 s (includes any GPU-queue wait); vram=10816 MiB
+b16-daisyrose-ctl2         pp-8k-med    prefill_tps=461.1
+b16-daisyrose-ctl2         code-0k-med  decode_tps=7.87 min=7.83 max=7.92
+b16-daisyrose-default ready after 2 s (includes any GPU-queue wait); vram=11901 MiB
+b16-daisyrose-default      pp-8k        prompt_n=8033 prefill_tps=511.5 ttft_s=15.71
+b16-daisyrose-default      pp-8k        prompt_n=8042 prefill_tps=504.3 ttft_s=15.95
+b16-daisyrose-default      pp-8k-med    prefill_tps=507.9
+b16-daisyrose-default      pp-30k       prompt_n=30244 prefill_tps=461.6 ttft_s=65.52
+b16-daisyrose-default      pp-30k       prompt_n=30116 prefill_tps=461.5 ttft_s=65.26
+b16-daisyrose-default      pp-30k-med   prefill_tps=461.5
+b16-daisyrose-default      code-0k      gen_n=205 prompt_n=61 decode_tps=14.32 finish=stop content_chars=625 z=0.472
+b16-daisyrose-default      code-0k      gen_n=187 prompt_n=66 decode_tps=14.43 finish=stop content_chars=706 z=0.424
+b16-daisyrose-default      code-0k      gen_n=184 prompt_n=58 decode_tps=14.31 finish=stop content_chars=725 z=0.401
+b16-daisyrose-default      code-0k      gen_n=121 prompt_n=69 decode_tps=14.26 finish=stop content_chars=311 z=None
+b16-daisyrose-default      code-0k      gen_n=166 prompt_n=72 decode_tps=14.41 finish=stop content_chars=579 z=0.466
+b16-daisyrose-default      code-0k      gen_n=156 prompt_n=68 decode_tps=14.38 finish=stop content_chars=652 z=0.532
+b16-daisyrose-default      code-0k-med  decode_tps=14.35 min=14.26 max=14.43
+b16-daisyrose-default      code-30k     gen_n=221 prompt_n=30231 decode_tps=12.15 finish=stop content_chars=644 z=0.463
+b16-daisyrose-default      code-30k     gen_n=162 prompt_n=30236 decode_tps=12.23 finish=stop content_chars=549 z=0.481
+b16-daisyrose-default      code-30k     gen_n=256 prompt_n=30228 decode_tps=12.17 finish=length content_chars=1111 z=0.455
+b16-daisyrose-default      code-30k     gen_n=183 prompt_n=30239 decode_tps=12.25 finish=stop content_chars=569 z=0.589
+b16-daisyrose-default      code-30k     gen_n=170 prompt_n=30242 decode_tps=12.22 finish=stop content_chars=683 z=0.438
+b16-daisyrose-default      code-30k     gen_n=148 prompt_n=30238 decode_tps=12.27 finish=stop content_chars=652 z=0.54
+b16-daisyrose-default      code-30k-med decode_tps=12.23 min=12.15 max=12.27
+b16-daisyrose-default      needle-16k   prompt_n=16260 found=3/3 prefill_tps=490.9 ttft_s=33.1 decode_tps=13.12 answer=KT1RLD1L | LGUKHC45 | 86KY05VX
+b16-daisyrose-default      needle-30k   prompt_n=30475 found=3/3 prefill_tps=458.8 ttft_s=66.4 decode_tps=12.21 answer=F4X1P80K | O1OE90L3 | 28G4QH5D
+b16-daisyrose-default bisect PASS stop 121 
+b16-daisyrose-default matrix_spiral PASS stop 247 
+b16-daisyrose-default passed 8/8
+b16-daisyrose-default 0 261 14.35 '```python\ndef fibonacci(n: int) -> int:\n    """\n    Return the n-th Fibonacci numb
+b16-daisyrose-default 1 300 14.37 'When you encounter a `Permission denied` error while executing a script like `./build
+b16-daisyrose-default 2 109 14.42 'A Gated DeltaNet layer is a linear attention mechanism that enhances standard DeltaNe
+b16-daisyrose-default 3 300 14.35 'To fix the `IndexError` in `tests/test_parser.py::test_empty` caused by an empty stri
+b16-daisyrose-default 4 50 14.42 "```bash\ngit ls-files '*.py' | grep -v -E '(^tests/|/tests/|_test\\.py$|test_.*\\.py$)
+b16-daisyrose-default 5 300 14.35 'To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order
+b16-daisyrose-default 6 41 14.21 '```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isA
+b16-daisyrose-default 7 300 14.4 'Here is a summary of the CAP theorem tailored for a junior engineer:\n\n*   **The Core
+llama_kv_cache:      CUDA0 KV buffer size =   576.00 MiB
+llama_memory_recurrent:      CUDA0 RS buffer size =   149.62 MiB
+load_tensors:        CUDA0 model buffer size =  9861.39 MiB
+sched_reserve:      CUDA0 compute buffer size =   241.54 MiB
+MEM b16-daisyrose-default VmHWM:	12318292 kB VmRSS:	10990908 kB  cgroup_peak=21582495744
+b16-daisyrose-default done; vram=11912 MiB
+b16-daisyrose-fast ready after 2 s (includes any GPU-queue wait); vram=11860 MiB
+b16-daisyrose-fast         pp-8k-med    prefill_tps=535.0
+b16-daisyrose-fast         code-0k-med  decode_tps=16.54 min=16.32 max=16.73
+b16-daisyrose-long ready after 3 s (includes any GPU-queue wait); vram=11844 MiB
+b16-daisyrose-long         pp-8k-med    prefill_tps=385.2
+b16-daisyrose-long         code-0k-med  decode_tps=7.41 min=7.12 max=7.44
+MEMBER daisyrose done
+DONE

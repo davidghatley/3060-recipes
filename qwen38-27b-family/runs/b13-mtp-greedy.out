@@ -1,0 +1,31 @@
+gpu_run: waiting for the GPU lock (3516645 02:57:52 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/s01-smoke.sh )
+b13-nospec ready after 15 s (includes any GPU-queue wait); vram=11762 MiB
+b13-nospec 0 263 20.41 '```python\ndef fibonacci(n: int) -> int:\n    """\n    Return the n-th Fibonacci number iteratively.\n\n '
+b13-nospec 1 583 20.24 'Here are the three most likely causes for a `Permission denied` error when running `./build.sh`, alo'
+b13-nospec 2 120 20.21 'A Gated DeltaNet layer is a linear attention mechanism that enhances the standard DeltaNet architect'
+b13-nospec 3 99 20.21 "I'll start by exploring the repository structure to understand the codebase and find the relevant fi"
+b13-nospec 4 266 20.15 "```bash\ngit ls-files '*.py' | grep -v '/tests/' | grep -v '_test\\.py$' | xargs wc -l | tail -1\n```\n\n"
+b13-nospec 5 175 20.13 'To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order of operations ('
+b13-nospec 6 41 20.09 '```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.eve'
+b13-nospec 7 286 20.11 'Here is a summary of the CAP theorem for a junior engineer:\n\n*   **The Core Constraint**: You cannot'
+b13-nospec done; vram=11776 MiB
+b13-mtp2 ready after 2 s (includes any GPU-queue wait); vram=11802 MiB
+b13-mtp2 0 263 21.47 '```python\ndef fibonacci(n: int) -> int:\n    """\n    Return the n-th Fibonacci number iteratively.\n\n '
+b13-mtp2 1 638 17.44 'Here are the three most likely causes for a `Permission denied` error when running `./build.sh`, alo'
+b13-mtp2 2 111 15.87 'A Gated DeltaNet layer is a linear attention mechanism that enhances the standard DeltaNet architect'
+b13-mtp2 3 73 20.04 "I'll start by exploring the repository structure to understand the codebase and find the relevant fi"
+b13-mtp2 4 266 20.04 "```bash\ngit ls-files '*.py' | grep -v '/tests/' | grep -v '_test\\.py$' | xargs wc -l | tail -1\n```\n\n"
+b13-mtp2 5 171 20.41 'To solve the expression $17 \\times 23 + 144 / 12$, we must follow the standard order of operations ('
+b13-mtp2 6 41 20.55 '```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.eve'
+b13-mtp2 7 273 16.28 'Here is a summary of the CAP theorem for a junior engineer:\n\n*   **The Core Constraint**: In a distr'
+b13-mtp2 done; vram=11830 MiB
+prompt 0: diverges at char 157 of 830/797  's defined as:\n        F(0) = 0\n        F(1) = 1\n        F(n) = F(n-1) ' | 's defined as:\n        F(0) = 0, F(1) = 1, and F(n) = F(n-1) + F(n-2) f'
+prompt 1: diverges at char 178 of 2344/2524  'cript Lacks Execute Permissions\n**Cause:** The file `build.sh` does no' | 'cript Lacks Execute Permission\n**Cause:** The file `build.sh` does not'
+prompt 2: diverges at char 143 of 765/696  'orating a gating mechanism to control information flow. This gating al' | 'orating a gating mechanism to regulate information flow. This gating a'
+prompt 3: diverges at char 282 of 374/305  '/test_parser.py\n</parameter>\n<parameter=offset>\n1\n</parameter>\n<parame' | '/test_parser.py\n</parameter>\n</function>\n</tool_call>'
+prompt 4: identical  ' | xargs wc -l | tail -1\n> ```' | ' | xargs wc -l | tail -1\n> ```'
+prompt 5: diverges at char 245 of 515/494  't to right)\n\nHere are the step-by-step calculations:\n\n**Step 1: Perfor' | 't to right)\n\nHere are the steps:\n\n**Step 1: Perform the multiplication'
+prompt 6: diverges at char 129 of 145/145  "ery((item) => typeof item === 'string');\n}\n```" | 'ery((item) => typeof item === "string");\n}\n```'
+prompt 7: diverges at char 90 of 1326/1296  '\n*   **The Core Constraint**: You cannot simultaneously have all three' | '\n*   **The Core Constraint**: In a distributed system, you cannot simu'
+identical 1/8
+DONE

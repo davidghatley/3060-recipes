@@ -1,0 +1,85 @@
+{
+ "label": "b08-stock",
+ "passed": 5,
+ "n": 8,
+ "results": [
+  {
+   "task": "merge_intervals",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 429,
+   "decode_tps": 39.45,
+   "wall_s": 11.0
+  },
+  {
+   "task": "roman",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 588,
+   "decode_tps": 39.43,
+   "wall_s": 15.0
+  },
+  {
+   "task": "lru",
+   "pass": false,
+   "err": [
+    "AttributeError: 'NoneType' object has no attribute 'next' and no __dict__ for setting new attributes"
+   ],
+   "finish": "stop",
+   "gen_n": 963,
+   "decode_tps": 39.35,
+   "wall_s": 24.6
+  },
+  {
+   "task": "topo",
+   "pass": false,
+   "err": [
+    "AssertionError"
+   ],
+   "finish": "stop",
+   "gen_n": 827,
+   "decode_tps": 39.35,
+   "wall_s": 21.1
+  },
+  {
+   "task": "rle",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 877,
+   "decode_tps": 39.32,
+   "wall_s": 22.4
+  },
+  {
+   "task": "parse_duration",
+   "pass": false,
+   "err": [
+    "ValueError: Invalid duration string: '1h30m'"
+   ],
+   "finish": "stop",
+   "gen_n": 1062,
+   "decode_tps": 39.33,
+   "wall_s": 27.1
+  },
+  {
+   "task": "bisect",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 386,
+   "decode_tps": 39.39,
+   "wall_s": 9.9
+  },
+  {
+   "task": "matrix_spiral",
+   "pass": true,
+   "err": "",
+   "finish": "stop",
+   "gen_n": 876,
+   "decode_tps": 39.3,
+   "wall_s": 22.4
+  }
+ ]
+}

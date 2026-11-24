@@ -1,0 +1,28 @@
+{
+ "_about": "Headline numbers for the promo, copied from RESULTS.md. Each measured value names its ledger row (label, case) in runs/ledger.jsonl; promo/tools/prep.py checks every one against the ledger and refuses to mark the set measured if any differ.",
+ "engine": {"name": "llama.cpp", "build": "master 225a5345b", "stock": true},
+ "pi": {
+  "quant": "IQ3_XXS", "file_gb": 11.4, "publisher": "netprojects",
+  "stock":   {"decode": [7.93, "b01-baseline-stock", "code-0k-med"], "prefill_8k": [474.6, "b01-baseline-stock", "pp-8k-med"], "placement": "-ngl 49 (16 layers in RAM)", "layers_in_ram": 16},
+  "default": {"ctx": 32768, "decode": [16.62, "b11-pi-default", "code-0k-med"], "decode_deep": [13.76, "b11-pi-default", "code-30k-med"], "deep_at": "30k", "needles": ["16k 3/3", "30k 3/3"], "ffn_in_ram": 3, "ram_gb": 0.29, "vram_gb": 11.9},
+  "fast":    {"ctx": 16384, "decode": [19.72, "b11-pi-fast", "code-0k-med"], "decode_deep": [17.57, "b11-pi-fast", "code-15k-med"], "deep_at": "15k", "needles": ["8k 3/3", "14k 3/3"], "ffn_in_ram": 0},
+  "long":    {"ctx": 131072, "decode": [7.48, "b12-pi-long", "code-0k-med"], "decode_deep": [5.63, "b12-pi-long", "code-120k-med"], "deep_at": "120k", "needles": ["65k 3/3", "123k 3/3"], "ffn_in_ram": 26},
+  "ceiling": 31.7
+ },
+ "members": [
+  {"id": "pi", "name": "pi-adapted", "by": "harness-hub", "file": "netprojects IQ3_XXS, 11.4 GB", "controls": [[7.93, "b01-baseline-stock", "code-0k-med"]], "tuned": [16.62, "b11-pi-default", "code-0k-med"], "speedup_results_md": 2.10},
+  {"id": "huihui", "name": "Huihui abliterated", "by": "huihui-ai", "file": "GSQ-RCO IQ3_XXS mix, 10.4 GB", "controls": [[9.89, "b15-huihui-ctl", "code-0k-med"], [9.89, "b15-huihui-ctl2", "code-0k-med"]], "tuned": [20.77, "b15-huihui-default", "code-0k-med"], "speedup_results_md": 2.10},
+  {"id": "daisyrose", "name": "DaisyRose-27B", "by": "RadixArk", "file": "bartowski IQ3_XXS, 12.2 GB", "controls": [[8.19, "b16-daisyrose-ctl", "code-0k-med"], [7.87, "b16-daisyrose-ctl2", "code-0k-med"]], "tuned": [14.35, "b16-daisyrose-default", "code-0k-med"], "speedup_results_md": 1.79},
+  {"id": "heretic", "name": "Heretic", "by": "DavidAU", "file": "IQ2_M, BF16 LM head, 12.1 GB", "controls": [[6.96, "b17-heretic-ctl", "code-0k-med"], [6.97, "b17-heretic-ctl2", "code-0k-med"]], "tuned": [11.62, "b18-heretic-default", "code-0k-med"], "speedup_results_md": 1.67}
+ ],
+ "flags": [
+  {"flag": "-ctk q4_0 -ctv q4_0", "note": "K/V 2,048 → 576 MIB"},
+  {"flag": "-ub 256", "note": "COMPUTE 269 → 220 MIB"},
+  {"flag": "-ot 'blk\\.(0|1|2)\\.ffn_(up|gate|down)=CPU'", "note": "0.29 GB IN RAM"},
+  {"flag": "-ngl 99 --fit off -c 32768", "note": "NEEDLES 3/3"}
+ ],
+ "mtp": {"accept": "91–98%", "vram_mib": 650, "ffn_pushed": "6–10", "decode": [16.03, "b10-c32-mtp1-ffn9", "code-0k-med"], "controls": [16.45, 16.66], "best_case": "+1.8% at 16k", "best_case_prefill": "12%", "verdict": "rejected"},
+ "ram_cost_ms_per_gb": 29,
+ "kld": null,
+ "kld_note": "not measured (no higher-precision reference on disk); netprojects reports KLD 0.1244 for pi IQ3_XXS vs its Q8_0"
+}

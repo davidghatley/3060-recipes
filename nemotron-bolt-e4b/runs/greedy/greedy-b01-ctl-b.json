@@ -1,0 +1,29 @@
+{
+ "label": "b01-ctl-b",
+ "rows": [
+  {
+   "i": 0,
+   "text": "```python\ndef fibonacci_iterative(n):\n    \"\"\"\n    Calculates the n-th Fibonacci number iteratively.\n\n    The Fibonacci sequence starts with F(0) = 0 and F(1) = 1.\n    F(n) = F(n-1) + F(n-2) for n > 1.\n\n    Args:\n        n (int): The index of the Fibonacci number to return (must be non-negative).\n\n    Returns:\n        int: The n-th Fibonacci number.\n\n    Raises:\n        ValueError: If n is a negative integer.\n\n    Examples:\n        >>> fibonacci_iterative(0)\n        0\n        >>> fibonacci_iterative(1)\n        1\n        >>> fibonacci_iterative(6)\n        8\n    \"\"\"\n    if not isinstance(n, int) or n < 0:\n        raise ValueError",
+   "n": 200,
+   "decode_tps": 76.51,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 1,
+   "text": "Here are the three most likely causes for a \"Permission denied\" error when running `./build.sh`, along with the fix for each:\n\n| # | Most Likely Cause | Explanation | Fix |\n|---|---|---|---|\n| 1 | **The script file itself lacks execute permission.** | Even if you own the file, the operating system needs explicit permission to *run* it as a program. | Run: `chmod +x build.sh` |\n| 2 | **You are not running the script from the correct directory.** | `./` means \"in the current directory.\" If you are in `/home/user` but the script is in `/home/user/scripts`, the shell won't find it or execute it correctly. | Navigate to the directory containing the script: `cd /path/to/build.sh` then run: `./build.sh` |\n| 3 | **The script tries to access a resource (file,",
+   "n": 200,
+   "decode_tps": 76.62,
+   "draft_n": null,
+   "accepted": null
+  },
+  {
+   "i": 2,
+   "text": "A Gated DeltaNet layer is a specialized neural network component designed to control the flow of information within a network. It incorporates gating mechanisms, similar to those in LSTMs, to selectively update or retain information during processing. This gating allows the network to manage dependencies and prevent vanishing/exploding gradients effectively. Ultimately, it enhances the model's ability to learn long-term dependencies in sequential data while maintaining computational efficiency.",
+   "n": 86,
+   "decode_tps": 76.62,
+   "draft_n": null,
+   "accepted": null
+  }
+ ]
+}

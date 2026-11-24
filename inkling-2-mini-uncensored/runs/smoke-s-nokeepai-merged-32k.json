@@ -1,0 +1,72 @@
+{
+ "chat": {
+  "content": "ok",
+  "reasoning_chars": 153,
+  "reasoning_head": "The user asks to reply with exactly \"ok\". Need final exactly ok. No extra words. Ensure no punctuation? They said exactly: ok. Final should be \"ok\" only.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 18,
+   "prompt_ms": 346.3,
+   "prompt_per_token_ms": 19.24,
+   "prompt_per_second": 51.98,
+   "predicted_n": 47,
+   "predicted_ms": 1589.06,
+   "predicted_per_token_ms": 34.54,
+   "predicted_per_second": 28.95
+  },
+  "wall_s": 1.95
+ },
+ "math": {
+  "content": "391",
+  "reasoning_chars": 102,
+  "reasoning_head": "The user wants just the number. Compute 17*23 = 17*20 + 17*3 = 340 + 51 = 391. Need final only number.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 0,
+   "prompt_n": 29,
+   "prompt_ms": 413.17,
+   "prompt_per_token_ms": 14.25,
+   "prompt_per_second": 70.19,
+   "predicted_n": 45,
+   "predicted_ms": 1516.16,
+   "predicted_per_token_ms": 34.46,
+   "predicted_per_second": 29.02
+  },
+  "wall_s": 1.93
+ },
+ "code": {
+  "content": "```python\ndef is_palindrome(s):\n    cleaned = ''.join(ch.lower() for ch in s if ch.isalnum())\n    return cleaned == cleaned[::-1]\n```",
+  "reasoning_chars": 577,
+  "reasoning_head": "The user wants a Python function is_palindrome(s) that ignores case and non-alphanumerics. Output only one code block. Need final only code block, no extra text. Need ensure code correct.\n\nImplementation:\nimport re\ndef is_palindrome(s):\n    cleaned = ''.join(ch.lower() for ch in s if ch.isalnum())\n ",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 33,
+   "prompt_ms": 405.62,
+   "prompt_per_token_ms": 12.29,
+   "prompt_per_second": 81.36,
+   "predicted_n": 207,
+   "predicted_ms": 7014.05,
+   "predicted_per_token_ms": 34.05,
+   "predicted_per_second": 29.37
+  },
+  "wall_s": 7.42
+ },
+ "image": {
+  "content": "A vertical red-and-blue split background with a white square centered over the boundary.",
+  "finish": "stop",
+  "timings": {
+   "cache_n": 12,
+   "prompt_n": 68,
+   "prompt_ms": 834.0,
+   "prompt_per_token_ms": 12.26,
+   "prompt_per_second": 81.54,
+   "predicted_n": 68,
+   "predicted_ms": 2289.62,
+   "predicted_per_token_ms": 34.17,
+   "predicted_per_second": 29.26
+  },
+  "wall_s": 3.14
+ }
+}

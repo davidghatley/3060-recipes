@@ -1,0 +1,4 @@
+{"id": "03-atomicchat-lora", "from": "00-base-control", "change": "add --lora-scaled Inkling-2-Mini-Uncensored-LoRA.gguf:1 (rank 1: attn_output, ffn_down_exps of all 24 layers, token_embd; the expert part of layers 0-5/18-23 sits in RAM with its experts)",
+ "serve": "VARIANT=atomicchat-lora ./serve.sh", "build": "r2inkfix-19c41d2ff",
+ "model": "/mnt/models/llm/inkling-2-mini/Inkling-2-Mini-IQ4_NL.gguf", "lora": "/mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-LoRA.gguf (AtomicChat/Inkling-2-Mini-Uncensored-GGUF @ 40886ab6, sha256 42914b85...; built for AtomicChat/Inkling-2-Mini-GGUF, applied here to ggml-org's IQ4_NL)",
+ "flags": "base serve.sh defaults + --alias + --lora-scaled <lora>:1", "env": {"GPU_RUN_MEM": "44G", "INK_PORT": "8102"}}

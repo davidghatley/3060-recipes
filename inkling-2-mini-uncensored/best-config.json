@@ -1,0 +1,40 @@
+{
+  "recipe": "inkling-2-mini-uncensored",
+  "launch": "./serve.sh",
+  "variant": "atomicchat",
+  "weights": {
+    "model": "/mnt/models/llm/inkling-2-mini-uncensored/atomicchat/Inkling-2-Mini-Uncensored-AD-Q4_K.gguf",
+    "source": "AtomicChat/Inkling-2-Mini-Uncensored-GGUF@40886ab6",
+    "sha256_prefix": "36e99f1f",
+    "mmproj_optional": "UNC_MMPROJ=1: /mnt/models/llm/inkling-2-mini/mmproj-Inkling-2-Mini-Q8_0.gguf at ub 64 (AtomicChat's F16 projector does not fit at 64k)"
+  },
+  "engine": "/mnt/scratch/llama.cpp/r2inkfix-19c41d2ff (llama.cpp master 225a5345b + ../inkling-2-mini/patches/0001, 0002)",
+  "flags": "the base recipe's serve.sh: -ngl 99 -ot 'blk\\.([0-5]|1[89]|2[0-3])\\.ffn_.*_exps=CPU' --fit off -c 65536 -np 1 -t 6 -b 2048 -ub 96 -fa on -ctk q8_0 -ctv q8_0 --jinja --reasoning-format deepseek --temp 1.0, op offload on",
+  "env": {
+    "GPU_RUN_MEM": "44G",
+    "INK_PORT": "8102"
+  },
+  "measured": {
+    "decode_tps_empty": 29.6,
+    "decode_tps_32k": 24.1,
+    "prefill_tps_8k": 136.7,
+    "prefill_tps_32k": 116.8,
+    "prefill_tps_62k": 97.0,
+    "needles_32k": "3/3",
+    "needles_62k": "3/3",
+    "kld_vs_q8_0_wiki_code": [
+      0.0142,
+      0.0109
+    ],
+    "codeeval": "8/8 (at ub 64, same weights)",
+    "refusal_probe_answered": "20/20 (at ub 64, same weights)",
+    "vram_gb_after_62k": 11.81,
+    "rss_hwm_gb": 17.5
+  },
+  "evidence": [
+    "runs/batches/b05-ad-placement2.log",
+    "runs/batches/d02-ad-ub96-deep.log",
+    "runs/kld/atomicchat-ad-q4k-wiki.log",
+    "runs/batches/q04-atomicchat.log"
+  ]
+}

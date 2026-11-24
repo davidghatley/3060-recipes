@@ -1,0 +1,3 @@
+{"id": "08-cache5600", "from": "06-cpumoe-cache4800", "change": "MoE cache 4800 -> 5600 MiB (06 left ~1.05 GB of the card free)",
+ "serve": "MX_PLACEMENT=cpu MX_MOE_CACHE_MIB=5600 ./serve.sh", "build": "maxwell-4f969ad24", "model": "AD-Q4_K-IQ4_XS", "lora": null,
+ "env": {"GPU_RUN_MEM": "44G", "MX_PORT": "8104"}, "result": "CUDA OOM at load (316 MiB pp compute buffer after the cache)"}

@@ -1,0 +1,45 @@
+gpu_run: waiting for the GPU lock (2386101 23:04:46 env INK_NO_GPU_RUN=1 KLD_INSIDE=1 WAIT_IDLE=0 prlimit --core=0 bash runs/batches/q01-base-nokeepai.sh )
+b04-kintsugi-nolora ready after 18 s (includes any GPU-queue wait); vram=10201 MiB
+kintsugi-nolora 0 213 15.9 '```python\ndef fibonacci(n: int) -> int:\n    """\n    Return the n-th Fibonacci number iteratively.\n\n '
+kintsugi-nolora 1 300 15.8 'Here are the three most likely causes for a `Permission denied` error when running `./build.sh`, alo'
+kintsugi-nolora 2 101 15.8 'A Gated DeltaNet layer is a linear-time attention mechanism that combines the efficiency of linear a'
+kintsugi-nolora 3 300 15.77 'Here is the step-by-step sequence of tool calls I would make to fix the `IndexError` in `tests/test_'
+kintsugi-nolora 4 170 15.77 "```bash\ngit ls-files '*.py' | grep -v -E '(^|/)tests?/|_test\\.py$|test_.*\\.py$' | xargs wc -l | tail"
+kintsugi-nolora 5 248 15.73 'To solve the expression $17 \\times 23 + 144 / 12$, we must follow the order of operations (PEMDAS/BO'
+kintsugi-nolora 6 41 15.71 '```typescript\nfunction isStringArray(x: unknown): x is string[] {\n  return Array.isArray(x) && x.eve'
+kintsugi-nolora 7 259 15.71 'Here is a summary of the CAP theorem tailored for a junior engineer:\n\n*   **The Core Constraint**: I'
+b04-kintsugi-nolora done; vram=10181 MiB
+b04-kintsugi-lora: server exited during load:
+0.00.418.305 W model has unused tensor blk.64.post_attention_norm.weight (size = 20480 bytes) -- ignoring
+0.00.418.320 W model has unused tensor blk.64.attn_q.weight (size = 35389440 bytes) -- ignoring
+0.00.418.323 W model has unused tensor blk.64.attn_k.weight (size = 2949120 bytes) -- ignoring
+0.00.418.325 W model has unused tensor blk.64.attn_v.weight (size = 2949120 bytes) -- ignoring
+0.00.418.334 W model has unused tensor blk.64.attn_output.weight (size = 17694720 bytes) -- ignoring
+0.00.418.336 W model has unused tensor blk.64.attn_q_norm.weight (size = 1024 bytes) -- ignoring
+0.00.418.338 W model has unused tensor blk.64.attn_k_norm.weight (size = 1024 bytes) -- ignoring
+0.00.418.341 W model has unused tensor blk.64.ffn_gate.weight (size = 50135040 bytes) -- ignoring
+0.00.418.343 W model has unused tensor blk.64.ffn_down.weight (size = 50135040 bytes) -- ignoring
+0.00.418.346 W model has unused tensor blk.64.ffn_up.weight (size = 50135040 bytes) -- ignoring
+0.00.418.349 W model has unused tensor blk.64.nextn.eh_proj.weight (size = 29491200 bytes) -- ignoring
+0.00.418.352 W model has unused tensor blk.64.nextn.enorm.weight (size = 20480 bytes) -- ignoring
+0.00.418.354 W model has unused tensor blk.64.nextn.hnorm.weight (size = 20480 bytes) -- ignoring
+0.00.418.360 W model has unused tensor blk.64.nextn.shared_head_norm.weight (size = 20480 bytes) -- ignoring
+0.01.170.075 E llama_adapter_lora_init: failed to apply lora adapter: LoRA tensor 'blk.0.ffn_down.weight' does not exist in base model (hint: maybe wrong base model?)
+0.01.170.080 E cmn  common_init_: failed to load lora adapter '/mnt/models/llm/qwen38-27b-family/pi-adapted/lora-gguf/Qwen3.8-27B-pi-lora-F16.gguf'
+0.01.170.083 E cmn  common_init_: failed to create context with model '/mnt/models/llm/kintsugi-27b/Kintsugi-27B-12G.gguf'
+0.01.170.086 E srv    load_model: failed to create_context with model '/mnt/models/llm/kintsugi-27b/Kintsugi-27B-12G.gguf'
+0.01.170.087 I srv    operator(): operator(): cleaning up before exit...
+0.01.170.492 E srv  llama_server: exiting due to model loading error
+0.01.170.075 E llama_adapter_lora_init: failed to apply lora adapter: LoRA tensor 'blk.0.ffn_down.weight' does not exist in base model (hint: maybe wrong base model?)
+0.01.170.080 E cmn  common_init_: failed to load lora adapter '/mnt/models/llm/qwen38-27b-family/pi-adapted/lora-gguf/Qwen3.8-27B-pi-lora-F16.gguf'
+0.01.170.083 E cmn  common_init_: failed to create context with model '/mnt/models/llm/kintsugi-27b/Kintsugi-27B-12G.gguf'
+0.01.170.086 E srv    load_model: failed to create_context with model '/mnt/models/llm/kintsugi-27b/Kintsugi-27B-12G.gguf'
+0.01.170.492 E srv  llama_server: exiting due to model loading error
+Traceback (most recent call last):
+  File "/home/davidhatley/Projects/3060-recipes/qwen38-27b-family/tools/greedy.py", line 18, in <module>
+    x, y = (json.load(open(f)) for f in a.compare); same = 0
+    ^^^^
+  File "/home/davidhatley/Projects/3060-recipes/qwen38-27b-family/tools/greedy.py", line 18, in <genexpr>
+    x, y = (json.load(open(f)) for f in a.compare); same = 0
+                      ~~~~^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'runs/greedy/greedy-kintsugi-lora.json'
